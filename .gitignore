@@ -1,0 +1,11 @@
+# Android Studio generated files
+.gradle/
+.idea/
+build/
+*.iml
+
+# Local configuration
+local.properties
+
+# External auxiliary files, directory will be mounted
+cloud/
