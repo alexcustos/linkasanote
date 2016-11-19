@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.neenbedankt.android-apt'
 
 ext {
     supportLibraryVersion = '25.0.1'
@@ -7,6 +6,7 @@ ext {
     espressoVersion = '2.2.2'
     guavaVersion = '18.0'
     daggerVersion = '2.7'
+    mockitoVersion = '1.10.19'
 }
 
 android {
@@ -20,6 +20,15 @@ android {
         versionCode 1
         versionName "0.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        jackOptions {
+            enabled true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     buildTypes {
@@ -63,14 +72,17 @@ dependencies {
 
     compile "com.android.support:appcompat-v7:${supportLibraryVersion}"
     compile "com.android.support:design:${supportLibraryVersion}"
+    compile "com.android.support.test.espresso:espresso-idling-resource:${espressoVersion}"
     compile "com.google.guava:guava:${guavaVersion}"
 
     // Dagger 2
-    apt "com.google.dagger:dagger-compiler:${daggerVersion}"
+    annotationProcessor "com.google.dagger:dagger-compiler:${daggerVersion}"
     compile "com.google.dagger:dagger:${daggerVersion}"
     provided "javax.annotation:jsr250-api:1.0"
 
+    // Local unit tests
     testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
 
     // Espresso Testing
     androidTestCompile("com.android.support.test.espresso:espresso-core:${espressoVersion}", {

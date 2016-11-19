@@ -34,4 +34,9 @@ public class LinksFragment extends Fragment implements LinksContract.View {
     public void setPresenter(LinksContract.Presenter presenter) {
         this.presenter = checkNotNull(presenter);
     }
+
+    @Override
+    public boolean isActive() {
+        return isAdded();
+    }
 }
