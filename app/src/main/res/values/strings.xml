@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Link as a Note</string>
+    <string name="drawer_header_title">LaaNo</string>
+    <string name="drawer_actions_settings">Settings</string>
 </resources>
