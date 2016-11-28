@@ -1,4 +1,4 @@
-package com.bytesforge.linkasanote.links;
+package com.bytesforge.linkasanote.laano.links;
 
 import javax.inject.Inject;
 

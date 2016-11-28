@@ -12,7 +12,7 @@ ext {
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+    buildToolsVersion "25.0.1"
 
     defaultConfig {
         applicationId "com.bytesforge.linkasanote"
@@ -48,9 +48,7 @@ android {
         mock {
             applicationIdSuffix = ".mock"
         }
-        prod {
-
-        }
+        prod
     }
 
     android.variantFilter { variant ->

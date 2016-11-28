@@ -7,10 +7,11 @@
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".links.LinksActivity"
+        tools:context=".laano.LaanoActivity"
         tools:openDrawer="start">
 
-        <LinearLayout
+        <android.support.design.widget.CoordinatorLayout
+            android:id="@+id/coordinator_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
@@ -25,29 +26,29 @@
                     android:layout_height="wrap_content"
                     android:minHeight="?attr/actionBarSize"
                     app:theme="@style/Toolbar" />
+
+                <android.support.design.widget.TabLayout
+                    android:id="@+id/tab_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/LaanoTabLayout" />
             </android.support.design.widget.AppBarLayout>
 
-            <android.support.design.widget.CoordinatorLayout
-                android:id="@+id/coordinator_layout"
+            <android.support.v4.view.ViewPager
+                android:id="@+id/view_pager"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent" />
 
-                <FrameLayout
-                    android:id="@+id/content_frame"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-                <android.support.design.widget.FloatingActionButton
-                    android:id="@+id/fab_add_link"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="@dimen/fab_margin"
-                    android:src="@drawable/ic_add"
-                    app:fabSize="normal"
-                    app:layout_anchor="@id/content_frame"
-                    app:layout_anchorGravity="bottom|right|end" />
-            </android.support.design.widget.CoordinatorLayout>
-        </LinearLayout>
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/fab_add"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/fab_margin"
+                android:src="@drawable/ic_add"
+                app:fabSize="normal"
+                app:layout_anchor="@id/view_pager"
+                app:layout_anchorGravity="bottom|right|end" />
+        </android.support.design.widget.CoordinatorLayout>
 
         <!-- Navigation Drawer -->
         <android.support.design.widget.NavigationView

@@ -1,4 +1,7 @@
-package com.bytesforge.linkasanote.links;
+package com.bytesforge.linkasanote.laano;
+
+import com.bytesforge.linkasanote.laano.links.LinksContract;
+import com.bytesforge.linkasanote.laano.links.LinksPresenter;
 
 import org.junit.Before;
 import org.mockito.Mock;

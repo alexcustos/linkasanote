@@ -11,4 +11,14 @@
     </style>
 
     <style name="Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="LaanoTabLayout" parent="Base.Widget.Design.TabLayout">
+        <item name="tabMode">fixed</item>
+        <item name="tabTextAppearance">@style/LaanoTabTextAppearance</item>
+        <item name="tabSelectedTextColor">@color/laano_tabs_selected_text</item>
+    </style>
+
+    <style name="LaanoTabTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="android:textColor">@color/laano_tabs_text</item>
+    </style>
 </resources>

@@ -9,8 +9,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:name=".LaaNoApplication">
-        <activity android:name=".links.LinksActivity">
+        android:name=".LaanoApplication">
+        <activity android:name=".laano.LaanoActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

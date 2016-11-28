@@ -1,15 +1,17 @@
-package com.bytesforge.linkasanote.links;
+package com.bytesforge.linkasanote.laano.links;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.bytesforge.linkasanote.BaseFragment;
+import com.bytesforge.linkasanote.databinding.FragmentLaanoLinksBinding;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class LinksFragment extends Fragment implements LinksContract.View {
+public class LinksFragment extends BaseFragment implements LinksContract.View {
 
     private LinksContract.Presenter presenter;
 
@@ -27,7 +29,11 @@ public class LinksFragment extends Fragment implements LinksContract.View {
             LayoutInflater inflater,
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
-        return super.onCreateView(inflater, container, savedInstanceState);
+        FragmentLaanoLinksBinding binding =
+            FragmentLaanoLinksBinding.inflate(inflater, container, false);
+        binding.textView.setText(getTitle());
+
+        return binding.getRoot();
     }
 
     @Override
