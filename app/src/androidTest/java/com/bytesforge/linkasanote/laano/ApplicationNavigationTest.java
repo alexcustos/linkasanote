@@ -6,7 +6,6 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.view.Gravity;
 
-import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
 import com.bytesforge.linkasanote.laano.links.LinksFragment;
@@ -22,13 +21,16 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.swipeLeft;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.contrib.DrawerActions.open;
 import static android.support.test.espresso.contrib.DrawerMatchers.isClosed;
 import static android.support.test.espresso.contrib.DrawerMatchers.isOpen;
+import static android.support.test.espresso.contrib.NavigationViewActions.navigateTo;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withResourceName;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static com.bytesforge.linkasanote.TestUtils.getToolbarNavigationContentDescription;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -76,17 +78,17 @@ public class ApplicationNavigationTest {
     @Test
     public void swipeLeftViewPager_SwitchesTab() {
         // Links
-        onView(withId(R.id.view_pager)).check(matches(isDisplayed()));
+        onView(withId(R.id.laano_view_pager)).check(matches(isDisplayed()));
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(LINKS_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(LinksFragment.class));
 
         // Favorites
-        onView(withId(R.id.view_pager)).perform(swipeLeft());
+        onView(withId(R.id.laano_view_pager)).perform(swipeLeft());
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(FAVORITES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(FavoritesFragment.class));
 
         // Notes
-        onView(withId(R.id.view_pager)).perform(swipeLeft());
+        onView(withId(R.id.laano_view_pager)).perform(swipeLeft());
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(NOTES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(NotesFragment.class));
     }
@@ -113,5 +115,22 @@ public class ApplicationNavigationTest {
                 .check(matches(isDisplayed()));
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(NOTES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(NotesFragment.class));
+    }
+
+    @Test
+    public void clickOnSettingsNavigationItem_ShowsSettingsScreen_And_ClickOnHomeIcon_ClosesIt() {
+        // Open
+        onView(withId(R.id.drawer_layout))
+                .check(matches(isClosed(Gravity.START)))
+                .perform(open());
+        onView(withId(R.id.nav_view)).perform(navigateTo(R.id.settings_menu_item));
+        onView(allOf(
+                withText(R.string.actionbar_title_settings),
+                isDescendantOfA(withResourceName("action_bar_container"))))
+            .check(matches(isDisplayed()));
+
+        // Close
+        onView(withContentDescription("Navigate up")).perform(click());
+        onView(withId(R.id.laano_view_pager)).check(matches(isDisplayed()));
     }
 }

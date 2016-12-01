@@ -2,6 +2,8 @@ package com.bytesforge.linkasanote;
 
 import android.content.Context;
 
+import javax.inject.Singleton;
+
 import dagger.Module;
 import dagger.Provides;
 
@@ -15,6 +17,7 @@ public final class ApplicationModule {
     }
 
     @Provides
+    @Singleton
     Context provideContext() {
         return context;
     }

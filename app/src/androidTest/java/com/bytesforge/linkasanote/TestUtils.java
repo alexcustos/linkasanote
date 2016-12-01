@@ -45,7 +45,7 @@ public class TestUtils {
         if (toolbar != null) {
             return (String) toolbar.getNavigationContentDescription();
         } else {
-            throw new RuntimeException("No toolbar found.");
+            throw new RuntimeException("No toolbar found");
         }
     }
 

@@ -1,5 +1,7 @@
 package com.bytesforge.linkasanote.laano;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -13,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
 import com.bytesforge.linkasanote.BaseFragment;
+import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.databinding.ActivityLaanoBinding;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
@@ -24,6 +27,7 @@ import com.bytesforge.linkasanote.laano.links.LinksPresenterModule;
 import com.bytesforge.linkasanote.laano.notes.NotesFragment;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
+import com.bytesforge.linkasanote.settings.SettingsActivity;
 
 import javax.inject.Inject;
 
@@ -38,6 +42,9 @@ public class LaanoActivity extends AppCompatActivity {
     @Inject
     NotesPresenter notesPresenter;
 
+    @Inject
+    SharedPreferences sharedPreferences;
+
     private DrawerLayout drawerLayout;
     private ViewPager viewPager;
 
@@ -48,10 +55,10 @@ public class LaanoActivity extends AppCompatActivity {
 
         // Toolbar
         setSupportActionBar(binding.toolbar);
-        ActionBar ab = getSupportActionBar();
-        if (ab != null) {
-            ab.setHomeAsUpIndicator(R.drawable.ic_menu);
-            ab.setDisplayHomeAsUpEnabled(true);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+            actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
         // Navigation Drawer
@@ -67,7 +74,7 @@ public class LaanoActivity extends AppCompatActivity {
         NotesFragment notesFragment = NotesFragment.newInstance();
 
         // Tabs
-        viewPager = binding.viewPager;
+        viewPager = binding.laanoViewPager;
 
         if (viewPager != null) {
             LaanoFragmentPagerAdapter adapter = new LaanoFragmentPagerAdapter(
@@ -86,8 +93,9 @@ public class LaanoActivity extends AppCompatActivity {
             }
         }
 
-        // Presenter
+        // Presenters
         DaggerLaanoComponent.builder()
+                .settingsComponent(((LaanoApplication) getApplication()).getSettingsComponent())
                 .linksPresenterModule(new LinksPresenterModule(linksFragment))
                 .favoritesPresenterModule(new FavoritesPresenterModule(favoritesFragment))
                 .notesPresenterModule(new NotesPresenterModule(notesFragment))
@@ -101,6 +109,7 @@ public class LaanoActivity extends AppCompatActivity {
                 drawerLayout.openDrawer(GravityCompat.START);
                 return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -108,7 +117,9 @@ public class LaanoActivity extends AppCompatActivity {
         navigationView.setNavigationItemSelectedListener(
                 (menuItem) -> {
                     switch (menuItem.getItemId()) {
-                        case R.id.preferences_menu_item:
+                        case R.id.settings_menu_item:
+                            Intent intent = new Intent(LaanoActivity.this, SettingsActivity.class);
+                            startActivity(intent);
                             break;
                         default:
                             break;

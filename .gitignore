@@ -2,10 +2,11 @@
 .gradle/
 .idea/
 build/
+/captures/
 *.iml
 
 # Local configuration
 local.properties
 
 # External auxiliary files, directory will be mounted
-cloud/
+/cloud/
