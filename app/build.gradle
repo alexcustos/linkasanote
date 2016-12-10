@@ -7,7 +7,13 @@ ext {
     espressoVersion = '2.2.2'
     guavaVersion = '18.0'
     daggerVersion = '2.7'
+    jsr250ApiVersion = '1.0'
     mockitoVersion = '1.10.19'
+    powermockVersion = '1.6.5'
+    commonsLang3Version = '3.5'
+    rxjavaVersion = '1.1.6'
+    rxandroidVersion = '1.2.1'
+    sqlbriteVersion = '1.0.0'
 }
 
 android {
@@ -78,15 +84,24 @@ dependencies {
     compile "com.android.support:preference-v14:${supportLibraryVersion}"
     compile "com.android.support.test.espresso:espresso-idling-resource:${espressoVersion}"
     compile "com.google.guava:guava:${guavaVersion}"
+    compile "org.apache.commons:commons-lang3:${commonsLang3Version}"
+
+    // RxJava
+    compile "io.reactivex:rxjava:${rxjavaVersion}"
+    compile "io.reactivex:rxandroid:${rxandroidVersion}"
+    compile "com.squareup.sqlbrite:sqlbrite:${sqlbriteVersion}"
 
     // Dagger 2
     annotationProcessor "com.google.dagger:dagger-compiler:${daggerVersion}"
     compile "com.google.dagger:dagger:${daggerVersion}"
-    provided "javax.annotation:jsr250-api:1.0"
+    provided "javax.annotation:jsr250-api:${jsr250ApiVersion}"
 
     // Local unit tests
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
+    testCompile "org.powermock:powermock:${powermockVersion}"
+    testCompile "org.powermock:powermock-module-junit4:${powermockVersion}"
+    testCompile "org.powermock:powermock-api-mockito:${powermockVersion}"
 
     // Espresso Testing
     androidTestCompile "com.android.support.test.espresso:espresso-core:${espressoVersion}"

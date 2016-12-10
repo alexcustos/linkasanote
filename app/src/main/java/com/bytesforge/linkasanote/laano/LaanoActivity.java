@@ -95,7 +95,7 @@ public class LaanoActivity extends AppCompatActivity {
 
         // Presenters
         DaggerLaanoComponent.builder()
-                .settingsComponent(((LaanoApplication) getApplication()).getSettingsComponent())
+                .applicationComponent(((LaanoApplication) getApplication()).getApplicationComponent())
                 .linksPresenterModule(new LinksPresenterModule(linksFragment))
                 .favoritesPresenterModule(new FavoritesPresenterModule(favoritesFragment))
                 .notesPresenterModule(new NotesPresenterModule(notesFragment))

@@ -28,6 +28,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".laano.LaanoActivity" />
         </activity>
+
+        <provider
+            android:authorities="${packageName}.provider"
+            android:name=".data.source.Provider"
+            android:exported="false" />
     </application>
 
 </manifest>
