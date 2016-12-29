@@ -4,11 +4,11 @@ import javax.inject.Inject;
 
 public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
-    private final FavoritesContract.View linksView;
+    private final FavoritesContract.View favoritesView;
 
     @Inject
-    public FavoritesPresenter(FavoritesContract.View linksView) {
-        this.linksView = linksView;
+    public FavoritesPresenter(FavoritesContract.View favoritesView) {
+        this.favoritesView = favoritesView;
     }
 
     @Override

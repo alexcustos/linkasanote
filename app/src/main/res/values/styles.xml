@@ -1,6 +1,6 @@
 <resources>
 
-    <!-- Base application theme. -->
+    <!-- Base application theme -->
     <style name="AppTheme" parent="Base.AppTheme" />
 
     <style name="Base.AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
@@ -28,5 +28,13 @@
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
         <item name="colorAccent">@color/color_accent</item>
+    </style>
+
+    <!-- Styles -->
+    <style name="Button" parent="Base.Widget.AppCompat.Button" />
+
+    <style name="Button.About" parent="Button">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textColor">@color/indigo_A200</item>
     </style>
 </resources>

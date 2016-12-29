@@ -1,4 +1,11 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="drawer_header_padding">16dp</dimen>
+    <dimen name="screen_edge_padding">16dp</dimen>
+    <dimen name="add_edit_account_title_text_size">28sp</dimen>
+    <dimen name="add_edit_account_description_padding">24dp</dimen>
+    <dimen name="add_edit_account_status_min_height">32dp</dimen>
+    <dimen name="add_edit_account_status_margin">16dp</dimen>
+    <dimen name="add_edit_account_status_icon_padding">8dp</dimen>
+    <dimen name="add_edit_account_login_button_padding">16dp</dimen>
 </resources>

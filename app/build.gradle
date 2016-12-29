@@ -2,27 +2,29 @@ apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
 
 ext {
-    supportLibraryVersion = '25.0.1'
+    supportLibraryVersion = '25.1.0'
     junitVersion = '4.12'
     espressoVersion = '2.2.2'
     guavaVersion = '18.0'
     daggerVersion = '2.7'
     jsr250ApiVersion = '1.0'
     mockitoVersion = '1.10.19'
+    dexmakerVersion = '1.2'
     powermockVersion = '1.6.5'
     commonsLang3Version = '3.5'
     rxjavaVersion = '1.1.6'
     rxandroidVersion = '1.2.1'
     sqlbriteVersion = '1.0.0'
+    androidLibraryVersion = '1.0.9'
 }
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.1"
+    buildToolsVersion "25.0.2"
 
     defaultConfig {
         applicationId "com.bytesforge.linkasanote"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "0.1"
@@ -80,11 +82,13 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
     compile "com.android.support:appcompat-v7:${supportLibraryVersion}"
+    compile "com.android.support:support-v13:${supportLibraryVersion}"
     compile "com.android.support:design:${supportLibraryVersion}"
     compile "com.android.support:preference-v14:${supportLibraryVersion}"
     compile "com.android.support.test.espresso:espresso-idling-resource:${espressoVersion}"
     compile "com.google.guava:guava:${guavaVersion}"
     compile "org.apache.commons:commons-lang3:${commonsLang3Version}"
+    compile "com.github.nextcloud:android-library:${androidLibraryVersion}"
 
     // RxJava
     compile "io.reactivex:rxjava:${rxjavaVersion}"
@@ -106,6 +110,9 @@ dependencies {
     // Espresso Testing
     androidTestCompile "com.android.support.test.espresso:espresso-core:${espressoVersion}"
     androidTestCompile "com.android.support.test.espresso:espresso-contrib:${espressoVersion}"
+    androidTestCompile "org.mockito:mockito-core:${mockitoVersion}"
+    androidTestCompile "com.google.dexmaker:dexmaker:${dexmakerVersion}"
+    androidTestCompile "com.google.dexmaker:dexmaker-mockito:${dexmakerVersion}"
 
     // Resolve conflicts
     androidTestCompile "com.android.support:recyclerview-v7:${supportLibraryVersion}"

@@ -3,6 +3,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bytesforge.linkasanote">
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+
+    <!-- On Android M and above, use of these permissions is only requested at run time -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -12,15 +20,13 @@
         android:name=".LaanoApplication">
 
         <activity android:name=".laano.LaanoActivity">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".settings.SettingsActivity"
+        <activity android:name=".settings.SettingsActivity"
             android:theme="@style/Settings"
             android:parentActivityName=".laano.LaanoActivity">
 
@@ -29,10 +35,35 @@
                 android:value=".laano.LaanoActivity" />
         </activity>
 
+        <activity android:name=".addeditaccount.AddEditAccountActivity"
+            android:exported="true">
+        </activity>
+
         <provider
             android:authorities="${packageName}.provider"
             android:name=".data.source.Provider"
             android:exported="false" />
+
+        <service android:name=".addeditaccount.AuthenticatorService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
+
+        <service android:name=".sync.SyncService"
+            android:process=":sync">
+
+            <intent-filter>
+                <action android:name="anroid.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_adapter" />
+        </service>
+
+        <service android:name=".sync.operations.OperationsService" />
     </application>
 
 </manifest>

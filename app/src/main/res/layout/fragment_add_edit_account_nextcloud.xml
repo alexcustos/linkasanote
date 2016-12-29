@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:bind="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable
+            name="viewModel"
+            type="com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudViewModel" />
+    </data>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/snackbar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/screen_edge_padding"
+            bind:snackbarId="@{viewModel.snackbarId}">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_name"
+                android:textSize="@dimen/add_edit_account_title_text_size" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="@dimen/add_edit_account_description_padding"
+                android:paddingBottom="@dimen/add_edit_account_description_padding"
+                android:text="@string/add_edit_account_nextcloud_description" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <EditText
+                        android:id="@+id/server_url"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/add_edit_account_nextcloud_url_hint"
+                        android:inputType="textUri"
+                        android:text="@={viewModel.serverUrl}"
+                        android:afterTextChanged="@{viewModel::afterServerUrlChanged}"
+                        android:onFocusChange="@{viewModel::onServerUrlFocusChange}">
+
+                        <requestFocus />
+                    </EditText>
+                </android.support.design.widget.TextInputLayout>
+
+                <ImageButton
+                    android:id="@+id/host_url_refresh_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|end"
+                    android:src="@drawable/ic_refresh"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="@string/add_edit_account_nextcloud_url_refresh_description"
+                    android:visibility="@{viewModel.refreshButton ? View.VISIBLE : View.GONE}"
+                    android:onClick="@{() -> viewModel.onRefreshButtonClick()}" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/server_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableStart="@{viewModel.serverStatusIcon}"
+                android:text="@{viewModel.serverStatusText}"
+                android:contentDescription="@string/add_edit_account_nextcloud_server_status_testing"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/add_edit_account_status_min_height"
+                android:layout_marginBottom="@dimen/add_edit_account_status_margin"
+                android:drawablePadding="@dimen/add_edit_account_status_icon_padding"
+                android:visibility="@{viewModel.serverStatus ? View.VISIBLE : View.INVISIBLE}" />
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <EditText
+                    android:id="@+id/account_username"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/add_edit_account_nextcloud_username_hint"
+                    android:inputType="textNoSuggestions"
+                    android:text="@={viewModel.accountUsername}"
+                    android:afterTextChanged="@{viewModel::afterAccountCredentialsChanged}" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:passwordToggleEnabled="true">
+
+                <EditText
+                    android:id="@+id/account_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/add_edit_account_nextcloud_password_hint"
+                    android:inputType="textPassword"
+                    android:text="@={viewModel.accountPassword}"
+                    android:afterTextChanged="@{viewModel::afterAccountCredentialsChanged}" />
+            </android.support.design.widget.TextInputLayout>
+
+            <TextView
+                android:id="@+id/auth_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:drawableStart="@{viewModel.authStatusIcon}"
+                android:text="@{viewModel.authStatusText}"
+                android:contentDescription="@string/add_edit_account_nextcloud_auth_status_checking"
+                android:minHeight="@dimen/add_edit_account_status_min_height"
+                android:layout_marginBottom="@dimen/add_edit_account_status_margin"
+                android:drawablePadding="@dimen/add_edit_account_status_icon_padding"
+                android:visibility="@{viewModel.authStatus ? View.VISIBLE : View.INVISIBLE}" />
+
+            <android.support.v7.widget.AppCompatButton
+                android:id="@+id/login_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/add_edit_account_login_button"
+                android:padding="@dimen/add_edit_account_login_button_padding"
+                android:contentDescription="@string/add_edit_account_login_button"
+                android:enabled="@{viewModel.loginButton}"
+                android:onClick="@{() -> viewModel.onLoginButtonClick()}" />
+
+            <Button
+                android:id="@+id/about_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Button.About"
+                android:text="@string/add_edit_account_nextcloud_about"
+                android:contentDescription="@string/add_edit_account_nextcloud_about" />
+        </LinearLayout>
+    </ScrollView>
+</layout>

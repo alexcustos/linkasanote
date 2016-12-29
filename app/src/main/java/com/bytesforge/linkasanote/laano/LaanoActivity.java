@@ -1,10 +1,12 @@
 package com.bytesforge.linkasanote.laano;
 
+import android.accounts.AccountManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.GravityCompat;
@@ -30,6 +32,8 @@ import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.settings.SettingsActivity;
 
 import javax.inject.Inject;
+
+import static com.bytesforge.linkasanote.utils.CommonUtils.getAccountType;
 
 public class LaanoActivity extends AppCompatActivity {
 
@@ -121,11 +125,18 @@ public class LaanoActivity extends AppCompatActivity {
                             Intent intent = new Intent(LaanoActivity.this, SettingsActivity.class);
                             startActivity(intent);
                             break;
+                        case R.id.add_account_menu_item:
+                            AccountManager accountManager =
+                                    AccountManager.get(getApplicationContext());
+                            accountManager.addAccount(getAccountType(),
+                                    null, null, null, this, null, new Handler());
+                            break;
                         default:
                             break;
                     }
                     menuItem.setChecked(true);
                     drawerLayout.closeDrawers();
+
                     return true;
                 }
         );

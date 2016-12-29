@@ -4,11 +4,11 @@ import javax.inject.Inject;
 
 public final class NotesPresenter implements NotesContract.Presenter {
 
-    private final NotesContract.View linksView;
+    private final NotesContract.View notesView;
 
     @Inject
-    public NotesPresenter(NotesContract.View linksView) {
-        this.linksView = linksView;
+    public NotesPresenter(NotesContract.View notesView) {
+        this.notesView = notesView;
     }
 
     @Override
