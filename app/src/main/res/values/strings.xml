@@ -4,6 +4,8 @@
     <string name="drawer_header_title">LaaNo</string>
     <string name="drawer_actions_settings">Settings</string>
     <string name="drawer_actions_add_account">Add account</string>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
     <string name="laano_tab_links_title">Links</string>
     <string name="laano_tab_favorites_title">Favorites</string>
     <string name="laano_tab_notes_title">Notes</string>

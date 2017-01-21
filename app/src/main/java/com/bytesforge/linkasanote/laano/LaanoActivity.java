@@ -13,8 +13,10 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.LaanoApplication;
@@ -67,6 +69,24 @@ public class LaanoActivity extends AppCompatActivity {
 
         // Navigation Drawer
         drawerLayout = binding.drawerLayout;
+        // NOTE: untestable behavior (swipeRight() not opening Drawer at all)
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(
+                this, drawerLayout, R.string.drawer_open, R.string.drawer_close) {
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+            }
+        };
+        drawerLayout.addDrawerListener(drawerToggle);
 
         if (binding.navView != null) {
             setupDrawerContent(binding.navView);
