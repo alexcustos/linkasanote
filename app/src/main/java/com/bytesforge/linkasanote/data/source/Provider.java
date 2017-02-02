@@ -9,13 +9,15 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.source.local.DatabaseHelper;
-import com.bytesforge.linkasanote.data.source.local.PersistenceContract;
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
 
 public class Provider extends ContentProvider {
 
@@ -44,37 +46,37 @@ public class Provider extends ContentProvider {
 
     private static UriMatcher buildUriMatcher() {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
-        final String authority = PersistenceContract.CONTENT_AUTHORITY;
+        final String authority = LocalContract.CONTENT_AUTHORITY;
 
-        matcher.addURI(authority, PersistenceContract.LinkEntry.TABLE_NAME, LINK);
-        matcher.addURI(authority, PersistenceContract.LinkEntry.TABLE_NAME + "/*", LINK_ITEM);
+        matcher.addURI(authority, LocalContract.LinkEntry.TABLE_NAME, LINK);
+        matcher.addURI(authority, LocalContract.LinkEntry.TABLE_NAME + "/*", LINK_ITEM);
         matcher.addURI(authority,
-                PersistenceContract.LinkEntry.TABLE_NAME + "/*/" +
-                PersistenceContract.TagEntry.TABLE_NAME, LINK_TAG);
+                LocalContract.LinkEntry.TABLE_NAME + "/*/" +
+                LocalContract.TagEntry.TABLE_NAME, LINK_TAG);
 
-        matcher.addURI(authority, PersistenceContract.NoteEntry.TABLE_NAME, NOTE);
-        matcher.addURI(authority, PersistenceContract.NoteEntry.TABLE_NAME + "/*", NOTE_ITEM);
+        matcher.addURI(authority, LocalContract.NoteEntry.TABLE_NAME, NOTE);
+        matcher.addURI(authority, LocalContract.NoteEntry.TABLE_NAME + "/*", NOTE_ITEM);
         matcher.addURI(authority,
-                PersistenceContract.NoteEntry.TABLE_NAME + "/*/" +
-                PersistenceContract.TagEntry.TABLE_NAME, NOTE_TAG);
+                LocalContract.NoteEntry.TABLE_NAME + "/*/" +
+                LocalContract.TagEntry.TABLE_NAME, NOTE_TAG);
 
-        matcher.addURI(authority, PersistenceContract.FavoriteEntry.TABLE_NAME, FAVORITE);
-        matcher.addURI(authority, PersistenceContract.FavoriteEntry.TABLE_NAME + "/*", FAVORITE_ITEM);
+        matcher.addURI(authority, LocalContract.FavoriteEntry.TABLE_NAME, FAVORITE);
+        matcher.addURI(authority, LocalContract.FavoriteEntry.TABLE_NAME + "/*", FAVORITE_ITEM);
         matcher.addURI(authority,
-                PersistenceContract.FavoriteEntry.TABLE_NAME + "/*/" +
-                PersistenceContract.TagEntry.TABLE_NAME, FAVORITE_TAG);
+                LocalContract.FavoriteEntry.TABLE_NAME + "/*/" +
+                LocalContract.TagEntry.TABLE_NAME, FAVORITE_TAG);
 
-        matcher.addURI(authority, PersistenceContract.TagEntry.TABLE_NAME, TAG);
-        matcher.addURI(authority, PersistenceContract.TagEntry.TABLE_NAME + "/*", TAG_ITEM);
+        matcher.addURI(authority, LocalContract.TagEntry.TABLE_NAME, TAG);
+        matcher.addURI(authority, LocalContract.TagEntry.TABLE_NAME + "/*", TAG_ITEM);
         matcher.addURI(authority,
-                PersistenceContract.TagEntry.TABLE_NAME + "/*/" +
-                PersistenceContract.LinkEntry.TABLE_NAME, TAG_LINK);
+                LocalContract.TagEntry.TABLE_NAME + "/*/" +
+                LocalContract.LinkEntry.TABLE_NAME, TAG_LINK);
         matcher.addURI(authority,
-                PersistenceContract.TagEntry.TABLE_NAME + "/*/" +
-                PersistenceContract.NoteEntry.TABLE_NAME, TAG_NOTE);
+                LocalContract.TagEntry.TABLE_NAME + "/*/" +
+                LocalContract.NoteEntry.TABLE_NAME, TAG_NOTE);
         matcher.addURI(authority,
-                PersistenceContract.TagEntry.TABLE_NAME + "/*/" +
-                PersistenceContract.FavoriteEntry.TABLE_NAME, TAG_FAVORITE);
+                LocalContract.TagEntry.TABLE_NAME + "/*/" +
+                LocalContract.FavoriteEntry.TABLE_NAME, TAG_FAVORITE);
 
         return matcher;
     }
@@ -95,90 +97,155 @@ public class Provider extends ContentProvider {
     public String getType(@NonNull Uri uri) {
         switch (uriMatcher.match(uri)) {
             case LINK:
-                return PersistenceContract.LinkEntry.CONTENT_TYPE;
+                return LocalContract.LinkEntry.CONTENT_TYPE;
             case LINK_ITEM:
-                return PersistenceContract.LinkEntry.CONTENT_ITEM_TYPE;
+                return LocalContract.LinkEntry.CONTENT_ITEM_TYPE;
             case LINK_TAG:
-                return PersistenceContract.LinkEntry.CONTENT_TYPE;
+                return LocalContract.LinkEntry.CONTENT_TYPE;
             case NOTE:
-                return PersistenceContract.NoteEntry.CONTENT_TYPE;
+                return LocalContract.NoteEntry.CONTENT_TYPE;
             case NOTE_ITEM:
-                return PersistenceContract.NoteEntry.CONTENT_ITEM_TYPE;
+                return LocalContract.NoteEntry.CONTENT_ITEM_TYPE;
             case NOTE_TAG:
-                return PersistenceContract.NoteEntry.CONTENT_TYPE;
+                return LocalContract.NoteEntry.CONTENT_TYPE;
             case FAVORITE:
-                return PersistenceContract.FavoriteEntry.CONTENT_TYPE;
+                return LocalContract.FavoriteEntry.CONTENT_TYPE;
             case FAVORITE_ITEM:
-                return PersistenceContract.FavoriteEntry.CONTENT_ITEM_TYPE;
+                return LocalContract.FavoriteEntry.CONTENT_ITEM_TYPE;
             case FAVORITE_TAG:
-                return PersistenceContract.FavoriteEntry.CONTENT_TYPE;
+                return LocalContract.FavoriteEntry.CONTENT_TYPE;
             case TAG:
-                return PersistenceContract.TagEntry.CONTENT_TYPE;
+                return LocalContract.TagEntry.CONTENT_TYPE;
             case TAG_ITEM:
-                return PersistenceContract.TagEntry.CONTENT_ITEM_TYPE;
+                return LocalContract.TagEntry.CONTENT_ITEM_TYPE;
             case TAG_LINK:
-                return PersistenceContract.TagEntry.CONTENT_TYPE;
+                return LocalContract.TagEntry.CONTENT_TYPE;
             case TAG_NOTE:
-                return PersistenceContract.TagEntry.CONTENT_TYPE;
+                return LocalContract.TagEntry.CONTENT_TYPE;
             case TAG_FAVORITE:
-                return PersistenceContract.TagEntry.CONTENT_TYPE;
+                return LocalContract.TagEntry.CONTENT_TYPE;
             default:
-                throw new UnsupportedOperationException("Unknown uri: " + uri);
+                throw new UnsupportedOperationException("Unknown uri [" + uri + "]");
         }
     }
 
+    /*
+    * Note: all queries receive ENTRY_ID (except *_TAG).
+    * */
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, String[] projection,
             String selection, String[] selectionArgs, String sortOrder) {
         final SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor returnCursor;
+        String tableName;
 
         switch (uriMatcher.match(uri)) {
             case LINK:
-                returnCursor = db.query(
-                        PersistenceContract.LinkEntry.TABLE_NAME, projection,
-                        selection, selectionArgs,
-                        null, null, sortOrder);
+                tableName = LocalContract.LinkEntry.TABLE_NAME;
                 break;
 
             case LINK_ITEM:
-                String[] where = {uri.getLastPathSegment()};
-                returnCursor = db.query(
-                        PersistenceContract.LinkEntry.TABLE_NAME, projection,
-                        PersistenceContract.LinkEntry.COLUMN_NAME_ENTRY_ID + " = ?", where,
-                        null, null, sortOrder);
+                tableName = LocalContract.LinkEntry.TABLE_NAME;
+                selection = LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID + " = ?";
+                selectionArgs = new String[]{LocalContract.LinkEntry.getLinkId(uri)};
+                break;
+
+            case FAVORITE:
+                tableName = LocalContract.FavoriteEntry.TABLE_NAME;
+                break;
+
+            case FAVORITE_ITEM:
+                tableName = LocalContract.FavoriteEntry.TABLE_NAME;
+                selection = LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + " = ?";
+                selectionArgs = new String[]{LocalContract.FavoriteEntry.getFavoriteId(uri)};
+                break;
+
+            case FAVORITE_TAG:
+                String favoriteTable = LocalContract.FavoriteEntry.TABLE_NAME;
+                tableName = sqlJoinManyToManyWithTags(favoriteTable);
+                selection = favoriteTable + LocalContract.FavoriteEntry._ID + " = ?";
+                selectionArgs = new String[]{LocalContract.FavoriteEntry.getFavoriteId(uri)};
+                break;
+
+            case TAG:
+                tableName = LocalContract.TagEntry.TABLE_NAME;
+                break;
+
+            case TAG_ITEM:
+                tableName = LocalContract.TagEntry.TABLE_NAME;
+                selection = LocalContract.TagEntry.COLUMN_NAME_NAME + " = ?";
+                selectionArgs = new String[]{LocalContract.TagEntry.getTagId(uri)};
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknown uri: " + uri);
+                throw new UnsupportedOperationException("Unknown query uri [" + uri + "]");
 
         }
+        Cursor returnCursor = db.query(
+                tableName, projection,
+                selection, selectionArgs,
+                null, null, sortOrder);
         returnCursor.setNotificationUri(contentResolver, uri);
 
         return returnCursor;
     }
 
+    /*
+    * Note: all insert operations receive ENTRY_ID (except *_TAG) and return _ID.
+    * ENTRY_ID can be taken from values.
+    * */
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, ContentValues values) {
         final SQLiteDatabase db = databaseHelper.getWritableDatabase();
         Uri returnUri = null;
+        long rowId;
 
         switch (uriMatcher.match(uri)) {
             case LINK:
-                long _id = updateOrInsert(db,
-                        PersistenceContract.LinkEntry.TABLE_NAME,
-                        PersistenceContract.LinkEntry.COLUMN_NAME_ENTRY_ID,
-                        values);
-                if (_id >= 0) {
-                    returnUri = PersistenceContract.LinkEntry.buildLinksUriWith(
-                            values.getAsString(PersistenceContract.LinkEntry.COLUMN_NAME_ENTRY_ID));
+                db.beginTransaction();
+                try {
+                    rowId = updateOrInsert(db,
+                            LocalContract.LinkEntry.TABLE_NAME,
+                            LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID,
+                            values);
+                    db.setTransactionSuccessful();
+                    returnUri = LocalContract.LinkEntry.buildLinksUriWith(rowId);
+                } finally {
+                    db.endTransaction();
+                }
+                break;
+
+            case FAVORITE:
+                db.beginTransaction();
+                try {
+                    rowId = updateOrInsert(db,
+                            LocalContract.FavoriteEntry.TABLE_NAME,
+                            LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID,
+                            values);
+                    db.setTransactionSuccessful();
+                    returnUri = LocalContract.FavoriteEntry.buildFavoritesUriWith(rowId);
+                } finally {
+                    db.endTransaction();
+                }
+                break;
+
+            case FAVORITE_TAG:
+                db.beginTransaction();
+                try {
+                    rowId = appendTag(db,
+                            LocalContract.FavoriteEntry.TABLE_NAME,
+                            LocalContract.FavoriteEntry.getFavoriteId(uri),
+                            values);
+                    db.setTransactionSuccessful();
+                    returnUri = LocalContract.TagEntry.buildTagsUriWith(rowId);
+                } finally {
+                    db.endTransaction();
                 }
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknown uri: " + uri);
+                throw new UnsupportedOperationException("Unknown insert uri [" + uri + "]");
         }
         contentResolver.notifyChange(uri, null);
 
@@ -187,7 +254,34 @@ public class Provider extends ContentProvider {
 
     @Override
     public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
-        return 0;
+        final SQLiteDatabase db = databaseHelper.getWritableDatabase();
+
+        String tableName;
+        switch (uriMatcher.match(uri)) {
+            case LINK:
+                tableName = LocalContract.LinkEntry.TABLE_NAME;
+                break;
+
+            case NOTE:
+                tableName = LocalContract.NoteEntry.TABLE_NAME;
+                break;
+
+            case FAVORITE:
+                tableName = LocalContract.FavoriteEntry.TABLE_NAME;
+                break;
+
+            case TAG:
+                tableName = LocalContract.TagEntry.TABLE_NAME;
+                break;
+
+            default:
+                throw new UnsupportedOperationException("Unknown delete uri [" + uri + "]");
+        }
+        int rowsDeleted = db.delete(tableName, selection, selectionArgs);
+        if (selection == null || rowsDeleted != 0) {
+            contentResolver.notifyChange(uri, null);
+        }
+        return rowsDeleted;
     }
 
     @Override
@@ -196,36 +290,98 @@ public class Provider extends ContentProvider {
         return 0;
     }
 
-    private long updateOrInsert(
-            @NonNull SQLiteDatabase db,
-            String tableName, String idFieldName, ContentValues values) {
+    private long appendTag(
+            final @NonNull SQLiteDatabase db,
+            final String leftTable, final String leftId, final ContentValues values) {
         checkNotNull(db);
 
-        long returnId;
-        String idFieldValue = values.getAsString(idFieldName);
+        // Tag
+        final String tagTable = LocalContract.TagEntry.TABLE_NAME;
+        final String tagNameField = LocalContract.TagEntry.COLUMN_NAME_NAME;
+        final String tagNameValue = values.getAsString(tagNameField);
 
         Cursor exists = db.query(
-                tableName, new String[] {idFieldName},
-                idFieldName + " = ?", new String[] {idFieldValue},
+                tagTable, new String[]{BaseColumns._ID},
+                tagNameField + " = ?", new String[]{tagNameValue},
                 null, null, null);
 
+        long tagId = 0;
         if (exists.moveToLast()) {
-            returnId = db.update(
-                    tableName, values,
-                    idFieldName + " = ?", new String[] {idFieldValue});
-            if (returnId < 0) {
+            int tagIdIndex = exists.getColumnIndexOrThrow(BaseColumns._ID);
+            tagId = exists.getLong(tagIdIndex);
+            exists.close();
+        }
+        if (tagId <= 0) {
+            tagId = db.insert(tagTable, null, values);
+            if (tagId <= 0) {
                 throw new SQLException(String.format(
-                        "Failed to update row '%s' in table '%s'", idFieldValue, tableName));
-            }
-        } else {
-            returnId = db.insert(tableName, null, values);
-            if (returnId < 0) {
-                throw new SQLException(String.format(
-                        "Failed to insert row '%s' in table '%s'", idFieldValue, tableName));
+                        "Failed to insert tag [%s] bound with table [%s] for record [%s]",
+                        tagNameValue, leftTable, leftId));
             }
         }
-        exists.close();
 
-        return returnId;
+        // Reference
+        final String refTable = leftTable + "_" + tagTable;
+
+        ContentValues refValues = new ContentValues();
+        refValues.put(LocalContract.MANY_TO_MANY_COLUMN_NAME_ADDED, currentTimeMillis());
+        refValues.put(leftTable + BaseColumns._ID, leftId);
+        refValues.put(tagTable + BaseColumns._ID, tagId);
+
+        long rowId = db.insert(refTable, null, refValues);
+        if (rowId <= 0) {
+            throw new SQLException(String.format(
+                    "Failed to insert reference [%s] with table [%s]", leftId, leftTable));
+        }
+
+        return tagId;
+    }
+
+    // TODO: modify the UI to not allow violate the name duplication constrain
+    private long updateOrInsert(
+            final @NonNull SQLiteDatabase db,
+            final String tableName, final String idField, final ContentValues values) {
+        checkNotNull(db);
+
+        long rowId;
+        String idValue = values.getAsString(idField);
+
+        Cursor exists = db.query(
+                tableName, new String[]{BaseColumns._ID},
+                idField + " = ?", new String[]{idValue},
+                null, null, null);
+
+        String rowIdValue = null;
+        if (exists.moveToLast()) {
+            int rowIdIndex = exists.getColumnIndexOrThrow(BaseColumns._ID);
+            rowIdValue = exists.getString(rowIdIndex);
+            exists.close();
+        }
+        if (rowIdValue != null) {
+            rowId = db.update(
+                    tableName, values,
+                    BaseColumns._ID + " = ?", new String[]{rowIdValue});
+            if (rowId <= 0) {
+                throw new SQLException(String.format(
+                        "Failed to update row [%s] in table [%s]", idValue, tableName));
+            }
+        } else {
+            rowId = db.insert(tableName, null, values);
+            if (rowId <= 0) {
+                throw new SQLException(String.format(
+                        "Failed to insert row [%s] in table [%s]", idValue, tableName));
+            }
+        }
+
+        return rowId;
+    }
+
+    private static String sqlJoinManyToManyWithTags(final String leftTable) {
+        final String tagTable = LocalContract.TagEntry.TABLE_NAME;
+        final String TAG_ID = tagTable + BaseColumns._ID;
+        final String refTable = leftTable + "_" + tagTable;
+
+        return refTable + " LEFT OUTER JOIN " + tagTable +
+                " ON " + refTable + "." + TAG_ID + "=" + tagTable + "." + BaseColumns._ID;
     }
 }

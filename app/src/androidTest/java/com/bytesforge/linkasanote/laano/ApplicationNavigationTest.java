@@ -32,6 +32,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withContentDesc
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withResourceName;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
 import static com.bytesforge.linkasanote.TestUtils.getToolbarNavigationContentDescription;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.allOf;
@@ -42,7 +43,6 @@ import static org.hamcrest.Matchers.notNullValue;
 public class ApplicationNavigationTest {
 
     private LaanoActivity activity;
-    private Resources resources;
 
     private String LINKS_TITLE;
     private String FAVORITES_TITLE;
@@ -52,12 +52,15 @@ public class ApplicationNavigationTest {
     public ActivityTestRule<LaanoActivity> activityTestRule =
             new ActivityTestRule<>(LaanoActivity.class);
 
+    public ApplicationNavigationTest() {
+    }
+
     @Before
     public void setupActivity() {
         activity = activityTestRule.getActivity();
         assertThat(activity, notNullValue());
 
-        resources = activity.getResources();
+        Resources resources = activity.getResources();
         assertThat(resources, notNullValue());
 
         LINKS_TITLE = resources.getString(R.string.laano_tab_links_title);
@@ -96,21 +99,21 @@ public class ApplicationNavigationTest {
     @Test
     public void clickOnTab_SwitchesTab() {
         // Links
-        onView(allOf(withText(LINKS_TITLE), isDescendantOfA(withId(R.id.tab_layout))))
+        onView(withItemTextId(LINKS_TITLE, R.id.tab_layout))
             .perform(click())
             .check(matches(isDisplayed()));
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(LINKS_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(LinksFragment.class));
 
         // Favorites
-        onView(allOf(withText(FAVORITES_TITLE), isDescendantOfA(withId(R.id.tab_layout))))
+        onView(withItemTextId(FAVORITES_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(FAVORITES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(FavoritesFragment.class));
 
         // Notes
-        onView(allOf(withText(NOTES_TITLE), isDescendantOfA(withId(R.id.tab_layout))))
+        onView(withItemTextId(NOTES_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(NOTES_TITLE));

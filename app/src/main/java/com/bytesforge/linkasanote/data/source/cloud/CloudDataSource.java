@@ -35,6 +35,10 @@ public class CloudDataSource implements DataSource {
     }
 
     @Override
+    public void deleteAllLinks() {
+    }
+
+    @Override
     public Observable<List<Note>> getNotes() {
         return null;
     }
@@ -46,6 +50,10 @@ public class CloudDataSource implements DataSource {
 
     @Override
     public void saveNote(@NonNull Note note) {
+    }
+
+    @Override
+    public void deleteAllNotes() {
     }
 
     @Override
@@ -63,6 +71,10 @@ public class CloudDataSource implements DataSource {
     }
 
     @Override
+    public void deleteAllFavorites() {
+    }
+
+    @Override
     public Observable<List<Tag>> getTags() {
         return null;
     }
@@ -74,5 +86,9 @@ public class CloudDataSource implements DataSource {
 
     @Override
     public void saveTag(@NonNull Tag tag) {
+    }
+
+    @Override
+    public void deleteAllTags() {
     }
 }

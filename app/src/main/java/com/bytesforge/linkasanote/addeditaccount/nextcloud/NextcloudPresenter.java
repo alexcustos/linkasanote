@@ -28,7 +28,7 @@ import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
 import static com.bytesforge.linkasanote.utils.CommonUtils.getAccountType;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class NextcloudPresenter
+public final class NextcloudPresenter
         implements NextcloudContract.Presenter, OnRemoteOperationListener {
 
     private static final String TAG = NextcloudPresenter.class.getSimpleName();
@@ -42,15 +42,14 @@ public class NextcloudPresenter
     private final Handler handler = new Handler();
     private OperationsService operationsService = null;
 
-    private NextcloudContract.View view;
-    private NextcloudContract.ViewModel viewModel;
+    private final NextcloudContract.View view;
+    private final NextcloudContract.ViewModel viewModel;
 
     private GetServerInfoOperation.ServerInfo serverInfo;
     private RemoteOperationResult checkCredentialsResult; // for the callback
 
     @Inject
-    NextcloudPresenter(
-            NextcloudContract.View view, NextcloudContract.ViewModel viewModel) {
+    NextcloudPresenter(NextcloudContract.View view, NextcloudContract.ViewModel viewModel) {
         this.view = view;
         this.viewModel = viewModel;
         serverInfo = null;
@@ -68,7 +67,11 @@ public class NextcloudPresenter
     }
 
     @Override
-    public void start() {
+    public void subscribe() {
+    }
+
+    @Override
+    public void unsubscribe() {
     }
 
     @Override

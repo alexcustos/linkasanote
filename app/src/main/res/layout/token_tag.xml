@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.bytesforge.linkasanote.utils.TokenTextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tag_name"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/token_background"
+    android:textColor="@android:color/white"
+    android:paddingTop="@dimen/token_vertical_padding"
+    android:paddingBottom="@dimen/token_vertical_padding"
+    android:paddingStart="@dimen/token_horizontal_padding"
+    android:paddingEnd="@dimen/token_horizontal_padding"
+    android:textSize="@dimen/token_text_size"
+    android:ellipsize="end" />

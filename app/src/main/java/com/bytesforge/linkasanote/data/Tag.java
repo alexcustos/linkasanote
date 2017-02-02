@@ -4,12 +4,14 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 
-import com.bytesforge.linkasanote.data.source.local.PersistenceContract;
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.google.common.base.Objects;
+
+import java.io.Serializable;
 
 import static java.lang.System.currentTimeMillis;
 
-public final class Tag {
+public final class Tag implements Serializable {
 
     private final long added;
 
@@ -27,18 +29,18 @@ public final class Tag {
 
     public static Tag from(Cursor cursor) {
         long added = cursor.getLong(cursor.getColumnIndexOrThrow(
-                PersistenceContract.TagEntry.COLUMN_NAME_ADDED));
+                LocalContract.TagEntry.COLUMN_NAME_ADDED));
 
         String name = cursor.getString(cursor.getColumnIndexOrThrow(
-                PersistenceContract.TagEntry.COLUMN_NAME_NAME));
+                LocalContract.TagEntry.COLUMN_NAME_NAME));
 
         return new Tag(added, name);
     }
 
     public static Tag from(ContentValues values) {
-        long added = values.getAsLong(PersistenceContract.TagEntry.COLUMN_NAME_ADDED);
+        long added = values.getAsLong(LocalContract.TagEntry.COLUMN_NAME_ADDED);
 
-        String name = values.getAsString(PersistenceContract.TagEntry.COLUMN_NAME_NAME);
+        String name = values.getAsString(LocalContract.TagEntry.COLUMN_NAME_NAME);
 
         return new Tag(added, name);
     }
@@ -46,9 +48,9 @@ public final class Tag {
     public ContentValues getContentValues() {
         ContentValues values = new ContentValues();
 
-        values.put(PersistenceContract.TagEntry.COLUMN_NAME_ADDED, getAdded());
+        values.put(LocalContract.TagEntry.COLUMN_NAME_ADDED, getAdded());
 
-        values.put(PersistenceContract.TagEntry.COLUMN_NAME_NAME, getName());
+        values.put(LocalContract.TagEntry.COLUMN_NAME_NAME, getName());
 
         return values;
     }
@@ -74,5 +76,10 @@ public final class Tag {
     @Override
     public int hashCode() {
         return Objects.hashCode(name);
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

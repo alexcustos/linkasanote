@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:bind="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable name="viewModel"
+            type="com.bytesforge.linkasanote.addeditfavorite.AddEditFavoriteViewModel" />
+    </data>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/snackbar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/screen_edge_padding"
+            bind:snackbarId="@{viewModel.snackbarId}">
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <EditText
+                    android:id="@+id/favorite_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/add_edit_favorite_name_hint"
+                    android:inputType="text|textNoSuggestions"
+                    android:maxLines="1"
+                    android:text="@={viewModel.favoriteName}"
+                    android:afterTextChanged="@{viewModel::afterFavoriteDataChanged}" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.bytesforge.linkasanote.addeditfavorite.FavoriteTagsCompletionView
+                    android:id="@+id/favorite_tags"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="4dp"
+                    android:gravity="top"
+                    android:layout_marginBottom="@dimen/last_field_bottom_margin"
+                    android:hint="@string/add_edit_favorite_tags_hint"
+                    android:inputType="text|textNoSuggestions|textMultiLine"
+                    android:afterTextChanged="@{viewModel::afterFavoriteDataChanged}" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.v7.widget.AppCompatButton
+                android:id="@+id/add_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:padding="@dimen/main_button_padding"
+                android:text="@{viewModel.addButtonText}"
+                android:enabled="@{viewModel.addButton}"
+                android:onClick="@{() -> viewModel.onAddButtonClick()}" />
+        </LinearLayout>
+    </ScrollView>
+</layout>

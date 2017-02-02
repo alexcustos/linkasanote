@@ -2,13 +2,15 @@ package com.bytesforge.linkasanote.laano;
 
 import android.accounts.AccountManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.VisibleForTesting;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.test.espresso.IdlingResource;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -32,6 +34,7 @@ import com.bytesforge.linkasanote.laano.notes.NotesFragment;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.settings.SettingsActivity;
+import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 
 import javax.inject.Inject;
 
@@ -48,8 +51,8 @@ public class LaanoActivity extends AppCompatActivity {
     @Inject
     NotesPresenter notesPresenter;
 
-    @Inject
-    SharedPreferences sharedPreferences;
+    /*@Inject
+    SharedPreferences sharedPreferences;*/
 
     private DrawerLayout drawerLayout;
     private ViewPager viewPager;
@@ -101,8 +104,8 @@ public class LaanoActivity extends AppCompatActivity {
         viewPager = binding.laanoViewPager;
 
         if (viewPager != null) {
-            LaanoFragmentPagerAdapter adapter = new LaanoFragmentPagerAdapter(
-                    getSupportFragmentManager(), LaanoActivity.this);
+            LaanoFragmentPagerAdapter adapter =
+                    new LaanoFragmentPagerAdapter(getSupportFragmentManager());
 
             Resources res = getResources();
 
@@ -124,6 +127,11 @@ public class LaanoActivity extends AppCompatActivity {
                 .favoritesPresenterModule(new FavoritesPresenterModule(favoritesFragment))
                 .notesPresenterModule(new NotesPresenterModule(notesFragment))
                 .build().inject(this);
+
+        // FAB
+        if (binding.fabAdd != null) {
+            setupFabAdd(binding.fabAdd);
+        }
     }
 
     @Override
@@ -181,10 +189,31 @@ public class LaanoActivity extends AppCompatActivity {
         });
     }
 
+    // TODO: refactor to get rid of instanceof checking
+    private void setupFabAdd(FloatingActionButton fab) {
+        fab.setOnClickListener(
+                (v) -> {
+                    BaseFragment fragment = getCurrentFragment();
+                    if (fragment instanceof LinksFragment) {
+                        linksPresenter.addLink();
+                    } else if (fragment instanceof FavoritesFragment) {
+                        favoritesPresenter.addFavorite();
+                    } else if (fragment instanceof  NotesFragment) {
+                        notesPresenter.addNote();
+                    }
+                }
+        );
+    }
+
     public BaseFragment getCurrentFragment() {
         int position = viewPager.getCurrentItem();
         LaanoFragmentPagerAdapter adapter = (LaanoFragmentPagerAdapter) viewPager.getAdapter();
 
         return adapter.getFragment(position);
+    }
+
+    @VisibleForTesting
+    public IdlingResource getCountingIdlingResource() {
+        return EspressoIdlingResource.getIdlingResource();
     }
 }

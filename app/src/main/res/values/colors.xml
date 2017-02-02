@@ -4,7 +4,11 @@
     <color name="color_primary_dark">#303F9F</color>
     <color name="color_accent">#FF4081</color>
     <color name="tabs_text">#E0E0E0</color>
-    <color name="tabs_selected_text">#FFFFFF</color>
+    <color name="tabs_text_selected">#FFFFFF</color>
+    <color name="token">@color/indigo_300</color>
+    <color name="token_stroke">@color/indigo_300</color>
+    <color name="token_selected">@color/indigo_400</color>
+    <color name="token_stroke_selected">@color/indigo_400</color>
 
     <!-- Indigo -->
     <color name="indigo_50">#e8eaf6</color>

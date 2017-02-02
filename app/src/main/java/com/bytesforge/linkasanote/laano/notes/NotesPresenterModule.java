@@ -13,7 +13,7 @@ public class NotesPresenterModule {
     }
 
     @Provides
-    NotesContract.View provideLinksContractView() {
+    NotesContract.View provideNotesContractView() {
         return view;
     }
 }

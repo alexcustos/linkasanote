@@ -52,4 +52,14 @@
     <string name="add_edit_account_nextcloud_ok">OK</string>
     <string name="add_edit_account_nextcloud_warning_no_permission">Required permission was not granted</string>
     <string name="add_edit_account_nextcloud_canceled">Canceled by the user</string>
+    <string name="item_favorites_left_button_title">Apply filter to Links</string>
+    <string name="item_favorites_right_button_title">Apply filter to Notes</string>
+    <string name="favorites_empty_title">List is empty</string>
+    <string name="add_edit_favorite_new_title">New Favorite</string>
+    <string name="add_edit_favorite_edit_title">Edit Favorite</string>
+    <string name="add_edit_favorite_name_hint">Name</string>
+    <string name="add_edit_favorite_tags_hint">Tags</string>
+    <string name="add_edit_favorite_new_button_title">Create</string>
+    <string name="add_edit_favorite_edit_button_title">Update</string>
+    <string name="add_edit_favorite_warning_empty">The favorite Name and least one Tag must be specified</string>
 </resources>

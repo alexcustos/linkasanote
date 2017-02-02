@@ -2,5 +2,6 @@ package com.bytesforge.linkasanote;
 
 public interface BasePresenter {
 
-    void start();
+    void subscribe();
+    void unsubscribe();
 }

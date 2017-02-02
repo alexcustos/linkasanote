@@ -6,13 +6,14 @@ import android.provider.BaseColumns;
 
 import com.bytesforge.linkasanote.BuildConfig;
 
-public final class PersistenceContract {
+public final class LocalContract {
 
     public static final String CONTENT_AUTHORITY = BuildConfig.APPLICATION_ID + ".provider";
     public static final String CONTENT_SCHEME = "content://";
     public static final Uri BASE_CONTENT_URI = Uri.parse(CONTENT_SCHEME + CONTENT_AUTHORITY);
+    public static final String MANY_TO_MANY_COLUMN_NAME_ADDED = "added";
 
-    private PersistenceContract() {
+    private LocalContract() {
     }
 
     public static abstract class LinkEntry implements BaseColumns {
@@ -36,7 +37,7 @@ public final class PersistenceContract {
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(TABLE_NAME).build();
 
-        public static String[] LINK_COLUMNS = new String[] {
+        public static String[] LINK_COLUMNS = new String[]{
                 LinkEntry._ID,
                 LinkEntry.COLUMN_NAME_ENTRY_ID,
                 LinkEntry.COLUMN_NAME_CREATED,
@@ -57,6 +58,10 @@ public final class PersistenceContract {
 
         public static Uri buildLinksUriWith(String id) {
             return CONTENT_URI.buildUpon().appendPath(id).build();
+        }
+
+        public static String getLinkId(Uri uri) {
+            return uri.getPathSegments().get(1);
         }
     }
 
@@ -79,7 +84,7 @@ public final class PersistenceContract {
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendEncodedPath(TABLE_NAME).build();
 
-        public static String[] NOTE_COLUMNS = new String[] {
+        public static String[] NOTE_COLUMNS = new String[]{
                 NoteEntry._ID,
                 NoteEntry.COLUMN_NAME_ENTRY_ID,
                 NoteEntry.COLUMN_NAME_CREATED,
@@ -98,6 +103,10 @@ public final class PersistenceContract {
 
         public static Uri buildNotesUriWith(String id) {
             return CONTENT_URI.buildUpon().appendPath(id).build();
+        }
+
+        public static String getNoteId(Uri uri) {
+            return uri.getPathSegments().get(1);
         }
     }
 
@@ -136,6 +145,20 @@ public final class PersistenceContract {
         public static Uri buildFavoritesUriWith(String id) {
             return CONTENT_URI.buildUpon().appendPath(id).build();
         }
+
+        public static Uri buildTagsDirUriWith(long rowId) {
+            return ContentUris.withAppendedId(CONTENT_URI, rowId).buildUpon()
+                    .appendEncodedPath(TagEntry.TABLE_NAME).build();
+        }
+
+        public static Uri buildTagsDirUriWith(String id) {
+            return CONTENT_URI.buildUpon()
+                    .appendPath(id).appendEncodedPath(TagEntry.TABLE_NAME).build();
+        }
+
+        public static String getFavoriteId(Uri uri) {
+            return uri.getPathSegments().get(1);
+        }
     }
 
     public static abstract class TagEntry implements BaseColumns {
@@ -154,20 +177,25 @@ public final class PersistenceContract {
                 BASE_CONTENT_URI.buildUpon().appendEncodedPath(TABLE_NAME).build();
 
         public static String[] TAG_COLUMNS = new String[]{
-                TagEntry._ID,
-                TagEntry.COLUMN_NAME_ADDED,
-                TagEntry.COLUMN_NAME_NAME};
+                TABLE_NAME + "." + TagEntry._ID,
+                TABLE_NAME + "." + TagEntry.COLUMN_NAME_ADDED,
+                TABLE_NAME + "." + TagEntry.COLUMN_NAME_NAME};
 
-        public static Uri buildTagUri() {
+        public static Uri buildTagsUri() {
             return CONTENT_URI.buildUpon().build();
         }
 
-        public static Uri buildTagUriWith(long rowId) {
+        public static Uri buildTagsUriWith(long rowId) {
             return ContentUris.withAppendedId(CONTENT_URI, rowId);
         }
 
-        public static Uri buildTagUriWith(String id) {
-            return CONTENT_URI.buildUpon().appendPath(id).build();
+        // TODO: filter user input but not here
+        public static Uri buildTagsUriWith(String name) {
+            return CONTENT_URI.buildUpon().appendPath(name).build();
+        }
+
+        public static String getTagId(Uri uri) {
+            return uri.getPathSegments().get(1);
         }
     }
 }

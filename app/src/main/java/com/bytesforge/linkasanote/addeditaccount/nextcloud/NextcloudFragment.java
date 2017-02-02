@@ -45,7 +45,13 @@ public class NextcloudFragment extends Fragment
     @Override
     public void onResume() {
         super.onResume();
-        presenter.start();
+        presenter.subscribe();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        presenter.unsubscribe();
     }
 
     @Override
@@ -70,6 +76,7 @@ public class NextcloudFragment extends Fragment
             @Nullable Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_add_edit_account_nextcloud, container, false);
+        binding.setViewModel((NextcloudViewModel) presenter.getViewModel());
 
         return binding.getRoot();
     }
@@ -77,7 +84,6 @@ public class NextcloudFragment extends Fragment
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        binding.setViewModel((NextcloudViewModel) presenter.getViewModel());
 
         accountAuthenticatorResponse = getActivity().getIntent()
                 .getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE);

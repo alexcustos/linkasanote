@@ -17,7 +17,6 @@ import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenter;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterModule;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudViewModel;
-import com.bytesforge.linkasanote.databinding.ActivityAddEditAccountBinding;
 import com.bytesforge.linkasanote.sync.operations.OperationsService;
 import com.bytesforge.linkasanote.utils.ActivityUtils;
 
@@ -35,8 +34,7 @@ public class AddEditAccountActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ActivityAddEditAccountBinding binding = DataBindingUtil.setContentView(
-                this, R.layout.activity_add_edit_account);
+        DataBindingUtil.setContentView(this, R.layout.activity_add_edit_account);
 
         // Fragment (View)
         NextcloudFragment nextcloudFragment = (NextcloudFragment) getSupportFragmentManager()

@@ -16,16 +16,20 @@ public interface DataSource {
     Observable<List<Link>> getLinks();
     Observable<Link> getLink(@NonNull String linkId);
     void saveLink(@NonNull Link link);
+    void deleteAllLinks();
 
     Observable<List<Note>> getNotes();
     Observable<Note> getNote(@NonNull String noteId);
     void saveNote(@NonNull Note note);
+    void deleteAllNotes();
 
     Observable<List<Favorite>> getFavorites();
     Observable<Favorite> getFavorite(@NonNull String favoriteId);
     void saveFavorite(@NonNull Favorite favorite);
+    void deleteAllFavorites();
 
     Observable<List<Tag>> getTags();
     Observable<Tag> getTag(@NonNull String tagId);
     void saveTag(@NonNull Tag tag);
+    void deleteAllTags();
 }

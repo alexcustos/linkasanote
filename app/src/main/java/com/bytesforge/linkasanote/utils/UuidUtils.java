@@ -30,4 +30,9 @@ public class UuidUtils {
 
         return new UUID(byteBuffer.getLong(), byteBuffer.getLong());
     }
+
+    public static boolean isKeyValidUuid(String key) {
+        // TODO: find a better solution
+        return key.length() == 22;
+    }
 }

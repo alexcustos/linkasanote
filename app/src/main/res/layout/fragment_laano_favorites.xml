@@ -1,9 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <TextView
-        android:id="@+id/text_view"
+    <data>
+        <import type="android.view.View" />
+
+        <variable name="viewModel"
+            type="com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel" />
+    </data>
+
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center" />
+        android:layout_height="match_parent">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_favorites"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:visibility="@{viewModel.favoritesEmpty ? View.GONE : View.VISIBLE}" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_gravity="center"
+            android:drawableTop="@drawable/ic_favorite"
+            android:text="@string/favorites_empty_title"
+            android:visibility="@{viewModel.favoritesEmpty ? View.VISIBLE : View.GONE}" />
+    </RelativeLayout>
 </layout>

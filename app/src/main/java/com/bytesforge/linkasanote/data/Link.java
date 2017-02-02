@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
-import com.bytesforge.linkasanote.data.source.local.PersistenceContract;
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.google.common.base.Objects;
 
 import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
@@ -60,40 +60,40 @@ public final class Link {
 
     public static Link from(Cursor cursor) {
         String id = cursor.getString(cursor.getColumnIndexOrThrow(
-                PersistenceContract.LinkEntry.COLUMN_NAME_ENTRY_ID));
+                LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID));
 
         long created = cursor.getLong(cursor.getColumnIndexOrThrow(
-                PersistenceContract.LinkEntry.COLUMN_NAME_CREATED));
+                LocalContract.LinkEntry.COLUMN_NAME_CREATED));
         long updated = cursor.getLong(cursor.getColumnIndexOrThrow(
-                PersistenceContract.LinkEntry.COLUMN_NAME_UPDATED));
+                LocalContract.LinkEntry.COLUMN_NAME_UPDATED));
 
         String value = cursor.getString(cursor.getColumnIndexOrThrow(
-                PersistenceContract.LinkEntry.COLUMN_NAME_VALUE));
+                LocalContract.LinkEntry.COLUMN_NAME_VALUE));
         String title = cursor.getString(cursor.getColumnIndexOrThrow(
-                PersistenceContract.LinkEntry.COLUMN_NAME_TITLE));
+                LocalContract.LinkEntry.COLUMN_NAME_TITLE));
 
         boolean disabled = cursor.getInt(cursor.getColumnIndexOrThrow(
-                PersistenceContract.LinkEntry.COLUMN_NAME_DISABLED)) == 1;
+                LocalContract.LinkEntry.COLUMN_NAME_DISABLED)) == 1;
         boolean deleted = cursor.getInt(cursor.getColumnIndexOrThrow(
-                PersistenceContract.LinkEntry.COLUMN_NAME_DELETED)) == 1;
+                LocalContract.LinkEntry.COLUMN_NAME_DELETED)) == 1;
         boolean synced = cursor.getInt(cursor.getColumnIndexOrThrow(
-                PersistenceContract.LinkEntry.COLUMN_NAME_SYNCED)) == 1;
+                LocalContract.LinkEntry.COLUMN_NAME_SYNCED)) == 1;
 
         return new Link(id, created, updated, value, title, disabled, deleted, synced);
     }
 
     public static Link from(ContentValues values) {
-        String id = values.getAsString(PersistenceContract.LinkEntry.COLUMN_NAME_ENTRY_ID);
+        String id = values.getAsString(LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID);
 
-        long created = values.getAsLong(PersistenceContract.LinkEntry.COLUMN_NAME_CREATED);
-        long updated = values.getAsLong(PersistenceContract.LinkEntry.COLUMN_NAME_UPDATED);
+        long created = values.getAsLong(LocalContract.LinkEntry.COLUMN_NAME_CREATED);
+        long updated = values.getAsLong(LocalContract.LinkEntry.COLUMN_NAME_UPDATED);
 
-        String value = values.getAsString(PersistenceContract.LinkEntry.COLUMN_NAME_VALUE);
-        String title = values.getAsString(PersistenceContract.LinkEntry.COLUMN_NAME_TITLE);
+        String value = values.getAsString(LocalContract.LinkEntry.COLUMN_NAME_VALUE);
+        String title = values.getAsString(LocalContract.LinkEntry.COLUMN_NAME_TITLE);
 
-        boolean disabled = values.getAsInteger(PersistenceContract.LinkEntry.COLUMN_NAME_DISABLED) == 1;
-        boolean deleted = values.getAsInteger(PersistenceContract.LinkEntry.COLUMN_NAME_DELETED) == 1;
-        boolean synced = values.getAsInteger(PersistenceContract.LinkEntry.COLUMN_NAME_SYNCED) == 1;
+        boolean disabled = values.getAsInteger(LocalContract.LinkEntry.COLUMN_NAME_DISABLED) == 1;
+        boolean deleted = values.getAsInteger(LocalContract.LinkEntry.COLUMN_NAME_DELETED) == 1;
+        boolean synced = values.getAsInteger(LocalContract.LinkEntry.COLUMN_NAME_SYNCED) == 1;
 
         return new Link(id, created, updated, value, title, disabled, deleted, synced);
     }
@@ -101,16 +101,16 @@ public final class Link {
     public ContentValues getContentValues() {
         ContentValues values = new ContentValues();
 
-        values.put(PersistenceContract.LinkEntry.COLUMN_NAME_ENTRY_ID, getId());
-        values.put(PersistenceContract.LinkEntry.COLUMN_NAME_CREATED, getCreated());
-        values.put(PersistenceContract.LinkEntry.COLUMN_NAME_UPDATED, getUpdated());
+        values.put(LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID, getId());
+        values.put(LocalContract.LinkEntry.COLUMN_NAME_CREATED, getCreated());
+        values.put(LocalContract.LinkEntry.COLUMN_NAME_UPDATED, getUpdated());
 
-        values.put(PersistenceContract.LinkEntry.COLUMN_NAME_VALUE, getValue());
-        values.put(PersistenceContract.LinkEntry.COLUMN_NAME_TITLE, getTitle());
+        values.put(LocalContract.LinkEntry.COLUMN_NAME_VALUE, getValue());
+        values.put(LocalContract.LinkEntry.COLUMN_NAME_TITLE, getTitle());
 
-        values.put(PersistenceContract.LinkEntry.COLUMN_NAME_DISABLED, isDisabled() ? 1 : 0);
-        values.put(PersistenceContract.LinkEntry.COLUMN_NAME_DELETED, isDeleted() ? 1 : 0);
-        values.put(PersistenceContract.LinkEntry.COLUMN_NAME_SYNCED, isSynced() ? 1 : 0);
+        values.put(LocalContract.LinkEntry.COLUMN_NAME_DISABLED, isDisabled() ? 1 : 0);
+        values.put(LocalContract.LinkEntry.COLUMN_NAME_DELETED, isDeleted() ? 1 : 0);
+        values.put(LocalContract.LinkEntry.COLUMN_NAME_SYNCED, isSynced() ? 1 : 0);
 
         return values;
     }
@@ -156,9 +156,9 @@ public final class Link {
         if (obj == null || getClass() != obj.getClass()) return false;
 
         Link link = (Link) obj;
-        return Objects.equal(id, link.id) &&
-                Objects.equal(value, link.value) &&
-                Objects.equal(title, link.title);
+        return Objects.equal(id, link.id)
+                && Objects.equal(value, link.value)
+                && Objects.equal(title, link.title);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.bytesforge.linkasanote.data.source.local;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Favorite;
@@ -12,12 +13,12 @@ import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.DataSource;
 import com.squareup.sqlbrite.BriteContentResolver;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Singleton;
 
 import rx.Observable;
-import rx.functions.Func1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -27,29 +28,20 @@ public class LocalDataSource implements DataSource {
     private ContentResolver contentResolver;
     private BriteContentResolver briteResolver;
 
-    @NonNull
-    private Func1<Cursor, Link> linkMapperFunction;
-
     public LocalDataSource(ContentResolver contentResolver, BriteContentResolver briteResolver) {
         this.contentResolver = contentResolver;
         this.briteResolver = briteResolver;
-
-        /*linkMapperFunction = new Func1<Cursor, Link>() {
-            @Override
-            public Link call(Cursor cursor) {
-                return Link.from(cursor);
-            }
-        };*/
-        linkMapperFunction = Link::from;
     }
+
+    // Links
 
     @Override
     public Observable<List<Link>> getLinks() {
         return briteResolver.createQuery(
-                PersistenceContract.LinkEntry.buildLinksUri(),
-                PersistenceContract.LinkEntry.LINK_COLUMNS,
+                LocalContract.LinkEntry.buildLinksUri(),
+                LocalContract.LinkEntry.LINK_COLUMNS,
                 null, null, null, false)
-            .mapToList(linkMapperFunction);
+                .mapToList(Link::from);
     }
 
     @Override
@@ -62,8 +54,15 @@ public class LocalDataSource implements DataSource {
         checkNotNull(link);
 
         ContentValues values = link.getContentValues();
-        contentResolver.insert(PersistenceContract.LinkEntry.buildLinksUri(), values);
+        contentResolver.insert(LocalContract.LinkEntry.buildLinksUri(), values);
     }
+
+    @Override
+    public void deleteAllLinks() {
+        contentResolver.delete(LocalContract.LinkEntry.buildLinksUri(), null, null);
+    }
+
+    // Notes
 
     @Override
     public Observable<List<Note>> getNotes() {
@@ -80,30 +79,139 @@ public class LocalDataSource implements DataSource {
     }
 
     @Override
+    public void deleteAllNotes() {
+        contentResolver.delete(LocalContract.NoteEntry.buildNotesUri(), null, null);
+    }
+
+    // Favorites
+
+    @Override
     public Observable<List<Favorite>> getFavorites() {
-        return null;
+        return briteResolver.createQuery(
+                LocalContract.FavoriteEntry.buildFavoritesUri(),
+                LocalContract.FavoriteEntry.FAVORITE_COLUMNS,
+                null, null, null, false)
+                .map(query -> {
+                    Cursor cursor = query.run();
+                    if (cursor == null) return null;
+
+                    List<Favorite> favorites = new ArrayList<>();
+                    int rowIdIndex = cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID);
+                    while (cursor.moveToNext()) {
+                        String rowId = cursor.getString(rowIdIndex);
+                        List<Tag> tags = readTags(
+                                LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId));
+                        favorites.add(Favorite.from(cursor, tags));
+                    }
+                    return favorites;
+                })
+                .first();
     }
 
     @Override
     public Observable<Favorite> getFavorite(@NonNull String favoriteId) {
-        return null;
+        checkNotNull(favoriteId);
+
+        return briteResolver.createQuery(
+                LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId),
+                LocalContract.FavoriteEntry.FAVORITE_COLUMNS,
+                null, null, null, false)
+                .map(query -> {
+                    Cursor cursor = query.run();
+                    if (cursor == null || cursor.getCount() <= 0) return null;
+                    else cursor.moveToFirst();
+
+                    String rowId = cursor.getString(
+                            cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID));
+                    List<Tag> tags = readTags(
+                            LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId));
+
+                    return Favorite.from(cursor, tags);
+                })
+                .first();
     }
 
     @Override
     public void saveFavorite(@NonNull Favorite favorite) {
+        checkNotNull(favorite);
+
+        ContentValues values = favorite.getContentValues();
+        Uri favoriteUri = contentResolver.insert(
+                LocalContract.FavoriteEntry.buildFavoritesUri(), values);
+
+        // OPTIMIZATION: just add "/tag" to favoriteUri
+        String rowId = LocalContract.FavoriteEntry.getFavoriteId(favoriteUri);
+        Uri uri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
+        List<Tag> tags = favorite.getTags();
+        if (tags != null) {
+            for (Tag tag : tags) {
+                saveBoundTag(tag, uri);
+            }
+        }
     }
+
+    @Override
+    public void deleteAllFavorites() {
+        contentResolver.delete(LocalContract.FavoriteEntry.buildFavoritesUri(), null, null);
+    }
+
+    // Tags
 
     @Override
     public Observable<List<Tag>> getTags() {
-        return null;
+        return briteResolver.createQuery(
+                LocalContract.TagEntry.buildTagsUri(),
+                LocalContract.TagEntry.TAG_COLUMNS,
+                null, null, null, false)
+                .mapToList(Tag::from)
+                .first(); // Otherwise observer not always be completed
     }
 
     @Override
-    public Observable<Tag> getTag(@NonNull String tagId) {
-        return null;
+    public Observable<Tag> getTag(@NonNull String tagName) {
+        checkNotNull(tagName);
+
+        return briteResolver.createQuery(
+                LocalContract.TagEntry.buildTagsUriWith(tagName),
+                LocalContract.TagEntry.TAG_COLUMNS,
+                null, null, null, false)
+                .mapToOneOrDefault(Tag::from, null);
     }
 
     @Override
     public void saveTag(@NonNull Tag tag) {
+        checkNotNull(tag);
+
+        saveBoundTag(tag, LocalContract.TagEntry.buildTagsUri());
+    }
+
+    private void saveBoundTag(@NonNull Tag tag, @NonNull Uri uri) {
+        checkNotNull(tag);
+        checkNotNull(uri);
+
+        ContentValues values = tag.getContentValues();
+        contentResolver.insert(uri, values);
+    }
+
+    @Override
+    public void deleteAllTags() {
+        contentResolver.delete(LocalContract.TagEntry.buildTagsUri(), null, null);
+    }
+
+    // TODO: Tag must be cached when read
+    private List<Tag> readTags(Uri uri) {
+        List<Tag> tags = new ArrayList<>();
+        Cursor tagsCursor = contentResolver.query(
+                uri, LocalContract.TagEntry.TAG_COLUMNS, null, null, null);
+        if (tagsCursor != null) {
+            try {
+                while (tagsCursor.moveToNext()) {
+                    tags.add(Tag.from(tagsCursor));
+                }
+            } finally {
+                tagsCursor.close();
+            }
+        }
+        return tags;
     }
 }

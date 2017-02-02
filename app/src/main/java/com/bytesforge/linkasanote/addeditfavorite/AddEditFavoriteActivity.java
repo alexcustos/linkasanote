@@ -1,0 +1,79 @@
+package com.bytesforge.linkasanote.addeditfavorite;
+
+import android.databinding.DataBindingUtil;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
+import android.support.test.espresso.IdlingResource;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+
+import com.bytesforge.linkasanote.LaanoApplication;
+import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.databinding.ActivityAddEditFavoriteBinding;
+import com.bytesforge.linkasanote.utils.ActivityUtils;
+import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
+
+import javax.inject.Inject;
+
+public class AddEditFavoriteActivity extends AppCompatActivity {
+
+    public static final int REQUEST_ADD_FAVORITE = 1;
+
+    @Inject
+    AddEditFavoritePresenter presenter;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ActivityAddEditFavoriteBinding binding =
+                DataBindingUtil.setContentView(this, R.layout.activity_add_edit_favorite);
+
+        String favoriteId = getIntent().getStringExtra(
+                AddEditFavoriteFragment.ARGUMENT_EDIT_FAVORITE_ID);
+
+        // Toolbar
+        setSupportActionBar(binding.toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+        }
+
+        // Fragment (View)
+        AddEditFavoriteFragment fragment = (AddEditFavoriteFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.content_frame);
+        if (fragment == null) {
+            fragment = AddEditFavoriteFragment.newInstance();
+
+            if (favoriteId == null) {
+                if (actionBar != null) actionBar.setTitle(R.string.add_edit_favorite_new_title);
+            } else {
+                if (actionBar != null) actionBar.setTitle(R.string.add_edit_favorite_edit_title);
+
+                Bundle bundle = new Bundle();
+                bundle.putString(AddEditFavoriteFragment.ARGUMENT_EDIT_FAVORITE_ID, favoriteId);
+                fragment.setArguments(bundle);
+            }
+            ActivityUtils.addFragmentToActivity(
+                    getSupportFragmentManager(), fragment, R.id.content_frame);
+        }
+
+        // Presenter
+        DaggerAddEditFavoriteComponent.builder()
+                .applicationComponent(((LaanoApplication) getApplication()).getApplicationComponent())
+                .addEditFavoritePresenterModule(new AddEditFavoritePresenterModule(fragment, favoriteId))
+                .build().inject(this);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
+    }
+
+    @VisibleForTesting
+    public IdlingResource getCountingIdlingResource() {
+        return EspressoIdlingResource.getIdlingResource();
+    }
+}

@@ -1,6 +1,5 @@
 package com.bytesforge.linkasanote.laano;
 
-import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -13,14 +12,12 @@ import java.util.List;
 
 public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
 
-    private final Context context;
     private List<BaseFragment> tabFragments;
     private int tabCount;
 
-    public LaanoFragmentPagerAdapter(FragmentManager fm, Context context) {
+    public LaanoFragmentPagerAdapter(FragmentManager fm) {
         super(fm);
 
-        this.context = context;
         tabFragments = new ArrayList<>();
         tabCount = tabFragments.size();
     }

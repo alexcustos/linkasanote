@@ -5,7 +5,7 @@ import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
-import com.bytesforge.linkasanote.data.source.local.PersistenceContract;
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.google.common.base.Objects;
 
 import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
@@ -51,34 +51,34 @@ public final class Note {
 
     public static Note from(Cursor cursor) {
         String id = cursor.getString(cursor.getColumnIndexOrThrow(
-                PersistenceContract.NoteEntry.COLUMN_NAME_ENTRY_ID));
+                LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID));
 
         long created = cursor.getLong(cursor.getColumnIndexOrThrow(
-                PersistenceContract.NoteEntry.COLUMN_NAME_CREATED));
+                LocalContract.NoteEntry.COLUMN_NAME_CREATED));
         long updated = cursor.getLong(cursor.getColumnIndexOrThrow(
-                PersistenceContract.NoteEntry.COLUMN_NAME_UPDATED));
+                LocalContract.NoteEntry.COLUMN_NAME_UPDATED));
 
         String excerpt = cursor.getString(cursor.getColumnIndexOrThrow(
-                PersistenceContract.NoteEntry.COLUMN_NAME_EXCERPT));
+                LocalContract.NoteEntry.COLUMN_NAME_EXCERPT));
 
         boolean deleted = cursor.getInt(cursor.getColumnIndexOrThrow(
-                PersistenceContract.NoteEntry.COLUMN_NAME_DELETED)) == 1;
+                LocalContract.NoteEntry.COLUMN_NAME_DELETED)) == 1;
         boolean synced = cursor.getInt(cursor.getColumnIndexOrThrow(
-                PersistenceContract.NoteEntry.COLUMN_NAME_SYNCED)) == 1;
+                LocalContract.NoteEntry.COLUMN_NAME_SYNCED)) == 1;
 
         return new Note(id, created, updated, excerpt, deleted, synced);
     }
 
     public static Note from(ContentValues values) {
-        String id = values.getAsString(PersistenceContract.NoteEntry.COLUMN_NAME_ENTRY_ID);
+        String id = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID);
 
-        long created = values.getAsLong(PersistenceContract.NoteEntry.COLUMN_NAME_CREATED);
-        long updated = values.getAsLong(PersistenceContract.NoteEntry.COLUMN_NAME_UPDATED);
+        long created = values.getAsLong(LocalContract.NoteEntry.COLUMN_NAME_CREATED);
+        long updated = values.getAsLong(LocalContract.NoteEntry.COLUMN_NAME_UPDATED);
 
-        String excerpt = values.getAsString(PersistenceContract.NoteEntry.COLUMN_NAME_EXCERPT);
+        String excerpt = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_EXCERPT);
 
-        boolean deleted = values.getAsInteger(PersistenceContract.NoteEntry.COLUMN_NAME_DELETED) == 1;
-        boolean synced = values.getAsInteger(PersistenceContract.NoteEntry.COLUMN_NAME_SYNCED) == 1;
+        boolean deleted = values.getAsInteger(LocalContract.NoteEntry.COLUMN_NAME_DELETED) == 1;
+        boolean synced = values.getAsInteger(LocalContract.NoteEntry.COLUMN_NAME_SYNCED) == 1;
 
         return new Note(id, created, updated, excerpt, deleted, synced);
     }
@@ -86,15 +86,15 @@ public final class Note {
     public ContentValues getContentValues() {
         ContentValues values = new ContentValues();
 
-        values.put(PersistenceContract.NoteEntry.COLUMN_NAME_ENTRY_ID, getId());
+        values.put(LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID, getId());
 
-        values.put(PersistenceContract.NoteEntry.COLUMN_NAME_CREATED, getCreated());
-        values.put(PersistenceContract.NoteEntry.COLUMN_NAME_UPDATED, getUpdated());
+        values.put(LocalContract.NoteEntry.COLUMN_NAME_CREATED, getCreated());
+        values.put(LocalContract.NoteEntry.COLUMN_NAME_UPDATED, getUpdated());
 
-        values.put(PersistenceContract.NoteEntry.COLUMN_NAME_EXCERPT, getExcerpt());
+        values.put(LocalContract.NoteEntry.COLUMN_NAME_EXCERPT, getExcerpt());
 
-        values.put(PersistenceContract.NoteEntry.COLUMN_NAME_DELETED, isDeleted() ? 1 : 0);
-        values.put(PersistenceContract.NoteEntry.COLUMN_NAME_SYNCED, isSynced() ? 1 : 0);
+        values.put(LocalContract.NoteEntry.COLUMN_NAME_DELETED, isDeleted() ? 1 : 0);
+        values.put(LocalContract.NoteEntry.COLUMN_NAME_SYNCED, isSynced() ? 1 : 0);
 
         return values;
     }
@@ -131,8 +131,8 @@ public final class Note {
         if (obj == null || getClass() != obj.getClass()) return false;
 
         Note note = (Note) obj;
-        return Objects.equal(id, note.id) &&
-                Objects.equal(excerpt, note.excerpt);
+        return Objects.equal(id, note.id)
+                && Objects.equal(excerpt, note.excerpt);
     }
 
     @Override

@@ -16,72 +16,98 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String BOOLEAN_TYPE = " INTEGER";
 
     private static final String SQL_CREATE_LINK_ENTRIES =
-            "CREATE TABLE " + PersistenceContract.LinkEntry.TABLE_NAME + " (" +
-                    PersistenceContract.LinkEntry._ID + INTEGER_TYPE + " PRIMARY_KEY," +
-                    PersistenceContract.LinkEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
-                    PersistenceContract.LinkEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
-                    PersistenceContract.LinkEntry.COLUMN_NAME_UPDATED + DATETIME_TYPE + "," +
-                    PersistenceContract.LinkEntry.COLUMN_NAME_VALUE + TEXT_TYPE + "," +
-                    PersistenceContract.LinkEntry.COLUMN_NAME_TITLE + TEXT_TYPE + "," +
-                    PersistenceContract.LinkEntry.COLUMN_NAME_DISABLED + BOOLEAN_TYPE + "," +
-                    PersistenceContract.LinkEntry.COLUMN_NAME_DELETED + BOOLEAN_TYPE + "," +
-                    PersistenceContract.LinkEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
+            "CREATE TABLE " + LocalContract.LinkEntry.TABLE_NAME + " (" +
+                    LocalContract.LinkEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
+                    LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
+                    LocalContract.LinkEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_UPDATED + DATETIME_TYPE + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_VALUE + TEXT_TYPE + " UNIQUE," +
+                    LocalContract.LinkEntry.COLUMN_NAME_TITLE + TEXT_TYPE + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_DISABLED + BOOLEAN_TYPE + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_DELETED + BOOLEAN_TYPE + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
             ");";
 
     private static final String SQL_CREATE_NOTE_ENTRIES =
-            "CREATE TABLE " + PersistenceContract.NoteEntry.TABLE_NAME + " (" +
-                    PersistenceContract.NoteEntry._ID + INTEGER_TYPE + " PRIMARY_KEY," +
-                    PersistenceContract.NoteEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
-                    PersistenceContract.NoteEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
-                    PersistenceContract.NoteEntry.COLUMN_NAME_UPDATED + DATETIME_TYPE + "," +
-                    PersistenceContract.NoteEntry.COLUMN_NAME_EXCERPT + TEXT_TYPE + "," +
-                    PersistenceContract.NoteEntry.COLUMN_NAME_DELETED + BOOLEAN_TYPE + "," +
-                    PersistenceContract.NoteEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
+            "CREATE TABLE " + LocalContract.NoteEntry.TABLE_NAME + " (" +
+                    LocalContract.NoteEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
+                    LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
+                    LocalContract.NoteEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
+                    LocalContract.NoteEntry.COLUMN_NAME_UPDATED + DATETIME_TYPE + "," +
+                    LocalContract.NoteEntry.COLUMN_NAME_EXCERPT + TEXT_TYPE + "," +
+                    LocalContract.NoteEntry.COLUMN_NAME_DELETED + BOOLEAN_TYPE + "," +
+                    LocalContract.NoteEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
             ");";
 
     private static final String SQL_CREATE_FAVORITE_ENTRIES =
-            "CREATE TABLE " + PersistenceContract.FavoriteEntry.TABLE_NAME + " (" +
-                    PersistenceContract.FavoriteEntry._ID + INTEGER_TYPE + " PRIMARY_KEY," +
-                    PersistenceContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
-                    PersistenceContract.FavoriteEntry.COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
-                    PersistenceContract.FavoriteEntry.COLUMN_NAME_NAME + TEXT_TYPE + "," +
-                    PersistenceContract.FavoriteEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
+            "CREATE TABLE " + LocalContract.FavoriteEntry.TABLE_NAME + " (" +
+                    LocalContract.FavoriteEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_NAME + TEXT_TYPE + " UNIQUE," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
             ");";
 
     private static final String SQL_CREATE_TAG_ENTRIES =
-            "CREATE TABLE " + PersistenceContract.TagEntry.TABLE_NAME + " (" +
-                    PersistenceContract.TagEntry._ID + INTEGER_TYPE + " PRIMARY_KEY," +
-                    PersistenceContract.TagEntry.COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
-                    PersistenceContract.TagEntry.COLUMN_NAME_NAME + TEXT_TYPE + " UNIQUE" +
+            "CREATE TABLE " + LocalContract.TagEntry.TABLE_NAME + " (" +
+                    LocalContract.TagEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
+                    LocalContract.TagEntry.COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
+                    LocalContract.TagEntry.COLUMN_NAME_NAME + TEXT_TYPE + " UNIQUE" +
             ");";
 
+    private static final String SQL_CREATE_LINK_NOTE_ENTRIES = sqlCreateTableManyToMany(
+            LocalContract.LinkEntry.TABLE_NAME, LocalContract.NoteEntry.TABLE_NAME);
+    private static final String SQL_CREATE_LINK_NOTE_TRIGGER = sqlCreateTriggerManyToMany(
+            LocalContract.LinkEntry.TABLE_NAME, LocalContract.NoteEntry.TABLE_NAME);
+
     private static final String SQL_CREATE_LINK_TAG_ENTRIES =
-            sqlCreateManyToManyEntries(
-                    PersistenceContract.LinkEntry.TABLE_NAME,
-                    PersistenceContract.TagEntry.TABLE_NAME);
+            sqlCreateTableManyToManyWithTags(LocalContract.LinkEntry.TABLE_NAME);
+    private static final String SQL_CREATE_LINK_TAG_TRIGGER =
+            sqlCreateTriggerManyToManyWithTags(LocalContract.LinkEntry.TABLE_NAME);
 
     private static final String SQL_CREATE_NOTE_TAG_ENTRIES =
-            sqlCreateManyToManyEntries(
-                    PersistenceContract.NoteEntry.TABLE_NAME,
-                    PersistenceContract.TagEntry.TABLE_NAME);
+            sqlCreateTableManyToManyWithTags(LocalContract.NoteEntry.TABLE_NAME);
+    private static final String SQL_CREATE_NOTE_TAG_TRIGGER =
+            sqlCreateTriggerManyToManyWithTags(LocalContract.NoteEntry.TABLE_NAME);
 
     private static final String SQL_CREATE_FAVORITE_TAG_ENTRIES =
-            sqlCreateManyToManyEntries(
-                    PersistenceContract.FavoriteEntry.TABLE_NAME,
-                    PersistenceContract.TagEntry.TABLE_NAME);
+            sqlCreateTableManyToManyWithTags(LocalContract.FavoriteEntry.TABLE_NAME);
+    private static final String SQL_CREATE_FAVORITE_TAG_TRIGGER =
+            sqlCreateTriggerManyToManyWithTags(LocalContract.FavoriteEntry.TABLE_NAME);
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
-    private static String sqlCreateManyToManyEntries(String leftTable, String rightTable) {
-        final String COLUMN_NAME_ADDED = "added";
+    private static String sqlCreateTableManyToManyWithTags(final String leftTable) {
+        return sqlCreateTableManyToMany(leftTable, LocalContract.TagEntry.TABLE_NAME);
+    }
+
+    private static String sqlCreateTableManyToMany(
+            final String leftTable, final String rightTable) {
+        final String LID = leftTable + BaseColumns._ID;
+        final String RID = rightTable + BaseColumns._ID;
 
         return "CREATE TABLE " + leftTable + "_" + rightTable + " (" +
-                    BaseColumns._ID + INTEGER_TYPE + " PRIMARY_KEY," +
-                    COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
-                    leftTable + "_id" + INTEGER_TYPE + "," +
-                    rightTable + "_id" + INTEGER_TYPE + ");";
+                BaseColumns._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
+                LocalContract.MANY_TO_MANY_COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
+                LID + INTEGER_TYPE + " REFERENCES " + leftTable + "(" + BaseColumns._ID + ")," +
+                RID + INTEGER_TYPE + " REFERENCES " + rightTable + "(" + BaseColumns._ID + ")," +
+                "UNIQUE (" + LID + "," + RID + ") ON CONFLICT IGNORE);";
+    }
+
+    private static String sqlCreateTriggerManyToManyWithTags(final String leftTable) {
+        return sqlCreateTriggerManyToMany(leftTable, LocalContract.TagEntry.TABLE_NAME);
+    }
+
+    private static String sqlCreateTriggerManyToMany(
+            final String leftTable, final String rightTable) {
+        final String LID = leftTable + BaseColumns._ID;
+        final String refTable = leftTable + "_" + rightTable;
+
+        return "CREATE TRIGGER " + refTable + "_delete AFTER DELETE ON " + leftTable +
+                " BEGIN DELETE FROM " + refTable +
+                " WHERE " + refTable + "." + LID + "=OLD." + BaseColumns._ID + "; END;";
     }
 
     @Override
@@ -92,12 +118,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_TAG_ENTRIES);
 
         db.execSQL(SQL_CREATE_LINK_TAG_ENTRIES);
+        db.execSQL(SQL_CREATE_LINK_TAG_TRIGGER);
         db.execSQL(SQL_CREATE_NOTE_TAG_ENTRIES);
+        db.execSQL(SQL_CREATE_NOTE_TAG_TRIGGER);
+        db.execSQL(SQL_CREATE_FAVORITE_TAG_TRIGGER);
         db.execSQL(SQL_CREATE_FAVORITE_TAG_ENTRIES);
+        db.execSQL(SQL_CREATE_LINK_NOTE_ENTRIES);
+        db.execSQL(SQL_CREATE_LINK_NOTE_TRIGGER);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IS EXISTS " + LocalContract.LinkEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IS EXISTS " + LocalContract.NoteEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IS EXISTS " + LocalContract.FavoriteEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IS EXISTS " + LocalContract.TagEntry.TABLE_NAME);
+
+        final String tagTable = LocalContract.TagEntry.TABLE_NAME;
+        final String linkRefTable = LocalContract.LinkEntry.TABLE_NAME + "_" + tagTable;
+        final String noteRefTable = LocalContract.NoteEntry.TABLE_NAME + "_" + tagTable;
+        final String favoriteRefTable = LocalContract.FavoriteEntry.TABLE_NAME + "_" + tagTable;
+        final String linkNoteRefTable = LocalContract.LinkEntry.TABLE_NAME + "_"
+                + LocalContract.NoteEntry.TABLE_NAME;
+
+        db.execSQL("DROP TABLE IS EXISTS " + linkRefTable);
+        db.execSQL("DROP TRIGGER IF EXISTS " + linkRefTable + "_delete");
+        db.execSQL("DROP TABLE IS EXISTS " + noteRefTable);
+        db.execSQL("DROP TRIGGER IF EXISTS " + noteRefTable + "_delete");
+        db.execSQL("DROP TABLE IS EXISTS " + favoriteRefTable);
+        db.execSQL("DROP TRIGGER IF EXISTS " + favoriteRefTable + "_delete");
+        db.execSQL("DROP TABLE IS EXISTS " + linkNoteRefTable);
+        db.execSQL("DROP TRIGGER IS EXISTS " + linkNoteRefTable + "_delete");
+
+        onCreate(db);
     }
 
     @Override

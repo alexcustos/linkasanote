@@ -4,15 +4,30 @@ import javax.inject.Inject;
 
 public final class LinksPresenter implements LinksContract.Presenter {
 
-    private final LinksContract.View linksView;
+    private final LinksContract.View view;
 
     @Inject
-    public LinksPresenter(LinksContract.View linksView) {
-        this.linksView = linksView;
+    public LinksPresenter(LinksContract.View view) {
+        this.view = view;
+    }
+
+    @Inject
+    void setupView() {
+        view.setPresenter(this);
     }
 
     @Override
-    public void start() {
+    public void subscribe() {
+
+    }
+
+    @Override
+    public void unsubscribe() {
+
+    }
+
+    @Override
+    public void addLink() {
 
     }
 }

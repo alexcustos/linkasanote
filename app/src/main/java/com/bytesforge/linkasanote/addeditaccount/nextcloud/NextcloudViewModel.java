@@ -52,7 +52,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     }
 
     @Override
-    public void setPresenter(NextcloudContract.Presenter presenter) {
+    public void setPresenter(@NonNull NextcloudContract.Presenter presenter) {
         this.presenter = checkNotNull(presenter);
     }
 

@@ -12,5 +12,6 @@ public interface LinksContract {
 
     interface Presenter extends BasePresenter {
 
+        void addLink();
     }
 }

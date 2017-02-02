@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.laano.links;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,10 +15,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class LinksFragment extends BaseFragment implements LinksContract.View {
 
     private LinksContract.Presenter presenter;
-
-    public LinksFragment() {
-        // Requires empty public constructor
-    }
 
     public static LinksFragment newInstance() {
         return new LinksFragment();
@@ -37,7 +34,19 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     }
 
     @Override
-    public void setPresenter(LinksContract.Presenter presenter) {
+    public void onResume() {
+        super.onResume();
+        presenter.subscribe();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        presenter.unsubscribe();
+    }
+
+    @Override
+    public void setPresenter(@NonNull LinksContract.Presenter presenter) {
         this.presenter = checkNotNull(presenter);
     }
 

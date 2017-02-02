@@ -12,5 +12,6 @@ public interface NotesContract {
 
     interface Presenter extends BasePresenter {
 
+        void addNote();
     }
 }
