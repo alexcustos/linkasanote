@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
+import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.v7.widget.Toolbar;
 
@@ -15,24 +16,27 @@ import static android.support.test.runner.lifecycle.Stage.RESUMED;
 
 public class TestUtils {
 
-    private static void rotateToLandscape(Activity activity) {
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+    private static void rotateToLandscape(ActivityTestRule<? extends Activity> activity) {
+        activity.getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
     }
 
-    private static void rotateToPortrait(Activity activity) {
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+    private static void rotateToPortrait(ActivityTestRule<? extends Activity> activity) {
+        activity.getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
-    public static void rotateOrientation(Activity activity) {
-        int currentOrientation = activity.getResources().getConfiguration().orientation;
+    public static void rotateOrientation(ActivityTestRule<? extends Activity> activity) {
+        int currentOrientation =
+                activity.getActivity().getResources().getConfiguration().orientation;
 
         switch (currentOrientation) {
             case Configuration.ORIENTATION_LANDSCAPE:
                 rotateToPortrait(activity);
                 break;
+
             case Configuration.ORIENTATION_PORTRAIT:
                 rotateToLandscape(activity);
                 break;
+
             default:
                 rotateToLandscape(activity);
         }

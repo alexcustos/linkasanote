@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.addeditfavorite;
 
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.BasePresenter;
@@ -12,7 +13,6 @@ public interface AddEditFavoriteContract {
 
     interface View extends BaseView<Presenter> {
 
-        void setViewModel(@NonNull AddEditFavoriteContract.ViewModel viewModel);
         void swapTagsCompletionViewItems(List<Tag> tags);
 
         boolean isActive();
@@ -23,10 +23,12 @@ public interface AddEditFavoriteContract {
 
         void setTagsCompletionView(@NonNull FavoriteTagsCompletionView completionView);
         void showEmptyFavoriteSnackbar();
+        void onSaveInstanceState(Bundle outState);
     }
 
     interface Presenter extends BasePresenter {
 
+        boolean isNewFavorite();
         void saveFavorite(String name, List<Tag> tags);
     }
 }

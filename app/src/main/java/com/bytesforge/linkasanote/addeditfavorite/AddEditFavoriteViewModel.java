@@ -6,6 +6,7 @@ import android.databinding.Bindable;
 import android.databinding.BindingAdapter;
 import android.databinding.ObservableBoolean;
 import android.databinding.ObservableField;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.text.Editable;
@@ -22,6 +23,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AddEditFavoriteViewModel extends BaseObservable implements
         AddEditFavoriteContract.ViewModel, TokenCompleteTextView.TokenListener<Tag> {
 
+    public static final String FAVORITE_NAME = "FAVORITE_NAME";
+    public static final String ADD_BUTTON = "ADD_BUTTON";
+    public static final String ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
+
     public final ObservableField<String> favoriteName = new ObservableField<>();
     public final ObservableBoolean addButton = new ObservableBoolean(false);
 
@@ -36,13 +41,18 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Bindable
     public SnackbarId snackbarId;
 
-    public AddEditFavoriteViewModel(Context context, boolean isNewFavorite) {
+    public AddEditFavoriteViewModel(Context context, Bundle savedInstanceState) {
         this.context = context;
-        if (isNewFavorite) {
-            addButtonText = R.string.add_edit_favorite_new_button_title;
-        } else {
-            addButtonText = R.string.add_edit_favorite_edit_button_title;
-        }
+        favoriteName.set(savedInstanceState.getString(FAVORITE_NAME));
+        addButton.set(savedInstanceState.getBoolean(ADD_BUTTON));
+        addButtonText = savedInstanceState.getInt(ADD_BUTTON_TEXT);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(FAVORITE_NAME, favoriteName.get());
+        outState.putBoolean(ADD_BUTTON, addButton.get());
+        outState.putInt(ADD_BUTTON_TEXT, addButtonText);
     }
 
     @Override

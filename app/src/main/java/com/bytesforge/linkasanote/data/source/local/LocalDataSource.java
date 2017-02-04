@@ -99,8 +99,10 @@ public class LocalDataSource implements DataSource {
                     int rowIdIndex = cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID);
                     while (cursor.moveToNext()) {
                         String rowId = cursor.getString(rowIdIndex);
-                        List<Tag> tags = readTags(
-                                LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId));
+                        Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
+                        List<Tag> tags = getTagsFrom(favoriteTagsUri)
+                                .toBlocking()
+                                .single();
                         favorites.add(Favorite.from(cursor, tags));
                     }
                     return favorites;
@@ -121,11 +123,12 @@ public class LocalDataSource implements DataSource {
                     if (cursor == null || cursor.getCount() <= 0) return null;
                     else cursor.moveToFirst();
 
-                    String rowId = cursor.getString(
-                            cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID));
-                    List<Tag> tags = readTags(
-                            LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId));
-
+                    int rowIndex = cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID);
+                    String rowId = cursor.getString(rowIndex);
+                    Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
+                    List<Tag> tags = getTagsFrom(favoriteTagsUri)
+                            .toBlocking()
+                            .single();
                     return Favorite.from(cursor, tags);
                 })
                 .first();
@@ -144,9 +147,7 @@ public class LocalDataSource implements DataSource {
         Uri uri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
         List<Tag> tags = favorite.getTags();
         if (tags != null) {
-            for (Tag tag : tags) {
-                saveBoundTag(tag, uri);
-            }
+            for (Tag tag : tags) saveTagTo(tag, uri);
         }
     }
 
@@ -159,12 +160,15 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public Observable<List<Tag>> getTags() {
+        return getTagsFrom(LocalContract.TagEntry.buildTagsUri());
+    }
+
+    private Observable<List<Tag>> getTagsFrom(@NonNull Uri uri) {
         return briteResolver.createQuery(
-                LocalContract.TagEntry.buildTagsUri(),
-                LocalContract.TagEntry.TAG_COLUMNS,
+                uri, LocalContract.TagEntry.TAG_COLUMNS,
                 null, null, null, false)
                 .mapToList(Tag::from)
-                .first(); // Otherwise observer not always be completed
+                .first(); // Otherwise observable not always be completed
     }
 
     @Override
@@ -182,10 +186,10 @@ public class LocalDataSource implements DataSource {
     public void saveTag(@NonNull Tag tag) {
         checkNotNull(tag);
 
-        saveBoundTag(tag, LocalContract.TagEntry.buildTagsUri());
+        saveTagTo(tag, LocalContract.TagEntry.buildTagsUri());
     }
 
-    private void saveBoundTag(@NonNull Tag tag, @NonNull Uri uri) {
+    private void saveTagTo(@NonNull Tag tag, @NonNull Uri uri) {
         checkNotNull(tag);
         checkNotNull(uri);
 
@@ -196,22 +200,5 @@ public class LocalDataSource implements DataSource {
     @Override
     public void deleteAllTags() {
         contentResolver.delete(LocalContract.TagEntry.buildTagsUri(), null, null);
-    }
-
-    // TODO: Tag must be cached when read
-    private List<Tag> readTags(Uri uri) {
-        List<Tag> tags = new ArrayList<>();
-        Cursor tagsCursor = contentResolver.query(
-                uri, LocalContract.TagEntry.TAG_COLUMNS, null, null, null);
-        if (tagsCursor != null) {
-            try {
-                while (tagsCursor.moveToNext()) {
-                    tags.add(Tag.from(tagsCursor));
-                }
-            } finally {
-                tagsCursor.close();
-            }
-        }
-        return tags;
     }
 }

@@ -59,6 +59,7 @@
     <string name="add_edit_favorite_edit_title">Edit Favorite</string>
     <string name="add_edit_favorite_name_hint">Name</string>
     <string name="add_edit_favorite_tags_hint">Tags</string>
+    <string name="add_edit_favorite_tags_validation_error">Only alphanumeric is allowed here, space is used as the separator</string>
     <string name="add_edit_favorite_new_button_title">Create</string>
     <string name="add_edit_favorite_edit_button_title">Update</string>
     <string name="add_edit_favorite_warning_empty">The favorite Name and least one Tag must be specified</string>

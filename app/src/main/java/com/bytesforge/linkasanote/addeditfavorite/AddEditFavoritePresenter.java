@@ -1,6 +1,5 @@
 package com.bytesforge.linkasanote.addeditfavorite;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -44,12 +43,8 @@ public final class AddEditFavoritePresenter implements AddEditFavoriteContract.P
     }
 
     @Inject
-    void setupView(Context context) {
-        viewModel = new AddEditFavoriteViewModel(context, isNewFavorite());
-        viewModel.setPresenter(this);
-
+    void setupView() {
         view.setPresenter(this);
-        view.setViewModel(viewModel);
     }
 
     @Override
@@ -100,7 +95,8 @@ public final class AddEditFavoritePresenter implements AddEditFavoriteContract.P
         }
     }
 
-    private boolean isNewFavorite() {
+    @Override
+    public boolean isNewFavorite() {
         return favoriteId == null;
     }
 

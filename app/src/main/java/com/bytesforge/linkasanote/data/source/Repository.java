@@ -163,23 +163,35 @@ public class Repository implements DataSource {
     public Observable<List<Favorite>> getFavorites() {
         if (cachedFavorites != null && !cacheIsDirty) {
             return Observable.from(cachedFavorites.values()).toList();
-        } else if (cachedFavorites == null) {
-            cachedFavorites = new LinkedHashMap<>();
         }
+
+        Observable<List<Favorite>> localFavorites = getAndCacheLocalFavorites();
 
         Observable<List<Favorite>> cloudFavorites =
                 Observable.just(Collections.<Favorite>emptyList());
 
-        Observable<List<Favorite>> localFavorites = getAndCacheLocalFavorites();
         return Observable.concat(localFavorites, cloudFavorites)
                 .filter(favorites -> !favorites.isEmpty())
                 .first();
     }
 
     private Observable<List<Favorite>> getAndCacheLocalFavorites() {
+        if (cachedFavorites == null) {
+            cachedFavorites = new LinkedHashMap<>();
+        }
+        if (cachedTags == null) {
+            cachedTags = new LinkedHashMap<>();
+        }
         return localDataSource.getFavorites()
                 .flatMap(favorites -> Observable.from(favorites)
-                        .doOnNext(favorite -> cachedFavorites.put(favorite.getId(), favorite))
+                        .doOnNext(favorite -> {
+                            // NOTE: cache invalidation required when all items are requested
+                            cachedFavorites.put(favorite.getId(), favorite);
+                            List<Tag> tags = favorite.getTags();
+                            if (tags != null) {
+                                for (Tag tag : tags) cachedTags.put(tag.getName(), tag);
+                            }
+                        })
                         .toList());
     }
 
@@ -199,9 +211,17 @@ public class Repository implements DataSource {
         if (cachedFavorites == null) {
             cachedFavorites = new LinkedHashMap<>();
         }
-
+        if (cachedTags == null) {
+            cachedTags = new LinkedHashMap<>();
+        }
         Observable<Favorite> localFavorite = localDataSource.getFavorite(favoriteId)
-                .doOnNext(favorite -> cachedFavorites.put(favoriteId, favorite))
+                .doOnNext(favorite -> {
+                    cachedFavorites.put(favoriteId, favorite);
+                    List<Tag> tags = favorite.getTags();
+                    if (tags != null) {
+                        for (Tag tag : tags) cachedTags.put(tag.getName(), tag);
+                    }
+                })
                 .first();
 
         Observable<Favorite> cloudFavorite =

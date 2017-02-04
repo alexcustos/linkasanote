@@ -24,6 +24,7 @@
             bind:snackbarId="@{viewModel.snackbarId}">
 
             <android.support.design.widget.TextInputLayout
+                android:id="@+id/favorite_name_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -39,6 +40,7 @@
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
+                android:id="@+id/favorite_tags_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -48,7 +50,6 @@
                     android:layout_height="wrap_content"
                     android:lineSpacingExtra="4dp"
                     android:gravity="top"
-                    android:layout_marginBottom="@dimen/last_field_bottom_margin"
                     android:hint="@string/add_edit_favorite_tags_hint"
                     android:inputType="text|textNoSuggestions|textMultiLine"
                     android:afterTextChanged="@{viewModel::afterFavoriteDataChanged}" />
@@ -60,6 +61,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:padding="@dimen/main_button_padding"
+                android:layout_marginTop="@dimen/main_button_top_margin"
                 android:text="@{viewModel.addButtonText}"
                 android:enabled="@{viewModel.addButton}"
                 android:onClick="@{() -> viewModel.onAddButtonClick()}" />

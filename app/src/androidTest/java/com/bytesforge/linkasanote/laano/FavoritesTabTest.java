@@ -40,7 +40,7 @@ import static org.hamcrest.Matchers.notNullValue;
 public class FavoritesTabTest {
 
     private final List<String> FAVORITE_NAMES;
-     // last space to complete tag and close suggestions
+    // last space to complete tag and close suggestions
     private final String TAGS = "first second third ";
 
     private Repository repository;
@@ -99,12 +99,6 @@ public class FavoritesTabTest {
     }
 
     @Test
-    public void clickAddFab_opensAddEditFavoriteActivity() {
-        onView(withId(R.id.fab_add)).perform(click());
-        onView(withId(R.id.favorite_name)).check(matches(isDisplayed()));
-    }
-
-    @Test
     public void addFavoritesToFavoritesRecyclerView() {
         repository.cacheIsDirty = true;
         for (String name : FAVORITE_NAMES) {
@@ -115,6 +109,7 @@ public class FavoritesTabTest {
 
     private void createFavorite(String name, String tags) {
         onView(withId(R.id.fab_add)).perform(click());
+        onView(withId(R.id.favorite_name)).check(matches(isDisplayed()));
 
         onView(withId(R.id.favorite_name)).perform(typeText(name), closeSoftKeyboard());
         onView(withId(R.id.favorite_tags)).perform(typeText(tags), closeSoftKeyboard());
