@@ -1,5 +1,8 @@
 package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
+import android.accounts.Account;
+import android.support.annotation.Nullable;
+
 import dagger.Module;
 import dagger.Provides;
 
@@ -7,13 +10,13 @@ import dagger.Provides;
 public class NextcloudPresenterModule {
 
     private final NextcloudContract.View view;
-    private final NextcloudContract.ViewModel viewModel;
 
-    public NextcloudPresenterModule(
-            NextcloudContract.View view,
-            NextcloudContract.ViewModel viewModel) {
+    @Nullable
+    private final Account account;
+
+    public NextcloudPresenterModule(NextcloudContract.View view, @Nullable Account account) {
         this.view = view;
-        this.viewModel = viewModel;
+        this.account = account;
     }
 
     @Provides
@@ -22,7 +25,9 @@ public class NextcloudPresenterModule {
     }
 
     @Provides
-    NextcloudContract.ViewModel provideNextcloudContractViewModel() {
-        return viewModel;
+    @Nullable
+    @NextcloudAccount
+    Account provideAccount() {
+        return account;
     }
 }

@@ -23,9 +23,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AddEditFavoriteViewModel extends BaseObservable implements
         AddEditFavoriteContract.ViewModel, TokenCompleteTextView.TokenListener<Tag> {
 
-    public static final String FAVORITE_NAME = "FAVORITE_NAME";
-    public static final String ADD_BUTTON = "ADD_BUTTON";
-    public static final String ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
+    public static final String STATE_FAVORITE_NAME = "FAVORITE_NAME";
+    public static final String STATE_ADD_BUTTON = "ADD_BUTTON";
+    public static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
 
     public final ObservableField<String> favoriteName = new ObservableField<>();
     public final ObservableBoolean addButton = new ObservableBoolean(false);
@@ -41,18 +41,22 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Bindable
     public SnackbarId snackbarId;
 
-    public AddEditFavoriteViewModel(Context context, Bundle savedInstanceState) {
-        this.context = context;
-        favoriteName.set(savedInstanceState.getString(FAVORITE_NAME));
-        addButton.set(savedInstanceState.getBoolean(ADD_BUTTON));
-        addButtonText = savedInstanceState.getInt(ADD_BUTTON_TEXT);
+    public AddEditFavoriteViewModel(@NonNull Context context, @NonNull Bundle savedInstanceState) {
+        this.context = checkNotNull(context);
+        checkNotNull(savedInstanceState);
+
+        favoriteName.set(savedInstanceState.getString(STATE_FAVORITE_NAME));
+        addButton.set(savedInstanceState.getBoolean(STATE_ADD_BUTTON));
+        addButtonText = savedInstanceState.getInt(STATE_ADD_BUTTON_TEXT);
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putString(FAVORITE_NAME, favoriteName.get());
-        outState.putBoolean(ADD_BUTTON, addButton.get());
-        outState.putInt(ADD_BUTTON_TEXT, addButtonText);
+    public void loadInstanceState(@NonNull Bundle outState) {
+        checkNotNull(outState);
+
+        outState.putString(STATE_FAVORITE_NAME, favoriteName.get());
+        outState.putBoolean(STATE_ADD_BUTTON, addButton.get());
+        outState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
     }
 
     @Override

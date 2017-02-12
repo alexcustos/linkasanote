@@ -1,12 +1,21 @@
 package com.bytesforge.linkasanote;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
+import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.UiSelector;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 
 import java.util.Collection;
@@ -32,11 +41,9 @@ public class TestUtils {
             case Configuration.ORIENTATION_LANDSCAPE:
                 rotateToPortrait(activity);
                 break;
-
             case Configuration.ORIENTATION_PORTRAIT:
                 rotateToLandscape(activity);
                 break;
-
             default:
                 rotateToLandscape(activity);
         }
@@ -67,5 +74,41 @@ public class TestUtils {
         });
 
         return resumedActivity[0];
+    }
+
+    public static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Cannot execute Thread.sleep()");
+        }
+    }
+
+    // Permissions
+
+    private static final int PERMISSION_DIALOG_DELAY = 3000;
+    private static final int GRANT_BUTTON_INDEX = 1;
+
+    private static boolean hasNeededPermission(String permissionNeeded) {
+        Context context = InstrumentationRegistry.getTargetContext();
+        int permissionStatus = ContextCompat.checkSelfPermission(context, permissionNeeded);
+        return permissionStatus == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public static void allowPermissionIfNeeded(String permissionNeeded) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                    && !hasNeededPermission(permissionNeeded)) {
+                sleep(PERMISSION_DIALOG_DELAY);
+                UiDevice device = UiDevice.getInstance(getInstrumentation());
+                UiObject allowsPermissions = device.findObject(new UiSelector()
+                        .clickable(true).checkable(false).index(GRANT_BUTTON_INDEX));
+                if (allowsPermissions.exists()) {
+                    allowsPermissions.click();
+                }
+            }
+        } catch (UiObjectNotFoundException e) {
+            System.out.println("There is not permissions dialog to interact with");
+        }
     }
 }

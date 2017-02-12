@@ -2,10 +2,11 @@
 
 ext {
     SDK_VERSION = 25
-    MIN_SDK_VERSION = 21
+    MIN_SDK_VERSION = 23
     BUILD_TOOL_VERSION = '25.0.2'
 
     supportLibraryVersion = '25.1.1'
+    constraintLayoutVersion = '1.0.0-beta5'
     junitVersion = '4.12'
     espressoVersion = '2.2.2'
     guavaVersion = '18.0'
@@ -18,7 +19,8 @@ ext {
     rxjavaVersion = '1.1.6'
     rxandroidVersion = '1.2.1'
     sqlbriteVersion = '1.0.0'
-    androidLibraryVersion = '1.0.9'
+    nextcloudLibraryVersion = '1.0.11'
+    uiAutomatorVersion = '2.1.2'
 }
 
 buildscript {

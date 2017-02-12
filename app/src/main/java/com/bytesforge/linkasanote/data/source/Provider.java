@@ -143,40 +143,33 @@ public class Provider extends ContentProvider {
             case LINK:
                 tableName = LocalContract.LinkEntry.TABLE_NAME;
                 break;
-
             case LINK_ITEM:
                 tableName = LocalContract.LinkEntry.TABLE_NAME;
                 selection = LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID + " = ?";
                 selectionArgs = new String[]{LocalContract.LinkEntry.getLinkId(uri)};
                 break;
-
             case FAVORITE:
                 tableName = LocalContract.FavoriteEntry.TABLE_NAME;
                 break;
-
             case FAVORITE_ITEM:
                 tableName = LocalContract.FavoriteEntry.TABLE_NAME;
                 selection = LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + " = ?";
                 selectionArgs = new String[]{LocalContract.FavoriteEntry.getFavoriteId(uri)};
                 break;
-
             case FAVORITE_TAG:
                 String favoriteTable = LocalContract.FavoriteEntry.TABLE_NAME;
                 tableName = sqlJoinManyToManyWithTags(favoriteTable);
                 selection = favoriteTable + LocalContract.FavoriteEntry._ID + " = ?";
                 selectionArgs = new String[]{LocalContract.FavoriteEntry.getFavoriteId(uri)};
                 break;
-
             case TAG:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
                 break;
-
             case TAG_ITEM:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
                 selection = LocalContract.TagEntry.COLUMN_NAME_NAME + " = ?";
                 selectionArgs = new String[]{LocalContract.TagEntry.getTagId(uri)};
                 break;
-
             default:
                 throw new UnsupportedOperationException("Unknown query uri [" + uri + "]");
 
@@ -215,7 +208,6 @@ public class Provider extends ContentProvider {
                     db.endTransaction();
                 }
                 break;
-
             case FAVORITE:
                 db.beginTransaction();
                 try {
@@ -229,7 +221,6 @@ public class Provider extends ContentProvider {
                     db.endTransaction();
                 }
                 break;
-
             case FAVORITE_TAG:
                 db.beginTransaction();
                 try {
@@ -243,7 +234,6 @@ public class Provider extends ContentProvider {
                     db.endTransaction();
                 }
                 break;
-
             default:
                 throw new UnsupportedOperationException("Unknown insert uri [" + uri + "]");
         }
@@ -261,19 +251,15 @@ public class Provider extends ContentProvider {
             case LINK:
                 tableName = LocalContract.LinkEntry.TABLE_NAME;
                 break;
-
             case NOTE:
                 tableName = LocalContract.NoteEntry.TABLE_NAME;
                 break;
-
             case FAVORITE:
                 tableName = LocalContract.FavoriteEntry.TABLE_NAME;
                 break;
-
             case TAG:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
                 break;
-
             default:
                 throw new UnsupportedOperationException("Unknown delete uri [" + uri + "]");
         }
@@ -294,7 +280,6 @@ public class Provider extends ContentProvider {
             final @NonNull SQLiteDatabase db,
             final String leftTable, final String leftId, final ContentValues values) {
         checkNotNull(db);
-
         // Tag
         final String tagTable = LocalContract.TagEntry.TABLE_NAME;
         final String tagNameField = LocalContract.TagEntry.COLUMN_NAME_NAME;
@@ -319,7 +304,6 @@ public class Provider extends ContentProvider {
                         tagNameValue, leftTable, leftId));
             }
         }
-
         // Reference
         final String refTable = leftTable + "_" + tagTable;
 

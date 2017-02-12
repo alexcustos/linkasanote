@@ -17,6 +17,8 @@ import rx.Observer;
 import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public final class AddEditFavoritePresenter implements AddEditFavoriteContract.Presenter {
 
     private final AddEditFavoriteContract.View view;
@@ -45,6 +47,11 @@ public final class AddEditFavoritePresenter implements AddEditFavoriteContract.P
     @Inject
     void setupView() {
         view.setPresenter(this);
+    }
+
+    @Override
+    public void setViewModel(@NonNull AddEditFavoriteContract.ViewModel viewModel) {
+        this.viewModel = checkNotNull(viewModel);
     }
 
     @Override

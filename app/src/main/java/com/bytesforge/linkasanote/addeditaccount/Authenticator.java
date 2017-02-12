@@ -42,10 +42,9 @@ public class Authenticator extends AbstractAccountAuthenticator {
     }
 
     private void setIntentFlags(Intent intent) {
-        intent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK |
-                Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS |
-                Intent.FLAG_FROM_BACKGROUND);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+                | Intent.FLAG_FROM_BACKGROUND);
     }
 
     @Override

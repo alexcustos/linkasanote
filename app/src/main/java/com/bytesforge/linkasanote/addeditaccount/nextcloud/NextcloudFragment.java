@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
 import android.Manifest;
+import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -12,7 +13,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.Snackbar;
-import android.support.v13.app.FragmentCompat;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -22,21 +22,26 @@ import android.view.ViewGroup;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.databinding.FragmentAddEditAccountNextcloudBinding;
+import com.owncloud.android.lib.common.OwnCloudAccount;
+import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
+import com.owncloud.android.lib.common.accounts.AccountUtils;
 
+import org.jetbrains.annotations.NotNull;
+
+import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
+import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountUsername;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class NextcloudFragment extends Fragment
-        implements NextcloudContract.View, FragmentCompat.OnRequestPermissionsResultCallback {
+public class NextcloudFragment extends Fragment implements NextcloudContract.View {
 
     private static final String TAG = NextcloudFragment.class.getSimpleName();
-
-    private static final int REQUEST_GET_ACCOUNTS = 0;
-    private static final String PERMISSION_GET_ACCOUNTS = Manifest.permission.GET_ACCOUNTS;
-    private static String[] PERMISSIONS_GET_ACCOUNTS = {PERMISSION_GET_ACCOUNTS};
+    public static final String ARGUMENT_EDIT_ACCOUNT_ACCOUNT = "EDIT_ACCOUNT_ACCOUNT";
 
     private AccountAuthenticatorResponse accountAuthenticatorResponse = null;
-    private FragmentAddEditAccountNextcloudBinding binding;
     private NextcloudContract.Presenter presenter;
+    private NextcloudContract.ViewModel viewModel;
+    private FragmentAddEditAccountNextcloudBinding binding;
+    private AccountManager accountManager;
 
     public static NextcloudFragment newInstance() {
         return new NextcloudFragment();
@@ -64,11 +69,6 @@ public class NextcloudFragment extends Fragment
         this.presenter = checkNotNull(presenter);
     }
 
-    @VisibleForTesting
-    NextcloudContract.Presenter getPresenter() {
-        return presenter;
-    }
-
     @Nullable
     @Override
     public View onCreateView(
@@ -76,9 +76,23 @@ public class NextcloudFragment extends Fragment
             @Nullable Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_add_edit_account_nextcloud, container, false);
-        binding.setViewModel((NextcloudViewModel) presenter.getViewModel());
+        accountManager = AccountManager.get(getContext());
+        viewModel = new NextcloudViewModel(getContext(), savedInstanceState);
+        viewModel.setPresenter(presenter);
+        presenter.setViewModel(viewModel);
+        binding.setViewModel((NextcloudViewModel) viewModel);
+        if (savedInstanceState == null && !presenter.isNewAccount()) {
+            // NOTE: here because must be intact on orientation change
+            presenter.populateAccount();
+        }
 
         return binding.getRoot();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        viewModel.loadInstanceState(outState);
     }
 
     @Override
@@ -92,8 +106,7 @@ public class NextcloudFragment extends Fragment
         }
     }
 
-    @Override
-    public void finishActivity(@NonNull Intent result) {
+    private void finishActivity(@NonNull Intent result) {
         checkNotNull(result);
         FragmentActivity activity = getActivity();
 
@@ -105,7 +118,8 @@ public class NextcloudFragment extends Fragment
         activity.finish();
     }
 
-    private void finishActivity() {
+    @Override
+    public void cancelActivity() {
         FragmentActivity activity = getActivity();
 
         if (accountAuthenticatorResponse != null) {
@@ -118,46 +132,93 @@ public class NextcloudFragment extends Fragment
         activity.finish();
     }
 
-    // Get Accounts Permission
-
-    @Override
-    public void checkGetAccountsPermission() {
-        if (ActivityCompat.checkSelfPermission(getContext(), PERMISSION_GET_ACCOUNTS)
+    public Account[] getAccountsWithPermissionCheck() {
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.GET_ACCOUNTS)
                 != PackageManager.PERMISSION_GRANTED) {
-            requestGetAccountsPermission();
-        } else {
-            AccountManager accountManager = AccountManager.get(getContext());
-            presenter.onGetAccountsPermissionGranted(accountManager);
+            // NOTE: if permission have been revoked when the activity run (seems it's impossible)
+            return null;
         }
-    }
-
-    private void requestGetAccountsPermission() {
-        if (ActivityCompat.shouldShowRequestPermissionRationale(
-                getActivity(), PERMISSION_GET_ACCOUNTS)) {
-            Snackbar.make(binding.snackbarLayout,
-                    R.string.add_edit_account_nextcloud_permission_get_accounts,
-                    Snackbar.LENGTH_INDEFINITE)
-                    .setAction(R.string.add_edit_account_nextcloud_ok, (view) -> {
-                        requestPermissions(PERMISSIONS_GET_ACCOUNTS, REQUEST_GET_ACCOUNTS);
-                    }).show();
-        } else {
-            requestPermissions(PERMISSIONS_GET_ACCOUNTS, REQUEST_GET_ACCOUNTS);
-        }
+        return accountManager.getAccountsByType(getAccountType());
     }
 
     @Override
-    public void onRequestPermissionsResult(
-            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_GET_ACCOUNTS) {
-            if (grantResults.length == 1
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                AccountManager accountManager = AccountManager.get(getContext());
-                presenter.onGetAccountsPermissionGranted(accountManager);
-            } else {
-                presenter.onGetAccountsPermissionDenied();
-            }
-        } else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    public boolean addAccount(
+            @NonNull Account account, @NonNull String password, @NonNull Bundle data) {
+        checkNotNull(account);
+        checkNotNull(password);
+        checkNotNull(data);
+        // TODO: check why account can't be added implicitly
+        return accountManager.addAccountExplicitly(account, password, data);
+    }
+
+    @Override
+    public void updateAccount(
+            @NonNull Account account, @NonNull String password, @NotNull Bundle data)
+            throws AccountUtils.AccountNotFoundException {
+        checkNotNull(account);
+        checkNotNull(password);
+        checkNotNull(data);
+        for (String key : data.keySet()) {
+            Object value = data.get(key);
+            accountManager.setUserData(account, key, value == null ? null : value.toString());
         }
+        accountManager.setPassword(account, password);
+        // NOTE: remove managed clients for this account to enforce creation with fresh credentials
+        OwnCloudAccount ownCloudAccount = new OwnCloudAccount(account, getContext());
+        OwnCloudClientManagerFactory.getDefaultSingleton().removeClientFor(ownCloudAccount);
+    }
+
+    @Override
+    public void finishActivity(
+            @NonNull Account account, @NonNull String password, @NonNull Bundle data) {
+        checkNotNull(account);
+        checkNotNull(password);
+        checkNotNull(data);
+        final Intent intent = new Intent();
+        intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, account.type);
+        intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, account.name);
+        intent.putExtra(AccountManager.KEY_PASSWORD, password);
+        intent.putExtra(AccountManager.KEY_USERDATA, data);
+
+        finishActivity(intent);
+    }
+
+    @Override
+    public Bundle getAccountState(@NonNull Account account) {
+        checkNotNull(account);
+        Bundle state = new Bundle();
+        state.putBoolean(NextcloudViewModel.STATE_SERVER_URL, false);
+        state.putString(NextcloudViewModel.STATE_SERVER_URL_TEXT,
+                accountManager.getUserData(account, AccountUtils.Constants.KEY_OC_BASE_URL));
+        state.putBoolean(NextcloudViewModel.STATE_ACCOUNT_USERNAME, false);
+        state.putString(NextcloudViewModel.STATE_ACCOUNT_USERNAME_TEXT,
+                getAccountUsername(account.name));
+        state.putString(NextcloudViewModel.STATE_ACCOUNT_PASSWORD_TEXT,
+                accountManager.getPassword(account));
+        return state;
+    }
+
+    @Override
+    public void showAccountDoesNotExistSnackbar() {
+        Snackbar.make(binding.snackbarLayout,
+                R.string.add_edit_account_nextcloud_warning_no_account, Snackbar.LENGTH_LONG)
+                .addCallback(new Snackbar.Callback() {
+
+                    @Override
+                    public void onDismissed(Snackbar transientBottomBar, int event) {
+                        super.onDismissed(transientBottomBar, event);
+                        cancelActivity();
+                    }
+                }).show();
+    }
+
+    @VisibleForTesting
+    public void setAccountManager(AccountManager accountManager) {
+        this.accountManager = accountManager;
+    }
+
+    @VisibleForTesting
+    NextcloudContract.Presenter getPresenter() {
+        return presenter;
     }
 }

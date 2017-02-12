@@ -25,6 +25,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     private FavoritesContract.Presenter presenter;
     private FavoritesContract.ViewModel viewModel;
     private FavoritesAdapter adapter;
+
     public static FavoritesFragment newInstance() {
         return new FavoritesFragment();
     }
@@ -59,13 +60,11 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     @Nullable
     @Override
     public View onCreateView(
-            LayoutInflater inflater,
-            @Nullable ViewGroup container,
+            LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         FragmentLaanoFavoritesBinding binding =
                 FragmentLaanoFavoritesBinding.inflate(inflater, container, false);
         binding.setViewModel((FavoritesViewModel) viewModel);
-
         // RecyclerView
         RecyclerView rvFavorites = binding.rvFavorites;
         if (rvFavorites != null) {

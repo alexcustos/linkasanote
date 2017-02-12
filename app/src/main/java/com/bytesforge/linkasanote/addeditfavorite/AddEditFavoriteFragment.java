@@ -79,13 +79,14 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
         if (savedInstanceState == null) {
             // Default state
             savedInstanceState = new Bundle();
-            savedInstanceState.putInt(AddEditFavoriteViewModel.ADD_BUTTON_TEXT,
+            savedInstanceState.putInt(AddEditFavoriteViewModel.STATE_ADD_BUTTON_TEXT,
                     presenter.isNewFavorite()
                             ? R.string.add_edit_favorite_new_button_title
                             : R.string.add_edit_favorite_edit_button_title);
         }
         viewModel = new AddEditFavoriteViewModel(getContext(), savedInstanceState);
         viewModel.setPresenter(presenter);
+        presenter.setViewModel(viewModel);
         binding.setViewModel((AddEditFavoriteViewModel) viewModel);
         // FavoriteTags
         final FavoriteTagsCompletionView completionView = binding.favoriteTags;
@@ -146,7 +147,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        viewModel.onSaveInstanceState(outState);
+        viewModel.loadInstanceState(outState);
     }
 
     @Override

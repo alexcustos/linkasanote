@@ -6,7 +6,9 @@ import android.databinding.Bindable;
 import android.databinding.BindingAdapter;
 import android.databinding.ObservableBoolean;
 import android.databinding.ObservableField;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.text.Editable;
 import android.view.View;
@@ -15,23 +17,38 @@ import android.widget.TextView;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class NextcloudViewModel extends BaseObservable implements NextcloudContract.ViewModel {
 
-    public final ObservableField<String> serverUrl = new ObservableField<>();
-    public final ObservableField<String> accountUsername = new ObservableField<>();
-    public final ObservableField<String> accountPassword = new ObservableField<>();
+    public static final String STATE_SERVER_URL = "SERVER_URL";
+    public static final String STATE_SERVER_URL_TEXT = "SERVER_URL_TEXT";
+    public static final String STATE_ACCOUNT_USERNAME = "ACCOUNT_USERNAME";
+    public static final String STATE_ACCOUNT_USERNAME_TEXT = "ACCOUNT_USERNAME_TEXT";
+    public static final String STATE_ACCOUNT_PASSWORD_TEXT = "ACCOUNT_PASSWORD_TEXT";
+    public static final String STATE_REFRESH_BUTTON = "REFRESH_BUTTON";
+    public static final String STATE_LOGIN_BUTTON = "LOGIN_BUTTON";
+    public static final String STATE_SERVER_STATUS_ICON = "SERVER_STATUS_ICON";
+    public static final String STATE_AUTH_STATUS_ICON = "AUTH_STATUS_ICON";
+    public static final String STATE_SERVER_STATUS_TEXT = "SERVER_STATUS_TEXT";
+    public static final String STATE_AUTH_STATUS_TEXT = "AUTH_STATUS_TEXT";
 
+    public final ObservableField<String> serverUrlText = new ObservableField<>();
+    public final ObservableField<String> accountUsernameText = new ObservableField<>();
+    public final ObservableField<String> accountPasswordText = new ObservableField<>();
+
+    public final ObservableBoolean serverUrl = new ObservableBoolean(true);
+    public final ObservableBoolean accountUsername = new ObservableBoolean(true);
     public final ObservableBoolean refreshButton = new ObservableBoolean(false);
     public final ObservableBoolean loginButton = new ObservableBoolean(false);
 
     private Context context;
     private NextcloudContract.Presenter presenter;
 
-    public enum SnackbarId {NORMALIZED_URL};
+    public enum SnackbarId {NORMALIZED_URL, SOMETHING_WRONG};
 
     @Bindable
     public int serverStatusIcon = 0;
@@ -47,8 +64,67 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
 
     private boolean isServerUrlHasFocus = false;
 
-    public NextcloudViewModel(Context context) {
-        this.context = context;
+    public NextcloudViewModel(@NonNull Context context, @Nullable Bundle savedInstanceState) {
+        this.context = checkNotNull(context);
+
+        if (savedInstanceState == null) {
+            applyInstanceState(getDefaultInstanceState());
+        } else {
+            applyInstanceState(savedInstanceState);
+        }
+    }
+
+    public void loadInstanceState(@NonNull Bundle outState) {
+        checkNotNull(outState);
+
+        outState.putBoolean(STATE_SERVER_URL, serverUrl.get());
+        outState.putString(STATE_SERVER_URL_TEXT, serverUrlText.get());
+        outState.putBoolean(STATE_ACCOUNT_USERNAME, accountUsername.get());
+        outState.putString(STATE_ACCOUNT_USERNAME_TEXT, accountUsernameText.get());
+        outState.putString(STATE_ACCOUNT_PASSWORD_TEXT, accountPasswordText.get());
+        outState.putBoolean(STATE_REFRESH_BUTTON, refreshButton.get());
+        outState.putBoolean(STATE_LOGIN_BUTTON, loginButton.get());
+        outState.putInt(STATE_SERVER_STATUS_ICON, serverStatusIcon);
+        outState.putInt(STATE_AUTH_STATUS_ICON, authStatusIcon);
+        outState.putInt(STATE_SERVER_STATUS_TEXT, serverStatusText);
+        outState.putInt(STATE_AUTH_STATUS_TEXT, authStatusText);
+    }
+
+    @Override
+    public void applyInstanceState(@NonNull Bundle state) {
+        checkNotNull(state);
+
+        serverUrl.set(state.getBoolean(STATE_SERVER_URL));
+        serverUrlText.set(state.getString(STATE_SERVER_URL_TEXT));
+        accountUsername.set(state.getBoolean(STATE_ACCOUNT_USERNAME));
+        accountUsernameText.set(state.getString(STATE_ACCOUNT_USERNAME_TEXT));
+        accountPasswordText.set(state.getString(STATE_ACCOUNT_PASSWORD_TEXT));
+        refreshButton.set(state.getBoolean(STATE_REFRESH_BUTTON));
+        loginButton.set(state.getBoolean(STATE_LOGIN_BUTTON));
+        serverStatusIcon = state.getInt(STATE_SERVER_STATUS_ICON);
+        authStatusIcon = state.getInt(STATE_AUTH_STATUS_ICON);
+        serverStatusText = state.getInt(STATE_SERVER_STATUS_TEXT);
+        authStatusText = state.getInt(STATE_AUTH_STATUS_TEXT);
+
+        notifyChange();
+    }
+
+    private Bundle getDefaultInstanceState() {
+        Bundle defaultState = new Bundle();
+
+        defaultState.putBoolean(STATE_SERVER_URL, true);
+        defaultState.putString(STATE_SERVER_URL_TEXT, "");
+        defaultState.putBoolean(STATE_ACCOUNT_USERNAME, true);
+        defaultState.putString(STATE_ACCOUNT_USERNAME_TEXT, "");
+        defaultState.putString(STATE_ACCOUNT_PASSWORD_TEXT, "");
+        defaultState.putBoolean(STATE_REFRESH_BUTTON, false);
+        defaultState.putBoolean(STATE_LOGIN_BUTTON, false);
+        defaultState.putInt(STATE_SERVER_STATUS_ICON, 0);
+        defaultState.putInt(STATE_AUTH_STATUS_ICON, 0);
+        defaultState.putInt(STATE_SERVER_STATUS_TEXT, 0);
+        defaultState.putInt(STATE_AUTH_STATUS_TEXT, 0);
+
+        return defaultState;
     }
 
     @Override
@@ -72,6 +148,11 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
             case NORMALIZED_URL:
                 Snackbar.make(view,
                         R.string.add_edit_account_nextcloud_info_normalized_url,
+                        Snackbar.LENGTH_SHORT).show();
+                break;
+            case SOMETHING_WRONG:
+                Snackbar.make(view,
+                        R.string.snackbar_something_wrong,
                         Snackbar.LENGTH_LONG).show();
                 break;
         }
@@ -80,7 +161,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     // Server
 
     public void onRefreshButtonClick() {
-        presenter.checkUrl(serverUrl.get());
+        presenter.checkUrl(serverUrlText.get());
     }
 
     private void setServerStatus(int iconId, int textId) {
@@ -128,21 +209,17 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
         isServerUrlHasFocus = hasFocus;
         if (hasFocus) return;
 
-        String url = serverUrl.get();
-        String normalizedUrl = presenter.normalizeUrl(url);
-
-        if (!normalizedUrl.isEmpty() && !normalizedUrl.equals(url)) {
-            serverUrl.set(normalizedUrl);
-            showNormalizedUrlSnackbar();
-        }
-
-        if (!isServerStatus()) {
-            presenter.checkUrl(normalizedUrl);
-        }
+        validateServer();
     }
 
     private void showNormalizedUrlSnackbar() {
         snackbarId = SnackbarId.NORMALIZED_URL;
+        notifyPropertyChanged(BR.snackbarId);
+    }
+
+    @Override
+    public void showSomethingWrongSnackbar() {
+        snackbarId = SnackbarId.SOMETHING_WRONG;
         notifyPropertyChanged(BR.snackbarId);
     }
 
@@ -155,7 +232,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
 
     public void onLoginButtonClick() {
         disableLoginButton();
-        presenter.checkAuth(accountUsername.get(), accountPassword.get());
+        presenter.checkAuth(accountUsernameText.get(), accountPasswordText.get());
     }
 
     private void setAuthStatus(int iconId, int textId) {
@@ -190,6 +267,21 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     }
 
     // Interface
+
+    @Override
+    public void validateServer() {
+        String url = serverUrlText.get();
+        String normalizedUrl = presenter.normalizeUrl(url);
+
+        if (!normalizedUrl.isEmpty() && !normalizedUrl.equals(url)) {
+            serverUrlText.set(normalizedUrl);
+            showNormalizedUrlSnackbar();
+        }
+
+        if (!isServerStatus()) {
+            presenter.checkUrl(normalizedUrl);
+        }
+    }
 
     @Override
     public void showRefreshButton() {
@@ -236,15 +328,15 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     }
 
     @Override
-    public void showCheckUrlServiceNotReadyWarning() {
-        setServerStatus(R.drawable.ic_warning,
-                R.string.add_edit_account_nextcloud_warning_service_not_ready);
+    public void showCheckUrlWaitingForServiceStatus() {
+        setServerStatus(R.drawable.ic_sync,
+                R.string.add_edit_account_nextcloud_warning_waiting_for_service);
     }
 
     @Override
-    public void showCheckAuthServiceNotReadyWarning() {
-        setAuthStatus(R.drawable.ic_warning,
-                R.string.add_edit_account_nextcloud_warning_service_not_ready);
+    public void showCheckAuthWaitingForServiceStatus() {
+        setAuthStatus(R.drawable.ic_sync,
+                R.string.add_edit_account_nextcloud_warning_waiting_for_service);
     }
 
     @Override
@@ -265,7 +357,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
                 break;
             case OK:
             case OK_NO_SSL:
-                if (serverUrl.get().startsWith(NextcloudPresenter.HTTP_PROTOCOL)) {
+                if (serverUrlText.get().startsWith(AddEditAccountActivity.HTTP_PROTOCOL)) {
                     icon = R.drawable.ic_check;
                     text = R.string.add_edit_account_nextcloud_connection_established;
                 } else {
@@ -333,12 +425,12 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
 
     @Override
     public void checkLoginButton() {
-        String username = accountUsername.get();
-        String password = accountPassword.get();
+        String username = accountUsernameText.get();
+        String password = accountPasswordText.get();
 
-        if (presenter.isServerUrlValid() &&
-                username != null && !username.isEmpty() &&
-                password != null && !password.isEmpty()) {
+        if (presenter.isServerUrlValid()
+                && username != null && !username.isEmpty()
+                && password != null && !password.isEmpty()) {
             enableLoginButton();
         } else {
             disableLoginButton();

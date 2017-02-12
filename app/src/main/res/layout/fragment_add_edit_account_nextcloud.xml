@@ -26,6 +26,7 @@
             bind:snackbarId="@{viewModel.snackbarId}">
 
             <TextView
+                android:id="@+id/application_logo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/app_name"
@@ -52,7 +53,8 @@
                         android:layout_height="wrap_content"
                         android:hint="@string/add_edit_account_nextcloud_url_hint"
                         android:inputType="textUri"
-                        android:text="@={viewModel.serverUrl}"
+                        android:text="@={viewModel.serverUrlText}"
+                        android:enabled="@{viewModel.serverUrl}"
                         android:afterTextChanged="@{viewModel::afterServerUrlChanged}"
                         android:onFocusChange="@{viewModel::onServerUrlFocusChange}">
 
@@ -94,7 +96,8 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/add_edit_account_nextcloud_username_hint"
                     android:inputType="textNoSuggestions"
-                    android:text="@={viewModel.accountUsername}"
+                    android:text="@={viewModel.accountUsernameText}"
+                    android:enabled="@{viewModel.accountUsername}"
                     android:afterTextChanged="@{viewModel::afterAccountCredentialsChanged}" />
             </android.support.design.widget.TextInputLayout>
 
@@ -109,7 +112,7 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/add_edit_account_nextcloud_password_hint"
                     android:inputType="textPassword"
-                    android:text="@={viewModel.accountPassword}"
+                    android:text="@={viewModel.accountPasswordText}"
                     android:afterTextChanged="@{viewModel::afterAccountCredentialsChanged}" />
             </android.support.design.widget.TextInputLayout>
 
@@ -129,7 +132,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:text="@string/add_edit_account_login_button"
+                android:text="@string/add_edit_account_nextcloud_login_button"
                 android:padding="@dimen/main_button_padding"
                 android:layout_marginTop="@dimen/main_button_top_margin"
                 android:enabled="@{viewModel.loginButton}"

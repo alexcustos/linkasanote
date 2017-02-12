@@ -31,34 +31,27 @@ public class AddEditFavoriteActivity extends AppCompatActivity {
 
         String favoriteId = getIntent().getStringExtra(
                 AddEditFavoriteFragment.ARGUMENT_EDIT_FAVORITE_ID);
-
         // Toolbar
         setSupportActionBar(binding.toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setDisplayShowHomeEnabled(true);
+            if (favoriteId == null) {
+                actionBar.setTitle(R.string.actionbar_title_new_favorite);
+            } else {
+                actionBar.setTitle(R.string.actionbar_title_edit_favorite);
+            }
         }
-
-        // Fragment (View)
+        // Fragment
         AddEditFavoriteFragment fragment = (AddEditFavoriteFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.content_frame);
         if (fragment == null) {
             fragment = AddEditFavoriteFragment.newInstance();
 
-            if (favoriteId == null) {
-                if (actionBar != null) actionBar.setTitle(R.string.add_edit_favorite_new_title);
-            } else {
-                if (actionBar != null) actionBar.setTitle(R.string.add_edit_favorite_edit_title);
-
-                Bundle bundle = new Bundle();
-                bundle.putString(AddEditFavoriteFragment.ARGUMENT_EDIT_FAVORITE_ID, favoriteId);
-                fragment.setArguments(bundle);
-            }
             ActivityUtils.addFragmentToActivity(
                     getSupportFragmentManager(), fragment, R.id.content_frame);
         }
-
         // Presenter
         DaggerAddEditFavoriteComponent.builder()
                 .applicationComponent(((LaanoApplication) getApplication()).getApplicationComponent())

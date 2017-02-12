@@ -1,0 +1,280 @@
+package com.bytesforge.linkasanote.manageaccounts;
+
+import android.Manifest;
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.accounts.AccountManagerCallback;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
+import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment;
+import com.bytesforge.linkasanote.databinding.FragmentManageAccountsBinding;
+import com.owncloud.android.lib.common.OwnCloudAccount;
+import com.owncloud.android.lib.common.accounts.AccountUtils;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import rx.Observable;
+
+import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
+import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountUsername;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public class ManageAccountsFragment extends Fragment implements ManageAccountsContract.View {
+
+    private static final String TAG = ManageAccountsFragment.class.getSimpleName();
+    private static final Handler handler = new Handler();
+
+    private ManageAccountsContract.Presenter presenter;
+    private AccountsAdapter adapter;
+    private FragmentManageAccountsBinding binding;
+    private AccountManager accountManager;
+
+    public static ManageAccountsFragment newInstance() {
+        return new ManageAccountsFragment();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        presenter.subscribe();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        presenter.unsubscribe();
+    }
+
+    @Override
+    public boolean isActive() {
+        return isAdded();
+    }
+
+    @Override
+    public void setPresenter(@NonNull ManageAccountsContract.Presenter presenter) {
+        this.presenter = checkNotNull(presenter);
+    }
+
+    @Override
+    public void finishActivity() {
+        getActivity().onBackPressed();
+    }
+
+    @Override
+    public void cancelActivity() {
+        getActivity().setResult(Activity.RESULT_CANCELED);
+        getActivity().finish();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        presenter.result(requestCode, resultCode);
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
+        binding = FragmentManageAccountsBinding.inflate(inflater, container, false);
+        accountManager = AccountManager.get(getContext());
+        // RecyclerView
+        RecyclerView rvAccounts = binding.rvAccounts;
+        if (rvAccounts != null) {
+            List<AccountItem> accountItems = new ArrayList<>();
+            adapter = new AccountsAdapter((ManageAccountsPresenter) presenter, accountItems);
+            rvAccounts.setAdapter(adapter);
+            LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+            rvAccounts.setLayoutManager(layoutManager);
+            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
+                    rvAccounts.getContext(), layoutManager.getOrientation());
+            rvAccounts.addItemDecoration(dividerItemDecoration);
+        }
+        return binding.getRoot();
+    }
+
+    @Override
+    public Observable<AccountItem> loadAccountItems() {
+        return Observable.create(subscriber -> {
+            Account[] accounts = getAccountsWithPermissionCheck();
+            if (accounts == null) {
+                subscriber.onError(new NullPointerException());
+                return;
+            }
+            for (Account account : accounts) {
+                AccountItem accountItem = new AccountItem(account);
+                try {
+                    OwnCloudAccount ownCloudAccount = new OwnCloudAccount(account, getContext());
+                    accountItem.setDisplayName(ownCloudAccount.getDisplayName());
+                } catch (AccountUtils.AccountNotFoundException e) {
+                    accountItem.setDisplayName(getAccountUsername(account.name));
+                }
+                subscriber.onNext(accountItem);
+            }
+            if (getResources().getBoolean(R.bool.multiaccount_support) || accounts.length <= 0) {
+                subscriber.onNext(new AccountItem());
+            }
+            subscriber.onCompleted();
+        });
+    }
+
+    @Override
+    public void showNotEnoughPermissionsSnackbar() {
+        Snackbar.make(binding.rvAccounts,
+                R.string.snackbar_no_permission, Snackbar.LENGTH_LONG)
+                .addCallback(new Snackbar.Callback() {
+
+                    @Override
+                    public void onDismissed(Snackbar transientBottomBar, int event) {
+                        super.onDismissed(transientBottomBar, event);
+                        cancelActivity();
+                    }
+                }).show();
+    }
+
+    @Override
+    public void showSuccessfullyUpdatedSnackbar() {
+        Snackbar.make(binding.rvAccounts,
+                R.string.manage_accounts_account_updated, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void addAccount() {
+        accountManager.addAccount(getAccountType(),
+                null, null, null, getActivity(), addAccountCallback, new Handler());
+    }
+
+    @Override
+    public void editAccount(Account account) {
+        Intent updateAccountIntent = new Intent(getContext(), AddEditAccountActivity.class);
+        updateAccountIntent.putExtra(NextcloudFragment.ARGUMENT_EDIT_ACCOUNT_ACCOUNT, account);
+        updateAccountIntent.putExtra(AddEditAccountActivity.ARGUMENT_REQUEST_CODE,
+                AddEditAccountActivity.REQUEST_UPDATE_NEXTCLOUD_ACCOUNT);
+        startActivityForResult(updateAccountIntent,
+                AddEditAccountActivity.REQUEST_UPDATE_NEXTCLOUD_ACCOUNT);
+    }
+
+    @Override
+    public void confirmAccountRemoval(Account account) {
+        AccountRemovalConfirmationDialog dialog =
+                AccountRemovalConfirmationDialog.newInstance(account);
+        dialog.setTargetFragment(this, AccountRemovalConfirmationDialog.DIALOG_REQUEST_CODE);
+        dialog.show(getFragmentManager(), AccountRemovalConfirmationDialog.DIALOG_TAG);
+    }
+
+    public void removeAccount(Account account) {
+        accountManager.removeAccount(account, getActivity(), removeAccountCallback, handler);
+    }
+
+    public static class AccountRemovalConfirmationDialog extends DialogFragment {
+
+        private static final String ARGUMENT_REMOVAL_CONFIRMATION_ACCOUNT = "ACCOUNT";
+
+        public static final String DIALOG_TAG = "ACCOUNT_REMOVAL_CONFIRMATION";
+        public static final int DIALOG_REQUEST_CODE = 0;
+
+        private Account account;
+
+        public static AccountRemovalConfirmationDialog newInstance(@NonNull Account account) {
+            checkNotNull(account);
+
+            Bundle bundle = new Bundle();
+            bundle.putParcelable(ARGUMENT_REMOVAL_CONFIRMATION_ACCOUNT, account);
+            AccountRemovalConfirmationDialog dialog = new AccountRemovalConfirmationDialog();
+            dialog.setArguments(bundle);
+
+            return dialog;
+        }
+
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            account = getArguments().getParcelable(ARGUMENT_REMOVAL_CONFIRMATION_ACCOUNT);
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            return new AlertDialog.Builder(getContext())
+                    .setTitle(R.string.manage_accounts_removal_confirmation_title)
+                    .setMessage(getResources().getString(
+                            R.string.manage_accounts_removal_confirmation_message, account.name))
+                    .setIcon(R.drawable.ic_warning)
+                    .setPositiveButton(R.string.dialog_button_ok, (dialog, which) ->
+                            ((ManageAccountsFragment) getTargetFragment()).removeAccount(account))
+                    .setNegativeButton(R.string.dialog_button_cancel, null)
+                    .create();
+        }
+    }
+
+    private AccountManagerCallback<Bundle> removeAccountCallback = future -> {
+        if (future != null && future.isDone()) {
+            // TODO: disable sync with removed account
+            presenter.loadAccountItems(true);
+        }
+    };
+
+    private AccountManagerCallback<Bundle> addAccountCallback = future -> {
+        if (future == null) return;
+        try {
+            future.getResult(); // NOTE: see exceptions
+            presenter.loadAccountItems(true);
+        } catch (OperationCanceledException e) {
+            Log.d(TAG, "Account creation canceled");
+        } catch (IOException | AuthenticatorException e) {
+            Log.e(TAG, "Account creation finished with an exception", e);
+        }
+    };
+
+    @Override
+    @Nullable
+    public Account[] getAccountsWithPermissionCheck() {
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.GET_ACCOUNTS)
+                != PackageManager.PERMISSION_GRANTED) {
+            // NOTE: if permission have been revoked when the activity run (seems it's impossible)
+            return null;
+        }
+        return accountManager.getAccountsByType(getAccountType());
+    }
+
+    @Override
+    public void swapItems(List<AccountItem> accountItems) {
+        adapter.swapItems(accountItems);
+    }
+
+    @VisibleForTesting
+    public void setAccountManager(@NonNull AccountManager accountManager) {
+        this.accountManager = checkNotNull(accountManager);
+    }
+
+    @VisibleForTesting
+    ManageAccountsContract.Presenter getPresenter() {
+        return presenter;
+    }
+}

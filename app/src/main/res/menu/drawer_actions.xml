@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item
-        android:id="@+id/add_account_menu_item"
-        android:icon="@drawable/ic_person_add"
-        android:title="@string/drawer_actions_add_account" />
+    <group android:id="@+id/accounts_menu_group">
 
-    <item
-        android:id="@+id/settings_menu_item"
-        android:icon="@drawable/ic_settings"
-        android:title="@string/drawer_actions_settings" />
+        <item
+            android:id="@+id/add_account_menu_item"
+            android:icon="@drawable/ic_person_add"
+            android:title="@string/drawer_actions_add_account" />
+        <item
+            android:id="@+id/manage_accounts_menu_item"
+            android:icon="@drawable/ic_edit"
+            android:title="@string/drawer_actions_manage_accounts" />
+    </group>
+    <group android:id="@+id/application_menu_group">
+
+        <item
+            android:id="@+id/settings_menu_item"
+            android:icon="@drawable/ic_settings"
+            android:title="@string/drawer_actions_settings" />
+    </group>
 </menu>

@@ -13,20 +13,22 @@ public interface AddEditFavoriteContract {
 
     interface View extends BaseView<Presenter> {
 
-        void swapTagsCompletionViewItems(List<Tag> tags);
-
         boolean isActive();
         void finishActivity();
+
+        void swapTagsCompletionViewItems(List<Tag> tags);
     }
 
     interface ViewModel extends BaseView<Presenter> {
 
         void setTagsCompletionView(@NonNull FavoriteTagsCompletionView completionView);
         void showEmptyFavoriteSnackbar();
-        void onSaveInstanceState(Bundle outState);
+        void loadInstanceState(Bundle outState);
     }
 
     interface Presenter extends BasePresenter {
+
+        void setViewModel(@NonNull AddEditFavoriteContract.ViewModel viewModel);
 
         boolean isNewFavorite();
         void saveFavorite(String name, List<Tag> tags);

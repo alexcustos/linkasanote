@@ -67,14 +67,14 @@ dependencies {
     compile project(':tokenautocomplete')
 
     compile "com.android.support:appcompat-v7:${supportLibraryVersion}"
-    compile "com.android.support:support-v13:${supportLibraryVersion}"
     compile "com.android.support:design:${supportLibraryVersion}"
     compile "com.android.support:preference-v14:${supportLibraryVersion}"
     compile "com.android.support:recyclerview-v7:${supportLibraryVersion}"
     compile "com.android.support.test.espresso:espresso-idling-resource:${espressoVersion}"
+    compile "com.android.support.constraint:constraint-layout:${constraintLayoutVersion}"
     compile "com.google.guava:guava:${guavaVersion}"
     compile "org.apache.commons:commons-lang3:${commonsLang3Version}"
-    compile "com.github.nextcloud:android-library:${androidLibraryVersion}"
+    compile "com.github.nextcloud:android-library:${nextcloudLibraryVersion}"
 
     // RxJava
     compile "io.reactivex:rxjava:${rxjavaVersion}"
@@ -99,6 +99,7 @@ dependencies {
     androidTestCompile "org.mockito:mockito-core:${mockitoVersion}"
     androidTestCompile "com.google.dexmaker:dexmaker:${dexmakerVersion}"
     androidTestCompile "com.google.dexmaker:dexmaker-mockito:${dexmakerVersion}"
+    androidTestCompile "com.android.support.test.uiautomator:uiautomator-v18:${uiAutomatorVersion}"
 
     // Resolve conflicts
     androidTestCompile "com.android.support:recyclerview-v7:${supportLibraryVersion}"

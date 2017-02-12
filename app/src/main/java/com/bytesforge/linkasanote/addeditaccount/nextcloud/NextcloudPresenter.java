@@ -1,31 +1,34 @@
 package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
 import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.sync.operations.OperationsService;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.CheckCredentialsOperation;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation;
 import com.owncloud.android.lib.common.OwnCloudCredentials;
+import com.owncloud.android.lib.common.UserInfo;
 import com.owncloud.android.lib.common.accounts.AccountUtils;
 import com.owncloud.android.lib.common.operations.OnRemoteOperationListener;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
-import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.inject.Inject;
 
+import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
 import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
-import static com.bytesforge.linkasanote.utils.CommonUtils.getAccountType;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class NextcloudPresenter
@@ -34,36 +37,43 @@ public final class NextcloudPresenter
     private static final String TAG = NextcloudPresenter.class.getSimpleName();
 
     private static final int ACCOUNT_VERSION = 1;
-    public static final String HTTP_PROTOCOL = "http://";
-    private static final String HTTPS_PROTOCOL = "https://";
-    private static final String DEFAULT_PROTOCOL = HTTPS_PROTOCOL;
     private static final String NEXTCLOUD_INDEX = "/index.php";
 
     private final Handler handler = new Handler();
+    private static final Object operationsLock = new Object();
     private OperationsService operationsService = null;
+    private List<Intent> operationsQueue = new ArrayList<>();
+
+    @Nullable
+    private Account account;
 
     private final NextcloudContract.View view;
-    private final NextcloudContract.ViewModel viewModel;
-
+    private NextcloudContract.ViewModel viewModel;
     private GetServerInfoOperation.ServerInfo serverInfo;
-    private RemoteOperationResult checkCredentialsResult; // for the callback
 
     @Inject
-    NextcloudPresenter(NextcloudContract.View view, NextcloudContract.ViewModel viewModel) {
+    NextcloudPresenter(
+            NextcloudContract.View view, @Nullable @NextcloudAccount Account account) {
         this.view = view;
-        this.viewModel = viewModel;
+        this.account = account;
         serverInfo = null;
     }
 
     @Inject
     void setupView() {
-        viewModel.setPresenter(this);
         view.setPresenter(this);
     }
 
     @Override
     public void setOperationsService(OperationsService service) {
-        operationsService = service;
+        // TODO: presenter should know nothing about android stuff, move it to the View
+        synchronized (operationsLock) {
+            operationsService = service;
+            for (Intent intent : operationsQueue) {
+                operationsService.queueOperation(intent, this, handler);
+            }
+            operationsQueue.clear();
+        }
     }
 
     @Override
@@ -71,7 +81,22 @@ public final class NextcloudPresenter
     }
 
     @Override
+    public void populateAccount() {
+        if (account == null) {
+            throw new RuntimeException("populateAccount() was called but account is null.");
+        }
+        Bundle state = view.getAccountState(account);
+        viewModel.applyInstanceState(state);
+        viewModel.validateServer();
+    }
+
+    @Override
     public void unsubscribe() {
+    }
+
+    @Override
+    public void setViewModel(@NonNull NextcloudContract.ViewModel viewModel) {
+        this.viewModel = checkNotNull(viewModel);
     }
 
     @Override
@@ -81,34 +106,31 @@ public final class NextcloudPresenter
 
         Intent getServerInfoIntent = new Intent();
         getServerInfoIntent.setAction(OperationsService.ACTION_GET_SERVER_INFO);
-        getServerInfoIntent.putExtra(
-                OperationsService.EXTRA_SERVER_URL, convertIdn(url, true));
-
-        if (operationsService != null) {
-            operationsService.queueOperation(getServerInfoIntent, this, handler);
-        } else {
-            viewModel.showRefreshButton();
-            viewModel.showCheckUrlServiceNotReadyWarning();
-        }
+        getServerInfoIntent.putExtra(OperationsService.EXTRA_SERVER_URL, convertIdn(url, true));
+        synchronized (operationsLock) {
+            if (operationsService == null) {
+                operationsQueue.add(getServerInfoIntent);
+                viewModel.showCheckUrlWaitingForServiceStatus();
+            } else {
+                operationsService.queueOperation(getServerInfoIntent, this, handler);
+            }
+        } // synchronized
     }
 
     @Override
     public String normalizeUrl(final String serverUrl) {
         String normalizedUrl = "";
-
         // Empty
         if (serverUrl == null || serverUrl.length() <= 0) {
             viewModel.showEmptyUrlWarning();
             return normalizedUrl;
         }
-
         // Protocol
         normalizedUrl = serverUrl.toLowerCase().replaceAll("\\s+", "");
-        if (!normalizedUrl.startsWith(HTTP_PROTOCOL) &&
-                !normalizedUrl.startsWith(HTTPS_PROTOCOL)) {
-            normalizedUrl = DEFAULT_PROTOCOL + normalizedUrl;
+        if (!normalizedUrl.startsWith(AddEditAccountActivity.HTTP_PROTOCOL) &&
+                !normalizedUrl.startsWith(AddEditAccountActivity.HTTPS_PROTOCOL)) {
+            normalizedUrl = AddEditAccountActivity.DEFAULT_PROTOCOL + normalizedUrl;
         }
-
         // Parsing
         URL url;
         try {
@@ -117,7 +139,6 @@ public final class NextcloudPresenter
             viewModel.showMalformedUrlWarning();
             return normalizedUrl;
         }
-
         // Instance URL
         int port = url.getPort();
         String path = url.getPath();
@@ -145,17 +166,14 @@ public final class NextcloudPresenter
         checkCredentialsIntent.putExtra(OperationsService.EXTRA_SERVER_URL, serverInfo.baseUrl);
         checkCredentialsIntent.putExtra(OperationsService.EXTRA_CREDENTIALS, credentials);
 
-        if (operationsService != null) {
-            operationsService.queueOperation(checkCredentialsIntent, this, handler);
-        } else {
-            viewModel.enableLoginButton();
-            viewModel.showCheckAuthServiceNotReadyWarning();
-        }
-    }
-
-    @Override
-    public NextcloudContract.ViewModel getViewModel() {
-        return viewModel;
+        synchronized (operationsLock) {
+            if (operationsService == null) {
+                operationsQueue.add(checkCredentialsIntent);
+                viewModel.showCheckAuthWaitingForServiceStatus();
+            } else {
+                operationsService.queueOperation(checkCredentialsIntent, this, handler);
+            }
+        } // synchronized
     }
 
     @Override
@@ -166,48 +184,33 @@ public final class NextcloudPresenter
             if (result.isSuccess()) {
                 setServerInfo((GetServerInfoOperation.ServerInfo) result.getData().get(0));
                 viewModel.checkLoginButton();
-
             } else {
                 viewModel.showRefreshButton();
             }
         } else if (operation instanceof CheckCredentialsOperation) {
             // CheckCredentialsOperation
             if (result.isSuccess()) {
-                checkCredentialsResult = result;
-                view.checkGetAccountsPermission();
-
-            } else if (result.isServerFail() || result.isException()) {
+                if (isNewAccount()) addAccount(result);
+                else updateAccount(result);
+            } else if (result.isServerFail()) {
                 setServerInfo(null);
                 viewModel.showConnectionResultStatus(result.getCode());
                 viewModel.showRefreshButton();
                 viewModel.disableLoginButton();
-
-            } else { // assume it's wrong credentials
+            } else { // NOTE: it's wrong credentials or result.isException()
                 viewModel.showAuthResultStatus(result.getCode());
                 viewModel.enableLoginButton();
             }
         }
     }
 
-    @Override
-    @SuppressWarnings("MissingPermission")
-    public void onGetAccountsPermissionGranted(@NonNull final AccountManager accountManager) {
-        checkNotNull(accountManager);
-
-        if (checkCredentialsResult == null) {
-            viewModel.showAuthResultStatus(RemoteOperationResult.ResultCode.UNKNOWN_ERROR);
-            viewModel.enableLoginButton();
-            return;
-        }
-        RemoteOperationResult result = checkCredentialsResult;
-        checkCredentialsResult = null;
-
-        GetRemoteUserInfoOperation.UserInfo userInfo = null;
+    private void addAccount(RemoteOperationResult result) {
+        UserInfo userInfo = null;
         OwnCloudCredentials credentials = null;
 
         for (Object object : result.getData()) {
-            if (object instanceof GetRemoteUserInfoOperation.UserInfo) {
-                userInfo = (GetRemoteUserInfoOperation.UserInfo) object;
+            if (object instanceof UserInfo) {
+                userInfo = (UserInfo) object;
             } else if (object instanceof OwnCloudCredentials) {
                 credentials = (OwnCloudCredentials) object;
             }
@@ -217,47 +220,94 @@ public final class NextcloudPresenter
         Uri uri = Uri.parse(serverInfo.baseUrl);
         String username = credentials.getUsername();
         String accountName = AccountUtils.buildAccountName(uri, username);
-        Account account = new Account(accountName, getAccountType());
+        Account newAccount = new Account(accountName, getAccountType());
 
-        Account[] accounts = accountManager.getAccountsByType(getAccountType());
-        if (Arrays.asList(accounts).contains(account)) {
+        Account[] accounts = view.getAccountsWithPermissionCheck();
+        if (accounts == null) {
+            viewModel.showGetAccountsPermissionDeniedWarning();
+            return;
+        } else if (Arrays.asList(accounts).contains(newAccount)) {
             viewModel.showAuthResultStatus(RemoteOperationResult.ResultCode.ACCOUNT_NOT_NEW);
             viewModel.enableLoginButton();
             return;
         }
 
         final Bundle userData = new Bundle();
-        userData.putInt(AccountUtils.Constants.KEY_OC_ACCOUNT_VERSION, ACCOUNT_VERSION);
+        userData.putString(AccountUtils.Constants.KEY_OC_ACCOUNT_VERSION,
+                Integer.toString(ACCOUNT_VERSION));
         userData.putString(AccountUtils.Constants.KEY_OC_VERSION, serverInfo.version.getVersion());
         userData.putString(AccountUtils.Constants.KEY_OC_BASE_URL, serverInfo.baseUrl);
         if (userInfo != null) {
-            userData.putString(AccountUtils.Constants.KEY_DISPLAY_NAME, userInfo.mDisplayName);
+            userData.putString(AccountUtils.Constants.KEY_DISPLAY_NAME, userInfo.getDisplayName());
         }
-        // TODO: check why account can't be added implicitly
-        accountManager.addAccountExplicitly(account, credentials.getAuthToken(), userData);
 
-        final Intent intent = new Intent();
-        intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, account.type);
-        intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, account.name);
-        intent.putExtra(AccountManager.KEY_PASSWORD, credentials.getAuthToken());
-        intent.putExtra(AccountManager.KEY_USERDATA, userData);
-
-        view.finishActivity(intent);
+        boolean success = view.addAccount(newAccount, credentials.getAuthToken(), userData);
+        if (success) {
+            view.finishActivity(newAccount, credentials.getAuthToken(), userData);
+            return;
+        }
+        viewModel.showSomethingWrongSnackbar();
     }
 
-    @Override
-    public void onGetAccountsPermissionDenied() {
-        viewModel.showGetAccountsPermissionDeniedWarning();
-        viewModel.enableLoginButton();
+    private void updateAccount(RemoteOperationResult result) {
+        if (account == null) {
+            throw new RuntimeException("updateAccount() was called but account is null.");
+        }
+        UserInfo userInfo = null;
+        OwnCloudCredentials credentials = null;
+        // Updated info from the server
+        for (Object object : result.getData()) {
+            if (object instanceof UserInfo) {
+                userInfo = (UserInfo) object;
+            } else if (object instanceof OwnCloudCredentials) {
+                credentials = (OwnCloudCredentials) object;
+            }
+        }
+        checkNotNull(credentials);
+
+        final Bundle userData = new Bundle();
+        userData.putString(AccountUtils.Constants.KEY_OC_ACCOUNT_VERSION,
+                Integer.toString(ACCOUNT_VERSION));
+        userData.putString(AccountUtils.Constants.KEY_OC_VERSION, serverInfo.version.getVersion());
+        userData.putString(AccountUtils.Constants.KEY_OC_BASE_URL, serverInfo.baseUrl);
+        if (userInfo != null) {
+            userData.putString(AccountUtils.Constants.KEY_DISPLAY_NAME, userInfo.getDisplayName());
+        }
+
+        try {
+            view.updateAccount(account, credentials.getAuthToken(), userData);
+            view.finishActivity(account, credentials.getAuthToken(), userData);
+        } catch (AccountUtils.AccountNotFoundException e) {
+            view.showAccountDoesNotExistSnackbar();
+        }
     }
 
     @Override
     public boolean isServerUrlValid() {
-        return (serverInfo != null && serverInfo.isSet());
+        return serverInfo != null && serverInfo.isSet();
     }
 
     @Override
     public void setServerInfo(GetServerInfoOperation.ServerInfo serverInfo) {
         this.serverInfo = serverInfo;
+    }
+
+    @Override
+    public Bundle getInstanceState() {
+        Bundle state = new Bundle();
+        viewModel.loadInstanceState(state);
+
+        return state;
+    }
+
+    @Override
+    public void applyInstanceState(Bundle state) {
+        if (state == null) return;
+        viewModel.applyInstanceState(state);
+    }
+
+    @Override
+    public boolean isNewAccount() {
+        return account == null;
     }
 }

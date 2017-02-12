@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable name="accountItem" type="com.bytesforge.linkasanote.manageaccounts.AccountItem" />
+        <variable name="presenter"
+            type="com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenter" />
+    </data>
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/item_manage_accounts_layout_height"
+        android:layout_marginStart="@dimen/recycler_view_horizontal_padding"
+        android:layout_marginEnd="@dimen/recycler_view_nearby_button_margin">
+
+        <ImageView
+            android:id="@+id/account_logo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/item_manage_accounts_logo"
+            android:src="@drawable/ic_person"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent" />
+
+        <TextView
+            android:id="@+id/user_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{accountItem.displayName}"
+            android:ellipsize="end"
+            android:layout_marginStart="@dimen/recycler_view_text_left_margin"
+            android:layout_marginEnd="@dimen/recycler_view_nearby_button_margin"
+            android:textAppearance="?android:attr/textAppearanceListItem"
+            android:maxLines="1"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_constraintBottom_toTopOf="@+id/account_name"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/account_edit_button"
+            app:layout_constraintLeft_toRightOf="@+id/account_logo" />
+
+        <TextView
+            android:id="@+id/account_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{accountItem.accountName}"
+            android:ellipsize="end"
+            android:layout_marginStart="@dimen/recycler_view_text_left_margin"
+            android:layout_marginEnd="@dimen/recycler_view_nearby_button_margin"
+            android:maxLines="1"
+            app:layout_constraintTop_toBottomOf="@+id/user_name"
+            app:layout_constraintRight_toLeftOf="@+id/account_edit_button"
+            app:layout_constraintLeft_toRightOf="@+id/account_logo"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <ImageButton
+            android:id="@+id/account_edit_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/item_manage_accounts_edit_button"
+            android:src="@drawable/ic_edit"
+            android:padding="@dimen/recycler_view_button_padding"
+            android:onClick="@{() -> presenter.onEditClick(accountItem.account)}"
+            app:layout_constraintRight_toLeftOf="@+id/account_delete_button"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            style="@style/Button.RecyclerView" />
+
+        <ImageButton
+            android:id="@+id/account_delete_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/item_manage_accounts_delete_button"
+            android:src="@drawable/ic_delete"
+            android:padding="@dimen/recycler_view_button_padding"
+            android:onClick="@{() -> presenter.onRemoveClick(accountItem.account)}"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            style="@style/Button.RecyclerView" />
+    </android.support.constraint.ConstraintLayout>
+</layout>

@@ -49,7 +49,7 @@ public class ApplicationNavigationTest {
     private String NOTES_TITLE;
 
     @Rule
-    public ActivityTestRule<LaanoActivity> activityTestRule =
+    public ActivityTestRule<LaanoActivity> laanoActivityTestRule =
             new ActivityTestRule<>(LaanoActivity.class);
 
     public ApplicationNavigationTest() {
@@ -57,7 +57,7 @@ public class ApplicationNavigationTest {
 
     @Before
     public void setupActivity() {
-        activity = activityTestRule.getActivity();
+        activity = laanoActivityTestRule.getActivity();
         assertThat(activity, notNullValue());
 
         Resources resources = activity.getResources();
@@ -73,7 +73,7 @@ public class ApplicationNavigationTest {
         onView(withId(R.id.drawer_layout)).check(matches(isClosed(Gravity.START)));
 
         onView(withContentDescription(getToolbarNavigationContentDescription(
-                activityTestRule.getActivity(), R.id.toolbar))).perform(click());
+                laanoActivityTestRule.getActivity(), R.id.toolbar))).perform(click());
 
         onView(withId(R.id.drawer_layout)).check(matches(isOpen(Gravity.START)));
     }
@@ -84,12 +84,10 @@ public class ApplicationNavigationTest {
         onView(withId(R.id.laano_view_pager)).check(matches(isDisplayed()));
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(LINKS_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(LinksFragment.class));
-
         // Favorites
         onView(withId(R.id.laano_view_pager)).perform(swipeLeft());
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(FAVORITES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(FavoritesFragment.class));
-
         // Notes
         onView(withId(R.id.laano_view_pager)).perform(swipeLeft());
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(NOTES_TITLE));
@@ -104,14 +102,12 @@ public class ApplicationNavigationTest {
             .check(matches(isDisplayed()));
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(LINKS_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(LinksFragment.class));
-
         // Favorites
         onView(withItemTextId(FAVORITES_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(FAVORITES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(FavoritesFragment.class));
-
         // Notes
         onView(withItemTextId(NOTES_TITLE, R.id.tab_layout))
                 .perform(click())
@@ -129,9 +125,34 @@ public class ApplicationNavigationTest {
         onView(withId(R.id.nav_view)).perform(navigateTo(R.id.settings_menu_item));
         onView(allOf(
                 withText(R.string.actionbar_title_settings),
-                isDescendantOfA(withResourceName("action_bar_container"))))
+                isDescendantOfA(withResourceName("action_bar"))))
             .check(matches(isDisplayed()));
+        // Close
+        onView(withContentDescription("Navigate up")).perform(click());
+        onView(withId(R.id.laano_view_pager)).check(matches(isDisplayed()));
+    }
 
+    @Test
+    public void clickOnAddAccountNavigationItem_ShowsAddAccountScreen() {
+        onView(withId(R.id.drawer_layout))
+                .check(matches(isClosed(Gravity.START)))
+                .perform(DrawerActions.open());
+        onView(withId(R.id.nav_view)).perform(navigateTo(R.id.add_account_menu_item));
+        onView(withId(R.id.application_logo)).check(matches(withText(R.string.app_name)));
+
+    }
+
+    @Test
+    public void clickOnManageAccounts_ShowsManageAccountsScreen_And_ClickOnHomeIcon_ClosesIt() {
+        // Open
+        onView(withId(R.id.drawer_layout))
+                .check(matches(isClosed(Gravity.START)))
+                .perform(DrawerActions.open());
+        onView(withId(R.id.nav_view)).perform(navigateTo(R.id.manage_accounts_menu_item));
+        onView(allOf(
+                withText(R.string.action_bar_title_manage_accounts),
+                isDescendantOfA(withResourceName("toolbar"))))
+                .check(matches(isDisplayed()));
         // Close
         onView(withContentDescription("Navigate up")).perform(click());
         onView(withId(R.id.laano_view_pager)).check(matches(isDisplayed()));

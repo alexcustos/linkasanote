@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable name="presenter"
+            type="com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenter" />
+    </data>
+
+    <TextView
+        android:id="@+id/add_account_view"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/item_manage_accounts_layout_height"
+        android:drawableStart="@drawable/ic_person_add"
+        android:drawablePadding="32dp"
+        android:gravity="center_vertical"
+        android:text="@string/item_manage_accounts_add"
+        android:paddingStart="@dimen/recycler_view_horizontal_padding"
+        android:paddingEnd="@dimen/recycler_view_horizontal_padding"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:onClick="@{() -> presenter.onAddClick()}"
+        android:background="?android:attr/selectableItemBackground" />
+</layout>
