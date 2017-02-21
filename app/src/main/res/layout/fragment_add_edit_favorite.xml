@@ -26,7 +26,8 @@
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/favorite_name_layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                bind:nameError="@{viewModel.nameErrorText}">
 
                 <EditText
                     android:id="@+id/favorite_name"
@@ -36,7 +37,7 @@
                     android:inputType="text|textNoSuggestions"
                     android:maxLines="1"
                     android:text="@={viewModel.favoriteName}"
-                    android:afterTextChanged="@{viewModel::afterFavoriteDataChanged}" />
+                    android:afterTextChanged="@{viewModel::afterNameChanged}" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -52,7 +53,7 @@
                     android:gravity="top"
                     android:hint="@string/add_edit_favorite_tags_hint"
                     android:inputType="text|textNoSuggestions|textMultiLine"
-                    android:afterTextChanged="@{viewModel::afterFavoriteDataChanged}" />
+                    android:afterTextChanged="@{viewModel::afterTagsChanged}" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.v7.widget.AppCompatButton

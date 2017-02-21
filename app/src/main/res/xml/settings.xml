@@ -34,9 +34,9 @@
         android:title="@string/pref_title_synchronization">
 
         <EditTextPreference
-            android:key="pref_key_sync_directory"
+            android:key="@string/pref_key_sync_directory"
             android:title="@string/pref_title_sync_directory"
-            android:defaultValue="/laano_sync" />
+            android:defaultValue="@string/default_sync_directory" />
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -49,6 +49,7 @@
 
         <Preference
             android:key="pref_key_about"
-            android:title="@string/pref_title_about" />
+            android:title="@string/pref_title_about"
+            android:summary="@string/placeholder_text" />
     </PreferenceCategory>
 </PreferenceScreen>

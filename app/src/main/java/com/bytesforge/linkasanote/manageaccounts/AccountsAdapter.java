@@ -61,7 +61,7 @@ public class AccountsAdapter extends RecyclerView.Adapter<AccountsAdapter.ViewHo
 
             return new ViewHolder(binding);
         } else {
-            throw new InvalidParameterException("Unexpected AccountItem type ID: " + viewType);
+            throw new InvalidParameterException("Unexpected AccountItem type ID [" + viewType + "]");
         }
     }
 

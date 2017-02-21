@@ -1,5 +1,6 @@
 include ':app'
 include ':tokenautocomplete'
+//include ':nextcloud'
 
 project(':tokenautocomplete').projectDir = new File(settingsDir, 'third_party/tokenautocomplete')
-
+//project(':nextcloud').projectDir = new File(settingsDir, 'third_party/nextcloud')

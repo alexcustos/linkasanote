@@ -9,7 +9,6 @@ import com.bytesforge.linkasanote.BasePresenter;
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.sync.operations.OperationsService;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation;
-import com.owncloud.android.lib.common.accounts.AccountUtils;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 
 public interface NextcloudContract {
@@ -18,14 +17,16 @@ public interface NextcloudContract {
 
         boolean isActive();
 
-        Account[] getAccountsWithPermissionCheck();
-        boolean addAccount(@NonNull Account account, @NonNull String password, @NonNull Bundle data);
-        void updateAccount(@NonNull Account account, @NonNull String password, @NonNull Bundle data)
-                throws AccountUtils.AccountNotFoundException;
+        void addAccount(
+                @NonNull RemoteOperationResult result,
+                @NonNull GetServerInfoOperation.ServerInfo serverInfo);
+        void updateAccount(
+                @NonNull RemoteOperationResult result, @Nullable Account account,
+                @NonNull GetServerInfoOperation.ServerInfo serverInfo);
         void finishActivity(@NonNull Account account, @NonNull String password, @NonNull Bundle data);
         void cancelActivity();
         Bundle getAccountState(@NonNull Account account);
-        void showAccountDoesNotExistSnackbar();
+        void requestFocusOnAccountPassword();
     }
 
     interface ViewModel extends BaseView<Presenter> {

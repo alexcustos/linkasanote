@@ -17,6 +17,7 @@
     <string name="laano_tab_favorites_title">Favorites</string>
     <string name="laano_tab_notes_title">Notes</string>
     <string name="laano_permission_get_accounts">GET ACCOUNTS (Contacts) permission is needed to show list of existing accounts</string>
+    <string name="laano_account_added">The account has been successfully added</string>
     <string name="pref_category_application">Application</string>
     <string name="pref_title_urls_expanding">Expand URL cards</string>
     <string name="pref_summary_urls_expanding">Expand all URL cards with app opened</string>
@@ -42,7 +43,7 @@
     <string name="add_edit_account_nextcloud_username_hint">Username</string>
     <string name="add_edit_account_nextcloud_password_hint">Password</string>
     <string name="add_edit_account_nextcloud_login_button">Connect</string>
-    <string name="add_edit_account_nextcloud_about">New to Nextcloud?</string>
+    <string name="add_edit_account_nextcloud_about">About Nextcloud</string>
     <string name="add_edit_account_nextcloud_auth_status_checking">Checking credentials…</string>
     <string name="add_edit_account_nextcloud_warning_empty_url">A server URL must be specified</string>
     <string name="add_edit_account_nextcloud_info_normalized_url">The server URL has been normalized</string>
@@ -72,6 +73,7 @@
     <string name="add_edit_favorite_new_button_title">Create</string>
     <string name="add_edit_favorite_edit_button_title">Update</string>
     <string name="add_edit_favorite_warning_empty">The favorite Name and least one Tag must be specified</string>
+    <string name="add_edit_favorite_error_name_duplicated">Favorite with the same name already exists</string>
     <string name="action_bar_title_manage_accounts">Manage accounts</string>
     <string name="item_manage_accounts_add">Add account</string>
     <string name="item_manage_accounts_edit_button">Edit account</string>

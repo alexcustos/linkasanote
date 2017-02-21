@@ -3,5 +3,9 @@
     <string name="authenticator_account_type">linkasanote</string>
     <string name="scroll_aware_fab_behavior">com.bytesforge.linkasanote.utils.ScrollAwareFABBehavior</string>
     <integer name="tags_autocomplete_threshold">1</integer>
-    <bool name="multiaccount_support">true</bool>
+    <bool name="multiaccount_support">false</bool>
+    <string name="json_extension">.json</string>
+    <string name="default_sync_directory">.laano_sync</string>
+
+    <string name="pref_key_sync_directory">sync_directory</string>
 </resources>

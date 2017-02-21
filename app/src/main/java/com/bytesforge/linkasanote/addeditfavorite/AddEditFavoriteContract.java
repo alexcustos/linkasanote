@@ -24,6 +24,7 @@ public interface AddEditFavoriteContract {
         void setTagsCompletionView(@NonNull FavoriteTagsCompletionView completionView);
         void showEmptyFavoriteSnackbar();
         void loadInstanceState(Bundle outState);
+        void showDuplicateKeyError();
     }
 
     interface Presenter extends BasePresenter {

@@ -1,11 +1,14 @@
 package com.bytesforge.linkasanote.utils;
 
+
 import android.util.Base64;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
 public class UuidUtils {
+
+    private static final int KEY_LENGTH = 22;
 
     public static String generateKey() {
         UUID uuid = UUID.randomUUID();
@@ -33,6 +36,6 @@ public class UuidUtils {
 
     public static boolean isKeyValidUuid(String key) {
         // TODO: find a better solution
-        return key.length() == 22;
+        return key.length() == KEY_LENGTH;
     }
 }

@@ -253,15 +253,14 @@ public class Repository implements DataSource {
     public void saveFavorite(@NonNull Favorite favorite) {
         checkNotNull(favorite);
 
+        // NOTE: it may throw SQLiteConstraintException
         localDataSource.saveFavorite(favorite);
         cloudDataSource.saveFavorite(favorite);
-
         // Favorite
         if (cachedFavorites == null) {
             cachedFavorites = new LinkedHashMap<>();
         }
         cachedFavorites.put(favorite.getId(), favorite);
-
         // Tags
         if (cachedTags == null) {
             cachedTags = new LinkedHashMap<>();

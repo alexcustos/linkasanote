@@ -27,6 +27,7 @@ import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
 import com.owncloud.android.lib.common.operations.OnRemoteOperationListener;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
+import com.owncloud.android.lib.resources.status.OwnCloudVersion;
 
 import java.io.IOException;
 import java.security.InvalidParameterException;
@@ -45,6 +46,7 @@ public class OperationsService extends Service {
     public static final String EXTRA_ACCOUNT = "ACCOUNT";
     public static final String EXTRA_CREDENTIALS = "CREDENTIALS";
     public static final String EXTRA_SERVER_URL = "SERVER_URL";
+    public static final String EXTRA_SERVER_VERSION = "SERVER_VERSION";
 
     private final IBinder binder = new OperationsBinder();
     private OperationsHandler operationsHandler;
@@ -213,7 +215,9 @@ public class OperationsService extends Service {
             operation = new GetServerInfoOperation(serverUrl, OperationsService.this);
         } else if (action.equals(ACTION_CHECK_CREDENTIALS)) {
             Bundle credentials = intent.getBundleExtra(EXTRA_CREDENTIALS);
-            operation = new CheckCredentialsOperation(credentials);
+            OwnCloudVersion serverVersion = new OwnCloudVersion(
+                    intent.getStringExtra(EXTRA_SERVER_VERSION));
+            operation = new CheckCredentialsOperation(credentials, serverVersion);
         }
 
         if (operation == null) {

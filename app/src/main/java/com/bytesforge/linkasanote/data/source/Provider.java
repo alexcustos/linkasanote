@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
@@ -15,6 +16,7 @@ import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.source.local.DatabaseHelper;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
+import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
@@ -88,7 +90,6 @@ public class Provider extends ContentProvider {
         if (context != null) {
             contentResolver = context.getContentResolver();
         }
-
         return true;
     }
 
@@ -184,16 +185,16 @@ public class Provider extends ContentProvider {
     }
 
     /*
-    * Note: all insert operations receive ENTRY_ID (except *_TAG) and return _ID.
+    * Note: all insert operations receive ENTRY_ID (except *_TAG) then return _ID.
     * ENTRY_ID can be taken from values.
     * */
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, ContentValues values) {
         final SQLiteDatabase db = databaseHelper.getWritableDatabase();
-        Uri returnUri = null;
-        long rowId;
 
+        long rowId;
+        Uri returnUri = null;
         switch (uriMatcher.match(uri)) {
             case LINK:
                 db.beginTransaction();
@@ -273,7 +274,29 @@ public class Provider extends ContentProvider {
     @Override
     public int update(@NonNull Uri uri, ContentValues values,
             String selection, String[] selectionArgs) {
-        return 0;
+        final SQLiteDatabase db = databaseHelper.getWritableDatabase();
+
+        int numRows;
+        switch (uriMatcher.match(uri)) {
+            case FAVORITE_ITEM:
+                db.beginTransaction();
+                try {
+                    String idValue = LocalContract.FavoriteEntry.getFavoriteId(uri);
+                    numRows = updateEntry(db, LocalContract.FavoriteEntry.TABLE_NAME,
+                            LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID, idValue,
+                            values);
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown update uri [" + uri + "]");
+        }
+        if (numRows > 0) {
+            contentResolver.notifyChange(uri, null);
+        }
+        return numRows;
     }
 
     private long appendTag(
@@ -306,9 +329,8 @@ public class Provider extends ContentProvider {
         }
         // Reference
         final String refTable = leftTable + "_" + tagTable;
-
         ContentValues refValues = new ContentValues();
-        refValues.put(LocalContract.MANY_TO_MANY_COLUMN_NAME_ADDED, currentTimeMillis());
+        refValues.put(LocalContract.MANY_TO_MANY_COMMON_NAME_ADDED, currentTimeMillis());
         refValues.put(leftTable + BaseColumns._ID, leftId);
         refValues.put(tagTable + BaseColumns._ID, tagId);
 
@@ -317,47 +339,64 @@ public class Provider extends ContentProvider {
             throw new SQLException(String.format(
                     "Failed to insert reference [%s] with table [%s]", leftId, leftTable));
         }
-
         return tagId;
     }
 
-    // TODO: modify the UI to not allow violate the name duplication constrain
     private long updateOrInsert(
-            final @NonNull SQLiteDatabase db,
-            final String tableName, final String idField, final ContentValues values) {
+            @NonNull final SQLiteDatabase db, final String tableName,
+            final String idField, final ContentValues values) {
         checkNotNull(db);
 
-        long rowId;
         String idValue = values.getAsString(idField);
-
+        // NOTE: update does not produce rowId
         Cursor exists = db.query(
                 tableName, new String[]{BaseColumns._ID},
                 idField + " = ?", new String[]{idValue},
                 null, null, null);
-
-        String rowIdValue = null;
+        long rowId = 0;
         if (exists.moveToLast()) {
             int rowIdIndex = exists.getColumnIndexOrThrow(BaseColumns._ID);
-            rowIdValue = exists.getString(rowIdIndex);
+            rowId = exists.getLong(rowIdIndex);
             exists.close();
         }
-        if (rowIdValue != null) {
-            rowId = db.update(
+        if (rowId > 0) {
+            int numRows = db.update(
                     tableName, values,
-                    BaseColumns._ID + " = ?", new String[]{rowIdValue});
-            if (rowId <= 0) {
+                    BaseColumns._ID + " = ?", new String[]{Long.toString(rowId)});
+            if (numRows <= 0) {
                 throw new SQLException(String.format(
-                        "Failed to update row [%s] in table [%s]", idValue, tableName));
+                        "Failed to update the row [%s] in table [%s]", idValue, tableName));
             }
         } else {
-            rowId = db.insert(tableName, null, values);
+            rowId = db.insertOrThrow(tableName, null, values); // SQLiteConstraintException
             if (rowId <= 0) {
                 throw new SQLException(String.format(
                         "Failed to insert row [%s] in table [%s]", idValue, tableName));
             }
         }
-
         return rowId;
+    }
+
+    private int updateEntry(
+            @NonNull final SQLiteDatabase db, final String tableName,
+            final String idField, final String idValue, final ContentValues values) {
+        checkNotNull(db);
+        if (Strings.isNullOrEmpty(idValue)) return 0;
+
+        Cursor exists = db.query(
+                tableName, new String[]{BaseColumns._ID},
+                idField + " = ?", new String[]{idValue},
+                null, null, null);
+        boolean isExists = exists.moveToLast();
+        exists.close();
+        if (!isExists) return 0;
+
+        int numRows = db.update(tableName, values, idField + " = ?", new String[]{idValue});
+        if (numRows <= 0) {
+            throw new SQLiteConstraintException(String.format(
+                    "Failed to update row [%s] in table [%s]", idValue, tableName));
+        }
+        return numRows;
     }
 
     private static String sqlJoinManyToManyWithTags(final String leftTable) {

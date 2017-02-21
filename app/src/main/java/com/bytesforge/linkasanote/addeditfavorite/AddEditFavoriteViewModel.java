@@ -8,14 +8,16 @@ import android.databinding.ObservableBoolean;
 import android.databinding.ObservableField;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.widget.LinearLayout;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Tag;
+import com.google.common.base.Strings;
 import com.tokenautocomplete.TokenCompleteTextView;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -26,6 +28,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     public static final String STATE_FAVORITE_NAME = "FAVORITE_NAME";
     public static final String STATE_ADD_BUTTON = "ADD_BUTTON";
     public static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
+    public static final String STATE_NAME_ERROR_TEXT = "NAME_ERROR_TEXT";
 
     public final ObservableField<String> favoriteName = new ObservableField<>();
     public final ObservableBoolean addButton = new ObservableBoolean(false);
@@ -41,6 +44,9 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Bindable
     public SnackbarId snackbarId;
 
+    @Bindable
+    public String nameErrorText;
+
     public AddEditFavoriteViewModel(@NonNull Context context, @NonNull Bundle savedInstanceState) {
         this.context = checkNotNull(context);
         checkNotNull(savedInstanceState);
@@ -48,6 +54,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         favoriteName.set(savedInstanceState.getString(STATE_FAVORITE_NAME));
         addButton.set(savedInstanceState.getBoolean(STATE_ADD_BUTTON));
         addButtonText = savedInstanceState.getInt(STATE_ADD_BUTTON_TEXT);
+        nameErrorText = savedInstanceState.getString(STATE_NAME_ERROR_TEXT);
     }
 
     @Override
@@ -57,6 +64,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         outState.putString(STATE_FAVORITE_NAME, favoriteName.get());
         outState.putBoolean(STATE_ADD_BUTTON, addButton.get());
         outState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
+        outState.putString(STATE_NAME_ERROR_TEXT, nameErrorText);
     }
 
     @Override
@@ -83,6 +91,17 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         }
     }
 
+    @BindingAdapter({"nameError"})
+    public static void showNameError(TextInputLayout layout, @Nullable String nameErrorText) {
+        if (nameErrorText != null) {
+            layout.setError(nameErrorText);
+            layout.setErrorEnabled(true);
+            layout.requestFocus();
+        } else {
+            layout.setErrorEnabled(false);
+        }
+    }
+
     @Bindable
     public String getAddButtonText() {
         return context.getResources().getString(addButtonText);
@@ -101,28 +120,56 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         addButton.set(false);
     }
 
-    public void afterFavoriteDataChanged(Editable s) {
-        if (TextUtils.isEmpty(favoriteName.get())
-                || favoriteTags.getText().length() < favoriteTags.getThreshold()) {
-            disableAddButton();
-        } else {
+    public void afterNameChanged(Editable s) {
+        hideNameError();
+        if (isNameValid() && isTagsValid()) {
             enableAddButton();
+        } else {
+            disableAddButton();
         }
+    }
+
+    public void afterTagsChanged(Editable s) {
+        if (isNameValid() && isTagsValid()) {
+            enableAddButton();
+        } else {
+            disableAddButton();
+        }
+    }
+
+    private boolean isNameValid() {
+        return !Strings.isNullOrEmpty(favoriteName.get());
+    }
+
+    private boolean isTagsValid() {
+        return favoriteTags.getText().length() >= favoriteTags.getThreshold();
     }
 
     @Override
     public void onTokenAdded(Tag tag) {
-        afterFavoriteDataChanged(null);
+        afterTagsChanged(null);
     }
 
     @Override
     public void onTokenRemoved(Tag tag) {
-        afterFavoriteDataChanged(null);
+        afterTagsChanged(null);
     }
 
     @Override
     public void showEmptyFavoriteSnackbar() {
         snackbarId = SnackbarId.FAVORITE_EMPTY;
         notifyPropertyChanged(BR.snackbarId);
+    }
+
+    @Override
+    public void showDuplicateKeyError() {
+        nameErrorText = context.getResources().getString(
+                R.string.add_edit_favorite_error_name_duplicated);
+        notifyPropertyChanged(BR.nameErrorText);
+    }
+
+    private void hideNameError() {
+        nameErrorText = null;
+        notifyPropertyChanged(BR.nameErrorText);
     }
 }

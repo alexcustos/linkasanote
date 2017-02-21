@@ -9,6 +9,7 @@ import com.owncloud.android.lib.common.network.RedirectionPath;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import com.owncloud.android.lib.resources.files.ExistenceCheckRemoteOperation;
+import com.owncloud.android.lib.resources.status.OwnCloudVersion;
 import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation;
 
 public class CheckCredentialsOperation extends RemoteOperation {
@@ -18,12 +19,14 @@ public class CheckCredentialsOperation extends RemoteOperation {
 
     private static final String ROOT_PATH = "/";
 
-    private String username;
-    private String password;
+    private final String username;
+    private final String password;
+    private final OwnCloudVersion serverVersion;
 
-    public CheckCredentialsOperation(Bundle credentials) {
+    public CheckCredentialsOperation(Bundle credentials, OwnCloudVersion serverVersion) {
         username = credentials.getString(ACCOUNT_USERNAME);
         password = credentials.getString(ACCOUNT_PASSWORD);
+        this.serverVersion = serverVersion;
     }
 
     @Override
@@ -31,6 +34,7 @@ public class CheckCredentialsOperation extends RemoteOperation {
         OwnCloudCredentials credentials =
                 OwnCloudCredentialsFactory.newBasicCredentials(username, password);
         client.setCredentials(credentials);
+        client.setOwnCloudVersion(serverVersion);
         client.setFollowRedirects(true);
 
         ExistenceCheckRemoteOperation checkOperation =

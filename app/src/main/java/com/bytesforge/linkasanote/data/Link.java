@@ -14,6 +14,8 @@ import static java.lang.System.currentTimeMillis;
 
 public final class Link {
 
+    public static final String CLOUD_DIRECTORY = "links";
+
     @NonNull
     private final String id;
 

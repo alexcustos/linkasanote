@@ -65,7 +65,6 @@ public class FavoritesTabTest {
         FAVORITE_NAMES = new ArrayList<>();
         FAVORITE_NAMES.add("Favorite");
         FAVORITE_NAMES.add("Favorite #2");
-        FAVORITE_NAMES.add("Favorite #3");
     }
 
     @Before

@@ -13,6 +13,8 @@ import static java.lang.System.currentTimeMillis;
 
 public final class Note {
 
+    public static final String CLOUD_DIRECTORY = "notes";
+
     @NonNull
     private final String id;
 

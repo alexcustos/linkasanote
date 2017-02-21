@@ -26,10 +26,9 @@ import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterMod
 import com.bytesforge.linkasanote.databinding.ActivityAddEditAccountBinding;
 import com.bytesforge.linkasanote.sync.operations.OperationsService;
 import com.bytesforge.linkasanote.utils.ActivityUtils;
+import com.bytesforge.linkasanote.utils.CloudUtils;
 
 import javax.inject.Inject;
-
-import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
 
 public class AddEditAccountActivity extends AppCompatActivity implements
         ActivityCompat.OnRequestPermissionsResultCallback {
@@ -104,7 +103,7 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         if (ActivityCompat.checkSelfPermission(this, PERMISSION_GET_ACCOUNTS)
                 != PackageManager.PERMISSION_GRANTED) {
             requestGetAccountsPermission();
-        } else if (!accountCanBeAdded()) {
+        } else if (!accountCanBeProcessed()) {
             disableActivity();
             showUnsupportedMultipleAccountsSnackbar();
         }
@@ -130,7 +129,7 @@ public class AddEditAccountActivity extends AppCompatActivity implements
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_PERMISSION_GET_ACCOUNTS) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (accountCanBeAdded()) enableActivity();
+                if (accountCanBeProcessed()) enableActivity();
                 else showUnsupportedMultipleAccountsSnackbar();
             } else {
                 showNotEnoughPermissionsSnackbar();
@@ -140,12 +139,13 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         }
     }
 
-    @SuppressWarnings("MissingPermission")
-    private boolean accountCanBeAdded() {
+    private boolean accountCanBeProcessed() {
         AccountManager accountManager = AccountManager.get(this);
-        Account[] accounts = accountManager.getAccountsByType(getAccountType());
+        Account[] accounts = CloudUtils.getAccountsWithPermissionCheck(this, accountManager);
 
-        return getResources().getBoolean(R.bool.multiaccount_support) || accounts.length <= 0;
+        return !presenter.isNewAccount()
+                || getResources().getBoolean(R.bool.multiaccount_support)
+                || (accounts != null && accounts.length <= 0);
     }
 
     private void disableActivity() {

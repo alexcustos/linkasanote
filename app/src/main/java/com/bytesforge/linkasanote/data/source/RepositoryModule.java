@@ -1,6 +1,8 @@
 package com.bytesforge.linkasanote.data.source;
 
 import android.content.ContentResolver;
+import android.content.Context;
+import android.content.SharedPreferences;
 
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
@@ -26,7 +28,7 @@ public class RepositoryModule {
     @Provides
     @Singleton
     @Cloud
-    DataSource provideCloudDataSource() {
-        return new CloudDataSource();
+    DataSource provideCloudDataSource(Context context, SharedPreferences sharedPreferences) {
+        return new CloudDataSource(context, sharedPreferences);
     }
 }

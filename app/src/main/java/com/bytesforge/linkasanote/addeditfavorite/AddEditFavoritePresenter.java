@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.addeditfavorite;
 
+import android.database.sqlite.SQLiteConstraintException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -111,9 +112,13 @@ public final class AddEditFavoritePresenter implements AddEditFavoriteContract.P
         Favorite favorite = new Favorite(name, tags);
         if (favorite.isEmpty()) {
             viewModel.showEmptyFavoriteSnackbar();
-        } else {
+            return;
+        }
+        try {
             repository.saveFavorite(favorite);
             view.finishActivity();
+        } catch (SQLiteConstraintException e) {
+            viewModel.showDuplicateKeyError();
         }
     }
 

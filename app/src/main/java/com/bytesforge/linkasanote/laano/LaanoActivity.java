@@ -2,6 +2,10 @@ package com.bytesforge.linkasanote.laano;
 
 import android.Manifest;
 import android.accounts.AccountManager;
+import android.accounts.AccountManagerCallback;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -22,6 +26,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -42,12 +47,16 @@ import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity;
 import com.bytesforge.linkasanote.settings.SettingsActivity;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 
+import java.io.IOException;
+
 import javax.inject.Inject;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
 
 public class LaanoActivity extends AppCompatActivity implements
         ActivityCompat.OnRequestPermissionsResultCallback {
+
+    private static final String TAG = LaanoActivity.class.getSimpleName();
 
     private static final int REQUEST_GET_ACCOUNTS = 0;
     private static final String PERMISSION_GET_ACCOUNTS = Manifest.permission.GET_ACCOUNTS;
@@ -205,11 +214,6 @@ public class LaanoActivity extends AppCompatActivity implements
         }
     }
 
-    private void showPermissionDeniedSnackbar() {
-        Snackbar.make(binding.laanoViewPager, R.string.snackbar_no_permission, Snackbar.LENGTH_LONG)
-                .show();
-    }
-
     // Setup
 
     private void startManageAccountsActivity() {
@@ -229,10 +233,10 @@ public class LaanoActivity extends AppCompatActivity implements
                             startActivity(settingsIntent);
                             break;
                         case R.id.add_account_menu_item:
-                            AccountManager accountManager =
-                                    AccountManager.get(getApplicationContext());
-                            accountManager.addAccount(getAccountType(),
-                                    null, null, null, this, null, new Handler());
+                            Context context = getApplicationContext();
+                            AccountManager accountManager = AccountManager.get(context);
+                            accountManager.addAccount(getAccountType(context),
+                                    null, null, null, this, addAccountCallback, new Handler());
                             break;
                         case R.id.manage_accounts_menu_item:
                             checkGetAccountsPermissionAndLaunchActivity();
@@ -281,6 +285,32 @@ public class LaanoActivity extends AppCompatActivity implements
                     }
                 }
         );
+    }
+
+    // Callbacks
+
+    private AccountManagerCallback<Bundle> addAccountCallback = future -> {
+        if (future == null) return;
+        try {
+            future.getResult(); // NOTE: see exceptions
+            showAccountSuccessfullyAddedSnackbar();
+        } catch (OperationCanceledException e) {
+            Log.d(TAG, "Account creation canceled");
+        } catch (IOException | AuthenticatorException e) {
+            Log.e(TAG, "Account creation finished with an exception", e);
+        }
+    };
+
+    // SnackBars
+
+    private void showPermissionDeniedSnackbar() {
+        Snackbar.make(binding.laanoViewPager, R.string.snackbar_no_permission, Snackbar.LENGTH_LONG)
+                .show();
+    }
+
+    private void showAccountSuccessfullyAddedSnackbar() {
+        Snackbar.make(binding.laanoViewPager, R.string.laano_account_added, Snackbar.LENGTH_LONG)
+                .show();
     }
 
     // Testing

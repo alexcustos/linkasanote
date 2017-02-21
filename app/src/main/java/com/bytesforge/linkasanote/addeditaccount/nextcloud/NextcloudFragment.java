@@ -1,19 +1,17 @@
 package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
-import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
@@ -22,11 +20,16 @@ import android.view.ViewGroup;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.databinding.FragmentAddEditAccountNextcloudBinding;
+import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation;
+import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.owncloud.android.lib.common.OwnCloudAccount;
 import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
+import com.owncloud.android.lib.common.OwnCloudCredentials;
+import com.owncloud.android.lib.common.UserInfo;
 import com.owncloud.android.lib.common.accounts.AccountUtils;
+import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 
-import org.jetbrains.annotations.NotNull;
+import java.util.Arrays;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountUsername;
@@ -35,6 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class NextcloudFragment extends Fragment implements NextcloudContract.View {
 
     private static final String TAG = NextcloudFragment.class.getSimpleName();
+    private static final int ACCOUNT_VERSION = 1;
     public static final String ARGUMENT_EDIT_ACCOUNT_ACCOUNT = "EDIT_ACCOUNT_ACCOUNT";
 
     private AccountAuthenticatorResponse accountAuthenticatorResponse = null;
@@ -132,40 +136,104 @@ public class NextcloudFragment extends Fragment implements NextcloudContract.Vie
         activity.finish();
     }
 
-    public Account[] getAccountsWithPermissionCheck() {
-        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.GET_ACCOUNTS)
-                != PackageManager.PERMISSION_GRANTED) {
-            // NOTE: if permission have been revoked when the activity run (seems it's impossible)
-            return null;
-        }
-        return accountManager.getAccountsByType(getAccountType());
-    }
-
     @Override
-    public boolean addAccount(
-            @NonNull Account account, @NonNull String password, @NonNull Bundle data) {
-        checkNotNull(account);
-        checkNotNull(password);
-        checkNotNull(data);
-        // TODO: check why account can't be added implicitly
-        return accountManager.addAccountExplicitly(account, password, data);
+    public void addAccount(
+            @NonNull RemoteOperationResult result,
+            @NonNull GetServerInfoOperation.ServerInfo serverInfo) {
+        checkNotNull(result);
+        checkNotNull(serverInfo);
+
+        UserInfo userInfo = null;
+        OwnCloudCredentials credentials = null;
+        for (Object object : result.getData()) {
+            if (object instanceof UserInfo) {
+                userInfo = (UserInfo) object;
+            } else if (object instanceof OwnCloudCredentials) {
+                credentials = (OwnCloudCredentials) object;
+            }
+        }
+        checkNotNull(credentials);
+
+        Uri baseUri = Uri.parse(serverInfo.baseUrl);
+        String username = credentials.getUsername();
+        String accountName = AccountUtils.buildAccountName(baseUri, username);
+        Account newAccount = new Account(accountName, getAccountType(getContext()));
+
+        // TODO: replace with CloudUtils.isAccountExists if permission warning is technically impossible
+        Account[] accounts = CloudUtils.getAccountsWithPermissionCheck(getContext(), accountManager);
+        if (accounts == null) {
+            viewModel.showGetAccountsPermissionDeniedWarning();
+            return;
+        } else if (Arrays.asList(accounts).contains(newAccount)) {
+            viewModel.showAuthResultStatus(RemoteOperationResult.ResultCode.ACCOUNT_NOT_NEW);
+            viewModel.enableLoginButton();
+            return;
+        }
+
+        final Bundle userData = new Bundle();
+        userData.putString(AccountUtils.Constants.KEY_OC_ACCOUNT_VERSION,
+                Integer.toString(ACCOUNT_VERSION));
+        userData.putString(AccountUtils.Constants.KEY_OC_VERSION, serverInfo.version.getVersion());
+        userData.putString(AccountUtils.Constants.KEY_OC_BASE_URL, serverInfo.baseUrl);
+        if (userInfo != null) {
+            userData.putString(AccountUtils.Constants.KEY_DISPLAY_NAME, userInfo.getDisplayName());
+        }
+
+        boolean success = accountManager.addAccountExplicitly(
+                newAccount, credentials.getAuthToken(), userData);
+        if (success) {
+            finishActivity(newAccount, credentials.getAuthToken(), userData);
+            return;
+        }
+        viewModel.showSomethingWrongSnackbar();
     }
 
     @Override
     public void updateAccount(
-            @NonNull Account account, @NonNull String password, @NotNull Bundle data)
-            throws AccountUtils.AccountNotFoundException {
-        checkNotNull(account);
-        checkNotNull(password);
-        checkNotNull(data);
-        for (String key : data.keySet()) {
-            Object value = data.get(key);
+            @NonNull RemoteOperationResult result,
+            @Nullable Account account,
+            @NonNull GetServerInfoOperation.ServerInfo serverInfo) {
+        checkNotNull(result);
+        checkNotNull(serverInfo);
+        if (account == null) {
+            throw new RuntimeException("updateAccount() was called but account is null.");
+        }
+        UserInfo userInfo = null;
+        OwnCloudCredentials credentials = null;
+        // Updated info from the server
+        for (Object object : result.getData()) {
+            if (object instanceof UserInfo) {
+                userInfo = (UserInfo) object;
+            } else if (object instanceof OwnCloudCredentials) {
+                credentials = (OwnCloudCredentials) object;
+            }
+        }
+        checkNotNull(credentials);
+
+        final Bundle userData = new Bundle();
+        userData.putString(AccountUtils.Constants.KEY_OC_ACCOUNT_VERSION,
+                Integer.toString(ACCOUNT_VERSION));
+        userData.putString(AccountUtils.Constants.KEY_OC_VERSION, serverInfo.version.getVersion());
+        userData.putString(AccountUtils.Constants.KEY_OC_BASE_URL, serverInfo.baseUrl);
+        if (userInfo != null) {
+            userData.putString(AccountUtils.Constants.KEY_DISPLAY_NAME, userInfo.getDisplayName());
+        }
+        // Update
+        for (String key : userData.keySet()) {
+            Object value = userData.get(key);
             accountManager.setUserData(account, key, value == null ? null : value.toString());
         }
+        String password = credentials.getAuthToken();
         accountManager.setPassword(account, password);
-        // NOTE: remove managed clients for this account to enforce creation with fresh credentials
-        OwnCloudAccount ownCloudAccount = new OwnCloudAccount(account, getContext());
-        OwnCloudClientManagerFactory.getDefaultSingleton().removeClientFor(ownCloudAccount);
+        try {
+            // NOTE: remove managed clients for this account to enforce creation with fresh credentials
+            OwnCloudAccount ownCloudAccount = new OwnCloudAccount(account, getContext());
+            OwnCloudClientManagerFactory.getDefaultSingleton().removeClientFor(ownCloudAccount);
+
+            finishActivity(account, password, userData);
+        } catch (AccountUtils.AccountNotFoundException e) {
+            showAccountDoesNotExistSnackbar();
+        }
     }
 
     @Override
@@ -174,6 +242,7 @@ public class NextcloudFragment extends Fragment implements NextcloudContract.Vie
         checkNotNull(account);
         checkNotNull(password);
         checkNotNull(data);
+
         final Intent intent = new Intent();
         intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, account.type);
         intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, account.name);
@@ -186,6 +255,7 @@ public class NextcloudFragment extends Fragment implements NextcloudContract.Vie
     @Override
     public Bundle getAccountState(@NonNull Account account) {
         checkNotNull(account);
+
         Bundle state = new Bundle();
         state.putBoolean(NextcloudViewModel.STATE_SERVER_URL, false);
         state.putString(NextcloudViewModel.STATE_SERVER_URL_TEXT,
@@ -193,13 +263,19 @@ public class NextcloudFragment extends Fragment implements NextcloudContract.Vie
         state.putBoolean(NextcloudViewModel.STATE_ACCOUNT_USERNAME, false);
         state.putString(NextcloudViewModel.STATE_ACCOUNT_USERNAME_TEXT,
                 getAccountUsername(account.name));
-        state.putString(NextcloudViewModel.STATE_ACCOUNT_PASSWORD_TEXT,
-                accountManager.getPassword(account));
+        // NOTE: security hole, non-authorized user can view the password
+        /*state.putString(NextcloudViewModel.STATE_ACCOUNT_PASSWORD_TEXT,
+                accountManager.getPassword(account));*/
+
         return state;
     }
 
     @Override
-    public void showAccountDoesNotExistSnackbar() {
+    public void requestFocusOnAccountPassword() {
+        binding.accountPassword.requestFocus();
+    }
+
+    private void showAccountDoesNotExistSnackbar() {
         Snackbar.make(binding.snackbarLayout,
                 R.string.add_edit_account_nextcloud_warning_no_account, Snackbar.LENGTH_LONG)
                 .addCallback(new Snackbar.Callback() {

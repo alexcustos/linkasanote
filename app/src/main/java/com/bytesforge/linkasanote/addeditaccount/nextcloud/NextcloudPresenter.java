@@ -2,7 +2,6 @@ package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
 import android.accounts.Account;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -12,9 +11,6 @@ import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.sync.operations.OperationsService;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.CheckCredentialsOperation;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation;
-import com.owncloud.android.lib.common.OwnCloudCredentials;
-import com.owncloud.android.lib.common.UserInfo;
-import com.owncloud.android.lib.common.accounts.AccountUtils;
 import com.owncloud.android.lib.common.operations.OnRemoteOperationListener;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
@@ -22,12 +18,10 @@ import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
 import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -36,7 +30,6 @@ public final class NextcloudPresenter
 
     private static final String TAG = NextcloudPresenter.class.getSimpleName();
 
-    private static final int ACCOUNT_VERSION = 1;
     private static final String NEXTCLOUD_INDEX = "/index.php";
 
     private final Handler handler = new Handler();
@@ -88,6 +81,7 @@ public final class NextcloudPresenter
         Bundle state = view.getAccountState(account);
         viewModel.applyInstanceState(state);
         viewModel.validateServer();
+        view.requestFocusOnAccountPassword();
     }
 
     @Override
@@ -164,6 +158,8 @@ public final class NextcloudPresenter
         Intent checkCredentialsIntent = new Intent();
         checkCredentialsIntent.setAction(OperationsService.ACTION_CHECK_CREDENTIALS);
         checkCredentialsIntent.putExtra(OperationsService.EXTRA_SERVER_URL, serverInfo.baseUrl);
+        checkCredentialsIntent.putExtra(
+                OperationsService.EXTRA_SERVER_VERSION, serverInfo.version.getVersion());
         checkCredentialsIntent.putExtra(OperationsService.EXTRA_CREDENTIALS, credentials);
 
         synchronized (operationsLock) {
@@ -190,8 +186,11 @@ public final class NextcloudPresenter
         } else if (operation instanceof CheckCredentialsOperation) {
             // CheckCredentialsOperation
             if (result.isSuccess()) {
-                if (isNewAccount()) addAccount(result);
-                else updateAccount(result);
+                if (isNewAccount()) {
+                    view.addAccount(result, serverInfo);
+                } else {
+                    view.updateAccount(result, account, serverInfo);
+                }
             } else if (result.isServerFail()) {
                 setServerInfo(null);
                 viewModel.showConnectionResultStatus(result.getCode());
@@ -201,84 +200,6 @@ public final class NextcloudPresenter
                 viewModel.showAuthResultStatus(result.getCode());
                 viewModel.enableLoginButton();
             }
-        }
-    }
-
-    private void addAccount(RemoteOperationResult result) {
-        UserInfo userInfo = null;
-        OwnCloudCredentials credentials = null;
-
-        for (Object object : result.getData()) {
-            if (object instanceof UserInfo) {
-                userInfo = (UserInfo) object;
-            } else if (object instanceof OwnCloudCredentials) {
-                credentials = (OwnCloudCredentials) object;
-            }
-        }
-        checkNotNull(credentials);
-
-        Uri uri = Uri.parse(serverInfo.baseUrl);
-        String username = credentials.getUsername();
-        String accountName = AccountUtils.buildAccountName(uri, username);
-        Account newAccount = new Account(accountName, getAccountType());
-
-        Account[] accounts = view.getAccountsWithPermissionCheck();
-        if (accounts == null) {
-            viewModel.showGetAccountsPermissionDeniedWarning();
-            return;
-        } else if (Arrays.asList(accounts).contains(newAccount)) {
-            viewModel.showAuthResultStatus(RemoteOperationResult.ResultCode.ACCOUNT_NOT_NEW);
-            viewModel.enableLoginButton();
-            return;
-        }
-
-        final Bundle userData = new Bundle();
-        userData.putString(AccountUtils.Constants.KEY_OC_ACCOUNT_VERSION,
-                Integer.toString(ACCOUNT_VERSION));
-        userData.putString(AccountUtils.Constants.KEY_OC_VERSION, serverInfo.version.getVersion());
-        userData.putString(AccountUtils.Constants.KEY_OC_BASE_URL, serverInfo.baseUrl);
-        if (userInfo != null) {
-            userData.putString(AccountUtils.Constants.KEY_DISPLAY_NAME, userInfo.getDisplayName());
-        }
-
-        boolean success = view.addAccount(newAccount, credentials.getAuthToken(), userData);
-        if (success) {
-            view.finishActivity(newAccount, credentials.getAuthToken(), userData);
-            return;
-        }
-        viewModel.showSomethingWrongSnackbar();
-    }
-
-    private void updateAccount(RemoteOperationResult result) {
-        if (account == null) {
-            throw new RuntimeException("updateAccount() was called but account is null.");
-        }
-        UserInfo userInfo = null;
-        OwnCloudCredentials credentials = null;
-        // Updated info from the server
-        for (Object object : result.getData()) {
-            if (object instanceof UserInfo) {
-                userInfo = (UserInfo) object;
-            } else if (object instanceof OwnCloudCredentials) {
-                credentials = (OwnCloudCredentials) object;
-            }
-        }
-        checkNotNull(credentials);
-
-        final Bundle userData = new Bundle();
-        userData.putString(AccountUtils.Constants.KEY_OC_ACCOUNT_VERSION,
-                Integer.toString(ACCOUNT_VERSION));
-        userData.putString(AccountUtils.Constants.KEY_OC_VERSION, serverInfo.version.getVersion());
-        userData.putString(AccountUtils.Constants.KEY_OC_BASE_URL, serverInfo.baseUrl);
-        if (userInfo != null) {
-            userData.putString(AccountUtils.Constants.KEY_DISPLAY_NAME, userInfo.getDisplayName());
-        }
-
-        try {
-            view.updateAccount(account, credentials.getAuthToken(), userData);
-            view.finishActivity(account, credentials.getAuthToken(), userData);
-        } catch (AccountUtils.AccountNotFoundException e) {
-            view.showAccountDoesNotExistSnackbar();
         }
     }
 

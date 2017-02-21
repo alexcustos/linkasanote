@@ -11,7 +11,12 @@ public final class LocalContract {
     public static final String CONTENT_AUTHORITY = BuildConfig.APPLICATION_ID + ".provider";
     public static final String CONTENT_SCHEME = "content://";
     public static final Uri BASE_CONTENT_URI = Uri.parse(CONTENT_SCHEME + CONTENT_AUTHORITY);
-    public static final String MANY_TO_MANY_COLUMN_NAME_ADDED = "added";
+
+    public static final String MANY_TO_MANY_COMMON_NAME_ADDED = "added";
+    public static final String COMMON_NAME_ETAG = "etag";
+    // NOTE: there is a conflict with a cloud version
+    public static final String COMMON_NAME_CONFLICTED = "conflicted";
+    public static final String COMMON_NAME_SYNCED = "synced";
 
     private LocalContract() {
     }
@@ -117,7 +122,9 @@ public final class LocalContract {
         public static final String COLUMN_NAME_ENTRY_ID = "entry_id";
         public static final String COLUMN_NAME_ADDED = "added";
         public static final String COLUMN_NAME_NAME = "name";
-        public static final String COLUMN_NAME_SYNCED = "synced";
+        public static final String COLUMN_NAME_ETAG = LocalContract.COMMON_NAME_ETAG;
+        public static final String COLUMN_NAME_CONFLICTED = LocalContract.COMMON_NAME_CONFLICTED;
+        public static final String COLUMN_NAME_SYNCED = LocalContract.COMMON_NAME_SYNCED;
 
         public static final String CONTENT_TYPE =
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + FavoriteEntry.TABLE_NAME;
@@ -132,6 +139,8 @@ public final class LocalContract {
                 FavoriteEntry.COLUMN_NAME_ENTRY_ID,
                 FavoriteEntry.COLUMN_NAME_ADDED,
                 FavoriteEntry.COLUMN_NAME_NAME,
+                FavoriteEntry.COLUMN_NAME_ETAG,
+                FavoriteEntry.COLUMN_NAME_CONFLICTED,
                 FavoriteEntry.COLUMN_NAME_SYNCED};
 
         public static Uri buildFavoritesUri() {

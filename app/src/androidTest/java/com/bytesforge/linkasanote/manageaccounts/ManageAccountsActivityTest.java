@@ -5,8 +5,10 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
@@ -45,22 +47,26 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("MissingPermission")
 public class ManageAccountsActivityTest {
 
-    private static final String ACCOUNT_TYPE = getAccountType();
     private static final String USER_NAME = "demo";
-    private static final Account[] ACCOUNTS = {
-            new Account(USER_NAME + "@demo.nextcloud.com", ACCOUNT_TYPE)};
 
     @Rule
     public ActivityTestRule<ManageAccountsActivity> manageAccountsActivityTestRule =
             new ActivityTestRule<>(ManageAccountsActivity.class);
 
+    private static String ACCOUNT_TYPE;
+    private static Account[] ACCOUNTS;
     private AccountManager mockAccountManager;
     private ManageAccountsContract.Presenter presenter;
+    private Context context;
 
     @Before
     public void setupManageAccountsActivity() {
         TestUtils.allowPermissionIfNeeded(Manifest.permission.GET_ACCOUNTS);
         mockAccountManager = Mockito.mock(AccountManager.class);
+        context = InstrumentationRegistry.getTargetContext();
+
+        ACCOUNT_TYPE = getAccountType(context);
+        ACCOUNTS = new Account[]{new Account(USER_NAME + "@demo.nextcloud.com", ACCOUNT_TYPE)};
 
         ManageAccountsActivity activity = manageAccountsActivityTestRule.getActivity();
         assertThat(activity, notNullValue());
@@ -98,18 +104,20 @@ public class ManageAccountsActivityTest {
     public void checkInitialStateWithOneAccountAdded() {
         when(mockAccountManager.getAccountsByType(anyString())).thenReturn(ACCOUNTS);
         presenter.loadAccountItems(true);
-        onView(withId(R.id.add_account_view)).check(
-                matches(withText(R.string.item_manage_accounts_add)));
+        if (context.getResources().getBoolean(R.bool.multiaccount_support)) {
+            onView(withId(R.id.add_account_view)).check(
+                    matches(withText(R.string.item_manage_accounts_add)));
+        }
         onView(withId(R.id.user_name)).check(matches(withText(USER_NAME)));
         onView(withId(R.id.account_name)).check(matches(withText(ACCOUNTS[0].name)));
     }
 
     @Test
     public void clickOnAddItem_MakesAccountManagerAddAccountCall() {
-        when(mockAccountManager.getAccountsByType(anyString())).thenReturn(ACCOUNTS);
+        when(mockAccountManager.getAccountsByType(anyString())).thenReturn(new Account[0]);
         presenter.loadAccountItems(true);
         onView(withId(R.id.add_account_view)).perform(click());
-        verify(mockAccountManager).addAccount(eq(getAccountType()), isNull(String.class),
+        verify(mockAccountManager).addAccount(eq(ACCOUNT_TYPE), isNull(String.class),
                 isNull(String[].class), isNull(Bundle.class), any(Activity.class),
                 Matchers.<AccountManagerCallback<Bundle>>any(), any(Handler.class));
     }

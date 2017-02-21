@@ -45,6 +45,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_NAME + TEXT_TYPE + " UNIQUE," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_ETAG + TEXT_TYPE + "," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED + BOOLEAN_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
             ");";
 
@@ -90,10 +92,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return "CREATE TABLE " + leftTable + "_" + rightTable + " (" +
                 BaseColumns._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
-                LocalContract.MANY_TO_MANY_COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
+                LocalContract.MANY_TO_MANY_COMMON_NAME_ADDED + DATETIME_TYPE + "," +
                 LID + INTEGER_TYPE + " REFERENCES " + leftTable + "(" + BaseColumns._ID + ")," +
                 RID + INTEGER_TYPE + " REFERENCES " + rightTable + "(" + BaseColumns._ID + ")," +
-                "UNIQUE (" + LID + "," + RID + ") ON CONFLICT IGNORE);";
+                "UNIQUE (" + LID + "," + RID + ") ON CONFLICT ABORT);";
     }
 
     private static String sqlCreateTriggerManyToManyWithTags(final String leftTable) {

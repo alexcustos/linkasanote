@@ -1,6 +1,5 @@
 package com.bytesforge.linkasanote.manageaccounts;
 
-import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
@@ -9,14 +8,12 @@ import android.accounts.OperationCanceledException;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
@@ -32,6 +29,7 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment;
 import com.bytesforge.linkasanote.databinding.FragmentManageAccountsBinding;
+import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.owncloud.android.lib.common.OwnCloudAccount;
 import com.owncloud.android.lib.common.accounts.AccountUtils;
 
@@ -166,18 +164,18 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
 
     @Override
     public void addAccount() {
-        accountManager.addAccount(getAccountType(),
+        accountManager.addAccount(getAccountType(getContext()),
                 null, null, null, getActivity(), addAccountCallback, new Handler());
     }
 
     @Override
     public void editAccount(Account account) {
         Intent updateAccountIntent = new Intent(getContext(), AddEditAccountActivity.class);
+        int requestCode = AddEditAccountActivity.REQUEST_UPDATE_NEXTCLOUD_ACCOUNT;
+
         updateAccountIntent.putExtra(NextcloudFragment.ARGUMENT_EDIT_ACCOUNT_ACCOUNT, account);
-        updateAccountIntent.putExtra(AddEditAccountActivity.ARGUMENT_REQUEST_CODE,
-                AddEditAccountActivity.REQUEST_UPDATE_NEXTCLOUD_ACCOUNT);
-        startActivityForResult(updateAccountIntent,
-                AddEditAccountActivity.REQUEST_UPDATE_NEXTCLOUD_ACCOUNT);
+        updateAccountIntent.putExtra(AddEditAccountActivity.ARGUMENT_REQUEST_CODE, requestCode);
+        startActivityForResult(updateAccountIntent, requestCode);
     }
 
     @Override
@@ -255,12 +253,7 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
     @Override
     @Nullable
     public Account[] getAccountsWithPermissionCheck() {
-        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.GET_ACCOUNTS)
-                != PackageManager.PERMISSION_GRANTED) {
-            // NOTE: if permission have been revoked when the activity run (seems it's impossible)
-            return null;
-        }
-        return accountManager.getAccountsByType(getAccountType());
+        return CloudUtils.getAccountsWithPermissionCheck(getContext(), accountManager);
     }
 
     @Override

@@ -67,6 +67,7 @@
         </service>
 
         <service android:name=".sync.operations.OperationsService" />
+        <service android:name=".sync.files.FilesService" />
     </application>
 
 </manifest>
