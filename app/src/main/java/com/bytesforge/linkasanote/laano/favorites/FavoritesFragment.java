@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -25,6 +26,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     private FavoritesContract.Presenter presenter;
     private FavoritesContract.ViewModel viewModel;
     private FavoritesAdapter adapter;
+    private ActionMode actionMode;
 
     public static FavoritesFragment newInstance() {
         return new FavoritesFragment();
@@ -64,16 +66,19 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
             @Nullable Bundle savedInstanceState) {
         FragmentLaanoFavoritesBinding binding =
                 FragmentLaanoFavoritesBinding.inflate(inflater, container, false);
+        viewModel.setInstanceState(savedInstanceState);
         binding.setViewModel((FavoritesViewModel) viewModel);
         // RecyclerView
-        RecyclerView rvFavorites = binding.rvFavorites;
-        if (rvFavorites != null) {
-            List<Favorite> favorites = new ArrayList<>(0);
-            adapter = new FavoritesAdapter(getContext(), favorites);
-            rvFavorites.setAdapter(adapter);
-            rvFavorites.setLayoutManager(new LinearLayoutManager(getContext()));
+        if (binding.rvFavorites != null) {
+            setupFavoritesRecyclerView(binding.rvFavorites);
         }
         return binding.getRoot();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        viewModel.loadInstanceState(outState);
     }
 
     @Override
@@ -91,5 +96,17 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void setupFavoritesRecyclerView(RecyclerView rvFavorites) {
+        List<Favorite> favorites = new ArrayList<>(0);
+        adapter = new FavoritesAdapter(favorites, presenter, (FavoritesViewModel) viewModel);
+        rvFavorites.setAdapter(adapter);
+        rvFavorites.setLayoutManager(new LinearLayoutManager(getContext()));
+    }
+
+    @Override
+    public void onFavoriteSelected(int position) {
+
     }
 }

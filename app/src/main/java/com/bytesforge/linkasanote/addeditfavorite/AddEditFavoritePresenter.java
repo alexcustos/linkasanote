@@ -18,16 +18,14 @@ import rx.Observer;
 import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public final class AddEditFavoritePresenter implements AddEditFavoriteContract.Presenter {
 
-    private final AddEditFavoriteContract.View view;
     private final Repository repository;
-    private final String favoriteId;
+    private final AddEditFavoriteContract.View view;
+    private final AddEditFavoriteContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
+    private final String favoriteId;
 
-    private AddEditFavoriteContract.ViewModel viewModel;
 
     @NonNull
     private final CompositeSubscription subscription;
@@ -35,10 +33,12 @@ public final class AddEditFavoritePresenter implements AddEditFavoriteContract.P
     @Inject
     AddEditFavoritePresenter(
             Repository repository, AddEditFavoriteContract.View view,
+            AddEditFavoriteContract.ViewModel viewModel,
             BaseSchedulerProvider schedulerProvider,
             @Nullable @FavoriteId String favoriteId) {
         this.repository = repository;
         this.view = view;
+        this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
         this.favoriteId = favoriteId;
 
@@ -48,11 +48,8 @@ public final class AddEditFavoritePresenter implements AddEditFavoriteContract.P
     @Inject
     void setupView() {
         view.setPresenter(this);
-    }
-
-    @Override
-    public void setViewModel(@NonNull AddEditFavoriteContract.ViewModel viewModel) {
-        this.viewModel = checkNotNull(viewModel);
+        view.setViewModel(viewModel);
+        viewModel.setPresenter(this);
     }
 
     @Override

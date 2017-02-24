@@ -8,7 +8,6 @@ import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.Handler;
@@ -52,6 +51,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LaanoActivity extends AppCompatActivity implements
         ActivityCompat.OnRequestPermissionsResultCallback {
@@ -73,9 +73,6 @@ public class LaanoActivity extends AppCompatActivity implements
     @Inject
     NotesPresenter notesPresenter;
 
-    /*@Inject
-    SharedPreferences sharedPreferences;*/
-
     private ActivityLaanoBinding binding;
 
     @Override
@@ -91,58 +88,33 @@ public class LaanoActivity extends AppCompatActivity implements
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
         // Navigation Drawer
-        DrawerLayout drawerLayout = binding.drawerLayout;
-        // NOTE: untestable behavior (swipeRight() doesn't open Drawer)
-        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(
-                this, drawerLayout, R.string.drawer_open, R.string.drawer_close) {
-
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-            }
-
-            @Override
-            public void onDrawerClosed(View drawerView) {
-                super.onDrawerClosed(drawerView);
-                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-            }
-        };
-        drawerLayout.addDrawerListener(drawerToggle);
-
+        if (binding.drawerLayout != null) {
+            setupDrawerLayout(binding.drawerLayout);
+        }
         if (binding.navView != null) {
             setupDrawerContent(binding.navView);
         }
         // Fragments
-        LinksFragment linksFragment = LinksFragment.newInstance();
-        FavoritesFragment favoritesFragment = FavoritesFragment.newInstance();
-        NotesFragment notesFragment = NotesFragment.newInstance();
-        // Tabs
-        ViewPager viewPager = binding.laanoViewPager;
-
-        if (viewPager != null) {
-            LaanoFragmentPagerAdapter adapter =
-                    new LaanoFragmentPagerAdapter(getSupportFragmentManager());
-
-            Resources res = getResources();
-
-            adapter.addTab(linksFragment, res.getString(R.string.laano_tab_links_title));
-            adapter.addTab(favoritesFragment, res.getString(R.string.laano_tab_favorites_title));
-            adapter.addTab(notesFragment, res.getString(R.string.laano_tab_notes_title));
-
+        LaanoFragmentPagerAdapter adapter = new LaanoFragmentPagerAdapter(
+                getSupportFragmentManager(), getApplicationContext());
+        if (binding.laanoViewPager != null) {
+            ViewPager viewPager = binding.laanoViewPager;
             viewPager.setAdapter(adapter);
-
+            // NOTE: Fragments are needed immediately to build Presenters
+            adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.LINKS_TAB);
+            adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.FAVORITES_TAB);
+            adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.NOTES_TAB);
+            adapter.finishUpdate(viewPager);
             if (binding.tabLayout != null) {
-                setupTabsContent(binding.tabLayout);
+                setupTabsContent(binding.tabLayout, viewPager);
             }
         }
         // Presenters
         DaggerLaanoComponent.builder()
                 .applicationComponent(((LaanoApplication) getApplication()).getApplicationComponent())
-                .linksPresenterModule(new LinksPresenterModule(linksFragment))
-                .favoritesPresenterModule(new FavoritesPresenterModule(favoritesFragment))
-                .notesPresenterModule(new NotesPresenterModule(notesFragment))
+                .linksPresenterModule(new LinksPresenterModule(adapter.getLinksFragment()))
+                .favoritesPresenterModule(new FavoritesPresenterModule(this, adapter.getFavoritesFragment()))
+                .notesPresenterModule(new NotesPresenterModule(adapter.getNotesFragment()))
                 .build().inject(this);
         // FAB
         if (binding.fabAdd != null) {
@@ -158,7 +130,6 @@ public class LaanoActivity extends AppCompatActivity implements
                 drawerLayout.openDrawer(GravityCompat.START);
                 return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -216,13 +187,38 @@ public class LaanoActivity extends AppCompatActivity implements
 
     // Setup
 
+    private void setupDrawerLayout(@NonNull final DrawerLayout drawerLayout) {
+        checkNotNull(drawerLayout);
+
+        // NOTE: untestable behavior (swipeRight() doesn't open Drawer)
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(
+                this, drawerLayout, R.string.drawer_open, R.string.drawer_close) {
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+            }
+        };
+        drawerLayout.addDrawerListener(drawerToggle);
+    }
+
     private void startManageAccountsActivity() {
         Intent manageAccountsIntent =
                 new Intent(getApplicationContext(), ManageAccountsActivity.class);
         startActivityForResult(manageAccountsIntent, ACTION_MANAGE_ACCOUNTS);
     }
 
-    private void setupDrawerContent(NavigationView navigationView) {
+    private void setupDrawerContent(@NonNull NavigationView navigationView) {
+        checkNotNull(navigationView);
+
         DrawerLayout drawerLayout = binding.drawerLayout;
         navigationView.setNavigationItemSelectedListener(
                 (menuItem) -> {
@@ -252,8 +248,10 @@ public class LaanoActivity extends AppCompatActivity implements
         );
     }
 
-    private void setupTabsContent(TabLayout tabLayout) {
-        ViewPager viewPager = binding.laanoViewPager;
+    private void setupTabsContent(@NonNull TabLayout tabLayout, @NonNull ViewPager viewPager) {
+        checkNotNull(tabLayout);
+        checkNotNull(viewPager);
+
         tabLayout.setupWithViewPager(viewPager);
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
 
@@ -273,7 +271,9 @@ public class LaanoActivity extends AppCompatActivity implements
     }
 
     // TODO: refactor to get rid of instanceof checking
-    private void setupFabAdd(FloatingActionButton fab) {
+    private void setupFabAdd(@NonNull FloatingActionButton fab) {
+        checkNotNull(fab);
+
         fab.setOnClickListener(v -> {
                     BaseFragment fragment = getCurrentFragment();
                     if (fragment instanceof LinksFragment) {

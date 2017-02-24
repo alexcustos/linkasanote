@@ -1,8 +1,9 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
-import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -11,18 +12,24 @@ import com.bytesforge.linkasanote.databinding.ItemFavoritesBinding;
 
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.ViewHolder> {
 
+    private final FavoritesContract.Presenter presenter;
+    private final FavoritesViewModel viewModel;
+
     private List<Favorite> favorites;
-    private Context context;
+    private SparseBooleanArray selectedIds;
 
-    public FavoritesAdapter(Context context, List<Favorite> favorites) {
-        this.context = context;
-        this.favorites = favorites;
-    }
-
-    public Context getContext() {
-        return context;
+    public FavoritesAdapter(
+            @NonNull List<Favorite> favorites,
+            @NonNull FavoritesContract.Presenter presenter,
+            @NonNull FavoritesViewModel viewModel) {
+        this.favorites = checkNotNull(favorites);
+        this.presenter = checkNotNull(presenter);
+        this.viewModel = checkNotNull(viewModel);
+        selectedIds = new SparseBooleanArray();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -34,8 +41,14 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
             this.binding = binding;
         }
 
-        public void bind(Favorite favorite) {
+        public void bind(
+                Favorite favorite, FavoritesContract.Presenter presenter,
+                FavoritesViewModel viewModel, Integer position) {
             binding.setFavorite(favorite);
+            binding.setPresenter(presenter);
+            binding.setViewModel(viewModel);
+            binding.setPosition(position);
+
             binding.executePendingBindings();
         }
     }
@@ -51,13 +64,40 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Favorite favorite = favorites.get(position);
-        holder.bind(favorite);
+        holder.bind(favorite, presenter, viewModel, position);
     }
 
     @Override
     public int getItemCount() {
         return favorites.size();
     }
+
+    // Selection
+
+    public void toggleSelection(int position) {
+        boolean isSelected = selectedIds.get(position);
+        if (isSelected) {
+            selectedIds.delete(position);
+        } else {
+            selectedIds.put(position, true);
+        }
+        notifyItemChanged(position);
+    }
+
+    public void removeSelection() {
+        selectedIds.clear();
+        notifyDataSetChanged();
+    }
+
+    public int getSelectedCount() {
+        return selectedIds.size();
+    }
+
+    public SparseBooleanArray getSelectedIds() {
+        return selectedIds;
+    }
+
+    // Swap
 
     public void swapItems(List<Favorite> favorites) {
         final FavoriteDiffCallback diffCallback =

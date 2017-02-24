@@ -72,8 +72,7 @@ public class UploadFileOperation extends RemoteOperation {
         result = uploadOperation.execute(client);
         if (result.isSuccess()) {
             file.setETag(uploadOperation.getETag());
-            file.setConflicted(false);
-            file.setSynced(true);
+            file.setSyncedState();
             int rowsUpdated = contentResolver.update(
                     file.getUri(), file.getUpdateValues(), null, null);
             if (rowsUpdated != 1) {

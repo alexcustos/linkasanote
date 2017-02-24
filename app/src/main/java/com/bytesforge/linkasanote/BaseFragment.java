@@ -1,24 +1,23 @@
 package com.bytesforge.linkasanote;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
 public abstract class BaseFragment extends Fragment {
 
-    public static final String ARG_TITLE = "ARG_TITLE";
+    public static final String ARGUMENT_TITLE = "ARGUMENT_TITLE";
 
-    private String title = null;
+    private String title;
 
-    public static void attachTitle(String tabTitle, Fragment fragment) {
+    public void attachTitle(String tabTitle) {
         Bundle args = new Bundle();
-        args.putString(ARG_TITLE, tabTitle);
-        fragment.setArguments(args);
+        args.putString(ARGUMENT_TITLE, tabTitle);
+        setArguments(args);
     }
 
     public String getTitle() {
         if (title == null) {
-            title = getArguments().getString(ARG_TITLE);
+            title = getArguments().getString(ARGUMENT_TITLE);
         }
         return title;
     }

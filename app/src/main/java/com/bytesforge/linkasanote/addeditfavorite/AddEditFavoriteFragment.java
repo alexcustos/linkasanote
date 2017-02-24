@@ -16,10 +16,9 @@ import android.widget.ArrayAdapter;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.databinding.FragmentAddEditFavoriteBinding;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.tokenautocomplete.FilteredArrayAdapter;
 import com.tokenautocomplete.TokenCompleteTextView;
-
-import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +62,11 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
     }
 
     @Override
+    public void setViewModel(@NonNull AddEditFavoriteContract.ViewModel viewModel) {
+        this.viewModel = checkNotNull(viewModel);
+    }
+
+    @Override
     public void finishActivity() {
         getActivity().setResult(Activity.RESULT_OK);
         getActivity().finish();
@@ -75,18 +79,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
             @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_add_edit_favorite, container, false);
-
-        if (savedInstanceState == null) {
-            // Default state
-            savedInstanceState = new Bundle();
-            savedInstanceState.putInt(AddEditFavoriteViewModel.STATE_ADD_BUTTON_TEXT,
-                    presenter.isNewFavorite()
-                            ? R.string.add_edit_favorite_new_button_title
-                            : R.string.add_edit_favorite_edit_button_title);
-        }
-        viewModel = new AddEditFavoriteViewModel(getContext(), savedInstanceState);
-        viewModel.setPresenter(presenter);
-        presenter.setViewModel(viewModel);
+        viewModel.setInstanceState(savedInstanceState);
         binding.setViewModel((AddEditFavoriteViewModel) viewModel);
         // FavoriteTags
         final FavoriteTagsCompletionView completionView = binding.favoriteTags;
@@ -139,7 +132,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
                 return filteredStringBuilder.toString();
             }
         };
-        InputFilter[] inputFilters = ArrayUtils.add(
+        InputFilter[] inputFilters = CommonUtils.arrayAdd(
                 completionView.getFilters(), alphanumericFilter);
         completionView.setFilters(inputFilters);
     }

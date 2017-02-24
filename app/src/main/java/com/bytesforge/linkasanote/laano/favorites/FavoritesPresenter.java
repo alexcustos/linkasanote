@@ -1,6 +1,5 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Favorite;
@@ -18,8 +17,11 @@ import rx.subscriptions.CompositeSubscription;
 
 public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
+    private static final String TAG = FavoritesPresenter.class.getSimpleName();
+
     private final Repository repository;
     private final FavoritesContract.View view;
+    private final FavoritesContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
 
     @NonNull
@@ -30,21 +32,21 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     @Inject
     FavoritesPresenter(
             Repository repository, FavoritesContract.View view,
+            FavoritesContract.ViewModel viewModel,
             BaseSchedulerProvider schedulerProvider) {
         this.repository = repository;
         this.view = view;
+        this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
 
         subscription = new CompositeSubscription();
     }
 
     @Inject
-    void setupView(Context context) {
-        FavoritesContract.ViewModel viewModel = new FavoritesViewModel(context);
-        viewModel.setPresenter(this);
-
+    void setupView() {
         view.setPresenter(this);
         view.setViewModel(viewModel);
+        viewModel.setPresenter(this);
     }
 
     @Override
@@ -101,5 +103,21 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
                     }
                 });
         this.subscription.add(subscription);
+    }
+
+    @Override
+    public void onFavoriteClick(int position) {
+        if (viewModel.isActionMode()) {
+            view.onFavoriteSelected(position);
+        }
+    }
+
+    @Override
+    public boolean onFavoriteLongClick(int position) {
+        if (!viewModel.isActionMode()) {
+            viewModel.setActionMode(true);
+        }
+        view.onFavoriteSelected(position);
+        return true;
     }
 }

@@ -2,7 +2,6 @@ package com.bytesforge.linkasanote.utils;
 
 import android.util.Base64;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +32,7 @@ public class UuidUtilsTest {
         byte[] bytesUUID = new byte[16];
         Arrays.fill(bytesUUID, (byte) 0x00);
 
-        String keyBase64 = StringUtils.repeat('A', 22);
+        String keyBase64 = CommonUtils.charRepeat('A', 22);
         byte[] bytesBase64 = new byte[22];
         Arrays.fill(bytesBase64, (byte) 0x41);
 

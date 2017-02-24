@@ -1,8 +1,8 @@
 package com.bytesforge.linkasanote.addeditaccount;
 
 import com.bytesforge.linkasanote.ApplicationComponent;
+import com.bytesforge.linkasanote.FragmentScoped;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterModule;
-import com.bytesforge.linkasanote.utils.FragmentScoped;
 
 import dagger.Component;
 

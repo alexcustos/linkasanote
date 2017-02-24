@@ -47,7 +47,7 @@ import static org.mockito.Mockito.verify;
 public class AddEditAccountNextcloudScreenTest {
 
     private OperationsService serviceMock;
-    private ArgumentCaptor<NextcloudPresenter> presenterCaptor;
+    private ArgumentCaptor<NextcloudFragment> viewCaptor;
 
     private final String MALFORMED_URL = "demo.nextcloud.com:port";
     private final String UNFORMATTED_URL = "Demo.Nextcloud.com:80/index.php/apps/files/";
@@ -77,8 +77,8 @@ public class AddEditAccountNextcloudScreenTest {
 
         serviceMock = Mockito.mock(OperationsService.class);
         // TODO: check if race condition is possible
-        presenter.setOperationsService(serviceMock);
-        presenterCaptor = ArgumentCaptor.forClass(NextcloudPresenter.class);
+        fragment.setOperationsService(serviceMock);
+        viewCaptor = ArgumentCaptor.forClass(NextcloudFragment.class);
     }
 
     @Test
@@ -136,8 +136,8 @@ public class AddEditAccountNextcloudScreenTest {
         onView(withId(R.id.account_username)).perform(click());
 
         verify(serviceMock).queueOperation(
-                any(Intent.class), presenterCaptor.capture(), any(Handler.class));
-        presenterCaptor.getValue().onRemoteOperationFinish(
+                any(Intent.class), viewCaptor.capture(), any(Handler.class));
+        viewCaptor.getValue().onRemoteOperationFinish(
                 new GetServerInfoOperation(SERVER_URL, serviceMock),
                 new RemoteOperationResult(RemoteOperationResult.ResultCode.FILE_NOT_FOUND));
         // Just to make sure UI is updated
@@ -154,7 +154,7 @@ public class AddEditAccountNextcloudScreenTest {
         onView(withId(R.id.server_url)).perform(typeText(SERVER_URL));
         onView(withId(R.id.account_username)).perform(click());
         verify(serviceMock).queueOperation(
-                any(Intent.class), presenterCaptor.capture(), any(Handler.class));
+                any(Intent.class), viewCaptor.capture(), any(Handler.class));
         // Mock OK_SSL Status
         RemoteOperationResult result =
                 new RemoteOperationResult(RemoteOperationResult.ResultCode.OK_SSL);
@@ -165,7 +165,7 @@ public class AddEditAccountNextcloudScreenTest {
         ArrayList<Object> data = new ArrayList<>();
         data.add(serverInfo);
         result.setData(data);
-        presenterCaptor.getValue().onRemoteOperationFinish(
+        viewCaptor.getValue().onRemoteOperationFinish(
                 new GetServerInfoOperation(SERVER_URL, serviceMock), result);
         onView(withId(R.id.server_url)).perform(click());
         // Auth

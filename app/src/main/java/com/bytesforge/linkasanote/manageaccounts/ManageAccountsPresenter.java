@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.manageaccounts;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.support.annotation.NonNull;
 
@@ -20,6 +21,7 @@ public final class ManageAccountsPresenter implements ManageAccountsContract.Pre
     private static final String TAG = ManageAccountsPresenter.class.getSimpleName();
 
     private final ManageAccountsContract.View view;
+    private final AccountManager accountManager;
     private final BaseSchedulerProvider schedulerProvider;
 
     @NonNull
@@ -27,17 +29,18 @@ public final class ManageAccountsPresenter implements ManageAccountsContract.Pre
 
     @Inject
     public ManageAccountsPresenter(
-            ManageAccountsContract.View view,
+            ManageAccountsContract.View view, AccountManager accountManager,
             BaseSchedulerProvider schedulerProvider) {
         this.view = view;
+        this.accountManager = accountManager;
         this.schedulerProvider = schedulerProvider;
-
         subscription = new CompositeSubscription();
     }
 
     @Inject
     void setupView() {
         view.setPresenter(this);
+        view.setAccountManager(accountManager);
     }
 
     @Override

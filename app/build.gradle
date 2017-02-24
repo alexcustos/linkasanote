@@ -74,7 +74,6 @@ dependencies {
     compile "com.android.support.test.espresso:espresso-idling-resource:${espressoVersion}"
     compile "com.android.support.constraint:constraint-layout:${constraintLayoutVersion}"
     compile "com.google.guava:guava:${guavaVersion}"
-    compile "org.apache.commons:commons-lang3:${commonsLang3Version}"
     compile "com.github.nextcloud:android-library:${nextcloudLibraryVersion}"
 
     // RxJava

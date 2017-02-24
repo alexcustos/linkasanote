@@ -24,6 +24,7 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
     private String remotePath;
     private String eTag;
     private boolean conflicted;
+    private boolean deleted;
     private boolean synced;
 
     public static final Creator<JsonFile> CREATOR = new Creator<JsonFile>() {
@@ -51,6 +52,7 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
         this.remotePath = remotePath;
         eTag = null;
         conflicted = false;
+        deleted = false;
         synced = false;
     }
 
@@ -61,6 +63,7 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
         remotePath = in.readString();
         eTag = in.readString();
         conflicted = in.readInt() == 1;
+        deleted = in.readInt() == 1;
         synced = in.readInt() == 1;
     }
 
@@ -77,6 +80,7 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
         dest.writeString(remotePath);
         dest.writeString(eTag);
         dest.writeInt(conflicted ? 1 : 0);
+        dest.writeInt(deleted ? 1 : 0);
         dest.writeInt(synced ? 1 : 0);
     }
 
@@ -100,24 +104,26 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
         return Objects.hashCode(remotePath, length);
     }
 
-    public void setUri(Uri uri) {
-        this.uri = uri;
-    }
+    // Getters & Setters
 
     public Uri getUri() {
         return uri;
+    }
+
+    public void setUri(Uri uri) {
+        this.uri = uri;
     }
 
     public String getRemotePath() {
         return remotePath;
     }
 
-    public void setLocalPath(String localPath) {
-        this.localPath = localPath;
-    }
-
     public String getLocalPath() {
         return localPath;
+    }
+
+    public void setLocalPath(String localPath) {
+        this.localPath = localPath;
     }
 
     public void setLength(long length) {
@@ -128,12 +134,44 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
         return MIME_TYPE;
     }
 
+    public String getETag() {
+        return eTag;
+    }
+
     public void setETag(String eTag) {
         this.eTag = eTag;
     }
 
-    public String getETag() {
-        return eTag;
+    // States
+
+    public void setState(boolean conflicted, boolean deleted, boolean synced) {
+        this.conflicted = conflicted;
+        this.deleted = deleted;
+        this.synced = synced;
+    }
+
+    public void setUnsyncedState() {
+        setState(false, false, false); // cds
+    }
+
+    public void setSyncedState() {
+        setState(false, false, true); // cdS
+    }
+
+    public void setLocalDeletedState() {
+        setState(false, true, false); // cDs, cDS successfully deleted (delete record)
+    }
+
+    public void setConflictedUpdate() {
+        // NOTE: Local record was updated and Cloud one was modified or deleted
+        // TODO: Conflicted record must preload Cloud copy and check if conflict still exists
+        // TODO: Cloud copy: empty & cDs - deleted, cds - updated
+        setState(true, false, false); // Cds, CdS successfully resolved (syncedState)
+    }
+
+    public void setConflictedDelete() {
+        // NOTE: Local record was deleted and Cloud one was modified
+        setState(true, true, false); // CDs, CDS successfully resolved (syncedState)
     }
 
     public String getKey(@NonNull Account account) {
@@ -141,28 +179,13 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
         return account.name + getRemotePath();
     }
 
-    public void setConflicted(boolean conflicted) {
-        this.conflicted = conflicted;
-    }
-
-    public boolean isConflicted() {
-        return conflicted;
-    }
-
-    public void setSynced(boolean synced) {
-        this.synced = synced;
-    }
-
-    public boolean isSynced() {
-        return synced;
-    }
-
     @NonNull
     public ContentValues getUpdateValues() {
         ContentValues values = new ContentValues();
         values.put(LocalContract.COMMON_NAME_ETAG, getETag());
-        values.put(LocalContract.COMMON_NAME_CONFLICTED, isConflicted());
-        values.put(LocalContract.COMMON_NAME_SYNCED, isSynced());
+        values.put(LocalContract.COMMON_NAME_CONFLICTED, conflicted);
+        values.put(LocalContract.COMMON_NAME_DELETED, deleted);
+        values.put(LocalContract.COMMON_NAME_SYNCED, synced);
 
         return values;
     }

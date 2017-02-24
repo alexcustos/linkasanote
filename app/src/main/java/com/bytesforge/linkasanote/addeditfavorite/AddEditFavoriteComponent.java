@@ -1,7 +1,7 @@
 package com.bytesforge.linkasanote.addeditfavorite;
 
 import com.bytesforge.linkasanote.ApplicationComponent;
-import com.bytesforge.linkasanote.utils.FragmentScoped;
+import com.bytesforge.linkasanote.FragmentScoped;
 
 import dagger.Component;
 

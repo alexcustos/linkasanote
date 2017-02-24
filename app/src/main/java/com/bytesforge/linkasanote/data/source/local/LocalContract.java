@@ -16,6 +16,7 @@ public final class LocalContract {
     public static final String COMMON_NAME_ETAG = "etag";
     // NOTE: there is a conflict with a cloud version
     public static final String COMMON_NAME_CONFLICTED = "conflicted";
+    public static final String COMMON_NAME_DELETED = "deleted";
     public static final String COMMON_NAME_SYNCED = "synced";
 
     private LocalContract() {
@@ -124,6 +125,7 @@ public final class LocalContract {
         public static final String COLUMN_NAME_NAME = "name";
         public static final String COLUMN_NAME_ETAG = LocalContract.COMMON_NAME_ETAG;
         public static final String COLUMN_NAME_CONFLICTED = LocalContract.COMMON_NAME_CONFLICTED;
+        public static final String COLUMN_NAME_DELETED = LocalContract.COMMON_NAME_DELETED;
         public static final String COLUMN_NAME_SYNCED = LocalContract.COMMON_NAME_SYNCED;
 
         public static final String CONTENT_TYPE =
@@ -141,6 +143,7 @@ public final class LocalContract {
                 FavoriteEntry.COLUMN_NAME_NAME,
                 FavoriteEntry.COLUMN_NAME_ETAG,
                 FavoriteEntry.COLUMN_NAME_CONFLICTED,
+                FavoriteEntry.COLUMN_NAME_DELETED,
                 FavoriteEntry.COLUMN_NAME_SYNCED};
 
         public static Uri buildFavoritesUri() {

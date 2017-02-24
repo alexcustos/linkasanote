@@ -1,13 +1,13 @@
 package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BasePresenter;
 import com.bytesforge.linkasanote.BaseView;
-import com.bytesforge.linkasanote.sync.operations.OperationsService;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 
@@ -15,6 +15,8 @@ public interface NextcloudContract {
 
     interface View extends BaseView<Presenter> {
 
+        void setViewModel(@NonNull NextcloudContract.ViewModel viewModel);
+        void setAccountManager(@NonNull AccountManager accountManager);
         boolean isActive();
 
         void addAccount(
@@ -27,12 +29,18 @@ public interface NextcloudContract {
         void cancelActivity();
         Bundle getAccountState(@NonNull Account account);
         void requestFocusOnAccountPassword();
+        boolean sendGetServerInfoOperation(String url);
+        boolean sendCheckCredentialsOperation(
+                String username, String password,
+                @Nullable GetServerInfoOperation.ServerInfo serverInfo);
     }
 
     interface ViewModel extends BaseView<Presenter> {
 
+        void setInstanceState(@Nullable Bundle savedInstanceState);
         void loadInstanceState(@NonNull Bundle outState);
         void applyInstanceState(@NonNull Bundle state);
+
         void validateServer();
 
         void showRefreshButton();
@@ -58,8 +66,6 @@ public interface NextcloudContract {
         boolean isNewAccount();
         void populateAccount();
 
-        void setViewModel(@NonNull NextcloudContract.ViewModel viewModel);
-        void setOperationsService(OperationsService service);
         Bundle getInstanceState();
         void applyInstanceState(@Nullable Bundle state);
 
@@ -67,6 +73,8 @@ public interface NextcloudContract {
         void checkUrl(String url);
         void checkAuth(String username, String password);
         boolean isServerUrlValid();
-        void setServerInfo(GetServerInfoOperation.ServerInfo serverInfo);
+        void setServerInfo(@Nullable GetServerInfoOperation.ServerInfo serverInfo);
+        @Nullable GetServerInfoOperation.ServerInfo getServerInfo();
+        @Nullable Account getAccount();
     }
 }

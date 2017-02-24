@@ -3,20 +3,15 @@ package com.bytesforge.linkasanote.addeditaccount;
 import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
@@ -76,11 +71,8 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         // Presenter
         DaggerAddEditAccountComponent.builder()
                 .applicationComponent(((LaanoApplication) getApplication()).getApplicationComponent())
-                .nextcloudPresenterModule(new NextcloudPresenterModule(nextcloudFragment, account))
+                .nextcloudPresenterModule(new NextcloudPresenterModule(this, nextcloudFragment, account))
                 .build().inject(this);
-        // Service binding
-        Intent intent = new Intent(this, OperationsService.class);
-        bindService(intent, operationsServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -92,9 +84,6 @@ public class AddEditAccountActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (operationsService != null) {
-            unbindService(operationsServiceConnection);
-        }
     }
 
     // Get Accounts Permission
@@ -188,26 +177,6 @@ public class AddEditAccountActivity extends AppCompatActivity implements
                     }
                 }).show();
     }
-
-    // Service
-
-    private ServiceConnection operationsServiceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            Log.d(TAG, "Service connected [" + className.getShortClassName() + "]");
-            OperationsService.OperationsBinder binder =
-                    (OperationsService.OperationsBinder) service;
-            operationsService = binder.getService();
-            presenter.setOperationsService(operationsService);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName className) {
-            Log.d(TAG, "Service disconnected [" + className.getShortClassName() + "]");
-            operationsService = null;
-        }
-    };
 
     private void cancelActivity() {
         setResult(RESULT_CANCELED);

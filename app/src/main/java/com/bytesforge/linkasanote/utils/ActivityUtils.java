@@ -1,9 +1,9 @@
 package com.bytesforge.linkasanote.utils;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -14,12 +14,34 @@ public class ActivityUtils {
     public static void addFragmentToActivity(
             @NonNull FragmentManager fragmentManager,
             @NonNull Fragment fragment,
+            int frameId, @Nullable String tag) {
+        checkNotNull(fragmentManager);
+        checkNotNull(fragment);
+        fragmentManager
+                .beginTransaction()
+                .add(frameId, fragment)
+                .commit();
+    }
+
+    public static void addFragmentToActivity(
+            @NonNull FragmentManager fragmentManager,
+            @NonNull Fragment fragment,
             int frameId) {
         checkNotNull(fragmentManager);
         checkNotNull(fragment);
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.add(frameId, fragment);
-        transaction.commit();
+        addFragmentToActivity(fragmentManager, fragment, frameId, null);
+    }
+
+    public static void replaceFragmentInActivity(
+            @NonNull FragmentManager fragmentManager,
+            @NonNull Fragment fragment,
+            int frameId, @Nullable String tag) {
+        checkNotNull(fragmentManager);
+        checkNotNull(fragment);
+        fragmentManager
+                .beginTransaction()
+                .replace(frameId, fragment, tag)
+                .commit();
     }
 
     public static void replaceFragmentInActivity(
@@ -28,9 +50,7 @@ public class ActivityUtils {
             int frameId) {
         checkNotNull(fragmentManager);
         checkNotNull(fragment);
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(frameId, fragment);
-        transaction.commit();
+        replaceFragmentInActivity(fragmentManager, fragment, frameId, null);
     }
 
     public static void disableViewGroupControls(ViewGroup viewGroup) {

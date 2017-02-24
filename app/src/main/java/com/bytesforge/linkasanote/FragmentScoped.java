@@ -1,4 +1,4 @@
-package com.bytesforge.linkasanote.utils;
+package com.bytesforge.linkasanote;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

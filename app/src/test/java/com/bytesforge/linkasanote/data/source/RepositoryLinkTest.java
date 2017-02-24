@@ -1,8 +1,8 @@
 package com.bytesforge.linkasanote.data.source;
 
 import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -49,7 +49,7 @@ public class RepositoryLinkTest {
         LINK_TITLES.add("Title for Link #2");
         LINK_TITLES.add("Title for Link #3");
 
-        String keyPrefix = StringUtils.repeat('A', 21);
+        String keyPrefix = CommonUtils.charRepeat('A', 21);
         LINKS = new ArrayList<>();
         LINKS.add(new Link(keyPrefix + 'A', LINK_VALUES.get(0), LINK_TITLES.get(0)));
         LINKS.add(new Link(keyPrefix + 'B', LINK_VALUES.get(1), LINK_TITLES.get(1)));

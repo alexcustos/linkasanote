@@ -55,7 +55,7 @@ public class AddEditFavoriteActivity extends AppCompatActivity {
         // Presenter
         DaggerAddEditFavoriteComponent.builder()
                 .applicationComponent(((LaanoApplication) getApplication()).getApplicationComponent())
-                .addEditFavoritePresenterModule(new AddEditFavoritePresenterModule(fragment, favoriteId))
+                .addEditFavoritePresenterModule(new AddEditFavoritePresenterModule(this, fragment, favoriteId))
                 .build().inject(this);
     }
 

@@ -64,9 +64,12 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
 
     private boolean isServerUrlHasFocus = false;
 
-    public NextcloudViewModel(@NonNull Context context, @Nullable Bundle savedInstanceState) {
+    public NextcloudViewModel(@NonNull Context context) {
         this.context = checkNotNull(context);
+    }
 
+    @Override
+    public void setInstanceState(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState == null) {
             applyInstanceState(getDefaultInstanceState());
         } else {
@@ -74,6 +77,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
         }
     }
 
+    @Override
     public void loadInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
 

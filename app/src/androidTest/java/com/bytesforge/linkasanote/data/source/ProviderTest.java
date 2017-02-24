@@ -12,8 +12,8 @@ import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @RunWith(AndroidJUnit4.class)
 public class ProviderTest extends ProviderTestCase2<Provider> {
 
-    private final String ENTRY_KEY = StringUtils.repeat('A', 22);
+    private final String ENTRY_KEY = CommonUtils.charRepeat('A', 22);
     private final List<Tag> TAGS;
     private final String LINK_VALUE = "http://laano.net/link";
     private final String LINK_TITLE = "Title of the Link";

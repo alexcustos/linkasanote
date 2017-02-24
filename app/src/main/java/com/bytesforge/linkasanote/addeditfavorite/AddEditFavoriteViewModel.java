@@ -32,10 +32,9 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
 
     public final ObservableField<String> favoriteName = new ObservableField<>();
     public final ObservableBoolean addButton = new ObservableBoolean(false);
+    private int addButtonText;
 
-    private final int addButtonText;
     private FavoriteTagsCompletionView favoriteTags;
-
     private Context context;
     private AddEditFavoriteContract.Presenter presenter;
 
@@ -47,14 +46,17 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Bindable
     public String nameErrorText;
 
-    public AddEditFavoriteViewModel(@NonNull Context context, @NonNull Bundle savedInstanceState) {
+    public AddEditFavoriteViewModel(@NonNull Context context) {
         this.context = checkNotNull(context);
-        checkNotNull(savedInstanceState);
+    }
 
-        favoriteName.set(savedInstanceState.getString(STATE_FAVORITE_NAME));
-        addButton.set(savedInstanceState.getBoolean(STATE_ADD_BUTTON));
-        addButtonText = savedInstanceState.getInt(STATE_ADD_BUTTON_TEXT);
-        nameErrorText = savedInstanceState.getString(STATE_NAME_ERROR_TEXT);
+    @Override
+    public void setInstanceState(@Nullable Bundle savedInstanceState) {
+        if (savedInstanceState == null) {
+            applyInstanceState(getDefaultInstanceState());
+        } else {
+            applyInstanceState(savedInstanceState);
+        }
     }
 
     @Override
@@ -65,6 +67,30 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         outState.putBoolean(STATE_ADD_BUTTON, addButton.get());
         outState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
         outState.putString(STATE_NAME_ERROR_TEXT, nameErrorText);
+    }
+
+    @Override
+    public void applyInstanceState(@NonNull Bundle state) {
+        checkNotNull(state);
+
+        favoriteName.set(state.getString(STATE_FAVORITE_NAME));
+        addButton.set(state.getBoolean(STATE_ADD_BUTTON));
+        addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
+        nameErrorText = state.getString(STATE_NAME_ERROR_TEXT);
+    }
+
+    private Bundle getDefaultInstanceState() {
+        Bundle defaultState = new Bundle();
+
+        defaultState.putString(STATE_FAVORITE_NAME, null);
+        defaultState.putBoolean(STATE_ADD_BUTTON, false);
+        int addButtonText = presenter.isNewFavorite()
+                ? R.string.add_edit_favorite_new_button_title
+                : R.string.add_edit_favorite_edit_button_title;
+        defaultState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
+        defaultState.putString(STATE_NAME_ERROR_TEXT, null);
+
+        return defaultState;
     }
 
     @Override

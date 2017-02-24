@@ -1,6 +1,8 @@
 package com.bytesforge.linkasanote.manageaccounts;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BasePresenter;
@@ -14,6 +16,7 @@ public interface ManageAccountsContract {
 
     interface View extends BaseView<Presenter> {
 
+        void setAccountManager(@NonNull AccountManager accountManager);
         boolean isActive();
         void finishActivity();
         void cancelActivity();

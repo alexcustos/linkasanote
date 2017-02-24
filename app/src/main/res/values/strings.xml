@@ -64,8 +64,10 @@
     <string name="add_edit_account_nextcloud_warning_no_permission">Required permission was not granted</string>
     <string name="add_edit_account_nextcloud_warning_no_account">Account does not exist in the device</string>
     <string name="add_edit_account_nextcloud_canceled">Canceled by the user</string>
-    <string name="item_favorites_left_button_title">Apply filter to Links</string>
-    <string name="item_favorites_right_button_title">Apply filter to Notes</string>
+    <string name="item_favorites_favorite_to_links_button">Apply Favorite filter to Links</string>
+    <string name="item_favorites_favorite_to_notes_button">Apply Favorite filter to Notes</string>
+    <string name="item_favorites_edit_button">Edit Favorite</string>
+    <string name="item_favorites_checkbox">Check Favorite</string>
     <string name="favorites_empty_title">List is empty</string>
     <string name="add_edit_favorite_name_hint">Name</string>
     <string name="add_edit_favorite_tags_hint">Tags</string>

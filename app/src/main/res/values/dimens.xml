@@ -16,8 +16,14 @@
     <dimen name="token_text_size">16sp</dimen>
     <dimen name="add_edit_account_url_form_space">16dp</dimen>
     <dimen name="item_manage_accounts_layout_height">72dp</dimen>
-    <dimen name="recycler_view_horizontal_padding">16dp</dimen>
-    <dimen name="recycler_view_nearby_button_margin">8dp</dimen>
+    <dimen name="item_favorites_layout_height">72dp</dimen>
+    <dimen name="recycler_view_left_icon_margin_start">16dp</dimen>
+    <dimen name="recycler_view_text_margin_right">16dp</dimen>
+    <dimen name="recycler_view_left_checkbox_margin_start">12dp</dimen>
+    <dimen name="recycler_view_text_to_button_margin_left">24dp</dimen>
+    <dimen name="recycler_view_nearby_button_margin_end">8dp</dimen>
+    <dimen name="recycler_view_button_padding_vertical">24dp</dimen>
     <dimen name="recycler_view_button_padding">8dp</dimen>
-    <dimen name="recycler_view_text_left_margin">32dp</dimen>
+    <dimen name="recycler_view_right_button_padding_end">16dp</dimen>
+    <dimen name="recycler_view_left_button_padding_start">16dp</dimen>
 </resources>

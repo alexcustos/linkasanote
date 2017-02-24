@@ -80,6 +80,11 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
     }
 
     @Override
+    public void setAccountManager(@NonNull AccountManager accountManager) {
+        this.accountManager = checkNotNull(accountManager);
+    }
+
+    @Override
     public void finishActivity() {
         getActivity().onBackPressed();
     }
@@ -101,7 +106,6 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
             LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         binding = FragmentManageAccountsBinding.inflate(inflater, container, false);
-        accountManager = AccountManager.get(getContext());
         // RecyclerView
         RecyclerView rvAccounts = binding.rvAccounts;
         if (rvAccounts != null) {
@@ -259,11 +263,6 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
     @Override
     public void swapItems(List<AccountItem> accountItems) {
         adapter.swapItems(accountItems);
-    }
-
-    @VisibleForTesting
-    public void setAccountManager(@NonNull AccountManager accountManager) {
-        this.accountManager = checkNotNull(accountManager);
     }
 
     @VisibleForTesting

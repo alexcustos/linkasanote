@@ -2,8 +2,8 @@ package com.bytesforge.linkasanote.data.source;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -40,7 +40,7 @@ public class RepositoryFavoriteTest {
     private DataSource cloudDataSource;
 
     public RepositoryFavoriteTest() {
-        String keyPrefix = StringUtils.repeat('A', 21);
+        String keyPrefix = CommonUtils.charRepeat('A', 21);
 
         TAGS = new ArrayList<>();
         TAGS.add(new Tag("first"));

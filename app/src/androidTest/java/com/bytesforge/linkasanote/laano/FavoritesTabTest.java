@@ -9,6 +9,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
 
@@ -98,12 +99,18 @@ public class FavoritesTabTest {
     }
 
     @Test
-    public void addFavoritesToFavoritesRecyclerView() {
+    public void addFavoritesToFavoritesRecyclerView_checkIfPersistOnOrientationChange() {
         repository.cacheIsDirty = true;
         for (String name : FAVORITE_NAMES) {
             createFavorite(name, TAGS);
         }
-        onView(withItemTextRV(FAVORITE_NAMES.get(0))).check(matches(isDisplayed()));
+        for (String name : FAVORITE_NAMES) {
+            onView(withItemTextRV(name)).check(matches(isDisplayed()));
+        }
+        TestUtils.rotateOrientation(laanoActivityTestRule);
+        for (String name : FAVORITE_NAMES) {
+            onView(withItemTextRV(name)).check(matches(isDisplayed()));
+        }
     }
 
     private void createFavorite(String name, String tags) {
