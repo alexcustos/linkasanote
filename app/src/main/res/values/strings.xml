@@ -84,4 +84,8 @@
     <string name="manage_accounts_removal_confirmation_title">Remove account</string>
     <string name="manage_accounts_removal_confirmation_message">Delete account %s?\n\nThis action cannot be undone.</string>
     <string name="manage_accounts_account_updated">The account has been successfully updated</string>
+    <string name="action_mode_favorites_delete">Delete</string>
+    <string name="laano_favorites_action_mode_selected">%d selected</string>
+    <string name="toolbar_item_sync">Start synchronization</string>
+    <string name="toolbar_item_action_mode">Switch to edit mode</string>
 </resources>

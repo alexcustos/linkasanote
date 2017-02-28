@@ -18,12 +18,12 @@ public class ManageAccountsPresenterModule {
     }
 
     @Provides
-    ManageAccountsContract.View provideManageAccountsContractView() {
+    public ManageAccountsContract.View provideManageAccountsContractView() {
         return view;
     }
 
     @Provides
-    AccountManager provideAccountManager() {
+    public AccountManager provideAccountManager() {
         return AccountManager.get(context);
     }
 }

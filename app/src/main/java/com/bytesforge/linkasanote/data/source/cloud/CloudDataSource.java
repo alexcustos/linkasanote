@@ -70,6 +70,8 @@ public class CloudDataSource implements DataSource {
     public void deleteAllLinks() {
     }
 
+    // Notes
+
     @Override
     public Observable<List<Note>> getNotes() {
         return null;
@@ -87,6 +89,8 @@ public class CloudDataSource implements DataSource {
     @Override
     public void deleteAllNotes() {
     }
+
+    // Favorites
 
     @Override
     public Observable<List<Favorite>> getFavorites() {
@@ -139,6 +143,12 @@ public class CloudDataSource implements DataSource {
     @Override
     public void deleteAllFavorites() {
     }
+
+    @Override
+    public void deleteFavorite(@NonNull String favoriteId) {
+    }
+
+    // Tags
 
     @Override
     public Observable<List<Tag>> getTags() {

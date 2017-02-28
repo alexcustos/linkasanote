@@ -55,12 +55,10 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
     @Override
     public void populateAccount() {
         if (account == null) {
-            throw new RuntimeException("populateAccount() was called but account is null.");
+            throw new RuntimeException("populateAccount() was called but account is null");
         }
-        Bundle state = view.getAccountState(account);
-        viewModel.applyInstanceState(state);
+        view.setupAccountState(account);
         viewModel.validateServer();
-        view.requestFocusOnAccountPassword();
     }
 
     @Override

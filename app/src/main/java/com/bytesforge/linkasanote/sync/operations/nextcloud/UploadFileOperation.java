@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
@@ -28,7 +29,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class UploadFileOperation extends RemoteOperation {
 
     private static final String NEXTCLOUD_HEADER_PREFIX = "OC-".toLowerCase();
-    private static final String NEXTCLOUD_ETAG_HEADER = NEXTCLOUD_HEADER_PREFIX + "ETag".toLowerCase();
+    private static final String NEXTCLOUD_FILE_ID_HEADER = NEXTCLOUD_HEADER_PREFIX + "FileId".toLowerCase();
+    private static final String NEXTCLOUD_E_TAG_HEADER = NEXTCLOUD_HEADER_PREFIX + "ETag".toLowerCase();
     private static final String TAG = UploadFileOperation.class.getSimpleName();
 
     private Account account;
@@ -72,7 +74,7 @@ public class UploadFileOperation extends RemoteOperation {
         result = uploadOperation.execute(client);
         if (result.isSuccess()) {
             file.setETag(uploadOperation.getETag());
-            file.setSyncedState();
+            file.setSyncState(SyncState.State.SYNCED);
             int rowsUpdated = contentResolver.update(
                     file.getUri(), file.getUpdateValues(), null, null);
             if (rowsUpdated != 1) {
@@ -108,8 +110,8 @@ public class UploadFileOperation extends RemoteOperation {
 
     private class EnhancedUploadRemoteFileOperation extends UploadRemoteFileOperation {
 
-        private Map<String, String> nextcloudHeaders = new HashMap<>();
         private OwnCloudClient client;
+        private String fileId;
         private String eTag;
 
         public EnhancedUploadRemoteFileOperation(String localPath, String remotePath, String mimeType) {
@@ -120,25 +122,38 @@ public class UploadFileOperation extends RemoteOperation {
         public String getETag() {
             if (eTag != null) return eTag;
 
-            if (nextcloudHeaders != null) {
-                eTag = nextcloudHeaders.get(NEXTCLOUD_ETAG_HEADER);
-            }
-            if (eTag == null) {
-                ReadRemoteFileOperation operation = new ReadRemoteFileOperation(this.mRemotePath);
-                RemoteOperationResult result = operation.execute(client);
-                if (result.isSuccess()) {
-                    RemoteFile file = (RemoteFile) result.getData().get(0);
-                    eTag = file.getEtag();
-                }
-            }
+            requestNextcloudFileAttributes();
             return eTag;
+        }
+
+        @Nullable
+        public String getFileId() {
+            if (fileId != null) return fileId;
+
+            requestNextcloudFileAttributes();
+            return fileId;
+        }
+
+        private void requestNextcloudFileAttributes() {
+            ReadRemoteFileOperation operation = new ReadRemoteFileOperation(this.mRemotePath);
+            RemoteOperationResult result = operation.execute(client);
+            if (result.isSuccess()) {
+                RemoteFile file = (RemoteFile) result.getData().get(0);
+                fileId = file.getRemoteId();
+                eTag = file.getEtag();
+            }
         }
 
         @Override
         public RemoteOperationResult execute(OwnCloudClient client) {
             this.client = client;
             RemoteOperationResult result = super.execute(client);
-            nextcloudHeaders = extractNextcloudResponseHeaders(this.mPutMethod.getResponseHeaders());
+            Map<String, String> nextcloudHeaders =
+                    extractNextcloudResponseHeaders(this.mPutMethod.getResponseHeaders());
+            if (nextcloudHeaders != null) {
+                fileId = nextcloudHeaders.get(NEXTCLOUD_FILE_ID_HEADER);
+                eTag = nextcloudHeaders.get(NEXTCLOUD_E_TAG_HEADER);
+            }
             return result;
         }
 
@@ -156,5 +171,5 @@ public class UploadFileOperation extends RemoteOperation {
             }
             return nextcloudHeaders.size() <= 0 ? null : nextcloudHeaders;
         }
-    } // class EnhancedUploadRemoteFileOperation
+    } // class
 }

@@ -21,19 +21,19 @@ public class AddEditFavoritePresenterModule {
     }
 
     @Provides
-    AddEditFavoriteContract.View provideAddEditFavoriteContractView() {
+    public AddEditFavoriteContract.View provideAddEditFavoriteContractView() {
         return view;
     }
 
     @Provides
-    AddEditFavoriteContract.ViewModel provideAddEditFavoriteContractViewModel() {
+    public AddEditFavoriteContract.ViewModel provideAddEditFavoriteContractViewModel() {
         return new AddEditFavoriteViewModel(context);
     }
 
     @Provides
     @Nullable
     @FavoriteId
-    String provideFavoriteId() {
+    public String provideFavoriteId() {
         return favoriteId;
     }
 }

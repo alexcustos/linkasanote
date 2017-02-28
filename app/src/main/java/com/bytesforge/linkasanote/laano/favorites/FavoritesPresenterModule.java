@@ -17,12 +17,12 @@ public class FavoritesPresenterModule {
     }
 
     @Provides
-    FavoritesContract.View provideFavoritesContractView() {
+    public FavoritesContract.View provideFavoritesContractView() {
         return view;
     }
 
     @Provides
-    FavoritesContract.ViewModel provideFavoritesContractViewModel() {
+    public FavoritesContract.ViewModel provideFavoritesContractViewModel() {
         return new FavoritesViewModel(context);
     }
 }

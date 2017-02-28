@@ -35,9 +35,13 @@ import com.owncloud.android.lib.common.accounts.AccountUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import rx.Observable;
+import rx.Observer;
+import rx.observables.SyncOnSubscribe;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountUsername;
@@ -123,26 +127,46 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
 
     @Override
     public Observable<AccountItem> loadAccountItems() {
-        return Observable.create(subscriber -> {
-            Account[] accounts = getAccountsWithPermissionCheck();
-            if (accounts == null) {
-                subscriber.onError(new NullPointerException());
-                return;
-            }
-            for (Account account : accounts) {
-                AccountItem accountItem = new AccountItem(account);
-                try {
-                    OwnCloudAccount ownCloudAccount = new OwnCloudAccount(account, getContext());
-                    accountItem.setDisplayName(ownCloudAccount.getDisplayName());
-                } catch (AccountUtils.AccountNotFoundException e) {
-                    accountItem.setDisplayName(getAccountUsername(account.name));
+        return Observable.create(new SyncOnSubscribe<Iterator<AccountItem>, AccountItem>() {
+            @Override
+            protected Iterator<AccountItem> generateState() {
+                Account[] accounts = getAccountsWithPermissionCheck();
+                if (accounts == null) return null;
+
+                List<AccountItem> accountItems = new LinkedList<>();
+                for (Account account : accounts) {
+                    accountItems.add(new AccountItem(account));
                 }
-                subscriber.onNext(accountItem);
+                if (getResources().getBoolean(R.bool.multiaccount_support) || accounts.length <= 0) {
+                    accountItems.add(new AccountItem());
+                }
+                return accountItems.iterator();
             }
-            if (getResources().getBoolean(R.bool.multiaccount_support) || accounts.length <= 0) {
-                subscriber.onNext(new AccountItem());
+
+            @Override
+            protected Iterator<AccountItem> next(
+                    Iterator<AccountItem> state, Observer<? super AccountItem> observer) {
+                if (state == null) {
+                    observer.onError(new NullPointerException());
+                } else if (state.hasNext()) {
+                    AccountItem accountItem = state.next();
+                    Account account = accountItem.getAccount();
+                    if (account != null) {
+                        try {
+                            OwnCloudAccount ocAccount = new OwnCloudAccount(account, getContext());
+                            accountItem.setDisplayName(ocAccount.getDisplayName());
+                        } catch (AccountUtils.AccountNotFoundException e) {
+                            accountItem.setDisplayName(getAccountUsername(account.name));
+                        }
+                        observer.onNext(accountItem);
+                    } else {
+                        observer.onNext(new AccountItem());
+                    }
+                } else {
+                    observer.onCompleted();
+                }
+                return state;
             }
-            subscriber.onCompleted();
         });
     }
 
@@ -169,7 +193,7 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
     @Override
     public void addAccount() {
         accountManager.addAccount(getAccountType(getContext()),
-                null, null, null, getActivity(), addAccountCallback, new Handler());
+                null, null, null, getActivity(), addAccountCallback, handler);
     }
 
     @Override

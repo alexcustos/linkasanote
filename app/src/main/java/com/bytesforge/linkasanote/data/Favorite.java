@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
+import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -23,7 +24,7 @@ import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
-public final class Favorite {
+public final class Favorite extends SyncState {
 
     private static final String TAG = Favorite.class.getSimpleName();
 
@@ -44,23 +45,20 @@ public final class Favorite {
     @Nullable
     private final String eTag;
 
-    private final boolean conflicted;
-    private final boolean synced;
-
     @Nullable
     private final List<Tag> tags;
 
     public Favorite(@Nullable String name, @Nullable List<Tag> tags) {
-        this(generateKey(), currentTimeMillis(), name, null, false, false, tags);
+        this(generateKey(), currentTimeMillis(), name, null, false, false, false, tags);
     }
 
     public Favorite(@NonNull String id, @Nullable String name, @Nullable List<Tag> tags) {
-        this(id, currentTimeMillis(), name, null, false, false, tags);
+        this(id, currentTimeMillis(), name, null, false, false, false, tags);
     }
 
     public Favorite(
             @NonNull String id, long added, @Nullable String name, @Nullable String eTag,
-            boolean conflicted, boolean synced, @Nullable List<Tag> tags) {
+            boolean conflicted, boolean deleted, boolean synced, @Nullable List<Tag> tags) {
         this.id = checkNotNull(id);
 
         this.added = added;
@@ -68,11 +66,9 @@ public final class Favorite {
         this.name = name;
         this.eTag = eTag;
 
-        this.conflicted = conflicted;
-        this.synced = synced;
+        setSyncState(conflicted, deleted, synced);
 
         this.tags = tags;
-
     }
 
     public static Favorite from(Cursor cursor, List<Tag> tags) {
@@ -89,10 +85,12 @@ public final class Favorite {
 
         boolean conflicted = cursor.getInt(cursor.getColumnIndexOrThrow(
                 LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED)) == 1;
+        boolean deleted = cursor.getInt(cursor.getColumnIndexOrThrow(
+                LocalContract.FavoriteEntry.COLUMN_NAME_DELETED)) == 1;
         boolean synced = cursor.getInt(cursor.getColumnIndexOrThrow(
                 LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED)) == 1;
 
-        return new Favorite(id, added, name, eTag, conflicted, synced, tags);
+        return new Favorite(id, added, name, eTag, conflicted, deleted, synced, tags);
     }
 
     public static Favorite from(ContentValues values, List<Tag> tags) {
@@ -103,10 +101,11 @@ public final class Favorite {
         String name = values.getAsString(LocalContract.FavoriteEntry.COLUMN_NAME_NAME);
         String eTag = values.getAsString(LocalContract.FavoriteEntry.COLUMN_NAME_ETAG);
 
-        boolean conflicted = values.getAsInteger(LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED) == 1;
-        boolean synced = values.getAsInteger(LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED) == 1;
+        boolean conflicted = values.getAsBoolean(LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED);
+        boolean deleted = values.getAsBoolean(LocalContract.FavoriteEntry.COLUMN_NAME_DELETED);
+        boolean synced = values.getAsBoolean(LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED);
 
-        return new Favorite(id, added, name, eTag, conflicted, synced, tags);
+        return new Favorite(id, added, name, eTag, conflicted, deleted, synced, tags);
     }
 
     public static Favorite from(String jsonFavoriteString) {
@@ -136,7 +135,7 @@ public final class Favorite {
     }
 
     public ContentValues getContentValues() {
-        ContentValues values = new ContentValues();
+        ContentValues values = getSyncStateValues();
 
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID, getId());
 
@@ -144,9 +143,6 @@ public final class Favorite {
 
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_NAME, getName());
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_ETAG, getETag());
-
-        values.put(LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED, isConflicted() ? 1 : 0);
-        values.put(LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED, isSynced() ? 1 : 0);
 
         return values;
     }
@@ -178,14 +174,6 @@ public final class Favorite {
     @Nullable
     public String getETag() {
         return eTag;
-    }
-
-    public boolean isConflicted() {
-        return conflicted;
-    }
-
-    public boolean isSynced() {
-        return synced;
     }
 
     @Nullable

@@ -27,6 +27,7 @@ public interface DataSource {
     Observable<Favorite> getFavorite(@NonNull String favoriteId);
     void saveFavorite(@NonNull Favorite favorite);
     void deleteAllFavorites();
+    void deleteFavorite(@NonNull String favoriteId);
 
     Observable<List<Tag>> getTags();
     Observable<Tag> getTag(@NonNull String tagId);

@@ -11,19 +11,19 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
-import android.text.Editable;
 import android.widget.LinearLayout;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Tag;
 import com.google.common.base.Strings;
-import com.tokenautocomplete.TokenCompleteTextView;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AddEditFavoriteViewModel extends BaseObservable implements
-        AddEditFavoriteContract.ViewModel, TokenCompleteTextView.TokenListener<Tag> {
+        AddEditFavoriteContract.ViewModel {
 
     public static final String STATE_FAVORITE_NAME = "FAVORITE_NAME";
     public static final String STATE_ADD_BUTTON = "ADD_BUTTON";
@@ -79,7 +79,8 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         nameErrorText = state.getString(STATE_NAME_ERROR_TEXT);
     }
 
-    private Bundle getDefaultInstanceState() {
+    @Override
+    public Bundle getDefaultInstanceState() {
         Bundle defaultState = new Bundle();
 
         defaultState.putString(STATE_FAVORITE_NAME, null);
@@ -101,7 +102,6 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Override
     public void setTagsCompletionView(@NonNull FavoriteTagsCompletionView completionView) {
         favoriteTags = completionView;
-        favoriteTags.setTokenListener(this);
     }
 
     @BindingAdapter({"snackbarId"})
@@ -135,32 +135,18 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
 
     public void onAddButtonClick() {
         favoriteTags.performCompletion();
+        // NOTE: there is no way to pass these values directly to the presenter
         presenter.saveFavorite(favoriteName.get(), favoriteTags.getObjects());
     }
 
-    private void enableAddButton() {
+    @Override
+    public void enableAddButton() {
         addButton.set(true);
     }
 
-    private void disableAddButton() {
+    @Override
+    public void disableAddButton() {
         addButton.set(false);
-    }
-
-    public void afterNameChanged(Editable s) {
-        hideNameError();
-        if (isNameValid() && isTagsValid()) {
-            enableAddButton();
-        } else {
-            disableAddButton();
-        }
-    }
-
-    public void afterTagsChanged(Editable s) {
-        if (isNameValid() && isTagsValid()) {
-            enableAddButton();
-        } else {
-            disableAddButton();
-        }
     }
 
     private boolean isNameValid() {
@@ -172,13 +158,8 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     }
 
     @Override
-    public void onTokenAdded(Tag tag) {
-        afterTagsChanged(null);
-    }
-
-    @Override
-    public void onTokenRemoved(Tag tag) {
-        afterTagsChanged(null);
+    public boolean isValid() {
+        return isNameValid() && isTagsValid();
     }
 
     @Override
@@ -194,8 +175,37 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         notifyPropertyChanged(BR.nameErrorText);
     }
 
-    private void hideNameError() {
+    @Override
+    public void hideNameError() {
         nameErrorText = null;
         notifyPropertyChanged(BR.nameErrorText);
+    }
+
+    @Override
+    public void afterNameChanged() {
+        hideNameError();
+        checkAddButton();
+    }
+
+    @Override
+    public void afterTagsChanged() {
+        checkAddButton();
+    }
+
+    @Override
+    public void checkAddButton() {
+        if (isValid()) enableAddButton();
+        else disableAddButton();
+    }
+
+    @Override
+    public void setFavoriteTags(List<Tag> tags) {
+        if (tags == null) {
+            favoriteTags.clear();
+            return;
+        }
+        for (Tag tag : tags) {
+            favoriteTags.addObject(tag);
+        }
     }
 }

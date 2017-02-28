@@ -19,7 +19,6 @@ import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenter;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterModule;
 import com.bytesforge.linkasanote.databinding.ActivityAddEditAccountBinding;
-import com.bytesforge.linkasanote.sync.operations.OperationsService;
 import com.bytesforge.linkasanote.utils.ActivityUtils;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 
@@ -43,7 +42,6 @@ public class AddEditAccountActivity extends AppCompatActivity implements
     private static final String TAG = AddEditAccountActivity.class.getSimpleName();
 
     private ActivityAddEditAccountBinding binding;
-    private OperationsService operationsService;
     private Bundle currentViewModelSate;
 
     @Inject
@@ -69,10 +67,10 @@ public class AddEditAccountActivity extends AppCompatActivity implements
                     getSupportFragmentManager(), nextcloudFragment, R.id.content_frame);
         }
         // Presenter
-        DaggerAddEditAccountComponent.builder()
-                .applicationComponent(((LaanoApplication) getApplication()).getApplicationComponent())
-                .nextcloudPresenterModule(new NextcloudPresenterModule(this, nextcloudFragment, account))
-                .build().inject(this);
+        LaanoApplication application = (LaanoApplication) getApplication();
+        application.getApplicationComponent().getAddEditAccountComponent(
+                new NextcloudPresenterModule(this, nextcloudFragment, account))
+                .inject(this);
     }
 
     @Override

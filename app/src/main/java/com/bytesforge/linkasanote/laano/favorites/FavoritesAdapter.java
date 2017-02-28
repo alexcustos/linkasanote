@@ -3,7 +3,6 @@ package com.bytesforge.linkasanote.laano.favorites;
 import android.support.annotation.NonNull;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -20,7 +19,6 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     private final FavoritesViewModel viewModel;
 
     private List<Favorite> favorites;
-    private SparseBooleanArray selectedIds;
 
     public FavoritesAdapter(
             @NonNull List<Favorite> favorites,
@@ -29,7 +27,6 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         this.favorites = checkNotNull(favorites);
         this.presenter = checkNotNull(presenter);
         this.viewModel = checkNotNull(viewModel);
-        selectedIds = new SparseBooleanArray();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -46,7 +43,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
                 FavoritesViewModel viewModel, Integer position) {
             binding.setFavorite(favorite);
             binding.setPresenter(presenter);
-            binding.setViewModel(viewModel);
+            binding.setViewModel(viewModel); // NOTE: global viewModel for fragment and all items
             binding.setPosition(position);
 
             binding.executePendingBindings();
@@ -72,50 +69,31 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         return favorites.size();
     }
 
-    // Selection
+    // Items
 
-    public void toggleSelection(int position) {
-        boolean isSelected = selectedIds.get(position);
-        if (isSelected) {
-            selectedIds.delete(position);
-        } else {
-            selectedIds.put(position, true);
-        }
-        notifyItemChanged(position);
+    @NonNull
+    public Favorite removeItem(int position) {
+        Favorite favorite = favorites.remove(position);
+        notifyItemRemoved(position);
+        return favorite;
     }
-
-    public void removeSelection() {
-        selectedIds.clear();
-        notifyDataSetChanged();
-    }
-
-    public int getSelectedCount() {
-        return selectedIds.size();
-    }
-
-    public SparseBooleanArray getSelectedIds() {
-        return selectedIds;
-    }
-
-    // Swap
 
     public void swapItems(List<Favorite> favorites) {
-        final FavoriteDiffCallback diffCallback =
-                new FavoriteDiffCallback(this.favorites, favorites);
+        final FavoritesDiffCallback diffCallback =
+                new FavoritesDiffCallback(this.favorites, favorites);
         final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
 
         this.favorites.clear();
         this.favorites.addAll(favorites);
-
         diffResult.dispatchUpdatesTo(this);
     }
 
-    public class FavoriteDiffCallback extends DiffUtil.Callback {
+    public class FavoritesDiffCallback extends DiffUtil.Callback {
 
         private List<Favorite> oldList;
         private List<Favorite> newList;
 
-        public FavoriteDiffCallback(List<Favorite> oldList, List<Favorite> newList) {
+        public FavoritesDiffCallback(List<Favorite> oldList, List<Favorite> newList) {
             this.oldList = oldList;
             this.newList = newList;
         }

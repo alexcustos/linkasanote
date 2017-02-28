@@ -5,12 +5,14 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.DataSource;
+import com.bytesforge.linkasanote.sync.SyncState;
 import com.squareup.sqlbrite.BriteContentResolver;
 
 import java.util.ArrayList;
@@ -24,6 +26,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Singleton
 public class LocalDataSource implements DataSource {
+
+    private static final String TAG = LocalDataSource.class.getSimpleName();
 
     private ContentResolver contentResolver;
     private BriteContentResolver briteResolver;
@@ -87,10 +91,12 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public Observable<List<Favorite>> getFavorites() {
+        final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_DELETED + " = ?";
+        final String[] selectionArgs = {"0"};
         return briteResolver.createQuery(
                 LocalContract.FavoriteEntry.buildFavoritesUri(),
                 LocalContract.FavoriteEntry.FAVORITE_COLUMNS,
-                null, null, null, false)
+                selection, selectionArgs, null, false)
                 .map(query -> {
                     Cursor cursor = query.run();
                     if (cursor == null) return null;
@@ -114,24 +120,27 @@ public class LocalDataSource implements DataSource {
     public Observable<Favorite> getFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
 
-        return briteResolver.createQuery(
-                LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId),
-                LocalContract.FavoriteEntry.FAVORITE_COLUMNS,
-                null, null, null, false)
-                .map(query -> {
-                    Cursor cursor = query.run();
-                    if (cursor == null || cursor.getCount() <= 0) return null;
-                    else cursor.moveToFirst();
+        return Observable.fromCallable(() -> {
+            Cursor cursor = contentResolver.query(
+                    LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId),
+                    LocalContract.FavoriteEntry.FAVORITE_COLUMNS, null, null, null);
+            if (cursor == null) {
+                return null;
+            } else if (cursor.getCount() <= 0) {
+                cursor.close();
+                return null;
+            }
+            cursor.moveToFirst();
+            int rowIndex = cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID);
+            String rowId = cursor.getString(rowIndex);
+            Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
+            List<Tag> tags = getTagsFrom(favoriteTagsUri)
+                    .toBlocking().single();
+            Favorite favorite = Favorite.from(cursor, tags);
+            cursor.close();
 
-                    int rowIndex = cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID);
-                    String rowId = cursor.getString(rowIndex);
-                    Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
-                    List<Tag> tags = getTagsFrom(favoriteTagsUri)
-                            .toBlocking()
-                            .single();
-                    return Favorite.from(cursor, tags);
-                })
-                .first();
+            return favorite;
+        });
     }
 
     @Override
@@ -154,6 +163,19 @@ public class LocalDataSource implements DataSource {
     @Override
     public void deleteAllFavorites() {
         contentResolver.delete(LocalContract.FavoriteEntry.buildFavoritesUri(), null, null);
+    }
+
+    @Override
+    public void deleteFavorite(@NonNull String favoriteId) {
+        checkNotNull(favoriteId);
+
+        Uri uri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
+        ContentValues values = SyncState.getSyncStateValues(SyncState.State.DELETED);
+        int numRows = contentResolver.update(uri, values, null, null);
+        if (numRows != 1) {
+            Log.w(TAG, "deleteFavorite(): updated unexpected number of rows "
+                    + "[" + numRows + ", id=" + favoriteId + "]");
+        }
     }
 
     // Tags

@@ -77,6 +77,8 @@ dependencies {
     compile "com.github.nextcloud:android-library:${nextcloudLibraryVersion}"
 
     // RxJava
+    //compile "io.reactivex.rxjava2:rxjava:${rxjavaVersion}"
+    //compile "io.reactivex.rxjava2:rxandroid:${rxandroidVersion}"
     compile "io.reactivex:rxjava:${rxjavaVersion}"
     compile "io.reactivex:rxandroid:${rxandroidVersion}"
     compile "com.squareup.sqlbrite:sqlbrite:${sqlbriteVersion}"
@@ -92,14 +94,15 @@ dependencies {
     testCompile "org.powermock:powermock:${powermockVersion}"
     testCompile "org.powermock:powermock-module-junit4:${powermockVersion}"
     testCompile "org.powermock:powermock-api-mockito:${powermockVersion}"
+    testCompile "com.github.fabioCollini:DaggerMock:${daggerMockVersion}"
 
     // Espresso Testing
     androidTestCompile "com.android.support.test.espresso:espresso-core:${espressoVersion}"
     androidTestCompile "com.android.support.test.espresso:espresso-contrib:${espressoVersion}"
     androidTestCompile "org.mockito:mockito-core:${mockitoVersion}"
-    androidTestCompile "com.google.dexmaker:dexmaker:${dexmakerVersion}"
-    androidTestCompile "com.google.dexmaker:dexmaker-mockito:${dexmakerVersion}"
+    androidTestCompile "com.linkedin.dexmaker:dexmaker-mockito:${dexmakerVersion}"
     androidTestCompile "com.android.support.test.uiautomator:uiautomator-v18:${uiAutomatorVersion}"
+    androidTestCompile "com.github.fabioCollini:DaggerMock:${daggerMockVersion}"
 
     // Resolve conflicts
     androidTestCompile "com.android.support:recyclerview-v7:${supportLibraryVersion}"

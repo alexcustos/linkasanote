@@ -25,24 +25,24 @@ public class NextcloudPresenterModule {
     }
 
     @Provides
-    NextcloudContract.View provideNextcloudContractView() {
+    public NextcloudContract.View provideNextcloudContractView() {
         return view;
     }
 
     @Provides
-    NextcloudContract.ViewModel provideNextcloudContractViewModel() {
+    public NextcloudContract.ViewModel provideNextcloudContractViewModel() {
         return new NextcloudViewModel(context);
     }
 
     @Provides
-    AccountManager provideAccountManager() {
+    public AccountManager provideAccountManager() {
         return AccountManager.get(context);
     }
 
     @Provides
     @Nullable
     @NextcloudAccount
-    Account provideAccount() {
+    public Account provideAccount() {
         return account;
     }
 }

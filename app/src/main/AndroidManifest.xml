@@ -27,7 +27,7 @@
         </activity>
 
         <activity android:name=".settings.SettingsActivity"
-            android:theme="@style/Settings"
+            android:theme="@style/Laano.Settings"
             android:parentActivityName=".laano.LaanoActivity">
 
             <meta-data

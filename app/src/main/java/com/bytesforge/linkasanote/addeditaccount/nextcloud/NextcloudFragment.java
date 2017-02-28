@@ -124,7 +124,7 @@ public class NextcloudFragment extends Fragment implements
         viewModel.setInstanceState(savedInstanceState);
         binding.setViewModel((NextcloudViewModel) viewModel);
         if (savedInstanceState == null && !presenter.isNewAccount()) {
-            // NOTE: here because must be intact on orientation change
+            // NOTE: here because populated account must stay intact on orientation change
             presenter.populateAccount();
         }
         return binding.getRoot();
@@ -327,10 +327,18 @@ public class NextcloudFragment extends Fragment implements
     }
 
     @Override
-    public Bundle getAccountState(@NonNull Account account) {
+    public void setupAccountState(@NonNull Account account) {
         checkNotNull(account);
 
-        Bundle state = new Bundle();
+        Bundle state = getAccountState(account);
+        viewModel.applyInstanceState(state);
+        requestFocusOnAccountPassword();
+    }
+
+    private Bundle getAccountState(@NonNull Account account) {
+        checkNotNull(account);
+
+        Bundle state = viewModel.getDefaultInstanceState();
         state.putBoolean(NextcloudViewModel.STATE_SERVER_URL, false);
         state.putString(NextcloudViewModel.STATE_SERVER_URL_TEXT,
                 accountManager.getUserData(account, AccountUtils.Constants.KEY_OC_BASE_URL));
@@ -338,8 +346,7 @@ public class NextcloudFragment extends Fragment implements
         state.putString(NextcloudViewModel.STATE_ACCOUNT_USERNAME_TEXT,
                 getAccountUsername(account.name));
         // NOTE: security hole, non-authorized user can view the password
-        /*state.putString(NextcloudViewModel.STATE_ACCOUNT_PASSWORD_TEXT,
-                accountManager.getPassword(account));*/
+        state.putString(NextcloudViewModel.STATE_ACCOUNT_PASSWORD_TEXT, null); // accountManager.getPassword(account)
 
         return state;
     }

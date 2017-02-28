@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.databinding.FragmentAddEditFavoriteBinding;
 import com.bytesforge.linkasanote.utils.CommonUtils;
@@ -81,6 +82,9 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
                 inflater, R.layout.fragment_add_edit_favorite, container, false);
         viewModel.setInstanceState(savedInstanceState);
         binding.setViewModel((AddEditFavoriteViewModel) viewModel);
+        if (savedInstanceState == null && !presenter.isNewFavorite()) {
+            presenter.populateFavorite();
+        }
         // FavoriteTags
         final FavoriteTagsCompletionView completionView = binding.favoriteTags;
         if (completionView != null) {
@@ -88,6 +92,24 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
             viewModel.setTagsCompletionView(completionView);
         }
         return binding.getRoot();
+    }
+
+    @Override
+    public void setupFavoriteState(@NonNull Favorite favorite) {
+        checkNotNull(favorite);
+
+        Bundle state = getFavoriteState(favorite);
+        viewModel.applyInstanceState(state);
+        viewModel.setFavoriteTags(favorite.getTags());
+    }
+
+    private Bundle getFavoriteState(@NonNull Favorite favorite) {
+        checkNotNull(favorite);
+
+        Bundle state = viewModel.getDefaultInstanceState();
+        state.putString(AddEditFavoriteViewModel.STATE_FAVORITE_NAME, favorite.getName());
+
+        return state;
     }
 
     private void setupTagsCompletionView(FavoriteTagsCompletionView completionView) {
@@ -101,13 +123,15 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
         completionView.performBestGuess(false);
         int threshold = getContext().getResources().getInteger(R.integer.tags_autocomplete_threshold);
         completionView.setThreshold(threshold);
+        completionView.setTokenListener((AddEditFavoritePresenter) presenter);
         // Adapter
         tags = new ArrayList<>();
         ArrayAdapter<Tag> adapter = new FilteredArrayAdapter<Tag>(
                 getContext(), android.R.layout.simple_list_item_1, tags) {
             @Override
             protected boolean keepObject(Tag tag, String mask) {
-                return tag.getName().toLowerCase().startsWith(mask)
+                String name = tag.getName();
+                return name != null && name.toLowerCase().startsWith(mask)
                         && !completionView.getObjects().contains(tag);
             }
         };

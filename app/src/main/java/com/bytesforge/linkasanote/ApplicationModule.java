@@ -8,7 +8,7 @@ import dagger.Module;
 import dagger.Provides;
 
 @Module
-public final class ApplicationModule {
+public class ApplicationModule { // NOTE: final removed and public added for sake of DaggerMock
 
     private final Context context;
 
@@ -18,7 +18,7 @@ public final class ApplicationModule {
 
     @Provides
     @Singleton
-    Context provideContext() {
+    public Context provideContext() {
         return context;
     }
 }

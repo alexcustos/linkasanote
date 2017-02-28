@@ -198,6 +198,7 @@ public class Repository implements DataSource {
     @Override
     public Observable<Favorite> getFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
+
         if (!isKeyValidUuid(favoriteId)) {
             throw new InvalidParameterException(
                     "getFavorite() called with invalid UUID ID [" + favoriteId + "]");
@@ -282,6 +283,19 @@ public class Repository implements DataSource {
             cachedFavorites = new LinkedHashMap<>();
         }
         cachedFavorites.clear();
+    }
+
+    @Override
+    public void deleteFavorite(@NonNull String favoriteId) {
+        checkNotNull(favoriteId);
+
+        localDataSource.deleteFavorite(favoriteId);
+        cloudDataSource.deleteFavorite(favoriteId);
+
+        if (cachedFavorites == null) {
+            cachedFavorites = new LinkedHashMap<>();
+        }
+        cachedFavorites.remove(favoriteId);
     }
 
     // Tags: tag is part of the object and should be bound with the object

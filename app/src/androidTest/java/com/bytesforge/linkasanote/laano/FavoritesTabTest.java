@@ -55,6 +55,7 @@ public class FavoritesTabTest {
                     super.beforeActivityLaunched();
                     // TODO: fix data loss on non-test DB; testApplicationId is not enough
                     repository = ((LaanoApplication) InstrumentationRegistry
+                            .getInstrumentation()
                             .getTargetContext().getApplicationContext())
                             .getApplicationComponent().getRepository();
                     repository.deleteAllFavorites();

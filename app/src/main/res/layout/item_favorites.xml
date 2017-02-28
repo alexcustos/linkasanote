@@ -20,6 +20,7 @@
         android:orientation="vertical"
         android:onClick="@{() -> presenter.onFavoriteClick(position)}"
         android:onLongClick="@{() -> presenter.onFavoriteLongClick(position)}">
+        <!--android:background="?android:attr/selectableItemBackground"-->
 
         <ImageButton
             android:id="@+id/favorite_to_links"
@@ -31,19 +32,22 @@
             android:paddingEnd="@dimen/recycler_view_button_padding"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
             android:paddingBottom="@dimen/recycler_view_button_padding_vertical"
-            android:visibility="@{viewModel.toLinksButton ? View.VISIBLE : View.INVISIBLE}"
+            android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
+            android:onClick="@{() -> presenter.onToLinksClick(favorite.id)}"
             style="@style/Button.RecyclerView"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent" />
 
         <android.support.v7.widget.AppCompatCheckBox
-            android:id="@+id/favorite_selected"
+            android:id="@+id/favorite_checkbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/item_favorites_checkbox"
             android:layout_marginStart="@dimen/recycler_view_left_checkbox_margin_start"
-            android:visibility="@{viewModel.selectedCheckbox ? View.VISIBLE : View.GONE}"
+            android:visibility="@{viewModel.actionMode ? View.VISIBLE : View.GONE}"
+            android:checked="@{viewModel.isSelected(position)}"
+            android:onClick="@{() -> presenter.onCheckboxClick(position)}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent" />
@@ -88,7 +92,8 @@
             android:paddingEnd="@dimen/recycler_view_right_button_padding_end"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
             android:paddingBottom="@dimen/recycler_view_button_padding_vertical"
-            android:visibility="@{viewModel.toNotesButton ? View.VISIBLE : View.INVISIBLE}"
+            android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
+            android:onClick="@{() -> presenter.onToNotesClick(favorite.id)}"
             style="@style/Button.RecyclerView"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -104,7 +109,8 @@
             android:paddingEnd="@dimen/recycler_view_right_button_padding_end"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
             android:paddingBottom="@dimen/recycler_view_button_padding_vertical"
-            android:visibility="@{viewModel.editButton ? View.VISIBLE : View.GONE}"
+            android:visibility="@{viewModel.actionMode ? View.VISIBLE : View.GONE}"
+            android:onClick="@{() -> presenter.onEditClick(favorite.id)}"
             style="@style/Button.RecyclerView"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"

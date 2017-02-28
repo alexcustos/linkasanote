@@ -1,19 +1,17 @@
 package com.bytesforge.linkasanote.laano;
 
-import com.bytesforge.linkasanote.ApplicationComponent;
 import com.bytesforge.linkasanote.FragmentScoped;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenterModule;
 import com.bytesforge.linkasanote.laano.links.LinksPresenterModule;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 
-import dagger.Component;
+import dagger.Subcomponent;
 
 @FragmentScoped
-@Component(dependencies = {ApplicationComponent.class},
-        modules = {
-                LinksPresenterModule.class,
-                FavoritesPresenterModule.class,
-                NotesPresenterModule.class})
+@Subcomponent(modules = {
+        LinksPresenterModule.class,
+        FavoritesPresenterModule.class,
+        NotesPresenterModule.class})
 public interface LaanoComponent {
 
     void inject(LaanoActivity activity);

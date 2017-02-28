@@ -55,10 +55,10 @@ public class ManageAccountsActivity extends AppCompatActivity {
         }
         view = fragment;
         // Presenter
-        DaggerManageAccountsComponent.builder()
-                .applicationComponent(((LaanoApplication) getApplication()).getApplicationComponent())
-                .manageAccountsPresenterModule(new ManageAccountsPresenterModule(this, fragment))
-                .build().inject(this);
+        LaanoApplication application = (LaanoApplication) getApplication();
+        application.getApplicationComponent().getManageAccountsComponent(
+                new ManageAccountsPresenterModule(this, fragment))
+                .inject(this);
         // Accounts
         if (savedInstanceState != null) {
             accountNames = savedInstanceState.getStringArray(STATE_ACCOUNT_NAMES);

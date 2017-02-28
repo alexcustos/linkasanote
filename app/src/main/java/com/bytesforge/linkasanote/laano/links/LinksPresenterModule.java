@@ -13,7 +13,7 @@ public class LinksPresenterModule {
     }
 
     @Provides
-    LinksContract.View provideLinksContractView() {
+    public LinksContract.View provideLinksContractView() {
         return view;
     }
 }

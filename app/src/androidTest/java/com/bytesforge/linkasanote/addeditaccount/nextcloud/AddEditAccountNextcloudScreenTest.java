@@ -21,7 +21,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 
@@ -46,7 +47,6 @@ import static org.mockito.Mockito.verify;
 @LargeTest
 public class AddEditAccountNextcloudScreenTest {
 
-    private OperationsService serviceMock;
     private ArgumentCaptor<NextcloudFragment> viewCaptor;
 
     private final String MALFORMED_URL = "demo.nextcloud.com:port";
@@ -60,8 +60,13 @@ public class AddEditAccountNextcloudScreenTest {
     public ActivityTestRule<AddEditAccountActivity> addEditAccountActivityTestRule =
             new ActivityTestRule<>(AddEditAccountActivity.class);
 
+    @Mock
+    private OperationsService serviceMock;
+
     @Before
     public void setupAddEditAccountActivityNextcloud() {
+        MockitoAnnotations.initMocks(this);
+
         TestUtils.allowPermissionIfNeeded(Manifest.permission.GET_ACCOUNTS);
 
         AddEditAccountActivity activity = addEditAccountActivityTestRule.getActivity();
@@ -75,7 +80,6 @@ public class AddEditAccountNextcloudScreenTest {
         NextcloudContract.Presenter presenter = fragment.getPresenter();
         assertThat(presenter, notNullValue());
 
-        serviceMock = Mockito.mock(OperationsService.class);
         // TODO: check if race condition is possible
         fragment.setOperationsService(serviceMock);
         viewCaptor = ArgumentCaptor.forClass(NextcloudFragment.class);

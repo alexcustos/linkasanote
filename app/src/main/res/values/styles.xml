@@ -8,21 +8,26 @@
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
         <item name="colorAccent">@color/color_accent</item>
+
+        <item name="windowActionModeOverlay">true</item>
+        <item name="android:actionModeBackground">@color/color_primary</item>
     </style>
 
-    <style name="Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Laano.Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:background">@color/color_primary</item>
+    </style>
 
-    <style name="LaanoTabLayout" parent="Base.Widget.Design.TabLayout">
+    <style name="Laano.TabLayout" parent="Base.Widget.Design.TabLayout">
         <item name="tabMode">fixed</item>
-        <item name="tabTextAppearance">@style/LaanoTabTextAppearance</item>
+        <item name="tabTextAppearance">@style/Laano.TabTextAppearance</item>
         <item name="tabSelectedTextColor">@color/tabs_text_selected</item>
     </style>
 
-    <style name="LaanoTabTextAppearance" parent="TextAppearance.Design.Tab">
+    <style name="Laano.TabTextAppearance" parent="TextAppearance.Design.Tab">
         <item name="android:textColor">@color/tabs_text</item>
     </style>
 
-    <style name="Settings" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="Laano.Settings" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
         <item name="dialogLayout">@layout/settings_dialog_edittext</item>
 

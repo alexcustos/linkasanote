@@ -18,8 +18,6 @@ import javax.inject.Inject;
 
 public class AddEditFavoriteActivity extends AppCompatActivity {
 
-    public static final int REQUEST_ADD_FAVORITE = 1;
-
     @Inject
     AddEditFavoritePresenter presenter;
 
@@ -53,10 +51,10 @@ public class AddEditFavoriteActivity extends AppCompatActivity {
                     getSupportFragmentManager(), fragment, R.id.content_frame);
         }
         // Presenter
-        DaggerAddEditFavoriteComponent.builder()
-                .applicationComponent(((LaanoApplication) getApplication()).getApplicationComponent())
-                .addEditFavoritePresenterModule(new AddEditFavoritePresenterModule(this, fragment, favoriteId))
-                .build().inject(this);
+        LaanoApplication application = (LaanoApplication) getApplication();
+        application.getApplicationComponent().getAddEditFavoriteComponent(
+                new AddEditFavoritePresenterModule(this, fragment, favoriteId))
+                .inject(this);
     }
 
     @Override

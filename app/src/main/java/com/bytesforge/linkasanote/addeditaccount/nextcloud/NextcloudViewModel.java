@@ -113,7 +113,8 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
         notifyChange();
     }
 
-    private Bundle getDefaultInstanceState() {
+    @Override
+    public Bundle getDefaultInstanceState() {
         Bundle defaultState = new Bundle();
 
         defaultState.putBoolean(STATE_SERVER_URL, true);

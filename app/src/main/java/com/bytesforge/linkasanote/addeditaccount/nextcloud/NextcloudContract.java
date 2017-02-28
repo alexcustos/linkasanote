@@ -27,7 +27,7 @@ public interface NextcloudContract {
                 @NonNull GetServerInfoOperation.ServerInfo serverInfo);
         void finishActivity(@NonNull Account account, @NonNull String password, @NonNull Bundle data);
         void cancelActivity();
-        Bundle getAccountState(@NonNull Account account);
+        void setupAccountState(@NonNull Account account);
         void requestFocusOnAccountPassword();
         boolean sendGetServerInfoOperation(String url);
         boolean sendCheckCredentialsOperation(
@@ -40,6 +40,7 @@ public interface NextcloudContract {
         void setInstanceState(@Nullable Bundle savedInstanceState);
         void loadInstanceState(@NonNull Bundle outState);
         void applyInstanceState(@NonNull Bundle state);
+        Bundle getDefaultInstanceState();
 
         void validateServer();
 

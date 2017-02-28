@@ -1,14 +1,12 @@
 package com.bytesforge.linkasanote.addeditaccount;
 
-import com.bytesforge.linkasanote.ApplicationComponent;
 import com.bytesforge.linkasanote.FragmentScoped;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterModule;
 
-import dagger.Component;
+import dagger.Subcomponent;
 
 @FragmentScoped
-@Component(dependencies = {ApplicationComponent.class},
-        modules = {NextcloudPresenterModule.class})
+@Subcomponent(modules = {NextcloudPresenterModule.class})
 public interface AddEditAccountComponent {
 
     void inject(AddEditAccountActivity addEditAccountActivity);

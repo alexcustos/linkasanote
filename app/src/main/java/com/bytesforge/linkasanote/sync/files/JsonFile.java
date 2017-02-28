@@ -8,11 +8,12 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
+import com.bytesforge.linkasanote.sync.SyncState;
 import com.google.common.base.Objects;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class JsonFile implements Parcelable, Comparable<JsonFile> {
+public class JsonFile extends SyncState implements Parcelable, Comparable<JsonFile> {
 
     private static final String MIME_TYPE = "application/json";
 
@@ -23,9 +24,6 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
     private String localPath;
     private String remotePath;
     private String eTag;
-    private boolean conflicted;
-    private boolean deleted;
-    private boolean synced;
 
     public static final Creator<JsonFile> CREATOR = new Creator<JsonFile>() {
         @Override
@@ -51,9 +49,6 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
         localPath = null;
         this.remotePath = remotePath;
         eTag = null;
-        conflicted = false;
-        deleted = false;
-        synced = false;
     }
 
     protected JsonFile(Parcel in) {
@@ -62,9 +57,6 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
         localPath = in.readString();
         remotePath = in.readString();
         eTag = in.readString();
-        conflicted = in.readInt() == 1;
-        deleted = in.readInt() == 1;
-        synced = in.readInt() == 1;
     }
 
     @Override
@@ -79,9 +71,6 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
         dest.writeString(localPath);
         dest.writeString(remotePath);
         dest.writeString(eTag);
-        dest.writeInt(conflicted ? 1 : 0);
-        dest.writeInt(deleted ? 1 : 0);
-        dest.writeInt(synced ? 1 : 0);
     }
 
     @Override
@@ -142,38 +131,6 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
         this.eTag = eTag;
     }
 
-    // States
-
-    public void setState(boolean conflicted, boolean deleted, boolean synced) {
-        this.conflicted = conflicted;
-        this.deleted = deleted;
-        this.synced = synced;
-    }
-
-    public void setUnsyncedState() {
-        setState(false, false, false); // cds
-    }
-
-    public void setSyncedState() {
-        setState(false, false, true); // cdS
-    }
-
-    public void setLocalDeletedState() {
-        setState(false, true, false); // cDs, cDS successfully deleted (delete record)
-    }
-
-    public void setConflictedUpdate() {
-        // NOTE: Local record was updated and Cloud one was modified or deleted
-        // TODO: Conflicted record must preload Cloud copy and check if conflict still exists
-        // TODO: Cloud copy: empty & cDs - deleted, cds - updated
-        setState(true, false, false); // Cds, CdS successfully resolved (syncedState)
-    }
-
-    public void setConflictedDelete() {
-        // NOTE: Local record was deleted and Cloud one was modified
-        setState(true, true, false); // CDs, CDS successfully resolved (syncedState)
-    }
-
     public String getKey(@NonNull Account account) {
         checkNotNull(account);
         return account.name + getRemotePath();
@@ -181,12 +138,8 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
 
     @NonNull
     public ContentValues getUpdateValues() {
-        ContentValues values = new ContentValues();
+        ContentValues values = getSyncStateValues();
         values.put(LocalContract.COMMON_NAME_ETAG, getETag());
-        values.put(LocalContract.COMMON_NAME_CONFLICTED, conflicted);
-        values.put(LocalContract.COMMON_NAME_DELETED, deleted);
-        values.put(LocalContract.COMMON_NAME_SYNCED, synced);
-
         return values;
     }
 }

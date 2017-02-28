@@ -130,9 +130,7 @@ public class Provider extends ContentProvider {
         }
     }
 
-    /*
-    * Note: all queries receive ENTRY_ID (except *_TAG).
-    * */
+    // NOTE: all queries take ENTRY_ID (except *_TAG).
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, String[] projection,
@@ -176,9 +174,7 @@ public class Provider extends ContentProvider {
 
         }
         Cursor returnCursor = db.query(
-                tableName, projection,
-                selection, selectionArgs,
-                null, null, sortOrder);
+                tableName, projection, selection, selectionArgs, null, null, sortOrder);
         returnCursor.setNotificationUri(contentResolver, uri);
 
         return returnCursor;
@@ -199,10 +195,8 @@ public class Provider extends ContentProvider {
             case LINK:
                 db.beginTransaction();
                 try {
-                    rowId = updateOrInsert(db,
-                            LocalContract.LinkEntry.TABLE_NAME,
-                            LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID,
-                            values);
+                    rowId = updateOrInsert(db, LocalContract.LinkEntry.TABLE_NAME,
+                            LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID, values);
                     db.setTransactionSuccessful();
                     returnUri = LocalContract.LinkEntry.buildLinksUriWith(rowId);
                 } finally {
@@ -212,10 +206,8 @@ public class Provider extends ContentProvider {
             case FAVORITE:
                 db.beginTransaction();
                 try {
-                    rowId = updateOrInsert(db,
-                            LocalContract.FavoriteEntry.TABLE_NAME,
-                            LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID,
-                            values);
+                    rowId = updateOrInsert(db, LocalContract.FavoriteEntry.TABLE_NAME,
+                            LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID, values);
                     db.setTransactionSuccessful();
                     returnUri = LocalContract.FavoriteEntry.buildFavoritesUriWith(rowId);
                 } finally {
@@ -225,10 +217,8 @@ public class Provider extends ContentProvider {
             case FAVORITE_TAG:
                 db.beginTransaction();
                 try {
-                    rowId = appendTag(db,
-                            LocalContract.FavoriteEntry.TABLE_NAME,
-                            LocalContract.FavoriteEntry.getFavoriteId(uri),
-                            values);
+                    rowId = appendTag(db, LocalContract.FavoriteEntry.TABLE_NAME,
+                            LocalContract.FavoriteEntry.getFavoriteId(uri), values);
                     db.setTransactionSuccessful();
                     returnUri = LocalContract.TagEntry.buildTagsUriWith(rowId);
                 } finally {
@@ -282,9 +272,10 @@ public class Provider extends ContentProvider {
                 db.beginTransaction();
                 try {
                     String idValue = LocalContract.FavoriteEntry.getFavoriteId(uri);
-                    numRows = updateEntry(db, LocalContract.FavoriteEntry.TABLE_NAME,
+                    long rowId = updateEntry(db, LocalContract.FavoriteEntry.TABLE_NAME,
                             LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID, idValue,
                             values);
+                    numRows = rowId > 0 ? 1 : 0;
                     db.setTransactionSuccessful();
                 } finally {
                     db.endTransaction();
@@ -308,24 +299,9 @@ public class Provider extends ContentProvider {
         final String tagNameField = LocalContract.TagEntry.COLUMN_NAME_NAME;
         final String tagNameValue = values.getAsString(tagNameField);
 
-        Cursor exists = db.query(
-                tagTable, new String[]{BaseColumns._ID},
-                tagNameField + " = ?", new String[]{tagNameValue},
-                null, null, null);
-
-        long tagId = 0;
-        if (exists.moveToLast()) {
-            int tagIdIndex = exists.getColumnIndexOrThrow(BaseColumns._ID);
-            tagId = exists.getLong(tagIdIndex);
-            exists.close();
-        }
+        long tagId = queryRowId(db, tagTable, tagNameField, tagNameValue);
         if (tagId <= 0) {
-            tagId = db.insert(tagTable, null, values);
-            if (tagId <= 0) {
-                throw new SQLException(String.format(
-                        "Failed to insert tag [%s] bound with table [%s] for record [%s]",
-                        tagNameValue, leftTable, leftId));
-            }
+            tagId = insertEntry(db, tagTable, values);
         }
         // Reference
         final String refTable = leftTable + "_" + tagTable;
@@ -333,12 +309,8 @@ public class Provider extends ContentProvider {
         refValues.put(LocalContract.MANY_TO_MANY_COMMON_NAME_ADDED, currentTimeMillis());
         refValues.put(leftTable + BaseColumns._ID, leftId);
         refValues.put(tagTable + BaseColumns._ID, tagId);
+        insertEntry(db, refTable, refValues); // NOTE: refTable rowId can be ignored
 
-        long rowId = db.insert(refTable, null, refValues);
-        if (rowId <= 0) {
-            throw new SQLException(String.format(
-                    "Failed to insert reference [%s] with table [%s]", leftId, leftTable));
-        }
         return tagId;
     }
 
@@ -348,55 +320,84 @@ public class Provider extends ContentProvider {
         checkNotNull(db);
 
         String idValue = values.getAsString(idField);
-        // NOTE: update does not produce rowId
-        Cursor exists = db.query(
-                tableName, new String[]{BaseColumns._ID},
-                idField + " = ?", new String[]{idValue},
-                null, null, null);
-        long rowId = 0;
-        if (exists.moveToLast()) {
-            int rowIdIndex = exists.getColumnIndexOrThrow(BaseColumns._ID);
-            rowId = exists.getLong(rowIdIndex);
-            exists.close();
-        }
-        if (rowId > 0) {
-            int numRows = db.update(
-                    tableName, values,
-                    BaseColumns._ID + " = ?", new String[]{Long.toString(rowId)});
-            if (numRows <= 0) {
-                throw new SQLException(String.format(
-                        "Failed to update the row [%s] in table [%s]", idValue, tableName));
-            }
-        } else {
-            rowId = db.insertOrThrow(tableName, null, values); // SQLiteConstraintException
-            if (rowId <= 0) {
-                throw new SQLException(String.format(
-                        "Failed to insert row [%s] in table [%s]", idValue, tableName));
-            }
+        long rowId = updateEntry(db, tableName, idField, idValue, values);
+        if (rowId <= 0) {
+            rowId = insertEntry(db, tableName, values);
         }
         return rowId;
     }
 
-    private int updateEntry(
+    private long insertEntry(
+            @NonNull final SQLiteDatabase db,
+            final String tableName, final ContentValues values) {
+        checkNotNull(db);
+
+        long rowId = db.insertOrThrow(tableName, null, values); // SQLiteConstraintException
+        if (rowId <= 0) {
+            throw new SQLException(String.format(
+                    "Failed to insert a row to the table [%s]", tableName));
+        }
+        return rowId;
+    }
+
+    /**
+     * Method for updating Row with the specified ID (idField, idValue)
+     *
+     * @return RowID of the updated record or 0 if the record was not found
+     */
+    private long updateEntry(
             @NonNull final SQLiteDatabase db, final String tableName,
             final String idField, final String idValue, final ContentValues values) {
         checkNotNull(db);
-        if (Strings.isNullOrEmpty(idValue)) return 0;
 
-        Cursor exists = db.query(
-                tableName, new String[]{BaseColumns._ID},
-                idField + " = ?", new String[]{idValue},
-                null, null, null);
-        boolean isExists = exists.moveToLast();
-        exists.close();
-        if (!isExists) return 0;
+        long rowId = queryRowId(db, tableName, idField, idValue);
+        if (rowId <= 0) return 0;
 
-        int numRows = db.update(tableName, values, idField + " = ?", new String[]{idValue});
+        final String selection = BaseColumns._ID + " = ?";
+        final String[] selectionArgs = new String[]{Long.toString(rowId)};
+        int numRows = db.update(tableName, values, selection, selectionArgs);
         if (numRows <= 0) {
             throw new SQLiteConstraintException(String.format(
-                    "Failed to update row [%s] in table [%s]", idValue, tableName));
+                    "Failed to update row with ID [%s, table=%s]", idValue, tableName));
         }
-        return numRows;
+        // NOTE: will be recreated with the new set of tags
+        deleteTagReferences(db, tableName, rowId);
+
+        return rowId;
+    }
+
+    private int deleteTagReferences(
+            final @NonNull SQLiteDatabase db, final String leftTable, final long leftId) {
+        checkNotNull(db);
+
+        final String tagTable = LocalContract.TagEntry.TABLE_NAME;
+        final String refTable = leftTable + "_" + tagTable;
+
+        final String selection = leftTable + BaseColumns._ID + " = ?";
+        final String[] selectionArgs = new String[]{Long.toString(leftId)};
+
+        return db.delete(refTable, selection, selectionArgs);
+    }
+
+
+    private long queryRowId(
+            @NonNull final SQLiteDatabase db, final String tableName,
+            final String idField, final String idValue) {
+        checkNotNull(db);
+        if (Strings.isNullOrEmpty(idValue)) return 0;
+
+        final String selection = idField + " = ?";
+        final String[] selectionArgs = new String[]{idValue};
+        Cursor exists = db.query(
+                tableName, new String[]{BaseColumns._ID},
+                selection, selectionArgs, null, null, null);
+        long rowId = 0;
+        if (exists.moveToLast()) {
+            int rowIdIndex = exists.getColumnIndexOrThrow(BaseColumns._ID);
+            rowId = exists.getLong(rowIdIndex);
+        }
+        exists.close();
+        return rowId;
     }
 
     private static String sqlJoinManyToManyWithTags(final String leftTable) {

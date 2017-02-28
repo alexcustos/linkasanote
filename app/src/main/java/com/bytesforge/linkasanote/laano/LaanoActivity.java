@@ -26,6 +26,8 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -33,13 +35,10 @@ import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.databinding.ActivityLaanoBinding;
-import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenter;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenterModule;
-import com.bytesforge.linkasanote.laano.links.LinksFragment;
 import com.bytesforge.linkasanote.laano.links.LinksPresenter;
 import com.bytesforge.linkasanote.laano.links.LinksPresenterModule;
-import com.bytesforge.linkasanote.laano.notes.NotesFragment;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity;
@@ -74,6 +73,8 @@ public class LaanoActivity extends AppCompatActivity implements
     NotesPresenter notesPresenter;
 
     private ActivityLaanoBinding binding;
+    // TODO: restore on orientation change
+    private int viewPagerCurrentTab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,17 +106,20 @@ public class LaanoActivity extends AppCompatActivity implements
             adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.FAVORITES_TAB);
             adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.NOTES_TAB);
             adapter.finishUpdate(viewPager);
+            setupViewPagerListener(viewPager);
+            viewPagerCurrentTab = viewPager.getCurrentItem();
             if (binding.tabLayout != null) {
                 setupTabsContent(binding.tabLayout, viewPager);
             }
         }
         // Presenters
-        DaggerLaanoComponent.builder()
-                .applicationComponent(((LaanoApplication) getApplication()).getApplicationComponent())
-                .linksPresenterModule(new LinksPresenterModule(adapter.getLinksFragment()))
-                .favoritesPresenterModule(new FavoritesPresenterModule(this, adapter.getFavoritesFragment()))
-                .notesPresenterModule(new NotesPresenterModule(adapter.getNotesFragment()))
-                .build().inject(this);
+        LaanoApplication application = (LaanoApplication) getApplication();
+        application.getApplicationComponent()
+                .getLaanoComponent(
+                        new LinksPresenterModule(adapter.getLinksFragment()),
+                        new FavoritesPresenterModule(this, adapter.getFavoritesFragment()),
+                        new NotesPresenterModule(adapter.getNotesFragment()))
+                .inject(this);
         // FAB
         if (binding.fabAdd != null) {
             setupFabAdd(binding.fabAdd);
@@ -141,6 +145,13 @@ public class LaanoActivity extends AppCompatActivity implements
                 && data.getBooleanExtra(ManageAccountsActivity.KEY_ACCOUNT_LIST_CHANGED, false)) {
             updateAccountList();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.toolbar_laano, menu);
+        return true;
     }
 
     private void updateAccountList() {
@@ -185,7 +196,57 @@ public class LaanoActivity extends AppCompatActivity implements
         }
     }
 
+    private void notifyTabSelected(int position) {
+        switch (position) {
+            case LaanoFragmentPagerAdapter.LINKS_TAB:
+                break;
+            case LaanoFragmentPagerAdapter.FAVORITES_TAB:
+                favoritesPresenter.onTabSelected();
+                break;
+            case LaanoFragmentPagerAdapter.NOTES_TAB:
+                break;
+            default:
+                throw new IllegalStateException("Unexpected tab was selected");
+        }
+    }
+
+    private void notifyTabDeselected(int position) {
+        switch (position) {
+            case LaanoFragmentPagerAdapter.LINKS_TAB:
+                break;
+            case LaanoFragmentPagerAdapter.FAVORITES_TAB:
+                favoritesPresenter.onTabDeselected();
+                break;
+            case LaanoFragmentPagerAdapter.NOTES_TAB:
+                break;
+            default:
+                throw new IllegalStateException("Unexpected tab was selected");
+        }
+    }
+
     // Setup
+
+    private void setupViewPagerListener(ViewPager viewPager) {
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                if (viewPagerCurrentTab != position) {
+                    notifyTabDeselected(viewPagerCurrentTab);
+                    notifyTabSelected(position);
+                    viewPagerCurrentTab = position;
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+            }
+        });
+    }
 
     private void setupDrawerLayout(@NonNull final DrawerLayout drawerLayout) {
         checkNotNull(drawerLayout);
@@ -270,18 +331,22 @@ public class LaanoActivity extends AppCompatActivity implements
         });
     }
 
-    // TODO: refactor to get rid of instanceof checking
     private void setupFabAdd(@NonNull FloatingActionButton fab) {
         checkNotNull(fab);
 
         fab.setOnClickListener(v -> {
-                    BaseFragment fragment = getCurrentFragment();
-                    if (fragment instanceof LinksFragment) {
-                        linksPresenter.addLink();
-                    } else if (fragment instanceof FavoritesFragment) {
-                        favoritesPresenter.addFavorite();
-                    } else if (fragment instanceof NotesFragment) {
-                        notesPresenter.addNote();
+                    switch (viewPagerCurrentTab) {
+                        case LaanoFragmentPagerAdapter.LINKS_TAB:
+                            linksPresenter.addLink();
+                            break;
+                        case LaanoFragmentPagerAdapter.FAVORITES_TAB:
+                            favoritesPresenter.addFavorite();
+                            break;
+                        case LaanoFragmentPagerAdapter.NOTES_TAB:
+                            notesPresenter.addNote();
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected tab was selected");
                     }
                 }
         );

@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.support.annotation.NonNull;
+import android.util.SparseBooleanArray;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Repository;
@@ -60,6 +61,16 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     }
 
     @Override
+    public void onTabSelected() {
+
+    }
+
+    @Override
+    public void onTabDeselected() {
+        view.disableActionMode();
+    }
+
+    @Override
     public void addFavorite() {
         view.showAddFavorite();
     }
@@ -108,16 +119,49 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     @Override
     public void onFavoriteClick(int position) {
         if (viewModel.isActionMode()) {
-            view.onFavoriteSelected(position);
+            onFavoriteSelected(position);
         }
     }
 
     @Override
     public boolean onFavoriteLongClick(int position) {
-        if (!viewModel.isActionMode()) {
-            viewModel.setActionMode(true);
-        }
-        view.onFavoriteSelected(position);
+        view.enableActionMode();
+        onFavoriteSelected(position);
         return true;
     }
+
+    @Override
+    public void onCheckboxClick(int position) {
+        onFavoriteSelected(position);
+    }
+
+    private void onFavoriteSelected(int position) {
+        viewModel.toggleSelection(position);
+        view.selectionChanged(position);
+    }
+
+    @Override
+    public void onEditClick(@NonNull String favoriteId) {
+        view.showEditFavorite(favoriteId);
+    }
+
+    @Override
+    public void onToLinksClick(@NonNull String favoriteId) {
+    }
+
+    @Override
+    public void onToNotesClick(@NonNull String favoriteId) {
+    }
+
+    @Override
+    public void onDeleteClick() {
+        SparseBooleanArray selectedIds = viewModel.getSelectedIds();
+        int size = selectedIds.size();
+        for (int i = size - 1; i >= 0; i--) {
+            int key = selectedIds.keyAt(i);
+            viewModel.removeSelection(key);
+            String favoriteId = view.removeFavorite(key).getId();
+            repository.deleteFavorite(favoriteId);
+        }
+    } // onDeleteClick
 }
