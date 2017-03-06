@@ -14,6 +14,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.typeText;
@@ -27,8 +30,7 @@ import static org.hamcrest.Matchers.containsString;
 public class AddEditFavoriteActivityTest {
 
     private final String FAVORITE_NAME = "Favorite";
-    // last tag is not completed
-    private final String FAVORITE_TAGS = "first second third";
+    private final String[] FAVORITE_TAGS = new String[]{"first", "second",  "third"};
 
     @Rule
     public ActivityTestRule<AddEditFavoriteActivity> addEditFavoriteActivityTestRule =
@@ -47,13 +49,15 @@ public class AddEditFavoriteActivityTest {
     }
 
     @Test
-    public void orientationChange_EditTextFieldsPersists() throws InterruptedException {
-        fillFavoriteFields(FAVORITE_NAME, FAVORITE_TAGS);
+    public void orientationChange_editTextFieldsPersists() throws InterruptedException {
+        // NOTE: last tag is incomplete if there is no a space at the end
+        String tags = Arrays.stream(FAVORITE_TAGS).collect(Collectors.joining(" "));
+        fillFavoriteFields(FAVORITE_NAME, tags);
 
         TestUtils.rotateOrientation(addEditFavoriteActivityTestRule);
 
         onView(withId(R.id.favorite_name)).check(matches(withText(FAVORITE_NAME)));
-        String uncompletedTag = FAVORITE_TAGS.split(" ")[2];
+        String uncompletedTag = FAVORITE_TAGS[FAVORITE_TAGS.length - 1];
         onView(withId(R.id.favorite_tags)).check(matches(withText(containsString(uncompletedTag))));
     }
 

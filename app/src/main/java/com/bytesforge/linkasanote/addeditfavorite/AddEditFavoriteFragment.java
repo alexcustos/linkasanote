@@ -164,7 +164,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        viewModel.loadInstanceState(outState);
+        viewModel.saveInstanceState(outState);
     }
 
     @Override

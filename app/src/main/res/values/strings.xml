@@ -75,6 +75,7 @@
     <string name="add_edit_favorite_new_button_title">Create</string>
     <string name="add_edit_favorite_edit_button_title">Update</string>
     <string name="add_edit_favorite_warning_empty">The favorite Name and least one Tag must be specified</string>
+    <string name="add_edit_favorite_warning_not_existed">Requested Favorite has not already existed</string>
     <string name="add_edit_favorite_error_name_duplicated">Favorite with the same name already exists</string>
     <string name="action_bar_title_manage_accounts">Manage accounts</string>
     <string name="item_manage_accounts_add">Add account</string>

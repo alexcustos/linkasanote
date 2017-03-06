@@ -8,7 +8,7 @@ import dagger.Provides;
 @Module
 public class FavoritesPresenterModule {
 
-    private final Context context;
+    private final Context context; // NOTE: Activity context
     private final FavoritesContract.View view;
 
     public FavoritesPresenterModule(Context context, FavoritesContract.View view) {

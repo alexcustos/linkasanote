@@ -9,28 +9,28 @@ import com.bytesforge.linkasanote.data.Tag;
 
 import java.util.List;
 
-import rx.Observable;
+import io.reactivex.Single;
 
 public interface DataSource {
 
-    Observable<List<Link>> getLinks();
-    Observable<Link> getLink(@NonNull String linkId);
+    Single<List<Link>> getLinks();
+    Single<Link> getLink(@NonNull String linkId);
     void saveLink(@NonNull Link link);
     void deleteAllLinks();
 
-    Observable<List<Note>> getNotes();
-    Observable<Note> getNote(@NonNull String noteId);
+    Single<List<Note>> getNotes();
+    Single<Note> getNote(@NonNull String noteId);
     void saveNote(@NonNull Note note);
     void deleteAllNotes();
 
-    Observable<List<Favorite>> getFavorites();
-    Observable<Favorite> getFavorite(@NonNull String favoriteId);
+    Single<List<Favorite>> getFavorites();
+    Single<Favorite> getFavorite(@NonNull String favoriteId);
     void saveFavorite(@NonNull Favorite favorite);
     void deleteAllFavorites();
     void deleteFavorite(@NonNull String favoriteId);
 
-    Observable<List<Tag>> getTags();
-    Observable<Tag> getTag(@NonNull String tagId);
+    Single<List<Tag>> getTags();
+    Single<Tag> getTag(@NonNull String tagId);
     void saveTag(@NonNull Tag tag);
     void deleteAllTags();
 }

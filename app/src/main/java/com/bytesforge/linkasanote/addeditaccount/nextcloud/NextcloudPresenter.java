@@ -144,7 +144,7 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
     @Override
     public Bundle getInstanceState() {
         Bundle state = new Bundle();
-        viewModel.loadInstanceState(state);
+        viewModel.saveInstanceState(state);
 
         return state;
     }

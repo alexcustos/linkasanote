@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import rx.Observable;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 
 import static com.bytesforge.linkasanote.utils.UuidUtils.isKeyValidUuid;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -50,10 +50,8 @@ public class Repository implements DataSource {
     @VisibleForTesting
     public boolean cacheIsDirty = false;
 
-    @Inject
-    public Repository(
-            @Local DataSource localDataSource,
-            @Cloud DataSource cloudDataSource) {
+    //@Inject NOTE: @Provides is needed for testing to mock Repository
+    public Repository(DataSource localDataSource, DataSource cloudDataSource) {
         this.localDataSource = localDataSource;
         this.cloudDataSource = cloudDataSource;
     }
@@ -61,37 +59,37 @@ public class Repository implements DataSource {
     // Links
 
     @Override
-    public Observable<List<Link>> getLinks() {
+    public Single<List<Link>> getLinks() {
         if (cachedLinks != null && !cacheIsDirty) {
-            return Observable.from(cachedLinks.values()).toList();
-        } else if (cachedLinks == null) {
-            cachedLinks = new LinkedHashMap<>();
+            return Observable.fromIterable(cachedLinks.values()).toList();
         }
         return getAndCacheLocalLinks();
     }
 
-    private Observable<List<Link>> getAndCacheLocalLinks() {
+    private Single<List<Link>> getAndCacheLocalLinks() {
+        if (cachedLinks == null) {
+            cachedLinks = new LinkedHashMap<>();
+        }
         return localDataSource.getLinks()
-                .flatMap(links -> Observable.from(links)
+                .flatMap(links -> Observable.fromIterable(links)
                         .doOnNext(link -> cachedLinks.put(link.getId(), link))
                         .toList());
     }
 
     @Override
-    public Observable<Link> getLink(@NonNull String linkId) {
+    public Single<Link> getLink(@NonNull String linkId) {
         checkNotNull(linkId);
 
         final Link cachedLink = getCachedLink(linkId);
         if (cachedLink != null) {
-            return Observable.just(cachedLink);
+            return Single.just(cachedLink);
         }
 
         if (cachedLinks == null) {
             cachedLinks = new LinkedHashMap<>();
         }
         return localDataSource.getLink(linkId)
-                .doOnNext(link -> cachedLinks.put(linkId, link))
-                .first();
+                .doOnSuccess(link -> cachedLinks.put(linkId, link));
     }
 
     @Nullable
@@ -100,9 +98,8 @@ public class Repository implements DataSource {
 
         if (cachedLinks == null || cachedLinks.isEmpty()) {
             return null;
-        } else {
-            return cachedLinks.get(id);
         }
+        return cachedLinks.get(id);
     }
 
     @Override
@@ -132,12 +129,12 @@ public class Repository implements DataSource {
     // Notes
 
     @Override
-    public Observable<List<Note>> getNotes() {
+    public Single<List<Note>> getNotes() {
         return null;
     }
 
     @Override
-    public Observable<Note> getNote(@NonNull String noteId) {
+    public Single<Note> getNote(@NonNull String noteId) {
         return null;
     }
 
@@ -160,22 +157,22 @@ public class Repository implements DataSource {
 
     // TODO: implement cloudFavorites
     @Override
-    public Observable<List<Favorite>> getFavorites() {
+    public Single<List<Favorite>> getFavorites() {
         if (cachedFavorites != null && !cacheIsDirty) {
-            return Observable.from(cachedFavorites.values()).toList();
+            return Observable.fromIterable(cachedFavorites.values()).toList();
         }
 
-        Observable<List<Favorite>> localFavorites = getAndCacheLocalFavorites();
+        Single<List<Favorite>> localFavorites = getAndCacheLocalFavorites();
 
-        Observable<List<Favorite>> cloudFavorites =
-                Observable.just(Collections.<Favorite>emptyList());
+        Single<List<Favorite>> cloudFavorites =
+                Single.just(Collections.<Favorite>emptyList());
 
-        return Observable.concat(localFavorites, cloudFavorites)
+        return Single.concat(localFavorites, cloudFavorites)
                 .filter(favorites -> !favorites.isEmpty())
-                .first();
+                .firstOrError();
     }
 
-    private Observable<List<Favorite>> getAndCacheLocalFavorites() {
+    private Single<List<Favorite>> getAndCacheLocalFavorites() {
         if (cachedFavorites == null) {
             cachedFavorites = new LinkedHashMap<>();
         }
@@ -183,7 +180,7 @@ public class Repository implements DataSource {
             cachedTags = new LinkedHashMap<>();
         }
         return localDataSource.getFavorites()
-                .flatMap(favorites -> Observable.from(favorites)
+                .flatMap(favorites -> Observable.fromIterable(favorites)
                         .doOnNext(favorite -> {
                             // NOTE: cache invalidation required when all items are requested
                             cachedFavorites.put(favorite.getId(), favorite);
@@ -196,9 +193,8 @@ public class Repository implements DataSource {
     }
 
     @Override
-    public Observable<Favorite> getFavorite(@NonNull String favoriteId) {
+    public Single<Favorite> getFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-
         if (!isKeyValidUuid(favoriteId)) {
             throw new InvalidParameterException(
                     "getFavorite() called with invalid UUID ID [" + favoriteId + "]");
@@ -206,7 +202,7 @@ public class Repository implements DataSource {
 
         final Favorite cachedFavorite = getCachedFavorite(favoriteId);
         if (cachedFavorite != null) {
-            return Observable.just(cachedFavorite);
+            return Single.just(cachedFavorite);
         }
 
         if (cachedFavorites == null) {
@@ -215,21 +211,18 @@ public class Repository implements DataSource {
         if (cachedTags == null) {
             cachedTags = new LinkedHashMap<>();
         }
-        Observable<Favorite> localFavorite = localDataSource.getFavorite(favoriteId)
-                .doOnNext(favorite -> {
+        Single<Favorite> localFavorite = localDataSource.getFavorite(favoriteId)
+                .doOnSuccess(favorite -> {
                     cachedFavorites.put(favoriteId, favorite);
                     List<Tag> tags = favorite.getTags();
                     if (tags != null) {
                         for (Tag tag : tags) cachedTags.put(tag.getName(), tag);
                     }
-                })
-                .first();
-
-        Observable<Favorite> cloudFavorite =
-                Observable.<Favorite>just(null).concatWith(Observable.<Favorite>never());
-
-        return Observable.concat(localFavorite, cloudFavorite)
-                .first()
+                });
+        Single<Favorite> cloudFavorite = Single.never();
+        // TODO: check if it possible to throw own exception, and if null still possible here
+        return Single.concat(localFavorite, cloudFavorite)
+                .firstOrError()
                 .map(favorite -> {
                     if (favorite == null) {
                         throw new NoSuchElementException(
@@ -301,37 +294,37 @@ public class Repository implements DataSource {
     // Tags: tag is part of the object and should be bound with the object
 
     @Override
-    public Observable<List<Tag>> getTags() {
+    public Single<List<Tag>> getTags() {
         if (cachedTags != null && !cacheIsDirty) {
-            return Observable.from(cachedTags.values()).toList();
-        } else if (cachedTags == null) {
-            cachedTags = new LinkedHashMap<>();
+            return Observable.fromIterable(cachedTags.values()).toList();
         }
         return getAndCacheLocalTags();
     }
 
-    private Observable<List<Tag>> getAndCacheLocalTags() {
+    private Single<List<Tag>> getAndCacheLocalTags() {
+        if (cachedTags == null) {
+            cachedTags = new LinkedHashMap<>();
+        }
         return localDataSource.getTags()
-                .flatMap(tags -> Observable.from(tags)
+                .flatMap(tags -> Observable.fromIterable(tags)
                         .doOnNext(tag -> cachedTags.put(tag.getName(), tag))
                         .toList());
     }
 
     @Override
-    public Observable<Tag> getTag(@NonNull String tagName) {
+    public Single<Tag> getTag(@NonNull String tagName) {
         checkNotNull(tagName);
 
         final Tag cachedTag = getCachedTag(tagName);
         if (cachedTag != null) {
-            return Observable.just(cachedTag);
+            return Single.just(cachedTag);
         }
 
         if (cachedTags == null) {
             cachedTags = new LinkedHashMap<>();
         }
         return localDataSource.getTag(tagName)
-                .doOnNext(tag -> cachedTags.put(tagName, tag))
-                .first();
+                .doOnSuccess(tag -> cachedTags.put(tagName, tag));
     }
 
     @Nullable

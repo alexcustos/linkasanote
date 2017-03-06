@@ -31,7 +31,7 @@ import java.util.List;
 
 import javax.inject.Singleton;
 
-import rx.Observable;
+import io.reactivex.Single;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -53,12 +53,12 @@ public class CloudDataSource implements DataSource {
     }
 
     @Override
-    public Observable<List<Link>> getLinks() {
+    public Single<List<Link>> getLinks() {
         return null;
     }
 
     @Override
-    public Observable<Link> getLink(@NonNull String linkId) {
+    public Single<Link> getLink(@NonNull String linkId) {
         return null;
     }
 
@@ -73,12 +73,12 @@ public class CloudDataSource implements DataSource {
     // Notes
 
     @Override
-    public Observable<List<Note>> getNotes() {
+    public Single<List<Note>> getNotes() {
         return null;
     }
 
     @Override
-    public Observable<Note> getNote(@NonNull String noteId) {
+    public Single<Note> getNote(@NonNull String noteId) {
         return null;
     }
 
@@ -93,12 +93,12 @@ public class CloudDataSource implements DataSource {
     // Favorites
 
     @Override
-    public Observable<List<Favorite>> getFavorites() {
+    public Single<List<Favorite>> getFavorites() {
         return null;
     }
 
     @Override
-    public Observable<Favorite> getFavorite(@NonNull String favoriteId) {
+    public Single<Favorite> getFavorite(@NonNull String favoriteId) {
         return null;
     }
 
@@ -151,12 +151,12 @@ public class CloudDataSource implements DataSource {
     // Tags
 
     @Override
-    public Observable<List<Tag>> getTags() {
+    public Single<List<Tag>> getTags() {
         throw new RuntimeException("getTags() was called but this operation cannot be applied to the cloud");
     }
 
     @Override
-    public Observable<Tag> getTag(@NonNull String tagId) {
+    public Single<Tag> getTag(@NonNull String tagId) {
         throw new RuntimeException("getTag() was called but this operation cannot be applied to the cloud");
     }
 

@@ -11,9 +11,7 @@ android {
         targetSdkVersion SDK_VERSION
         versionCode 1
         versionName "0.1"
-        //testApplicationId "${applicationId}.test"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
         //jackOptions {
         //    enabled true
         //}
@@ -44,8 +42,8 @@ android {
     }
 
     android.variantFilter { variant ->
-        if (variant.buildType.name.equals('release')
-                && variant.getFlavors().get(0).name.equals('mock')) {
+        if (variant.buildType.name == 'release'
+                && variant.getFlavors().get(0).name == 'mock') {
             variant.setIgnore(true);
         }
     }
@@ -65,6 +63,7 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':tokenautocomplete')
+    compile project(':base64')
     //compile project(':nextcloud')
 
     compile "com.android.support:appcompat-v7:${supportLibraryVersion}"
@@ -77,11 +76,8 @@ dependencies {
     compile "com.github.nextcloud:android-library:${nextcloudLibraryVersion}"
 
     // RxJava
-    //compile "io.reactivex.rxjava2:rxjava:${rxjavaVersion}"
-    //compile "io.reactivex.rxjava2:rxandroid:${rxandroidVersion}"
-    compile "io.reactivex:rxjava:${rxjavaVersion}"
-    compile "io.reactivex:rxandroid:${rxandroidVersion}"
-    compile "com.squareup.sqlbrite:sqlbrite:${sqlbriteVersion}"
+    compile "io.reactivex.rxjava2:rxjava:${rxjavaVersion}"
+    compile "io.reactivex.rxjava2:rxandroid:${rxandroidVersion}"
 
     // Dagger 2
     annotationProcessor "com.google.dagger:dagger-compiler:${daggerVersion}"
@@ -91,9 +87,8 @@ dependencies {
     // Local unit tests
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
-    testCompile "org.powermock:powermock:${powermockVersion}"
-    testCompile "org.powermock:powermock-module-junit4:${powermockVersion}"
-    testCompile "org.powermock:powermock-api-mockito:${powermockVersion}"
+    //testCompile "org.powermock:powermock-module-junit4:${powermockVersion}"
+    //testCompile "org.powermock:powermock-api-mockito2:${powermockVersion}"
     testCompile "com.github.fabioCollini:DaggerMock:${daggerMockVersion}"
 
     // Espresso Testing

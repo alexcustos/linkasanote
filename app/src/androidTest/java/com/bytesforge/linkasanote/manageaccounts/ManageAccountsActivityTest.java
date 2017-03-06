@@ -79,23 +79,23 @@ public class ManageAccountsActivityTest {
     private static Account[] ACCOUNTS;
 
     @Mock
-    private AccountManager mockAccountManager;
+    AccountManager mockAccountManager;
 
     public ManageAccountsActivityTest() {
         ACCOUNT_TYPE = getAccountType(context);
         ACCOUNTS = new Account[]{new Account(USER_NAME + "@demo.nextcloud.com", ACCOUNT_TYPE)};
     }
 
-    public void setupManageAccountsActivity() { // @Before
+    private void setupManageAccountsActivity() { // @Before
         TestUtils.allowPermissionIfNeeded(Manifest.permission.GET_ACCOUNTS);
     }
 
-    public void registerIdlingResource() { // @Before
+    private void registerIdlingResource() { // @Before
         Espresso.registerIdlingResources(
                 manageAccountsActivityTestRule.getActivity().getCountingIdlingResource());
     }
 
-    public void unregisterIdlingResource() { // @After
+    private void unregisterIdlingResource() { // @After
         Espresso.unregisterIdlingResources(
                 manageAccountsActivityTestRule.getActivity().getCountingIdlingResource());
     }

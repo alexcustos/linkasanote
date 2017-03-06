@@ -7,9 +7,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -47,9 +47,6 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     public void onResume() {
         super.onResume();
         presenter.subscribe();
-        if (viewModel.isActionMode()) {
-            enableActionMode();
-        }
     }
 
     @Override
@@ -114,7 +111,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        viewModel.loadInstanceState(outState);
+        viewModel.saveInstanceState(outState);
     }
 
     @Override
@@ -131,9 +128,12 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     }
 
     @Override
-    public void showFavorites(List<Favorite> favorites) {
+    public void showFavorites(@NonNull List<Favorite> favorites) {
+        checkNotNull(favorites);
+
         adapter.swapItems(favorites);
         viewModel.setFavoriteListSize(favorites.size());
+        if (viewModel.isActionMode()) enableActionMode();
     }
 
     @Override
@@ -154,7 +154,11 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         List<Favorite> favorites = new ArrayList<>(0);
         adapter = new FavoritesAdapter(favorites, presenter, (FavoritesViewModel) viewModel);
         rvFavorites.setAdapter(adapter);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         rvFavorites.setLayoutManager(new LinearLayoutManager(getContext()));
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
+                rvFavorites.getContext(), layoutManager.getOrientation());
+        rvFavorites.addItemDecoration(dividerItemDecoration);
     }
 
     @Override
@@ -178,18 +182,14 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
 
     private void destroyActionMode() {
         if (viewModel.isActionMode()) {
-            SparseBooleanArray selected = viewModel.getSelectedIds().clone();
+            int[] selectedIds = viewModel.getSelectedIds().clone();
             viewModel.removeSelection();
-            for (int i = 0; i < selected.size(); i++) {
-                if (selected.valueAt(i)) {
-                    adapter.notifyItemChanged(selected.keyAt(i));
-                }
+            for (int selectedId : selectedIds) {
+                adapter.notifyItemChanged(selectedId);
             }
             viewModel.disableActionMode();
         }
-        if (actionMode != null) {
-            actionMode = null;
-        }
+        if (actionMode != null) actionMode = null;
     }
 
     @Override
@@ -209,12 +209,11 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     }
 
     @Override
-    public Favorite removeFavorite(int position) {
+    public String removeFavorite(int position) {
         Favorite favorite = adapter.removeItem(position);
         selectionChanged(position);
         viewModel.setFavoriteListSize(adapter.getItemCount());
-
-        return favorite;
+        return favorite.getId();
     }
 
     public class FavoritesActionModeCallback implements ActionMode.Callback {

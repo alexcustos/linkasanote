@@ -81,7 +81,9 @@ public class AccountsAdapter extends RecyclerView.Adapter<AccountsAdapter.ViewHo
         return accountItems.get(position).getType();
     }
 
-    public void swapItems(List<AccountItem> accountItems) {
+    public void swapItems(@NonNull List<AccountItem> accountItems) {
+        checkNotNull(accountItems);
+
         final AccountItemDiffCallback diffCallback =
                 new AccountItemDiffCallback(this.accountItems, accountItems);
         final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
@@ -124,6 +126,7 @@ public class AccountsAdapter extends RecyclerView.Adapter<AccountsAdapter.ViewHo
 
         @Override
         public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            // TODO: override equal to AccountItem
             String oldAccountName = oldList.get(oldItemPosition).getAccountName();
             String newAccountName = newList.get(newItemPosition).getAccountName();
             String oldDisplayName = oldList.get(oldItemPosition).getDisplayName();

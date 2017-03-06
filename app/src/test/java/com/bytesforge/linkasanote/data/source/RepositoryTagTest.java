@@ -10,9 +10,10 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 
-import rx.Observable;
-import rx.observers.TestSubscriber;
+import io.reactivex.Single;
+import io.reactivex.observers.TestObserver;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -22,11 +23,7 @@ import static org.mockito.Mockito.when;
 
 public class RepositoryTagTest {
 
-    private final List<String> TAG_NAMES;
     private final List<Tag> TAGS;
-
-    private TestSubscriber<List<Tag>> testTagsSubscriber;
-    private TestSubscriber<Tag> testTagSubscriber;
 
     private Repository repository;
 
@@ -37,18 +34,11 @@ public class RepositoryTagTest {
     private DataSource cloudDataSource;
 
     public RepositoryTagTest() {
-        TAG_NAMES = new ArrayList<>();
-        TAG_NAMES.add("first");
-        TAG_NAMES.add("second");
-        TAG_NAMES.add("third");
-
-        TAGS = new ArrayList<>();
-        TAGS.add(new Tag(TAG_NAMES.get(0)));
-        TAGS.add(new Tag(TAG_NAMES.get(1)));
-        TAGS.add(new Tag(TAG_NAMES.get(2)));
-
-        testTagsSubscriber = new TestSubscriber<>();
-        testTagSubscriber = new TestSubscriber<>();
+        TAGS = new ArrayList<Tag>() {{
+            add(new Tag("first"));
+            add(new Tag("second"));
+            add(new Tag("third"));
+        }};
     }
 
     @Before
@@ -62,10 +52,11 @@ public class RepositoryTagTest {
         setTagsAvailable(localDataSource, TAGS);
         setTagsNotAvailable(cloudDataSource);
 
-        repository.getTags().subscribe(testTagsSubscriber);
+
+        TestObserver<List<Tag>> testTagsObserver = repository.getTags().test();
 
         verify(localDataSource).getTags();
-        testTagsSubscriber.assertValue(TAGS);
+        testTagsObserver.assertValue(TAGS);
     }
 
     @Test
@@ -74,9 +65,9 @@ public class RepositoryTagTest {
 
         setTagAvailable(localDataSource, tag);
 
-        repository.getTag(tag.getName()).subscribe(testTagSubscriber);
+        TestObserver<Tag> testTagObserver = repository.getTag(tag.getName()).test();
         verify(localDataSource).getTag(eq(tag.getName()));
-        testTagSubscriber.assertValue(tag);
+        testTagObserver.assertValue(tag);
     }
 
     @Test
@@ -103,21 +94,18 @@ public class RepositoryTagTest {
     // Data setup
 
     private void setTagsAvailable(DataSource dataSource, List<Tag> tags) {
-        when(dataSource.getTags()).
-                thenReturn(Observable.just(tags).concatWith(Observable.<List<Tag>>never()));
+        when(dataSource.getTags()).thenReturn(Single.just(tags));
     }
 
     private void setTagsNotAvailable(DataSource dataSource) {
-        when(dataSource.getTags()).thenReturn(Observable.just(Collections.<Tag>emptyList()));
+        when(dataSource.getTags()).thenReturn(Single.just(Collections.emptyList()));
     }
 
     private void setTagAvailable(DataSource dataSource, Tag tag) {
-        when(dataSource.getTag(eq(tag.getName())))
-                .thenReturn(Observable.just(tag).concatWith(Observable.<Tag>never()));
+        when(dataSource.getTag(eq(tag.getName()))).thenReturn(Single.just(tag));
     }
 
-    private void setTagNotAvailable(DataSource dataSource, String tagId) {
-        when(dataSource.getTag(eq(tagId)))
-                .thenReturn(Observable.<Tag>just(null).concatWith(Observable.<Tag>never()));
+    private void setTagNotAvailable(DataSource dataSource, String tagName) {
+        when(dataSource.getTag(eq(tagName))).thenReturn(Single.error(new NoSuchElementException()));
     }
 }

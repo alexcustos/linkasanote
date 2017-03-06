@@ -1,7 +1,7 @@
 package com.bytesforge.linkasanote.laano.links;
 
-import com.bytesforge.linkasanote.BasePresenter;
 import com.bytesforge.linkasanote.BaseView;
+import com.bytesforge.linkasanote.laano.LaanoTabPresenter;
 
 public interface LinksContract {
 
@@ -10,7 +10,7 @@ public interface LinksContract {
         boolean isActive();
     }
 
-    interface Presenter extends BasePresenter {
+    interface Presenter extends LaanoTabPresenter {
 
         void addLink();
     }

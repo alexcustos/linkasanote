@@ -2,7 +2,7 @@ package com.bytesforge.linkasanote.utils.schedulers;
 
 import android.support.annotation.NonNull;
 
-import rx.Scheduler;
+import io.reactivex.Scheduler;
 
 public interface BaseSchedulerProvider {
 

@@ -1,20 +1,19 @@
 package com.bytesforge.linkasanote.data.source;
 
+import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
-import com.bytesforge.linkasanote.data.Tag;
-import com.bytesforge.linkasanote.utils.CommonUtils;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 
-import rx.Observable;
-import rx.observers.TestSubscriber;
+import io.reactivex.Single;
+import io.reactivex.observers.TestObserver;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -24,12 +23,7 @@ import static org.mockito.Mockito.when;
 
 public class RepositoryFavoriteTest {
 
-    private final List<Tag> TAGS;
-    private final List<String> FAVORITE_NAMES;
     private final List<Favorite> FAVORITES;
-
-    private final TestSubscriber<List<Favorite>> testFavoritesSubscriber;
-    private final TestSubscriber<Favorite> testFavoriteSubscriber;
 
     private Repository repository;
 
@@ -39,26 +33,11 @@ public class RepositoryFavoriteTest {
     @Mock
     private DataSource cloudDataSource;
 
+    private TestObserver<List<Favorite>> testFavoritesObserver;
+    private TestObserver<Favorite> testFavoriteObserver;
+
     public RepositoryFavoriteTest() {
-        String keyPrefix = CommonUtils.charRepeat('A', 21);
-
-        TAGS = new ArrayList<>();
-        TAGS.add(new Tag("first"));
-        TAGS.add(new Tag("second"));
-        TAGS.add(new Tag("third"));
-
-        FAVORITE_NAMES = new ArrayList<>();
-        FAVORITE_NAMES.add("Favorite");
-        FAVORITE_NAMES.add("Favorite #2");
-        FAVORITE_NAMES.add("Favorite #3");
-
-        FAVORITES = new ArrayList<>();
-        FAVORITES.add(new Favorite(keyPrefix + 'A', FAVORITE_NAMES.get(0), TAGS));
-        FAVORITES.add(new Favorite(keyPrefix + 'B', FAVORITE_NAMES.get(1), TAGS));
-        FAVORITES.add(new Favorite(keyPrefix + 'C', FAVORITE_NAMES.get(2), TAGS));
-
-        testFavoritesSubscriber = new TestSubscriber<>();
-        testFavoriteSubscriber = new TestSubscriber<>();
+        FAVORITES = TestUtils.buildFavorites();
     }
 
     @Before
@@ -72,10 +51,9 @@ public class RepositoryFavoriteTest {
         setFavoritesAvailable(localDataSource, FAVORITES);
         setFavoritesNotAvailable(cloudDataSource);
 
-        repository.getFavorites().subscribe(testFavoritesSubscriber);
-
+        testFavoritesObserver = repository.getFavorites().test();
         verify(localDataSource).getFavorites();
-        testFavoritesSubscriber.assertValue(FAVORITES);
+        testFavoritesObserver.assertValue(FAVORITES);
     }
 
     @Test
@@ -85,9 +63,9 @@ public class RepositoryFavoriteTest {
         setFavoriteAvailable(localDataSource, favorite);
         setFavoriteNotAvailable(cloudDataSource, favorite.getId());
 
-        repository.getFavorite(favorite.getId()).subscribe(testFavoriteSubscriber);
+        testFavoriteObserver = repository.getFavorite(favorite.getId()).test();
         verify(localDataSource).getFavorite(eq(favorite.getId()));
-        testFavoriteSubscriber.assertValue(favorite);
+        testFavoriteObserver.assertValue(favorite);
     }
 
     @Test
@@ -95,7 +73,6 @@ public class RepositoryFavoriteTest {
         Favorite favorite = FAVORITES.get(0);
 
         repository.saveFavorite(favorite);
-
         verify(localDataSource).saveFavorite(favorite);
         verify(cloudDataSource).saveFavorite(favorite);
         assertThat(repository.cachedFavorites.size(), is(1));
@@ -117,21 +94,19 @@ public class RepositoryFavoriteTest {
     // Data setup
 
     private void setFavoritesAvailable(DataSource dataSource, List<Favorite> favorites) {
-        when(dataSource.getFavorites()).
-                thenReturn(Observable.just(favorites).concatWith(Observable.<List<Favorite>>never()));
+        when(dataSource.getFavorites()).thenReturn(Single.just(favorites));
     }
 
     private void setFavoritesNotAvailable(DataSource dataSource) {
-        when(dataSource.getFavorites()).thenReturn(Observable.just(Collections.<Favorite>emptyList()));
+        when(dataSource.getFavorites()).thenReturn(Single.just(Collections.emptyList()));
     }
 
     private void setFavoriteAvailable(DataSource dataSource, Favorite favorite) {
-        when(dataSource.getFavorite(eq(favorite.getId())))
-                .thenReturn(Observable.just(favorite).concatWith(Observable.<Favorite>never()));
+        when(dataSource.getFavorite(eq(favorite.getId()))).thenReturn(Single.just(favorite));
     }
 
     private void setFavoriteNotAvailable(DataSource dataSource, String favoriteId) {
-        when(dataSource.getFavorite(eq(favoriteId)))
-                .thenReturn(Observable.<Favorite>just(null).concatWith(Observable.<Favorite>never()));
+        when(dataSource.getFavorite(eq(favoriteId))).thenReturn(
+                Single.error(new NoSuchElementException()));
     }
 }

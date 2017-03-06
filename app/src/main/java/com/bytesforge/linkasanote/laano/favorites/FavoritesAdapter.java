@@ -78,7 +78,9 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         return favorite;
     }
 
-    public void swapItems(List<Favorite> favorites) {
+    public void swapItems(@NonNull List<Favorite> favorites) {
+        checkNotNull(favorites);
+
         final FavoritesDiffCallback diffCallback =
                 new FavoritesDiffCallback(this.favorites, favorites);
         final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
@@ -119,8 +121,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
             Favorite oldFavorite = oldList.get(oldItemPosition);
             Favorite newFavorite = newList.get(newItemPosition);
 
-            return oldFavorite.getName().equals(newFavorite.getName())
-                    && oldFavorite.getTagsAsString().equals(newFavorite.getTagsAsString());
+            return oldFavorite.equals(newFavorite);
         }
-    }
+    } // class
 }

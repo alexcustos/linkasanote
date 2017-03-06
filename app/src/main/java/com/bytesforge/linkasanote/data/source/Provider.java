@@ -248,6 +248,11 @@ public class Provider extends ContentProvider {
             case FAVORITE:
                 tableName = LocalContract.FavoriteEntry.TABLE_NAME;
                 break;
+            case FAVORITE_ITEM:
+                tableName = LocalContract.FavoriteEntry.TABLE_NAME;
+                selection = LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + " = ?";
+                selectionArgs = new String[]{LocalContract.FavoriteEntry.getFavoriteId(uri)};
+                break;
             case TAG:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
                 break;

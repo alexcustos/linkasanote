@@ -10,7 +10,7 @@ import com.bytesforge.linkasanote.BaseView;
 
 import java.util.List;
 
-import rx.Observable;
+import io.reactivex.Single;
 
 public interface ManageAccountsContract {
 
@@ -26,8 +26,8 @@ public interface ManageAccountsContract {
         void confirmAccountRemoval(Account account);
 
         @Nullable Account[] getAccountsWithPermissionCheck();
-        Observable<AccountItem> loadAccountItems();
-        void swapItems(List<AccountItem> accountItems);
+        Single<List<AccountItem>> loadAccountItems();
+        void swapItems(@NonNull List<AccountItem> accountItems);
 
         void showSuccessfullyUpdatedSnackbar();
         void showNotEnoughPermissionsSnackbar();

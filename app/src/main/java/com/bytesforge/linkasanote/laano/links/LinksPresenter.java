@@ -27,6 +27,16 @@ public final class LinksPresenter implements LinksContract.Presenter {
     }
 
     @Override
+    public void onTabSelected() {
+
+    }
+
+    @Override
+    public void onTabDeselected() {
+
+    }
+
+    @Override
     public void addLink() {
 
     }

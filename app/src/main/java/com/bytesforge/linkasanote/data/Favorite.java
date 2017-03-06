@@ -71,6 +71,10 @@ public final class Favorite extends SyncState {
         this.tags = tags;
     }
 
+    public static long rowIdFrom(Cursor cursor) {
+        return cursor.getLong(cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID));
+    }
+
     public static Favorite from(Cursor cursor, List<Tag> tags) {
         String id = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID));

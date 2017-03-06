@@ -1,20 +1,17 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.support.annotation.NonNull;
-import android.util.SparseBooleanArray;
 
-import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import javax.inject.Inject;
 
-import rx.Observer;
-import rx.Subscription;
-import rx.subscriptions.CompositeSubscription;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 
 public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
@@ -26,7 +23,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     private final BaseSchedulerProvider schedulerProvider;
 
     @NonNull
-    private final CompositeSubscription subscription;
+    private final CompositeDisposable disposable;
 
     private boolean firstLoad = true;
 
@@ -39,8 +36,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         this.view = view;
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
-
-        subscription = new CompositeSubscription();
+        disposable = new CompositeDisposable();
     }
 
     @Inject
@@ -57,12 +53,11 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void unsubscribe() {
-        subscription.clear();
+        disposable.clear();
     }
 
     @Override
     public void onTabSelected() {
-
     }
 
     @Override
@@ -84,40 +79,32 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     private void loadFavorites(boolean forceUpdate, final boolean showLoading) {
         // TODO: implement SwipeRefreshLayout and cache invalidation
         EspressoIdlingResource.increment();
-        subscription.clear();
+        disposable.clear();
 
-        Subscription subscription = repository.getFavorites()
+        Disposable disposable = repository.getFavorites()
                 // TODO: implement filter
                 //.flatMap(Observable::from)
                 //.filter(favorite -> {...})
                 //.toList()
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .doOnTerminate(() -> {
+                // NoSuchElementException, NullPointerException
+                .doOnError(throwable -> view.showFavorites(new ArrayList<>()))
+                .doFinally(() -> {
                     if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
                         EspressoIdlingResource.decrement();
                     }
                 })
-                .subscribe(new Observer<List<Favorite>>() {
-
-                    @Override
-                    public void onCompleted() {
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                    }
-
-                    @Override
-                    public void onNext(List<Favorite> favorites) {
-                        view.showFavorites(favorites);
-                    }
+                // NOTE: BiConsumer must be here or OnErrorNotImplementedException
+                .subscribe((favorites, throwable) -> {
+                    if (favorites != null) view.showFavorites(favorites);
                 });
-        this.subscription.add(subscription);
+        this.disposable.add(disposable);
     }
 
     @Override
     public void onFavoriteClick(int position) {
+        // TODO: normal mode selection must highlight current favorite filter
         if (viewModel.isActionMode()) {
             onFavoriteSelected(position);
         }
@@ -155,12 +142,10 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void onDeleteClick() {
-        SparseBooleanArray selectedIds = viewModel.getSelectedIds();
-        int size = selectedIds.size();
-        for (int i = size - 1; i >= 0; i--) {
-            int key = selectedIds.keyAt(i);
-            viewModel.removeSelection(key);
-            String favoriteId = view.removeFavorite(key).getId();
+        int[] selectedIds = viewModel.getSelectedIds();
+        for (int selectedId : selectedIds) {
+            viewModel.removeSelection(selectedId);
+            String favoriteId = view.removeFavorite(selectedId);
             repository.deleteFavorite(favoriteId);
         }
     } // onDeleteClick

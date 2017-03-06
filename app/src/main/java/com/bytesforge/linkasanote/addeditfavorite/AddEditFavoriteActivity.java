@@ -52,8 +52,9 @@ public class AddEditFavoriteActivity extends AppCompatActivity {
         }
         // Presenter
         LaanoApplication application = (LaanoApplication) getApplication();
-        application.getApplicationComponent().getAddEditFavoriteComponent(
-                new AddEditFavoritePresenterModule(this, fragment, favoriteId))
+        application.getApplicationComponent()
+                .getAddEditFavoriteComponent(
+                        new AddEditFavoritePresenterModule(this, fragment, favoriteId))
                 .inject(this);
     }
 

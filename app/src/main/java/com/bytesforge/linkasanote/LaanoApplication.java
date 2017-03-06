@@ -15,7 +15,7 @@ import java.lang.ref.WeakReference;
 
 public class LaanoApplication extends Application {
 
-    ApplicationComponent applicationComponent;
+    private ApplicationComponent applicationComponent;
     private static WeakReference<Context> context;
 
     private static String applicationId;

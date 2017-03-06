@@ -57,6 +57,8 @@ public class LaanoActivity extends AppCompatActivity implements
 
     private static final String TAG = LaanoActivity.class.getSimpleName();
 
+    private static final String STATE_CURRENT_TAB = "CURRENT_TAB";
+
     private static final int REQUEST_GET_ACCOUNTS = 0;
     private static final String PERMISSION_GET_ACCOUNTS = Manifest.permission.GET_ACCOUNTS;
     private static String[] PERMISSIONS_GET_ACCOUNTS = {PERMISSION_GET_ACCOUNTS};
@@ -72,13 +74,17 @@ public class LaanoActivity extends AppCompatActivity implements
     @Inject
     NotesPresenter notesPresenter;
 
-    private ActivityLaanoBinding binding;
-    // TODO: restore on orientation change
     private int viewPagerCurrentTab;
+    private ActivityLaanoBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState == null) {
+            applyInstanceState(getDefaultInstanceState());
+        } else {
+            applyInstanceState(savedInstanceState);
+        }
         binding = DataBindingUtil.setContentView(this, R.layout.activity_laano);
 
         // Toolbar
@@ -95,21 +101,15 @@ public class LaanoActivity extends AppCompatActivity implements
         if (binding.navView != null) {
             setupDrawerContent(binding.navView);
         }
-        // Fragments
+        // ViewPager
         LaanoFragmentPagerAdapter adapter = new LaanoFragmentPagerAdapter(
                 getSupportFragmentManager(), getApplicationContext());
         if (binding.laanoViewPager != null) {
             ViewPager viewPager = binding.laanoViewPager;
-            viewPager.setAdapter(adapter);
-            // NOTE: Fragments are needed immediately to build Presenters
-            adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.LINKS_TAB);
-            adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.FAVORITES_TAB);
-            adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.NOTES_TAB);
-            adapter.finishUpdate(viewPager);
-            setupViewPagerListener(viewPager);
-            viewPagerCurrentTab = viewPager.getCurrentItem();
+            setupViewPager(viewPager, adapter);
+            // TabLayout
             if (binding.tabLayout != null) {
-                setupTabsContent(binding.tabLayout, viewPager);
+                setupTabLayout(binding.tabLayout, viewPager);
             }
         }
         // Presenters
@@ -124,6 +124,23 @@ public class LaanoActivity extends AppCompatActivity implements
         if (binding.fabAdd != null) {
             setupFabAdd(binding.fabAdd);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_CURRENT_TAB, viewPagerCurrentTab);
+    }
+
+    private void applyInstanceState(@NonNull Bundle state) {
+        checkNotNull(state);
+        viewPagerCurrentTab = state.getInt(STATE_CURRENT_TAB);
+    }
+
+    private Bundle getDefaultInstanceState() {
+        Bundle defaultState = new Bundle();
+        defaultState.putInt(STATE_CURRENT_TAB, 0);
+        return defaultState;
     }
 
     @Override
@@ -226,7 +243,15 @@ public class LaanoActivity extends AppCompatActivity implements
 
     // Setup
 
-    private void setupViewPagerListener(ViewPager viewPager) {
+    private void setupViewPager(ViewPager viewPager, LaanoFragmentPagerAdapter adapter) {
+        viewPager.setAdapter(adapter);
+        // NOTE: Fragments are needed immediately to build Presenters
+        adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.LINKS_TAB);
+        adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.FAVORITES_TAB);
+        adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.NOTES_TAB);
+        adapter.finishUpdate(viewPager);
+        viewPager.setCurrentItem(viewPagerCurrentTab);
+        // Listener
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
             @Override
@@ -309,7 +334,7 @@ public class LaanoActivity extends AppCompatActivity implements
         );
     }
 
-    private void setupTabsContent(@NonNull TabLayout tabLayout, @NonNull ViewPager viewPager) {
+    private void setupTabLayout(@NonNull TabLayout tabLayout, @NonNull ViewPager viewPager) {
         checkNotNull(tabLayout);
         checkNotNull(viewPager);
 

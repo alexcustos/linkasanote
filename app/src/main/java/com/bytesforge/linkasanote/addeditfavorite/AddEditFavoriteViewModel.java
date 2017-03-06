@@ -38,7 +38,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     private Context context;
     private AddEditFavoriteContract.Presenter presenter;
 
-    public enum SnackbarId {FAVORITE_EMPTY};
+    public enum SnackbarId {FAVORITE_EMPTY, FAVORITE_NOT_FOUND};
 
     @Bindable
     public SnackbarId snackbarId;
@@ -60,7 +60,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     }
 
     @Override
-    public void loadInstanceState(@NonNull Bundle outState) {
+    public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
 
         outState.putString(STATE_FAVORITE_NAME, favoriteName.get());
@@ -114,6 +114,11 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
                         R.string.add_edit_favorite_warning_empty,
                         Snackbar.LENGTH_LONG).show();
                 break;
+            case FAVORITE_NOT_FOUND:
+                Snackbar.make(view,
+                        R.string.add_edit_favorite_warning_not_existed,
+                        Snackbar.LENGTH_LONG).show();
+                break;
         }
     }
 
@@ -165,6 +170,12 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Override
     public void showEmptyFavoriteSnackbar() {
         snackbarId = SnackbarId.FAVORITE_EMPTY;
+        notifyPropertyChanged(BR.snackbarId);
+    }
+
+    @Override
+    public void showFavoriteNotFoundSnackbar() {
+        snackbarId = SnackbarId.FAVORITE_NOT_FOUND;
         notifyPropertyChanged(BR.snackbarId);
     }
 

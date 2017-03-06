@@ -38,7 +38,7 @@ public interface NextcloudContract {
     interface ViewModel extends BaseView<Presenter> {
 
         void setInstanceState(@Nullable Bundle savedInstanceState);
-        void loadInstanceState(@NonNull Bundle outState);
+        void saveInstanceState(@NonNull Bundle outState);
         void applyInstanceState(@NonNull Bundle state);
         Bundle getDefaultInstanceState();
 

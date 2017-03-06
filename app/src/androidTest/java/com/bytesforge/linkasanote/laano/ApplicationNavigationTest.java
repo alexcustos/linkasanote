@@ -34,9 +34,9 @@ import static android.support.test.espresso.matcher.ViewMatchers.withResourceNam
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
 import static com.bytesforge.linkasanote.TestUtils.getToolbarNavigationContentDescription;
+import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.notNullValue;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -58,10 +58,10 @@ public class ApplicationNavigationTest {
     @Before
     public void setupActivity() {
         activity = laanoActivityTestRule.getActivity();
-        assertThat(activity, notNullValue());
+        assertNotNull(activity);
 
         Resources resources = activity.getResources();
-        assertThat(resources, notNullValue());
+        assertNotNull(resources);
 
         LINKS_TITLE = resources.getString(R.string.laano_tab_links_title);
         FAVORITES_TITLE = resources.getString(R.string.laano_tab_favorites_title);
@@ -69,7 +69,7 @@ public class ApplicationNavigationTest {
     }
 
     @Test
-    public void clickOnAndroidHomeIcon_OpensNavigation() {
+    public void clickOnAndroidHomeIcon_opensNavigation() {
         onView(withId(R.id.drawer_layout)).check(matches(isClosed(Gravity.START)));
 
         onView(withContentDescription(getToolbarNavigationContentDescription(
@@ -79,7 +79,7 @@ public class ApplicationNavigationTest {
     }
 
     @Test
-    public void swipeLeftViewPager_SwitchesTab() {
+    public void swipeLeftViewPager_switchesTab() {
         // Links
         onView(withId(R.id.laano_view_pager)).check(matches(isDisplayed()));
         assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(LINKS_TITLE));
@@ -95,7 +95,7 @@ public class ApplicationNavigationTest {
     }
 
     @Test
-    public void clickOnTab_SwitchesTab() {
+    public void clickOnTab_switchesTab() {
         // Links
         onView(withItemTextId(LINKS_TITLE, R.id.tab_layout))
             .perform(click())
@@ -117,7 +117,7 @@ public class ApplicationNavigationTest {
     }
 
     @Test
-    public void clickOnSettingsNavigationItem_ShowsSettingsScreen_And_ClickOnHomeIcon_ClosesIt() {
+    public void clickOnSettingsNavigationItem_showsSettingsScreenAndClickOnHomeIcon_closesIt() {
         // Open
         onView(withId(R.id.drawer_layout))
                 .check(matches(isClosed(Gravity.START)))
@@ -133,7 +133,7 @@ public class ApplicationNavigationTest {
     }
 
     @Test
-    public void clickOnAddAccountNavigationItem_ShowsAddAccountScreen() {
+    public void clickOnAddAccountNavigationItem_showsAddAccountScreen() {
         onView(withId(R.id.drawer_layout))
                 .check(matches(isClosed(Gravity.START)))
                 .perform(DrawerActions.open());
@@ -143,7 +143,7 @@ public class ApplicationNavigationTest {
     }
 
     @Test
-    public void clickOnManageAccounts_ShowsManageAccountsScreen_And_ClickOnHomeIcon_ClosesIt() {
+    public void clickOnManageAccounts_showsManageAccountsScreenAndClickOnHomeIconClosesIt() {
         // Open
         onView(withId(R.id.drawer_layout))
                 .check(matches(isClosed(Gravity.START)))

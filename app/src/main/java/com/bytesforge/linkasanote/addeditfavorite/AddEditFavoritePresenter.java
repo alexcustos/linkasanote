@@ -7,18 +7,19 @@ import android.support.annotation.Nullable;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
-import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.tokenautocomplete.TokenCompleteTextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 
-import rx.Observer;
-import rx.Subscription;
-import rx.subscriptions.CompositeSubscription;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class AddEditFavoritePresenter implements
         AddEditFavoriteContract.Presenter, TokenCompleteTextView.TokenListener<Tag> {
@@ -27,10 +28,11 @@ public final class AddEditFavoritePresenter implements
     private final AddEditFavoriteContract.View view;
     private final AddEditFavoriteContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
-    private final String favoriteId;
+
+    private String favoriteId; // NOTE: can be reset to null if NoSuchElementException
 
     @NonNull
-    private final CompositeSubscription subscription;
+    private final CompositeDisposable disposable;
 
     @Inject
     AddEditFavoritePresenter(
@@ -44,7 +46,7 @@ public final class AddEditFavoritePresenter implements
         this.schedulerProvider = schedulerProvider;
         this.favoriteId = favoriteId;
 
-        subscription = new CompositeSubscription();
+        disposable = new CompositeDisposable();
     }
 
     @Inject
@@ -61,36 +63,27 @@ public final class AddEditFavoritePresenter implements
 
     @Override
     public void unsubscribe() {
-        subscription.clear();
+        disposable.clear();
     }
 
-    private void loadTags() {
+    @Override
+    public void loadTags() {
         EspressoIdlingResource.increment();
-        //subscription.clear(); // NOTE: stop all other subscriptions
+        //disposable.clear(); // NOTE: stop all other subscriptions
 
-        Subscription subscription = repository.getTags()
+        Disposable disposable = repository.getTags()
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .doOnTerminate(() -> {
+                .doOnError(throwable -> view.swapTagsCompletionViewItems(new ArrayList<>()))
+                .doFinally(() -> {
                     if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
                         EspressoIdlingResource.decrement();
                     }
                 })
-                .subscribe(new Observer<List<Tag>>() {
-                    @Override
-                    public void onCompleted() {
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                    }
-
-                    @Override
-                    public void onNext(List<Tag> tags) {
-                        view.swapTagsCompletionViewItems(tags);
-                    }
+                .subscribe((tags, throwable) -> {
+                    if (tags != null) view.swapTagsCompletionViewItems(tags);
                 });
-        this.subscription.add(subscription);
+        this.disposable.add(disposable);
     }
 
     @Override
@@ -105,30 +98,25 @@ public final class AddEditFavoritePresenter implements
         }
         EspressoIdlingResource.increment();
 
-        Subscription subscription = repository.getFavorite(favoriteId)
+        Disposable disposable = repository.getFavorite(favoriteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .doOnTerminate(() -> {
+                .doOnError(throwable -> {
+                    favoriteId = null;
+                    viewModel.showFavoriteNotFoundSnackbar();
+                })
+                .doFinally(() -> {
                     if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
                         EspressoIdlingResource.decrement();
                     }
                 })
-                .subscribe(new Observer<Favorite>() {
-                    @Override
-                    public void onCompleted() {
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                    }
-
-                    @Override
-                    public void onNext(Favorite favorite) {
+                .subscribe((favorite, throwable) -> {
+                    if (favorite != null) {
                         view.setupFavoriteState(favorite);
                         viewModel.checkAddButton();
                     }
                 });
-        this.subscription.add(subscription);
+        this.disposable.add(disposable);
     }
 
     @Override
@@ -142,17 +130,7 @@ public final class AddEditFavoritePresenter implements
 
     private void createFavorite(String name, List<Tag> tags) {
         Favorite favorite = new Favorite(name, tags);
-        if (favorite.isEmpty()) {
-            viewModel.showEmptyFavoriteSnackbar();
-            return;
-        }
-        favorite.setSyncState(SyncState.State.UNSYNCED);
-        try {
-            repository.saveFavorite(favorite);
-            view.finishActivity();
-        } catch (SQLiteConstraintException e) {
-            viewModel.showDuplicateKeyError();
-        }
+        saveFavorite(favorite);
     }
 
     private void updateFavorite(String name, List<Tag> tags) {
@@ -160,11 +138,16 @@ public final class AddEditFavoritePresenter implements
             throw new RuntimeException("updateFavorite() was called but favoriteId is null");
         }
         Favorite favorite = new Favorite(favoriteId, name, tags);
+        saveFavorite(favorite);
+    }
+
+    private void saveFavorite(@NonNull final Favorite favorite) {
+        checkNotNull(favorite);
+
         if (favorite.isEmpty()) {
             viewModel.showEmptyFavoriteSnackbar();
             return;
         }
-        favorite.setSyncState(SyncState.State.UNSYNCED);
         try {
             repository.saveFavorite(favorite);
             view.finishActivity();

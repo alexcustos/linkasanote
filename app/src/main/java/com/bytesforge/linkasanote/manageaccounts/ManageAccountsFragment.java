@@ -35,13 +35,11 @@ import com.owncloud.android.lib.common.accounts.AccountUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import rx.Observable;
-import rx.Observer;
-import rx.observables.SyncOnSubscribe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountUsername;
@@ -126,48 +124,28 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
     }
 
     @Override
-    public Observable<AccountItem> loadAccountItems() {
-        return Observable.create(new SyncOnSubscribe<Iterator<AccountItem>, AccountItem>() {
-            @Override
-            protected Iterator<AccountItem> generateState() {
-                Account[] accounts = getAccountsWithPermissionCheck();
-                if (accounts == null) return null;
-
-                List<AccountItem> accountItems = new LinkedList<>();
-                for (Account account : accounts) {
-                    accountItems.add(new AccountItem(account));
-                }
-                if (getResources().getBoolean(R.bool.multiaccount_support) || accounts.length <= 0) {
-                    accountItems.add(new AccountItem());
-                }
-                return accountItems.iterator();
+    public Single<List<AccountItem>> loadAccountItems() {
+        return Observable.fromCallable(() -> {
+            Account[] accounts = getAccountsWithPermissionCheck();
+            if (accounts == null) {
+                throw new NullPointerException("Required permission was not granted");
             }
-
-            @Override
-            protected Iterator<AccountItem> next(
-                    Iterator<AccountItem> state, Observer<? super AccountItem> observer) {
-                if (state == null) {
-                    observer.onError(new NullPointerException());
-                } else if (state.hasNext()) {
-                    AccountItem accountItem = state.next();
-                    Account account = accountItem.getAccount();
-                    if (account != null) {
-                        try {
-                            OwnCloudAccount ocAccount = new OwnCloudAccount(account, getContext());
-                            accountItem.setDisplayName(ocAccount.getDisplayName());
-                        } catch (AccountUtils.AccountNotFoundException e) {
-                            accountItem.setDisplayName(getAccountUsername(account.name));
-                        }
-                        observer.onNext(accountItem);
-                    } else {
-                        observer.onNext(new AccountItem());
-                    }
-                } else {
-                    observer.onCompleted();
+            List<AccountItem> accountItems = new LinkedList<>();
+            for (Account account : accounts) {
+                AccountItem accountItem = new AccountItem(account);
+                try {
+                    OwnCloudAccount ocAccount = new OwnCloudAccount(account, getContext());
+                    accountItem.setDisplayName(ocAccount.getDisplayName());
+                } catch (AccountUtils.AccountNotFoundException e) {
+                    accountItem.setDisplayName(getAccountUsername(account.name));
                 }
-                return state;
+                accountItems.add(accountItem);
             }
-        });
+            if (getResources().getBoolean(R.bool.multiaccount_support) || accounts.length <= 0) {
+                accountItems.add(new AccountItem());
+            }
+            return accountItems;
+        }).firstOrError();
     }
 
     @Override
@@ -285,7 +263,8 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
     }
 
     @Override
-    public void swapItems(List<AccountItem> accountItems) {
+    public void swapItems(@NonNull List<AccountItem> accountItems) {
+        checkNotNull(accountItems);
         adapter.swapItems(accountItems);
     }
 

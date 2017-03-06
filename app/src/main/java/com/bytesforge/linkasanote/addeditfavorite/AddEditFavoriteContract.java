@@ -26,12 +26,13 @@ public interface AddEditFavoriteContract {
     interface ViewModel extends BaseView<Presenter> {
 
         void setInstanceState(@Nullable Bundle savedInstanceState);
-        void loadInstanceState(Bundle outState);
+        void saveInstanceState(Bundle outState);
         void applyInstanceState(@NonNull Bundle state);
         Bundle getDefaultInstanceState();
 
         void setTagsCompletionView(@NonNull FavoriteTagsCompletionView completionView);
         void showEmptyFavoriteSnackbar();
+        void showFavoriteNotFoundSnackbar();
         void showDuplicateKeyError();
 
         boolean isValid();
@@ -48,6 +49,7 @@ public interface AddEditFavoriteContract {
     interface Presenter extends BasePresenter {
 
         boolean isNewFavorite();
+        void loadTags();
         void saveFavorite(String name, List<Tag> tags);
         void populateFavorite();
     }

@@ -56,8 +56,8 @@ public class ManageAccountsActivity extends AppCompatActivity {
         view = fragment;
         // Presenter
         LaanoApplication application = (LaanoApplication) getApplication();
-        application.getApplicationComponent().getManageAccountsComponent(
-                new ManageAccountsPresenterModule(this, fragment))
+        application.getApplicationComponent()
+                .getManageAccountsComponent(new ManageAccountsPresenterModule(this, fragment))
                 .inject(this);
         // Accounts
         if (savedInstanceState != null) {

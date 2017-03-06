@@ -3,8 +3,11 @@ package com.bytesforge.linkasanote.data.source.local;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.BuildConfig;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class LocalContract {
 
@@ -14,7 +17,6 @@ public final class LocalContract {
 
     public static final String MANY_TO_MANY_COMMON_NAME_ADDED = "added";
     public static final String COMMON_NAME_ETAG = "etag";
-    // NOTE: there is a conflict with a cloud version
     public static final String COMMON_NAME_CONFLICTED = "conflicted";
     public static final String COMMON_NAME_DELETED = "deleted";
     public static final String COMMON_NAME_SYNCED = "synced";
@@ -66,8 +68,8 @@ public final class LocalContract {
             return CONTENT_URI.buildUpon().appendPath(id).build();
         }
 
-        public static String getLinkId(Uri uri) {
-            return uri.getPathSegments().get(1);
+        public static String getLinkId(@NonNull Uri uri) {
+            return checkNotNull(uri).getPathSegments().get(1);
         }
     }
 
@@ -111,8 +113,8 @@ public final class LocalContract {
             return CONTENT_URI.buildUpon().appendPath(id).build();
         }
 
-        public static String getNoteId(Uri uri) {
-            return uri.getPathSegments().get(1);
+        public static String getNoteId(@NonNull Uri uri) {
+            return checkNotNull(uri).getPathSegments().get(1);
         }
     }
 
@@ -168,8 +170,8 @@ public final class LocalContract {
                     .appendPath(id).appendEncodedPath(TagEntry.TABLE_NAME).build();
         }
 
-        public static String getFavoriteId(Uri uri) {
-            return uri.getPathSegments().get(1);
+        public static String getFavoriteId(@NonNull Uri uri) {
+            return checkNotNull(uri).getPathSegments().get(1);
         }
     }
 
@@ -206,8 +208,8 @@ public final class LocalContract {
             return CONTENT_URI.buildUpon().appendPath(name).build();
         }
 
-        public static String getTagId(Uri uri) {
-            return uri.getPathSegments().get(1);
+        public static String getTagId(@NonNull Uri uri) {
+            return checkNotNull(uri).getPathSegments().get(1);
         }
     }
 }

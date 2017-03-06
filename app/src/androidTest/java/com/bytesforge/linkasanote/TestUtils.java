@@ -18,12 +18,20 @@ import android.support.test.uiautomator.UiSelector;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 
+import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.utils.CommonUtils;
+
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.runner.lifecycle.Stage.RESUMED;
 
 public class TestUtils {
+
+    public static String KEY_PREFIX = CommonUtils.charRepeat('A', 21);
 
     private static void rotateToLandscape(ActivityTestRule<? extends Activity> activity) {
         activity.getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -110,5 +118,25 @@ public class TestUtils {
         } catch (UiObjectNotFoundException e) {
             System.out.println("There is not permissions dialog to interact with");
         }
+    }
+
+    public static List<Favorite> buildFavorites() {
+        final List<Tag> FAVORITE_TAGS = new ArrayList<Tag>() {{
+            add(new Tag("first"));
+            add(new Tag("second"));
+        }};
+        final List<Tag> FAVORITE_TAGS2 = new ArrayList<Tag>() {{
+            addAll(FAVORITE_TAGS);
+            add(new Tag("third"));
+        }};
+        final List<Tag> FAVORITE_TAGS3 = new ArrayList<Tag>() {{
+            addAll(FAVORITE_TAGS2);
+            add(new Tag("fourth"));
+        }};
+        return new ArrayList<Favorite>() {{
+            add(new Favorite(KEY_PREFIX + 'A', "Favorite", FAVORITE_TAGS));
+            add(new Favorite(KEY_PREFIX + 'B', "Favorite #2", FAVORITE_TAGS2));
+            add(new Favorite(KEY_PREFIX + 'C', "Favorite #3", FAVORITE_TAGS3));
+        }};
     }
 }

@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.data.source;
 
+import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 
@@ -8,12 +9,12 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 
-import rx.Observable;
-import rx.observers.TestSubscriber;
+import io.reactivex.Single;
+import io.reactivex.observers.TestObserver;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -23,12 +24,8 @@ import static org.mockito.Mockito.when;
 
 public class RepositoryLinkTest {
 
-    private final List<String> LINK_VALUES;
-    private final List<String> LINK_TITLES;
+    private final String KEY_PREFIX = CommonUtils.charRepeat('A', 21);
     private final List<Link> LINKS;
-
-    private TestSubscriber<List<Link>> testLinksSubscriber;
-    private TestSubscriber<Link> testLinkSubscriber;
 
     private Repository repository;
 
@@ -39,24 +36,7 @@ public class RepositoryLinkTest {
     private DataSource cloudDataSource;
 
     public RepositoryLinkTest() {
-        LINK_VALUES = new ArrayList<>();
-        LINK_VALUES.add("http://laano.net/link");
-        LINK_VALUES.add("http://laano.net/link2");
-        LINK_VALUES.add("http://laano.net/link3");
-
-        LINK_TITLES = new ArrayList<>();
-        LINK_TITLES.add("Title for Link");
-        LINK_TITLES.add("Title for Link #2");
-        LINK_TITLES.add("Title for Link #3");
-
-        String keyPrefix = CommonUtils.charRepeat('A', 21);
-        LINKS = new ArrayList<>();
-        LINKS.add(new Link(keyPrefix + 'A', LINK_VALUES.get(0), LINK_TITLES.get(0)));
-        LINKS.add(new Link(keyPrefix + 'B', LINK_VALUES.get(1), LINK_TITLES.get(1)));
-        LINKS.add(new Link(keyPrefix + 'C', LINK_VALUES.get(2), LINK_TITLES.get(2)));
-
-        testLinksSubscriber = new TestSubscriber<>();
-        testLinkSubscriber = new TestSubscriber<>();
+        LINKS = TestUtils.buildLinks();
     }
 
     @Before
@@ -70,10 +50,9 @@ public class RepositoryLinkTest {
         setLinksAvailable(localDataSource, LINKS);
         setLinksNotAvailable(cloudDataSource);
 
-        repository.getLinks().subscribe(testLinksSubscriber);
-
+        TestObserver<List<Link>> testLinksObserver = repository.getLinks().test();
         verify(localDataSource).getLinks();
-        testLinksSubscriber.assertValue(LINKS);
+        testLinksObserver.assertValue(LINKS);
     }
 
     @Test
@@ -83,9 +62,9 @@ public class RepositoryLinkTest {
         setLinkAvailable(localDataSource, link);
         setLinkNotAvailable(cloudDataSource, link.getId());
 
-        repository.getLink(link.getId()).subscribe(testLinkSubscriber);
+        TestObserver<Link> testLinkObserver = repository.getLink(link.getId()).test();
         verify(localDataSource).getLink(eq(link.getId()));
-        testLinkSubscriber.assertValue(link);
+        testLinkObserver.assertValue(link);
     }
 
     @Test
@@ -100,21 +79,18 @@ public class RepositoryLinkTest {
     }
 
     private void setLinksAvailable(DataSource dataSource, List<Link> links) {
-        when(dataSource.getLinks()).
-                thenReturn(Observable.just(links).concatWith(Observable.<List<Link>>never()));
+        when(dataSource.getLinks()).thenReturn(Single.just(links));
     }
 
     private void setLinksNotAvailable(DataSource dataSource) {
-        when(dataSource.getLinks()).thenReturn(Observable.just(Collections.<Link>emptyList()));
+        when(dataSource.getLinks()).thenReturn(Single.just(Collections.emptyList()));
     }
 
     private void setLinkAvailable(DataSource dataSource, Link link) {
-        when(dataSource.getLink(eq(link.getId())))
-                .thenReturn(Observable.just(link).concatWith(Observable.<Link>never()));
+        when(dataSource.getLink(eq(link.getId()))).thenReturn(Single.just(link));
     }
 
     private void setLinkNotAvailable(DataSource dataSource, String linkId) {
-        when(dataSource.getLink(eq(linkId)))
-                .thenReturn(Observable.<Link>just(null).concatWith(Observable.<Link>never()));
+        when(dataSource.getLink(eq(linkId))).thenReturn(Single.error(new NoSuchElementException()));
     }
 }

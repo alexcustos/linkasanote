@@ -20,7 +20,6 @@ import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenterModule;
 import com.bytesforge.linkasanote.settings.SettingsModule;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
-import com.squareup.sqlbrite.BriteContentResolver;
 
 import javax.inject.Singleton;
 
@@ -39,7 +38,6 @@ public interface ApplicationComponent {
     SharedPreferences getSharedPreferences();
     Repository getRepository();
     ContentResolver getContentResolver();
-    BriteContentResolver getBriteContentResolver();
     BaseSchedulerProvider getSchedulerProvider();
 
     // Subcomponents

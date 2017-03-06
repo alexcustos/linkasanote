@@ -9,12 +9,10 @@ import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
-import rx.Observer;
-import rx.subscriptions.CompositeSubscription;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 
 public final class ManageAccountsPresenter implements ManageAccountsContract.Presenter {
 
@@ -25,7 +23,7 @@ public final class ManageAccountsPresenter implements ManageAccountsContract.Pre
     private final BaseSchedulerProvider schedulerProvider;
 
     @NonNull
-    private final CompositeSubscription subscription;
+    private final CompositeDisposable disposable;
 
     @Inject
     public ManageAccountsPresenter(
@@ -34,7 +32,7 @@ public final class ManageAccountsPresenter implements ManageAccountsContract.Pre
         this.view = view;
         this.accountManager = accountManager;
         this.schedulerProvider = schedulerProvider;
-        subscription = new CompositeSubscription();
+        disposable = new CompositeDisposable();
     }
 
     @Inject
@@ -50,41 +48,29 @@ public final class ManageAccountsPresenter implements ManageAccountsContract.Pre
 
     @Override
     public void loadAccountItems(final boolean showLoading) {
-        // TODO: implement SwipeRefreshLayout
+        // TODO: implement showLoading
         EspressoIdlingResource.increment();
-        subscription.clear();
+        disposable.clear();
 
-        view.loadAccountItems()
-                .toList()
+        Disposable disposable = view.loadAccountItems()
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .doOnTerminate(() -> {
+                .doFinally(() -> {
                     if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
                         EspressoIdlingResource.decrement();
                     }
                 })
-                .subscribe(new Observer<List<AccountItem>>() {
-
-                    @Override
-                    public void onCompleted() {
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        view.showNotEnoughPermissionsSnackbar();
-                    }
-
-                    @Override
-                    public void onNext(List<AccountItem> accountItems) {
-                        view.swapItems(accountItems);
-                    }
+                // NullPointerException
+                .doOnError(throwable -> view.showNotEnoughPermissionsSnackbar())
+                .subscribe((accountItems, throwable) -> {
+                    if (accountItems != null) view.swapItems(accountItems);
                 });
-        this.subscription.add(subscription);
+        this.disposable.add(disposable);
     }
 
     @Override
     public void unsubscribe() {
-        subscription.clear();
+        disposable.clear();
     }
 
     @Override

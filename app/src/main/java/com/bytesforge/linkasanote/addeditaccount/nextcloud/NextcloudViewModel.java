@@ -78,7 +78,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     }
 
     @Override
-    public void loadInstanceState(@NonNull Bundle outState) {
+    public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
 
         outState.putBoolean(STATE_SERVER_URL, serverUrl.get());

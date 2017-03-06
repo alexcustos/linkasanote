@@ -27,6 +27,16 @@ public final class NotesPresenter implements NotesContract.Presenter {
     }
 
     @Override
+    public void onTabSelected() {
+
+    }
+
+    @Override
+    public void onTabDeselected() {
+
+    }
+
+    @Override
     public void addNote() {
 
     }

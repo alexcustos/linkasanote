@@ -13,6 +13,9 @@ import android.util.SparseBooleanArray;
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.utils.SparseBooleanParcelableArray;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // NOTE: global viewModel, applied to fragment and every Item
@@ -49,7 +52,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     }
 
     @Override
-    public void loadInstanceState(@NonNull Bundle outState) {
+    public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
 
         outState.putBoolean(STATE_ACTION_MODE, actionMode.get());
@@ -137,7 +140,13 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     }
 
     @Override
-    public SparseBooleanArray getSelectedIds() {
-        return selectedIds;
+    public int[] getSelectedIds() {
+        List<Integer> ids = new LinkedList<>();
+        for (int i = 0; i < selectedIds.size(); i++) {
+            if (selectedIds.valueAt(i)) {
+                ids.add(selectedIds.keyAt(i));
+            }
+        }
+        return ids.stream().mapToInt(i -> i).toArray();
     }
 }
