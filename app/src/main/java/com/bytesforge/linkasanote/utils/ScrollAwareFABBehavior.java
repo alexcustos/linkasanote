@@ -11,15 +11,15 @@ public class ScrollAwareFABBehavior extends FloatingActionButton.Behavior {
 
     // To enable layout inflation to work correctly
     public ScrollAwareFABBehavior(Context context, AttributeSet attrs) {
-        super();
+        super(context, attrs);
     }
 
     @Override
     public boolean onStartNestedScroll(
             CoordinatorLayout coordinatorLayout, FloatingActionButton child,
             View directTargetChild, View target, int nestedScrollAxes) {
-        return nestedScrollAxes == ViewCompat.SCROLL_AXIS_VERTICAL ||
-                super.onStartNestedScroll(
+        return nestedScrollAxes == ViewCompat.SCROLL_AXIS_VERTICAL
+                || super.onStartNestedScroll(
                         coordinatorLayout, child, directTargetChild, target, nestedScrollAxes);
     }
 
@@ -27,14 +27,22 @@ public class ScrollAwareFABBehavior extends FloatingActionButton.Behavior {
     public void onNestedScroll(
             CoordinatorLayout coordinatorLayout, FloatingActionButton child,
             View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
-        super.onNestedScroll(
-                coordinatorLayout, child, target,
-                dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed);
+        super.onNestedScroll(coordinatorLayout, child,
+                target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed);
 
-        if (dyConsumed > 0 && child.getVisibility() == View.VISIBLE) {
-            child.hide();
-        } else if (dyConsumed < 0 && child.getVisibility() != View.VISIBLE) {
+        final int dy = dyConsumed + dyConsumed;
+        if (dy > 0 && child.isShown()) {
+            // NOTE: workaround since Support Library 25.1.0
+            child.hide(new FloatingActionButton.OnVisibilityChangedListener() {
+
+                @Override
+                public void onHidden(FloatingActionButton fab) {
+                    super.onHidden(fab);
+                    fab.setVisibility(View.INVISIBLE);
+                }
+            });
+        } else if (dy < 0 && !child.isShown()) {
             child.show();
         }
-    }
+    } // onNestedScroll
 }

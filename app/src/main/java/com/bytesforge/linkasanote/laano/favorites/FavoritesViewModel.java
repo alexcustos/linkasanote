@@ -111,7 +111,12 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     // Selection
 
     @Override
-    public boolean isSelected(int position) {
+    public boolean isSelected(String favoriteId) {
+        int position = presenter.getPosition(favoriteId);
+        return isSelected(position);
+    }
+
+    private boolean isSelected(int position) {
         return selectedIds.get(position);
     }
 
@@ -142,7 +147,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     @Override
     public int[] getSelectedIds() {
         List<Integer> ids = new LinkedList<>();
-        for (int i = 0; i < selectedIds.size(); i++) {
+        for (int i = selectedIds.size() - 1; i >= 0; i--) { // NOTE: reverse order
             if (selectedIds.valueAt(i)) {
                 ids.add(selectedIds.keyAt(i));
             }

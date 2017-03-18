@@ -16,7 +16,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.Collections;
 import java.util.List;
 
-import io.reactivex.Single;
+import io.reactivex.Observable;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -35,7 +35,6 @@ public class FavoritesPresenterTest {
     @Mock
     private FavoritesContract.ViewModel viewModel;
 
-    private BaseSchedulerProvider schedulerProvider;
     private FavoritesPresenter presenter;
 
     @Captor
@@ -50,7 +49,7 @@ public class FavoritesPresenterTest {
     @Before
     public void setupFavoritesPresenter() {
         MockitoAnnotations.initMocks(this);
-        schedulerProvider = new ImmediateSchedulerProvider();
+        BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
         // TODO: check if it's needed at all
         when(view.isActive()).thenReturn(true);
 
@@ -59,14 +58,14 @@ public class FavoritesPresenterTest {
 
     @Test
     public void loadAllFavoritesFromRepository_loadsItIntoView() {
-        when(repository.getFavorites()).thenReturn(Single.just(FAVORITES));
+        when(repository.getFavorites()).thenReturn(Observable.fromIterable(FAVORITES));
         presenter.loadFavorites(true);
         verify(view).showFavorites(FAVORITES);
     }
 
     @Test
     public void loadEmptyListOfFavorites_showsEmptyList() {
-        when(repository.getFavorites()).thenReturn(Single.just(Collections.emptyList()));
+        when(repository.getFavorites()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         presenter.loadFavorites(true);
         verify(view).showFavorites(favoriteListCaptor.capture());
         assertEquals(favoriteListCaptor.getValue().size(), 0);

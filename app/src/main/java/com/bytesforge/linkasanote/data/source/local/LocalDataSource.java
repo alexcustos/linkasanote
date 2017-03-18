@@ -103,170 +103,155 @@ public class LocalDataSource implements DataSource {
     // Favorites
 
     @Override
-    public Single<List<Favorite>> getFavorites() {
-        // TODO: maybe 'OR conflicted' records are required
-        final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_DELETED + " = ?";
-        final String[] selectionArgs = {"0"};
+    public Observable<Favorite> getFavorites() {
+        final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_DELETED + " = ?" +
+                " OR " + LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED + " = ?";
+        final String[] selectionArgs = {"0", "1"};
+        final String sortOrder = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " ASC";
 
-        Observable<Favorite> favoriteObservable = Observable.generate(() -> {
-            return contentResolver.query(
-                    LocalContract.FavoriteEntry.buildFavoritesUri(),
-                    LocalContract.FavoriteEntry.FAVORITE_COLUMNS,
-                    selection, selectionArgs, null);
-        }, (cursor, favoriteEmitter) -> {
-            if (cursor == null) {
-                favoriteEmitter.onError(new NullPointerException("An error while retrieving the cursor"));
-                return null;
-            }
-            if (!cursor.moveToNext()) {
-                favoriteEmitter.onComplete();
-                return cursor;
-            }
-            int rowIdIndex = cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID);
-            String rowId = cursor.getString(rowIdIndex);
-            Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
-            List<Tag> tags = getTagsFrom(favoriteTagsUri).blockingGet();
-            favoriteEmitter.onNext(Favorite.from(cursor, tags));
-
-            return cursor;
-        }, Cursor::close);
-
-        return favoriteObservable.toList(); // NOTE: when no Items it returns empty List
+        return LocalFavorites.getFavorites(contentResolver, selection, selectionArgs, sortOrder);
     }
 
     @Override
     public Single<Favorite> getFavorite(final @NonNull String favoriteId) {
         checkNotNull(favoriteId);
-
-        return Observable.fromCallable(() -> {
-            Cursor cursor = contentResolver.query(
-                    LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId),
-                    LocalContract.FavoriteEntry.FAVORITE_COLUMNS, null, null, null);
-            if (cursor == null) return null; // NOTE: NullPointerException
-            else if (!cursor.moveToLast()) {
-                cursor.close();
-                throw new NoSuchElementException("The requested favorite was not found");
-            }
-            int rowIndex = cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID);
-            String rowId = cursor.getString(rowIndex);
-            Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
-            List<Tag> tags = getTagsFrom(favoriteTagsUri).blockingGet();
-            try {
-                return Favorite.from(cursor, tags);
-            } finally {
-                cursor.close();
-            }
-        }).firstOrError();
+        return LocalFavorites.getFavorite(contentResolver, favoriteId);
     }
 
     @Override
     public void saveFavorite(final @NonNull Favorite favorite) {
         checkNotNull(favorite);
 
-        favorite.setSyncState(SyncState.State.UNSYNCED);
-        ContentValues values = favorite.getContentValues();
-        Uri favoriteUri = contentResolver.insert(
-                LocalContract.FavoriteEntry.buildFavoritesUri(), values);
-        if (favoriteUri == null) {
-            throw new NullPointerException("Provider must return URI or throw exception");
-        }
-
-        // OPTIMIZATION: just add "/tag" to favoriteUri
-        String rowId = LocalContract.FavoriteEntry.getFavoriteId(favoriteUri);
-        Uri uri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
-        List<Tag> tags = favorite.getTags();
-        if (tags != null) {
-            for (Tag tag : tags) insertTag(tag, uri);
+        long rowId = LocalFavorites
+                .saveFavorite(contentResolver, favorite)
+                .blockingGet();
+        if (rowId <= 0) {
+            Log.e(TAG, "Favorite was not saved [" + favorite.getId() + "]");
         }
     }
 
     @Override
     public void deleteAllFavorites() {
-        contentResolver.delete(LocalContract.FavoriteEntry.buildFavoritesUri(), null, null);
+        LocalFavorites.deleteFavorites(contentResolver).blockingGet();
     }
 
     @Override
     public void deleteFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
 
-        Uri uri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
-        ContentValues values = SyncState.getSyncStateValues(SyncState.State.DELETED);
-        int numRows = contentResolver.update(uri, values, null, null);
+        SyncState state;
+        try {
+            state = LocalFavorites
+                    .getFavoriteSyncState(contentResolver, favoriteId)
+                    .blockingGet();
+        } catch (NoSuchElementException e) {
+            return; // Nothing to delete
+        } // let throw NullPointerException
+        int numRows;
+        if (!state.isSynced() && state.getETag() == null) {
+            // NOTE: if one has never been synced
+            numRows = LocalFavorites
+                    .deleteFavorite(contentResolver, favoriteId)
+                    .blockingGet();
+        } else {
+            SyncState deletedState = new SyncState(SyncState.State.DELETED);
+            numRows = LocalFavorites
+                    .updateFavorite(contentResolver, favoriteId, deletedState)
+                    .blockingGet();
+        }
         if (numRows != 1) {
-            Log.w(TAG, "deleteFavorite(): updated unexpected number of rows "
-                    + "[" + numRows + ", id=" + favoriteId + "]");
+            Log.e(TAG, "Unexpected number of rows processed [" + numRows + ", id=" + favoriteId + "]");
         }
     }
 
     // Tags
 
     @Override
-    public Single<List<Tag>> getTags() {
-        return getTagsFrom(LocalContract.TagEntry.buildTagsUri());
-    }
-
-    private Single<List<Tag>> getTagsFrom(@NonNull Uri uri) {
-        checkNotNull(uri);
-
-        Observable<Tag> tagObservable = Observable.generate(() -> {
-            return contentResolver.query(
-                    uri, LocalContract.TagEntry.TAG_COLUMNS,
-                    null, null, null);
-        }, (cursor, tagEmitter) -> {
-            if (cursor == null) {
-                tagEmitter.onError(new NullPointerException("An error while retrieving the cursor"));
-                return null;
-            }
-            if (cursor.moveToNext()) {
-                tagEmitter.onNext(Tag.from(cursor));
-            } else {
-                tagEmitter.onComplete();
-            }
-            return cursor;
-        }, Cursor::close);
-
-        return tagObservable.toList();
+    public Observable<Tag> getTags() {
+        return LocalTags.getTags(contentResolver, LocalContract.TagEntry.buildTagsUri());
     }
 
     @Override
     public Single<Tag> getTag(@NonNull String tagName) {
         checkNotNull(tagName);
-
-        return Observable.fromCallable(() -> {
-            Cursor cursor = contentResolver.query(
-                    LocalContract.TagEntry.buildTagsUriWith(tagName),
-                    LocalContract.TagEntry.TAG_COLUMNS,
-                    null, null, null);
-            if (cursor == null) return null;
-            else if (!cursor.moveToLast()) {
-                cursor.close();
-                throw new NoSuchElementException("The requested tag was not found");
-            }
-            try {
-                return Tag.from(cursor);
-            } finally {
-                cursor.close();
-            }
-        }).firstOrError();
+        return LocalTags.getTag(contentResolver, tagName);
     }
 
     @Override
     public void saveTag(@NonNull Tag tag) {
         checkNotNull(tag);
-
-        insertTag(tag, LocalContract.TagEntry.buildTagsUri());
-    }
-
-    private void insertTag(@NonNull Tag tag, @NonNull Uri uri) {
-        checkNotNull(tag);
-        checkNotNull(uri);
-
-        ContentValues values = tag.getContentValues();
-        contentResolver.insert(uri, values);
+        LocalTags.saveTag(contentResolver, tag, LocalContract.TagEntry.buildTagsUri());
     }
 
     @Override
     public void deleteAllTags() {
-        contentResolver.delete(LocalContract.TagEntry.buildTagsUri(), null, null);
+        LocalTags.deleteTags(contentResolver).blockingGet();
+    }
+
+    // Statics
+
+    public static Single<Integer> delete(final ContentResolver contentResolver, final Uri uri) {
+        return Single.fromCallable(() -> contentResolver.delete(uri, null, null));
+    }
+
+    public static Single<SyncState> getSyncState(
+            final ContentResolver contentResolver, final Uri uri) {
+        return Single.fromCallable(() -> {
+            Cursor cursor = contentResolver.query(
+                    uri, LocalContract.SYNC_STATE_COLUMNS, null, null, null);
+            if (cursor == null) return null; // NOTE: NullPointerException
+
+            if (!cursor.moveToLast()) {
+                cursor.close();
+                throw new NoSuchElementException("The requested favorite was not found");
+            }
+            try {
+                return SyncState.from(cursor);
+            } finally {
+                cursor.close();
+            }
+        });
+    }
+
+    public static Observable<SyncState> getSyncStates(
+            final ContentResolver contentResolver, final Uri uri,
+            final String selection, final String[] selectionArgs, final String sortOrder) {
+        return Observable.generate(() -> {
+            return contentResolver.query(
+                    uri, LocalContract.SYNC_STATE_COLUMNS, selection, selectionArgs, sortOrder);
+        }, (cursor, stateEmitter) -> {
+            if (cursor == null) {
+                stateEmitter.onError(new NullPointerException("An error while retrieving the cursor"));
+                return null;
+            }
+            if (!cursor.moveToNext()) {
+                stateEmitter.onComplete();
+                return cursor;
+            }
+            stateEmitter.onNext(SyncState.from(cursor));
+            return cursor;
+        }, Cursor::close);
+    }
+
+    public static Observable<String> getIds(
+            final ContentResolver contentResolver, final Uri uri) {
+        String[] columns = new String[]{LocalContract.COMMON_NAME_ENTRY_ID};
+
+        return Observable.generate(() -> {
+            return contentResolver.query(uri, columns, null, null, null);
+        }, (cursor, emitter) -> {
+            if (cursor == null) {
+                emitter.onError(new NullPointerException("An error while retrieving the cursor"));
+                return null;
+            }
+            if (!cursor.moveToNext()) {
+                emitter.onComplete();
+                return cursor;
+            }
+            String id = cursor.getString(cursor.getColumnIndexOrThrow(
+                    LocalContract.COMMON_NAME_ENTRY_ID));
+            emitter.onNext(id);
+            return cursor;
+        }, Cursor::close);
     }
 }

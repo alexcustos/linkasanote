@@ -32,8 +32,8 @@ import static android.support.test.espresso.matcher.ViewMatchers.withContentDesc
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withResourceName;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static com.bytesforge.linkasanote.AndroidTestUtils.getToolbarNavigationContentDescription;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
-import static com.bytesforge.linkasanote.TestUtils.getToolbarNavigationContentDescription;
 import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.allOf;

@@ -36,7 +36,8 @@
         <EditTextPreference
             android:key="@string/pref_key_sync_directory"
             android:title="@string/pref_title_sync_directory"
-            android:defaultValue="@string/default_sync_directory" />
+            android:defaultValue="@string/default_sync_directory"
+            android:summary="@string/placeholder_text" />
     </PreferenceCategory>
 
     <PreferenceCategory

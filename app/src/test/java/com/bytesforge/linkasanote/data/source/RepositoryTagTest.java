@@ -12,10 +12,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -53,7 +55,7 @@ public class RepositoryTagTest {
         setTagsNotAvailable(cloudDataSource);
 
 
-        TestObserver<List<Tag>> testTagsObserver = repository.getTags().test();
+        TestObserver<List<Tag>> testTagsObserver = repository.getTags().toList().test();
 
         verify(localDataSource).getTags();
         testTagsObserver.assertValue(TAGS);
@@ -62,10 +64,12 @@ public class RepositoryTagTest {
     @Test
     public void getTag_requestsSingleTagFromLocalSource() {
         Tag tag = TAGS.get(0);
+        String tagName = tag.getName();
+        assertNotNull(tagName);
 
         setTagAvailable(localDataSource, tag);
 
-        TestObserver<Tag> testTagObserver = repository.getTag(tag.getName()).test();
+        TestObserver<Tag> testTagObserver = repository.getTag(tagName).test();
         verify(localDataSource).getTag(eq(tag.getName()));
         testTagObserver.assertValue(tag);
     }
@@ -76,6 +80,7 @@ public class RepositoryTagTest {
         repository.saveTag(tag);
 
         verify(localDataSource).saveTag(tag);
+        assertNotNull(repository.cachedTags);
         assertThat(repository.cachedTags.size(), is(1));
     }
 
@@ -84,6 +89,7 @@ public class RepositoryTagTest {
         for (Tag tag : TAGS) {
             repository.saveTag(tag);
         }
+        assertNotNull(repository.cachedTags);
         assertThat(repository.cachedTags.size(), is(TAGS.size()));
 
         repository.deleteAllTags();
@@ -94,11 +100,11 @@ public class RepositoryTagTest {
     // Data setup
 
     private void setTagsAvailable(DataSource dataSource, List<Tag> tags) {
-        when(dataSource.getTags()).thenReturn(Single.just(tags));
+        when(dataSource.getTags()).thenReturn(Observable.fromIterable(tags));
     }
 
     private void setTagsNotAvailable(DataSource dataSource) {
-        when(dataSource.getTags()).thenReturn(Single.just(Collections.emptyList()));
+        when(dataSource.getTags()).thenReturn(Observable.fromIterable(Collections.emptyList()));
     }
 
     private void setTagAvailable(DataSource dataSource, Tag tag) {

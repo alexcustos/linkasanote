@@ -44,11 +44,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.FavoriteEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
-                    LocalContract.FavoriteEntry.COLUMN_NAME_NAME + TEXT_TYPE + " UNIQUE," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_NAME + TEXT_TYPE + "," + // UNIQUE
                     LocalContract.FavoriteEntry.COLUMN_NAME_ETAG + TEXT_TYPE + "," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + INTEGER_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED + BOOLEAN_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_DELETED + BOOLEAN_TYPE + "," +
-                    LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE + "," +
+                    "UNIQUE (" + LocalContract.FavoriteEntry.COLUMN_NAME_NAME + "," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + "," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED + ") ON CONFLICT ABORT" +
             ");";
 
     private static final String SQL_CREATE_TAG_ENTRIES =

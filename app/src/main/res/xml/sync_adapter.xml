@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- NOTE: ${applicationId} cannot be applied here -->
 <sync-adapter
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:contentAuthority="${packageName}.provider"
+    android:contentAuthority="@string/application_content_authority"
     android:accountType="@string/authenticator_account_type"
-    android:userVisible="false"
+    android:userVisible="true"
     android:supportsUploading="true"
     android:allowParallelSyncs="false"
-    android:isAlwaysSyncable="false" />
+    android:isAlwaysSyncable="true" />

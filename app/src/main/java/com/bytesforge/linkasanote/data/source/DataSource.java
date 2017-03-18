@@ -9,6 +9,7 @@ import com.bytesforge.linkasanote.data.Tag;
 
 import java.util.List;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 
 public interface DataSource {
@@ -23,13 +24,13 @@ public interface DataSource {
     void saveNote(@NonNull Note note);
     void deleteAllNotes();
 
-    Single<List<Favorite>> getFavorites();
+    Observable<Favorite> getFavorites();
     Single<Favorite> getFavorite(@NonNull String favoriteId);
     void saveFavorite(@NonNull Favorite favorite);
     void deleteAllFavorites();
     void deleteFavorite(@NonNull String favoriteId);
 
-    Single<List<Tag>> getTags();
+    Observable<Tag> getTags();
     Single<Tag> getTag(@NonNull String tagId);
     void saveTag(@NonNull Tag tag);
     void deleteAllTags();

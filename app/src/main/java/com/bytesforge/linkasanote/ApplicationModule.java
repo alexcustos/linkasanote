@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote;
 
+import android.accounts.AccountManager;
 import android.content.Context;
 
 import javax.inject.Singleton;
@@ -20,5 +21,11 @@ public class ApplicationModule { // NOTE: final removed and public added for sak
     @Singleton
     public Context provideContext() {
         return context;
+    }
+
+    @Provides
+    @Singleton
+    public AccountManager provideAccountManager() {
+        return AccountManager.get(context);
     }
 }

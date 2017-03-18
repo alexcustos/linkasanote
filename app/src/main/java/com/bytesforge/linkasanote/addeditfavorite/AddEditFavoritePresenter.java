@@ -24,6 +24,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class AddEditFavoritePresenter implements
         AddEditFavoriteContract.Presenter, TokenCompleteTextView.TokenListener<Tag> {
 
+    private static final String TAG = AddEditFavoritePresenter.class.getSimpleName();
+
     private final Repository repository;
     private final AddEditFavoriteContract.View view;
     private final AddEditFavoriteContract.ViewModel viewModel;
@@ -32,7 +34,10 @@ public final class AddEditFavoritePresenter implements
     private String favoriteId; // NOTE: can be reset to null if NoSuchElementException
 
     @NonNull
-    private final CompositeDisposable disposable;
+    private final CompositeDisposable tagsDisposable;
+
+    @NonNull
+    private final CompositeDisposable favoriteDisposable;
 
     @Inject
     AddEditFavoritePresenter(
@@ -45,8 +50,8 @@ public final class AddEditFavoritePresenter implements
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
         this.favoriteId = favoriteId;
-
-        disposable = new CompositeDisposable();
+        tagsDisposable = new CompositeDisposable();
+        favoriteDisposable = new CompositeDisposable();
     }
 
     @Inject
@@ -63,15 +68,17 @@ public final class AddEditFavoritePresenter implements
 
     @Override
     public void unsubscribe() {
-        disposable.clear();
+        tagsDisposable.clear();
+        favoriteDisposable.clear();
     }
 
     @Override
     public void loadTags() {
         EspressoIdlingResource.increment();
-        //disposable.clear(); // NOTE: stop all other subscriptions
+        tagsDisposable.clear(); // stop previous requests
 
         Disposable disposable = repository.getTags()
+                .toList()
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .doOnError(throwable -> view.swapTagsCompletionViewItems(new ArrayList<>()))
@@ -83,7 +90,7 @@ public final class AddEditFavoritePresenter implements
                 .subscribe((tags, throwable) -> {
                     if (tags != null) view.swapTagsCompletionViewItems(tags);
                 });
-        this.disposable.add(disposable);
+        tagsDisposable.add(disposable);
     }
 
     @Override
@@ -97,26 +104,27 @@ public final class AddEditFavoritePresenter implements
             throw new RuntimeException("populateFavorite() was called but favoriteId is null");
         }
         EspressoIdlingResource.increment();
+        favoriteDisposable.clear();
 
         Disposable disposable = repository.getFavorite(favoriteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .doOnError(throwable -> {
-                    favoriteId = null;
-                    viewModel.showFavoriteNotFoundSnackbar();
-                })
                 .doFinally(() -> {
                     if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
                         EspressoIdlingResource.decrement();
                     }
                 })
-                .subscribe((favorite, throwable) -> {
+                // TODO: check if favorite is nullable here
+                .subscribe(favorite -> {
                     if (favorite != null) {
                         view.setupFavoriteState(favorite);
                         viewModel.checkAddButton();
                     }
+                }, throwable -> {
+                    favoriteId = null;
+                    viewModel.showFavoriteNotFoundSnackbar();
                 });
-        this.disposable.add(disposable);
+        favoriteDisposable.add(disposable);
     }
 
     @Override
@@ -137,7 +145,8 @@ public final class AddEditFavoritePresenter implements
         if (favoriteId == null) {
             throw new RuntimeException("updateFavorite() was called but favoriteId is null");
         }
-        Favorite favorite = new Favorite(favoriteId, name, tags);
+        // NOTE: state eTag will NOT be overwritten if null
+        Favorite favorite = new Favorite(favoriteId, name, tags); // UNSYNCED
         saveFavorite(favorite);
     }
 

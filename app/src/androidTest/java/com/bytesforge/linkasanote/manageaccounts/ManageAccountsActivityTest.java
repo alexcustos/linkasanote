@@ -14,19 +14,23 @@ import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.ApplicationComponent;
 import com.bytesforge.linkasanote.ApplicationModule;
+import com.bytesforge.linkasanote.DaggerApplicationComponent;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.TestUtils;
+import com.bytesforge.linkasanote.data.source.ProviderModule;
+import com.bytesforge.linkasanote.data.source.RepositoryModule;
+import com.bytesforge.linkasanote.settings.SettingsModule;
+import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
-
-import it.cosenonjaviste.daggermock.DaggerMockRule;
+import org.mockito.MockitoAnnotations;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
@@ -51,15 +55,24 @@ public class ManageAccountsActivityTest {
     private static final String USER_NAME = "demo";
 
     private Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    private LaanoApplication laanoApplication = (LaanoApplication) context.getApplicationContext();
 
+    /* EXAMPLE: how to inject mock to the module
     @Rule
     public DaggerMockRule<ApplicationComponent> daggerMockRule = new DaggerMockRule<>(
             ApplicationComponent.class, new ApplicationModule(context)).set(component ->
-            ((LaanoApplication) context.getApplicationContext()).setApplicationComponent(component));
+            ((LaanoApplication) context.getApplicationContext()).setApplicationComponent(component));*/
 
     @Rule
     public ActivityTestRule<ManageAccountsActivity> manageAccountsActivityTestRule =
             new ActivityTestRule<ManageAccountsActivity>(ManageAccountsActivity.class, false, false) {
+                private ApplicationComponent applicationComponent;
+
+                @Override
+                protected void beforeActivityLaunched() {
+                    super.beforeActivityLaunched();
+                    applicationComponent = setupMockApplicationComponent(mockAccountManager);
+                }
 
                 @Override
                 protected void afterActivityLaunched() {
@@ -75,19 +88,39 @@ public class ManageAccountsActivityTest {
                 }
             };
 
-    private static String ACCOUNT_TYPE;
-    private static Account[] ACCOUNTS;
+    private String ACCOUNT_TYPE;
+    private Account[] ACCOUNTS;
 
     @Mock
     AccountManager mockAccountManager;
 
     public ManageAccountsActivityTest() {
+        MockitoAnnotations.initMocks(this);
         ACCOUNT_TYPE = getAccountType(context);
         ACCOUNTS = new Account[]{new Account(USER_NAME + "@demo.nextcloud.com", ACCOUNT_TYPE)};
     }
 
+    private ApplicationComponent setupMockApplicationComponent(AccountManager accountManager) {
+        ApplicationComponent oldApplicationComponent = laanoApplication.getApplicationComponent();
+        ApplicationComponent applicationComponent = DaggerApplicationComponent.builder()
+                .applicationModule(new ApplicationModule(laanoApplication) {
+
+                    @Override
+                    public AccountManager provideAccountManager() {
+                        return accountManager;
+                    }
+                })
+                .settingsModule(new SettingsModule())
+                .repositoryModule(new RepositoryModule())
+                .providerModule(new ProviderModule())
+                .schedulerProviderModule(new SchedulerProviderModule())
+                .build();
+        laanoApplication.setApplicationComponent(applicationComponent);
+        return oldApplicationComponent;
+    }
+
     private void setupManageAccountsActivity() { // @Before
-        TestUtils.allowPermissionIfNeeded(Manifest.permission.GET_ACCOUNTS);
+        AndroidTestUtils.allowPermissionIfNeeded(Manifest.permission.GET_ACCOUNTS);
     }
 
     private void registerIdlingResource() { // @Before

@@ -1,8 +1,5 @@
 package com.bytesforge.linkasanote.manageaccounts;
 
-import android.accounts.AccountManager;
-import android.content.Context;
-
 import dagger.Module;
 import dagger.Provides;
 
@@ -10,20 +7,13 @@ import dagger.Provides;
 public class ManageAccountsPresenterModule {
 
     private final ManageAccountsContract.View view;
-    private final Context context;
 
-    public ManageAccountsPresenterModule(Context context, ManageAccountsContract.View view) {
-        this.context = context;
+    public ManageAccountsPresenterModule(ManageAccountsContract.View view) {
         this.view = view;
     }
 
     @Provides
     public ManageAccountsContract.View provideManageAccountsContractView() {
         return view;
-    }
-
-    @Provides
-    public AccountManager provideAccountManager() {
-        return AccountManager.get(context);
     }
 }

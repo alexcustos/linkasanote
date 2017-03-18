@@ -328,6 +328,9 @@ public class Provider extends ContentProvider {
         long rowId = updateEntry(db, tableName, idField, idValue, values);
         if (rowId <= 0) {
             rowId = insertEntry(db, tableName, values);
+        } else {
+            // NOTE: will be recreated with the new set of tags
+            deleteTagReferences(db, tableName, rowId);
         }
         return rowId;
     }
@@ -355,6 +358,7 @@ public class Provider extends ContentProvider {
             final String idField, final String idValue, final ContentValues values) {
         checkNotNull(db);
 
+        // NOTE: return value
         long rowId = queryRowId(db, tableName, idField, idValue);
         if (rowId <= 0) return 0;
 
@@ -365,9 +369,6 @@ public class Provider extends ContentProvider {
             throw new SQLiteConstraintException(String.format(
                     "Failed to update row with ID [%s, table=%s]", idValue, tableName));
         }
-        // NOTE: will be recreated with the new set of tags
-        deleteTagReferences(db, tableName, rowId);
-
         return rowId;
     }
 

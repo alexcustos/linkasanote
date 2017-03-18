@@ -8,8 +8,8 @@ import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.sync.operations.OperationsService;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation;
@@ -67,7 +67,7 @@ public class AddEditAccountNextcloudScreenTest {
     public void setupAddEditAccountActivityNextcloud() {
         MockitoAnnotations.initMocks(this);
 
-        TestUtils.allowPermissionIfNeeded(Manifest.permission.GET_ACCOUNTS);
+        AndroidTestUtils.allowPermissionIfNeeded(Manifest.permission.GET_ACCOUNTS);
 
         AddEditAccountActivity activity = addEditAccountActivityTestRule.getActivity();
         assertThat(activity, notNullValue());
@@ -179,7 +179,7 @@ public class AddEditAccountNextcloudScreenTest {
         onView(withId(R.id.account_password)).perform(typeText(PASSWORD));
         onView(withId(R.id.login_button)).check(matches(isEnabled()));
         // Orientation change
-        TestUtils.rotateOrientation(addEditAccountActivityTestRule);
+        AndroidTestUtils.rotateOrientation(addEditAccountActivityTestRule);
         onView(withId(R.id.server_url)).check(matches(withText(SERVER_URL)));
         onView(withId(R.id.host_url_refresh_button)).check(matches(not(isDisplayed())));
         onView(withId(R.id.server_status)).check(matches(withText(R.string.add_edit_account_nextcloud_connection_secure)));

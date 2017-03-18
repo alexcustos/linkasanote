@@ -5,8 +5,8 @@ import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.TestUtils;
 
 import org.junit.After;
 import org.junit.Before;
@@ -54,7 +54,7 @@ public class AddEditFavoriteActivityTest {
         String tags = Arrays.stream(FAVORITE_TAGS).collect(Collectors.joining(" "));
         fillFavoriteFields(FAVORITE_NAME, tags);
 
-        TestUtils.rotateOrientation(addEditFavoriteActivityTestRule);
+        AndroidTestUtils.rotateOrientation(addEditFavoriteActivityTestRule);
 
         onView(withId(R.id.favorite_name)).check(matches(withText(FAVORITE_NAME)));
         String uncompletedTag = FAVORITE_TAGS[FAVORITE_TAGS.length - 1];

@@ -122,7 +122,8 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
     private String insertFavoriteOnly(Favorite favorite) {
         final Uri favoritesUri = LocalContract.FavoriteEntry.buildFavoritesUri();
 
-        Uri newFavoriteUri = contentResolver.insert(favoritesUri, favorite.getContentValues());
+        Uri newFavoriteUri = contentResolver.insert(
+                favoritesUri, favorite.getContentValues());
         assertNotNull(newFavoriteUri);
 
         String newFavoriteRowId = LocalContract.FavoriteEntry.getFavoriteId(newFavoriteUri);
@@ -186,8 +187,8 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
         assertThat(cursor.getCount(), equalTo(1));
         try {
             cursor.moveToLast();
-            long rowId = Favorite.rowIdFrom(cursor);
-            return Favorite.from(cursor, queryFavoriteTags(Long.toString(rowId)));
+            String rowId = LocalContract.rowIdFrom(cursor);
+            return Favorite.from(cursor, queryFavoriteTags(rowId));
         } finally {
             cursor.close();
         }

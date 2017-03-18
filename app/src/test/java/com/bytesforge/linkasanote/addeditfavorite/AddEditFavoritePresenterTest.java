@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 
 import static org.junit.Assert.assertEquals;
@@ -70,14 +71,14 @@ public class AddEditFavoritePresenterTest {
     public void loadAllTagsFromRepository_loadsItIntoView() {
         List<Tag> tags = FAVORITES.get(FAVORITES.size() - 1).getTags();
         assertNotNull(tags);
-        when(repository.getTags()).thenReturn(Single.just(tags));
+        when(repository.getTags()).thenReturn(Observable.fromIterable(tags));
         presenter.loadTags();
         verify(view).swapTagsCompletionViewItems(tags);
     }
 
     @Test
     public void loadEmptyListOfTags_loadsEmptyListIntoView() {
-        when(repository.getTags()).thenReturn(Single.just(Collections.emptyList()));
+        when(repository.getTags()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         presenter.loadTags();
         verify(view).swapTagsCompletionViewItems(tagListCaptor.capture());
         assertEquals(tagListCaptor.getValue().size(), 0);

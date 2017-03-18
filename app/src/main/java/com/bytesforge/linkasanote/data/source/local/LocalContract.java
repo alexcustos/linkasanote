@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.data.source.local;
 
 import android.content.ContentUris;
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
@@ -16,12 +17,27 @@ public final class LocalContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse(CONTENT_SCHEME + CONTENT_AUTHORITY);
 
     public static final String MANY_TO_MANY_COMMON_NAME_ADDED = "added";
+    // NOTE: entry_id must not be part of SyncState
+    public static final String COMMON_NAME_ENTRY_ID = "entry_id";
     public static final String COMMON_NAME_ETAG = "etag";
+    public static final String COMMON_NAME_DUPLICATED = "duplicated";
     public static final String COMMON_NAME_CONFLICTED = "conflicted";
     public static final String COMMON_NAME_DELETED = "deleted";
     public static final String COMMON_NAME_SYNCED = "synced";
 
+    public static String[] SYNC_STATE_COLUMNS = new String[]{
+            BaseColumns._ID,
+            COMMON_NAME_ETAG,
+            COMMON_NAME_DUPLICATED,
+            COMMON_NAME_CONFLICTED,
+            COMMON_NAME_DELETED,
+            COMMON_NAME_SYNCED};
+
     private LocalContract() {
+    }
+
+    public static String rowIdFrom(Cursor cursor) {
+        return cursor.getString(cursor.getColumnIndexOrThrow(BaseColumns._ID));
     }
 
     public static abstract class LinkEntry implements BaseColumns {
@@ -122,10 +138,11 @@ public final class LocalContract {
 
         public static final String TABLE_NAME = "favorite";
 
-        public static final String COLUMN_NAME_ENTRY_ID = "entry_id";
+        public static final String COLUMN_NAME_ENTRY_ID = LocalContract.COMMON_NAME_ENTRY_ID;
         public static final String COLUMN_NAME_ADDED = "added";
         public static final String COLUMN_NAME_NAME = "name";
         public static final String COLUMN_NAME_ETAG = LocalContract.COMMON_NAME_ETAG;
+        public static final String COLUMN_NAME_DUPLICATED = LocalContract.COMMON_NAME_DUPLICATED;
         public static final String COLUMN_NAME_CONFLICTED = LocalContract.COMMON_NAME_CONFLICTED;
         public static final String COLUMN_NAME_DELETED = LocalContract.COMMON_NAME_DELETED;
         public static final String COLUMN_NAME_SYNCED = LocalContract.COMMON_NAME_SYNCED;
@@ -144,6 +161,7 @@ public final class LocalContract {
                 FavoriteEntry.COLUMN_NAME_ADDED,
                 FavoriteEntry.COLUMN_NAME_NAME,
                 FavoriteEntry.COLUMN_NAME_ETAG,
+                FavoriteEntry.COLUMN_NAME_DUPLICATED,
                 FavoriteEntry.COLUMN_NAME_CONFLICTED,
                 FavoriteEntry.COLUMN_NAME_DELETED,
                 FavoriteEntry.COLUMN_NAME_SYNCED};

@@ -1,18 +1,23 @@
 package com.bytesforge.linkasanote.laano;
 
 import android.Manifest;
+import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
+import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -34,6 +39,7 @@ import android.view.View;
 import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.databinding.ActivityLaanoBinding;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenter;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenterModule;
@@ -43,6 +49,8 @@ import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity;
 import com.bytesforge.linkasanote.settings.SettingsActivity;
+import com.bytesforge.linkasanote.sync.SyncAdapter;
+import com.bytesforge.linkasanote.utils.AppBarLayoutOnStateChangeListener;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 
 import java.io.IOException;
@@ -50,6 +58,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
+import static com.bytesforge.linkasanote.utils.CloudUtils.getDefaultAccount;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LaanoActivity extends AppCompatActivity implements
@@ -57,7 +66,7 @@ public class LaanoActivity extends AppCompatActivity implements
 
     private static final String TAG = LaanoActivity.class.getSimpleName();
 
-    private static final String STATE_CURRENT_TAB = "CURRENT_TAB";
+    private static final String STATE_ACTIVE_TAB = "ACTIVE_TAB";
 
     private static final int REQUEST_GET_ACCOUNTS = 0;
     private static final String PERMISSION_GET_ACCOUNTS = Manifest.permission.GET_ACCOUNTS;
@@ -74,8 +83,35 @@ public class LaanoActivity extends AppCompatActivity implements
     @Inject
     NotesPresenter notesPresenter;
 
-    private int viewPagerCurrentTab;
+    @Inject
+    AccountManager accountManager;
+
+    private SyncBroadcastReceiver syncBroadcastReceiver;
+    private int activeTab;
     private ActivityLaanoBinding binding;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        IntentFilter syncIntentFilter = new IntentFilter();
+        syncIntentFilter.addAction(SyncAdapter.ACTION_SYNC_START);
+        syncIntentFilter.addAction(SyncAdapter.ACTION_SYNC_END);
+        syncIntentFilter.addAction(SyncAdapter.ACTION_SYNC_LINK);
+        syncIntentFilter.addAction(SyncAdapter.ACTION_SYNC_FAVORITE);
+        syncIntentFilter.addAction(SyncAdapter.ACTION_SYNC_NOTE);
+        syncBroadcastReceiver = new SyncBroadcastReceiver();
+        registerReceiver(syncBroadcastReceiver, syncIntentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        if (syncBroadcastReceiver != null) {
+            unregisterReceiver(syncBroadcastReceiver);
+            syncBroadcastReceiver = null;
+        }
+        super.onPause();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,23 +159,27 @@ public class LaanoActivity extends AppCompatActivity implements
         // FAB
         if (binding.fabAdd != null) {
             setupFabAdd(binding.fabAdd);
-        }
+            // AppBar
+            if (binding.appBarLayout != null) {
+                setupAppBarLayout(binding.appBarLayout, binding.fabAdd);
+            }
+        } // if
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STATE_CURRENT_TAB, viewPagerCurrentTab);
+        outState.putInt(STATE_ACTIVE_TAB, activeTab);
     }
 
     private void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
-        viewPagerCurrentTab = state.getInt(STATE_CURRENT_TAB);
+        activeTab = state.getInt(STATE_ACTIVE_TAB);
     }
 
     private Bundle getDefaultInstanceState() {
         Bundle defaultState = new Bundle();
-        defaultState.putInt(STATE_CURRENT_TAB, 0);
+        defaultState.putInt(STATE_ACTIVE_TAB, 0);
         return defaultState;
     }
 
@@ -150,8 +190,21 @@ public class LaanoActivity extends AppCompatActivity implements
             case android.R.id.home:
                 drawerLayout.openDrawer(GravityCompat.START);
                 return true;
+            case R.id.toolbar_laano_sync:
+                Account account = getDefaultAccount(this, accountManager);
+                if (account != null) {
+                    triggerSync(account);
+                }
+                return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private static void triggerSync(Account account) {
+        Bundle extras = new Bundle();
+        extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        extras.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        ContentResolver.requestSync(account, LocalContract.CONTENT_AUTHORITY, extras);
     }
 
     @Override
@@ -241,16 +294,59 @@ public class LaanoActivity extends AppCompatActivity implements
         }
     }
 
+    // Broadcast Receiver
+
+    private class SyncBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(SyncAdapter.ACTION_SYNC_START)) {
+
+            } else if (action.equals(SyncAdapter.ACTION_SYNC_END)) {
+
+            } else if (action.equals(SyncAdapter.ACTION_SYNC_LINK)) {
+
+            } else if (action.equals(SyncAdapter.ACTION_SYNC_FAVORITE)) {
+
+            } else if (action.equals(SyncAdapter.ACTION_SYNC_NOTE)) {
+
+            }
+        } // onReceive
+    }
+
     // Setup
 
-    private void setupViewPager(ViewPager viewPager, LaanoFragmentPagerAdapter adapter) {
+    private void setupAppBarLayout(
+            @NonNull AppBarLayout appBarLayout,
+            @NonNull FloatingActionButton fab) {
+        checkNotNull(appBarLayout);
+        checkNotNull(fab);
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayoutOnStateChangeListener() {
+
+            @Override
+            public void onStateChanged(AppBarLayout appBarLayout, State state) {
+                if (state == State.EXPANDED && !fab.isShown()) {
+                    fab.show();
+                } else if (state == State.COLLAPSED && fab.isShown()) {
+                    fab.hide();
+                }
+            }
+        });
+    }
+
+    private void setupViewPager(
+            @NonNull ViewPager viewPager, @NonNull LaanoFragmentPagerAdapter adapter) {
+        checkNotNull(viewPager);
+        checkNotNull(adapter);
+
         viewPager.setAdapter(adapter);
         // NOTE: Fragments are needed immediately to build Presenters
         adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.LINKS_TAB);
         adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.FAVORITES_TAB);
         adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.NOTES_TAB);
         adapter.finishUpdate(viewPager);
-        viewPager.setCurrentItem(viewPagerCurrentTab);
+        viewPager.setCurrentItem(activeTab);
         // Listener
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
@@ -260,10 +356,10 @@ public class LaanoActivity extends AppCompatActivity implements
 
             @Override
             public void onPageSelected(int position) {
-                if (viewPagerCurrentTab != position) {
-                    notifyTabDeselected(viewPagerCurrentTab);
+                if (activeTab != position) {
+                    notifyTabDeselected(activeTab);
                     notifyTabSelected(position);
-                    viewPagerCurrentTab = position;
+                    activeTab = position;
                 }
             }
 
@@ -315,9 +411,7 @@ public class LaanoActivity extends AppCompatActivity implements
                             startActivity(settingsIntent);
                             break;
                         case R.id.add_account_menu_item:
-                            Context context = getApplicationContext();
-                            AccountManager accountManager = AccountManager.get(context);
-                            accountManager.addAccount(getAccountType(context),
+                            accountManager.addAccount(getAccountType(this),
                                     null, null, null, this, addAccountCallback, new Handler());
                             break;
                         case R.id.manage_accounts_menu_item:
@@ -360,7 +454,7 @@ public class LaanoActivity extends AppCompatActivity implements
         checkNotNull(fab);
 
         fab.setOnClickListener(v -> {
-                    switch (viewPagerCurrentTab) {
+                    switch (activeTab) {
                         case LaanoFragmentPagerAdapter.LINKS_TAB:
                             linksPresenter.addLink();
                             break;

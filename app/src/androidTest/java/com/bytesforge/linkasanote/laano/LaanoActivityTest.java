@@ -8,9 +8,9 @@ import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
@@ -62,7 +62,7 @@ public class LaanoActivityTest {
             };
 
     public LaanoActivityTest() {
-        FAVORITES = TestUtils.buildFavorites();
+        FAVORITES = AndroidTestUtils.buildFavorites();
     }
 
     private void cleanupRepository(Repository repository) {
@@ -85,7 +85,7 @@ public class LaanoActivityTest {
 
     @Test
     public void fabButton_addFavoritesToFavoritesRecyclerView() {
-        repository.cacheIsDirty = true;
+        repository.favoriteCacheIsDirty = true;
         setupFavoritesTab();
         FAVORITES.forEach(this::createFavorite);
         for (Favorite favorite : FAVORITES) {

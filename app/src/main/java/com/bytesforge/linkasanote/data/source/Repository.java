@@ -10,11 +10,9 @@ import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 
 import java.security.InvalidParameterException;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import javax.inject.Singleton;
 
@@ -30,13 +28,10 @@ public class Repository implements DataSource {
     private final DataSource localDataSource;
     private final DataSource cloudDataSource;
 
+    // TODO: change to links
     @VisibleForTesting
     @Nullable
     Map<String, Link> cachedLinks;
-
-    @VisibleForTesting
-    @Nullable
-    Map<String, Link> cachedNotes;
 
     @VisibleForTesting
     @Nullable
@@ -44,11 +39,20 @@ public class Repository implements DataSource {
 
     @VisibleForTesting
     @Nullable
+    Map<String, Link> cachedNotes;
+
+    @VisibleForTesting
+    @Nullable
     Map<String, Tag> cachedTags;
 
-    // TODO: implement the cache invalidation
     @VisibleForTesting
-    public boolean cacheIsDirty = false;
+    public boolean linkCacheIsDirty = false;
+
+    @VisibleForTesting
+    public boolean favoriteCacheIsDirty = false;
+
+    @VisibleForTesting
+    public boolean noteCacheIsDirty = false;
 
     //@Inject NOTE: @Provides is needed for testing to mock Repository
     public Repository(DataSource localDataSource, DataSource cloudDataSource) {
@@ -60,7 +64,7 @@ public class Repository implements DataSource {
 
     @Override
     public Single<List<Link>> getLinks() {
-        if (cachedLinks != null && !cacheIsDirty) {
+        if (cachedLinks != null && !linkCacheIsDirty) {
             return Observable.fromIterable(cachedLinks.values()).toList();
         }
         return getAndCacheLocalLinks();
@@ -155,80 +159,63 @@ public class Repository implements DataSource {
 
     // Favorites
 
-    // TODO: implement cloudFavorites
     @Override
-    public Single<List<Favorite>> getFavorites() {
-        if (cachedFavorites != null && !cacheIsDirty) {
-            return Observable.fromIterable(cachedFavorites.values()).toList();
+    public Observable<Favorite> getFavorites() {
+        if (!favoriteCacheIsDirty && cachedFavorites != null) {
+            return Observable.fromIterable(cachedFavorites.values());
         }
-
-        Single<List<Favorite>> localFavorites = getAndCacheLocalFavorites();
-
-        Single<List<Favorite>> cloudFavorites =
-                Single.just(Collections.<Favorite>emptyList());
-
-        return Single.concat(localFavorites, cloudFavorites)
-                .filter(favorites -> !favorites.isEmpty())
-                .firstOrError();
+        return getAndCacheLocalFavorites();
     }
 
-    private Single<List<Favorite>> getAndCacheLocalFavorites() {
+    private Observable<Favorite> getAndCacheLocalFavorites() {
         if (cachedFavorites == null) {
             cachedFavorites = new LinkedHashMap<>();
         }
         if (cachedTags == null) {
             cachedTags = new LinkedHashMap<>();
         }
+        cachedFavorites.clear();
         return localDataSource.getFavorites()
-                .flatMap(favorites -> Observable.fromIterable(favorites)
-                        .doOnNext(favorite -> {
-                            // NOTE: cache invalidation required when all items are requested
-                            cachedFavorites.put(favorite.getId(), favorite);
-                            List<Tag> tags = favorite.getTags();
-                            if (tags != null) {
-                                for (Tag tag : tags) cachedTags.put(tag.getName(), tag);
-                            }
-                        })
-                        .toList());
-    }
-
-    @Override
-    public Single<Favorite> getFavorite(@NonNull String favoriteId) {
-        checkNotNull(favoriteId);
-        if (!isKeyValidUuid(favoriteId)) {
-            throw new InvalidParameterException(
-                    "getFavorite() called with invalid UUID ID [" + favoriteId + "]");
-        }
-
-        final Favorite cachedFavorite = getCachedFavorite(favoriteId);
-        if (cachedFavorite != null) {
-            return Single.just(cachedFavorite);
-        }
-
-        if (cachedFavorites == null) {
-            cachedFavorites = new LinkedHashMap<>();
-        }
-        if (cachedTags == null) {
-            cachedTags = new LinkedHashMap<>();
-        }
-        Single<Favorite> localFavorite = localDataSource.getFavorite(favoriteId)
-                .doOnSuccess(favorite -> {
-                    cachedFavorites.put(favoriteId, favorite);
+                .doOnComplete(() -> favoriteCacheIsDirty = false)
+                .doOnNext(favorite -> {
+                    cachedFavorites.put(favorite.getId(), favorite);
                     List<Tag> tags = favorite.getTags();
                     if (tags != null) {
                         for (Tag tag : tags) cachedTags.put(tag.getName(), tag);
                     }
                 });
-        Single<Favorite> cloudFavorite = Single.never();
-        // TODO: check if it possible to throw own exception, and if null still possible here
-        return Single.concat(localFavorite, cloudFavorite)
-                .firstOrError()
-                .map(favorite -> {
-                    if (favorite == null) {
-                        throw new NoSuchElementException(
-                                "No favorite found with ID [" + favoriteId + "]");
+    }
+
+    @Override
+    public Single<Favorite> getFavorite(@NonNull String favoriteId) {
+        checkNotNull(favoriteId);
+
+        if (!isKeyValidUuid(favoriteId)) {
+            throw new InvalidParameterException("getFavorite() called with invalid UUID");
+        }
+        final Favorite cachedFavorite = getCachedFavorite(favoriteId);
+        if (cachedFavorite != null) {
+            return Single.just(cachedFavorite);
+        }
+        return getAndCacheLocalFavorite(favoriteId);
+    }
+
+    private Single<Favorite> getAndCacheLocalFavorite(String favoriteId) {
+        if (cachedFavorites == null) {
+            cachedFavorites = new LinkedHashMap<>();
+        }
+        if (cachedTags == null) {
+            cachedTags = new LinkedHashMap<>();
+        }
+        return localDataSource.getFavorite(favoriteId)
+                .doOnSuccess(favorite -> {
+                    cachedFavorites.put(favoriteId, favorite);
+                    // NOTE: because order of Favorites is messed up
+                    favoriteCacheIsDirty = true;
+                    List<Tag> tags = favorite.getTags();
+                    if (tags != null) {
+                        for (Tag tag : tags) cachedTags.put(tag.getName(), tag);
                     }
-                    return favorite;
                 });
     }
 
@@ -236,25 +223,25 @@ public class Repository implements DataSource {
     private Favorite getCachedFavorite(@NonNull String id) {
         checkNotNull(id);
 
-        if (cachedFavorites == null || cachedFavorites.isEmpty()) {
-            return null;
-        } else {
+        if (cachedFavorites != null && !cachedFavorites.isEmpty()) {
             return cachedFavorites.get(id);
         }
+        return null;
     }
 
     @Override
     public void saveFavorite(@NonNull Favorite favorite) {
         checkNotNull(favorite);
 
-        // NOTE: it may throw SQLiteConstraintException
-        localDataSource.saveFavorite(favorite);
+        localDataSource.saveFavorite(favorite); // blocking operation
         cloudDataSource.saveFavorite(favorite);
+
         // Favorite
         if (cachedFavorites == null) {
             cachedFavorites = new LinkedHashMap<>();
         }
-        cachedFavorites.put(favorite.getId(), favorite);
+        // NOTE: new Favorite has no rowId to bind to RecyclerView and position is unknown
+        favoriteCacheIsDirty = true;
         // Tags
         if (cachedTags == null) {
             cachedTags = new LinkedHashMap<>();
@@ -269,8 +256,8 @@ public class Repository implements DataSource {
 
     @Override
     public void deleteAllFavorites() {
-        localDataSource.deleteAllFavorites();
-        cloudDataSource.deleteAllFavorites();
+        localDataSource.deleteAllFavorites(); // blocking operation
+        //cloudDataSource.deleteAllFavorites();
 
         if (cachedFavorites == null) {
             cachedFavorites = new LinkedHashMap<>();
@@ -294,21 +281,19 @@ public class Repository implements DataSource {
     // Tags: tag is part of the object and should be bound with the object
 
     @Override
-    public Single<List<Tag>> getTags() {
-        if (cachedTags != null && !cacheIsDirty) {
-            return Observable.fromIterable(cachedTags.values()).toList();
+    public Observable<Tag> getTags() {
+        if (cachedTags != null) {
+            return Observable.fromIterable(cachedTags.values());
         }
         return getAndCacheLocalTags();
     }
 
-    private Single<List<Tag>> getAndCacheLocalTags() {
+    private Observable<Tag> getAndCacheLocalTags() {
         if (cachedTags == null) {
             cachedTags = new LinkedHashMap<>();
         }
         return localDataSource.getTags()
-                .flatMap(tags -> Observable.fromIterable(tags)
-                        .doOnNext(tag -> cachedTags.put(tag.getName(), tag))
-                        .toList());
+                .doOnNext(tag -> cachedTags.put(tag.getName(), tag));
     }
 
     @Override

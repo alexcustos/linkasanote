@@ -11,15 +11,14 @@
             type="com.bytesforge.linkasanote.laano.favorites.FavoritesContract.Presenter" />
         <variable name="viewModel"
             type="com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel" />
-        <variable name="position" type="java.lang.Integer" />
     </data>
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/item_favorites_layout_height"
         android:orientation="vertical"
-        android:onClick="@{() -> presenter.onFavoriteClick(position)}"
-        android:onLongClick="@{() -> presenter.onFavoriteLongClick(position)}">
+        android:onClick="@{() -> presenter.onFavoriteClick(favorite.id)}"
+        android:onLongClick="@{() -> presenter.onFavoriteLongClick(favorite.id)}">
         <!--android:background="?android:attr/selectableItemBackground"-->
 
         <ImageButton
@@ -46,8 +45,8 @@
             android:contentDescription="@string/item_favorites_checkbox"
             android:layout_marginStart="@dimen/recycler_view_left_checkbox_margin_start"
             android:visibility="@{viewModel.actionMode ? View.VISIBLE : View.GONE}"
-            android:checked="@{viewModel.isSelected(position)}"
-            android:onClick="@{() -> presenter.onCheckboxClick(position)}"
+            android:checked="@{viewModel.isSelected(favorite.id)}"
+            android:onClick="@{() -> presenter.onCheckboxClick(favorite.id)}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent" />

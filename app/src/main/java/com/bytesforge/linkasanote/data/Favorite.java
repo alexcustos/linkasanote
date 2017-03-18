@@ -8,7 +8,6 @@ import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.sync.SyncState;
-import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -24,7 +23,7 @@ import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
-public final class Favorite extends SyncState {
+public final class Favorite {
 
     private static final String TAG = Favorite.class.getSimpleName();
 
@@ -38,91 +37,77 @@ public final class Favorite extends SyncState {
 
     private final long added;
 
-    // TODO: name & tags should not be @Nullable
     @Nullable
     private final String name;
 
     @Nullable
-    private final String eTag;
-
-    @Nullable
     private final List<Tag> tags;
 
-    public Favorite(@Nullable String name, @Nullable List<Tag> tags) {
-        this(generateKey(), currentTimeMillis(), name, null, false, false, false, tags);
+    @NonNull
+    private final SyncState state;
+
+    public Favorite(String name, List<Tag> tags) {
+        this(generateKey(), name, tags);
     }
 
-    public Favorite(@NonNull String id, @Nullable String name, @Nullable List<Tag> tags) {
-        this(id, currentTimeMillis(), name, null, false, false, false, tags);
+    public Favorite(String id, String name, List<Tag> tags) {
+        this(id, name, tags, new SyncState());
+    }
+
+    public Favorite(String id, String name, List<Tag> tags, SyncState state) {
+        this(id, currentTimeMillis(), name, tags, state);
     }
 
     public Favorite(
-            @NonNull String id, long added, @Nullable String name, @Nullable String eTag,
-            boolean conflicted, boolean deleted, boolean synced, @Nullable List<Tag> tags) {
+            @NonNull String id, long added, @Nullable String name, @Nullable List<Tag> tags,
+            @NonNull SyncState state) {
         this.id = checkNotNull(id);
-
         this.added = added;
-
         this.name = name;
-        this.eTag = eTag;
-
-        setSyncState(conflicted, deleted, synced);
-
         this.tags = tags;
+        this.state = checkNotNull(state);
     }
 
-    public static long rowIdFrom(Cursor cursor) {
-        return cursor.getLong(cursor.getColumnIndexOrThrow(LocalContract.FavoriteEntry._ID));
+    public Favorite(Favorite favorite, @NonNull SyncState state) {
+        this(favorite.getId(), favorite.getAdded(), favorite.getName(), favorite.getTags(), state);
     }
 
     public static Favorite from(Cursor cursor, List<Tag> tags) {
+        SyncState state = SyncState.from(cursor);
+
         String id = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID));
-
         long added = cursor.getLong(cursor.getColumnIndexOrThrow(
                 LocalContract.FavoriteEntry.COLUMN_NAME_ADDED));
-
         String name = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.FavoriteEntry.COLUMN_NAME_NAME));
-        String eTag = cursor.getString(cursor.getColumnIndexOrThrow(
-                LocalContract.FavoriteEntry.COLUMN_NAME_ETAG));
 
-        boolean conflicted = cursor.getInt(cursor.getColumnIndexOrThrow(
-                LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED)) == 1;
-        boolean deleted = cursor.getInt(cursor.getColumnIndexOrThrow(
-                LocalContract.FavoriteEntry.COLUMN_NAME_DELETED)) == 1;
-        boolean synced = cursor.getInt(cursor.getColumnIndexOrThrow(
-                LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED)) == 1;
-
-        return new Favorite(id, added, name, eTag, conflicted, deleted, synced, tags);
+        return new Favorite(id, added, name, tags, state);
     }
 
     public static Favorite from(ContentValues values, List<Tag> tags) {
+        SyncState state = SyncState.from(values);
+
         String id = values.getAsString(LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID);
-
         long added = values.getAsLong(LocalContract.FavoriteEntry.COLUMN_NAME_ADDED);
-
         String name = values.getAsString(LocalContract.FavoriteEntry.COLUMN_NAME_NAME);
-        String eTag = values.getAsString(LocalContract.FavoriteEntry.COLUMN_NAME_ETAG);
 
-        boolean conflicted = values.getAsBoolean(LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED);
-        boolean deleted = values.getAsBoolean(LocalContract.FavoriteEntry.COLUMN_NAME_DELETED);
-        boolean synced = values.getAsBoolean(LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED);
-
-        return new Favorite(id, added, name, eTag, conflicted, deleted, synced, tags);
+        return new Favorite(id, added, name, tags, state);
     }
 
-    public static Favorite from(String jsonFavoriteString) {
+    @Nullable
+    public static Favorite from(String jsonFavoriteString, SyncState state) {
         try {
             JSONObject jsonFavorite = new JSONObject(jsonFavoriteString);
-            return from(jsonFavorite);
+            return from(jsonFavorite, state);
         } catch (JSONException e) {
             Log.v(TAG, "Exception while processing Favorite JSON string");
-            return new Favorite(null, null);
+            return null;
         }
     }
 
-    public static Favorite from(JSONObject jsonFavorite) {
+    @Nullable
+    public static Favorite from(JSONObject jsonFavorite, SyncState state) {
         try {
             String id = jsonFavorite.getString(JSON_PROPERTY_ID);
             String name = jsonFavorite.getString(JSON_PROPERTY_NAME);
@@ -131,22 +116,19 @@ public final class Favorite extends SyncState {
             for (int i = 0; i < jsonTags.length(); i++) {
                 tags.add(Tag.from(jsonTags.getJSONObject(i)));
             }
-            return new Favorite(id, name, tags);
+            return new Favorite(id, name, tags, state);
         } catch (JSONException e) {
             Log.v(TAG, "Exception while processing Favorite JSON object");
-            return new Favorite(null, null);
+            return null;
         }
     }
 
     public ContentValues getContentValues() {
-        ContentValues values = getSyncStateValues();
+        ContentValues values = state.getContentValues();
 
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID, getId());
-
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_ADDED, getAdded());
-
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_NAME, getName());
-        values.put(LocalContract.FavoriteEntry.COLUMN_NAME_ETAG, getETag());
 
         return values;
     }
@@ -161,6 +143,35 @@ public final class Favorite extends SyncState {
         return tags;
     }
 
+    public long getRowId() {
+        return state.getRowId();
+    }
+
+    @Nullable
+    public String getETag() {
+        return state.getETag();
+    }
+
+    public int getDuplicated() {
+        return state.getDuplicated();
+    }
+
+    public boolean isDuplicated() {
+        return state.isDuplicated();
+    }
+
+    public boolean isConflicted() {
+        return state.isConflicted();
+    }
+
+    public boolean isDeleted() {
+        return state.isDeleted();
+    }
+
+    public boolean isSynced() {
+        return state.isSynced();
+    }
+
     @NonNull
     public String getId() {
         return id;
@@ -173,11 +184,6 @@ public final class Favorite extends SyncState {
     @Nullable
     public String getName() {
         return name;
-    }
-
-    @Nullable
-    public String getETag() {
-        return eTag;
     }
 
     @Nullable
@@ -213,16 +219,6 @@ public final class Favorite extends SyncState {
             return null;
         }
         return jsonFavorite;
-    }
-
-    @NonNull
-    public String getFileName() {
-        return id + CloudUtils.getFileExtension();
-    }
-
-    @NonNull
-    public String getTempFileName() {
-        return id + "." + CloudUtils.getApplicationId();
     }
 
     public boolean isEmpty() {

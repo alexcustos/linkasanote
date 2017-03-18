@@ -46,16 +46,14 @@ public class CheckCredentialsOperation extends RemoteOperation {
             String location = path.getLastPermanentLocation();
             result.setLastPermanentLocation(location);
         }
-
         if (result.isSuccess()) {
+            // NOTE: user display name is updated during synchronization
             GetRemoteUserInfoOperation infoOperation = new GetRemoteUserInfoOperation();
             result = infoOperation.execute(client);
         }
-
         if (result.isSuccess()) {
             result.getData().add(credentials);
         }
-
         return result;
     }
 }

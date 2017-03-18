@@ -77,11 +77,11 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     }
 
     private void loadFavorites(boolean forceUpdate, final boolean showLoading) {
-        // TODO: implement SwipeRefreshLayout and cache invalidation
         EspressoIdlingResource.increment();
         disposable.clear();
 
         Disposable disposable = repository.getFavorites()
+                .toList()
                 // TODO: implement filter
                 //.flatMap(Observable::from)
                 //.filter(favorite -> {...})
@@ -103,26 +103,27 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     }
 
     @Override
-    public void onFavoriteClick(int position) {
+    public void onFavoriteClick(String favoriteId) {
         // TODO: normal mode selection must highlight current favorite filter
         if (viewModel.isActionMode()) {
-            onFavoriteSelected(position);
+            onFavoriteSelected(favoriteId);
         }
     }
 
     @Override
-    public boolean onFavoriteLongClick(int position) {
+    public boolean onFavoriteLongClick(String favoriteId) {
         view.enableActionMode();
-        onFavoriteSelected(position);
+        onFavoriteSelected(favoriteId);
         return true;
     }
 
     @Override
-    public void onCheckboxClick(int position) {
-        onFavoriteSelected(position);
+    public void onCheckboxClick(String favoriteId) {
+        onFavoriteSelected(favoriteId);
     }
 
-    private void onFavoriteSelected(int position) {
+    private void onFavoriteSelected(String favoriteId) {
+        int position = view.getPosition(favoriteId);
         viewModel.toggleSelection(position);
         view.selectionChanged(position);
     }
@@ -146,7 +147,13 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         for (int selectedId : selectedIds) {
             viewModel.removeSelection(selectedId);
             String favoriteId = view.removeFavorite(selectedId);
+            // TODO: check NullPointerException
             repository.deleteFavorite(favoriteId);
         }
     } // onDeleteClick
+
+    @Override
+    public int getPosition(String favoriteId) {
+        return view.getPosition(favoriteId);
+    }
 }

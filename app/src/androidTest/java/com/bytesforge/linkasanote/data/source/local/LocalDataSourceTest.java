@@ -6,7 +6,7 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
 
-import com.bytesforge.linkasanote.TestUtils;
+import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
@@ -42,7 +42,7 @@ public class LocalDataSourceTest {
 
     @Before
     public void setupLocalDataSource() {
-        FAVORITES = TestUtils.buildFavorites();
+        FAVORITES = AndroidTestUtils.buildFavorites();
         localDataSource = new LocalDataSource(contentResolver);
         cleanupLocalDataSource();
     }
@@ -71,13 +71,13 @@ public class LocalDataSourceTest {
     @Test
     public void getFavorites_retrievesSavedFavorites() {
         // Preconditions
-        testFavoritesObserver = localDataSource.getFavorites().test();
+        testFavoritesObserver = localDataSource.getFavorites().toList().test();
         testFavoritesObserver.assertValue(Collections.emptyList());
         for (Favorite favorite : FAVORITES) {
             localDataSource.saveFavorite(favorite);
         }
         // Test
-        testFavoritesObserver = localDataSource.getFavorites().test();
+        testFavoritesObserver = localDataSource.getFavorites().toList().test();
         testFavoritesObserver.assertValue(FAVORITES);
     }
 
@@ -87,11 +87,11 @@ public class LocalDataSourceTest {
         for (Favorite favorite : FAVORITES) {
             localDataSource.saveFavorite(favorite);
         }
-        testFavoritesObserver = localDataSource.getFavorites().test();
+        testFavoritesObserver = localDataSource.getFavorites().toList().test();
         testFavoritesObserver.assertValue(FAVORITES);
         // Test
         localDataSource.deleteAllFavorites();
-        testFavoritesObserver = localDataSource.getFavorites().test();
+        testFavoritesObserver = localDataSource.getFavorites().toList().test();
         testFavoritesObserver.assertValue(Collections.emptyList());
     }
 
@@ -101,12 +101,12 @@ public class LocalDataSourceTest {
         for (Favorite favorite : FAVORITES) {
             localDataSource.saveFavorite(favorite);
         }
-        testFavoritesObserver = localDataSource.getFavorites().test();
+        testFavoritesObserver = localDataSource.getFavorites().toList().test();
         testFavoritesObserver.assertValue(FAVORITES);
         // Test
         Favorite favorite = FAVORITES.remove(0);
         localDataSource.deleteFavorite(favorite.getId());
-        testFavoritesObserver = localDataSource.getFavorites().test();
+        testFavoritesObserver = localDataSource.getFavorites().toList().test();
         testFavoritesObserver.assertValue(FAVORITES);
     }
 }

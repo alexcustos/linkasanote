@@ -1,24 +1,30 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.support.annotation.NonNull;
-import android.support.v7.util.DiffUtil;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.databinding.ItemFavoritesBinding;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.ViewHolder> {
 
+    private static final String TAG = FavoritesAdapter.class.getSimpleName();
+
     private final FavoritesContract.Presenter presenter;
     private final FavoritesViewModel viewModel;
 
     private List<Favorite> favorites;
+    private Map<String, Integer> positionMap;
 
     public FavoritesAdapter(
             @NonNull List<Favorite> favorites,
@@ -27,6 +33,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         this.favorites = checkNotNull(favorites);
         this.presenter = checkNotNull(presenter);
         this.viewModel = checkNotNull(viewModel);
+        setHasStableIds(true);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -40,11 +47,10 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
 
         public void bind(
                 Favorite favorite, FavoritesContract.Presenter presenter,
-                FavoritesViewModel viewModel, Integer position) {
+                FavoritesViewModel viewModel) {
             binding.setFavorite(favorite);
             binding.setPresenter(presenter);
             binding.setViewModel(viewModel); // NOTE: global viewModel for fragment and all items
-            binding.setPosition(position);
 
             binding.executePendingBindings();
         }
@@ -61,7 +67,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Favorite favorite = favorites.get(position);
-        holder.bind(favorite, presenter, viewModel, position);
+        holder.bind(favorite, presenter, viewModel);
     }
 
     @Override
@@ -69,11 +75,17 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         return favorites.size();
     }
 
+    @Override
+    public long getItemId(int position) {
+        return favorites.get(position).getRowId();
+    }
+
     // Items
 
     @NonNull
     public Favorite removeItem(int position) {
         Favorite favorite = favorites.remove(position);
+        updatePositionMap();
         notifyItemRemoved(position);
         return favorite;
     }
@@ -81,47 +93,34 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     public void swapItems(@NonNull List<Favorite> favorites) {
         checkNotNull(favorites);
 
-        final FavoritesDiffCallback diffCallback =
-                new FavoritesDiffCallback(this.favorites, favorites);
-        final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
-
-        this.favorites.clear();
-        this.favorites.addAll(favorites);
-        diffResult.dispatchUpdatesTo(this);
+        this.favorites = favorites;
+        updatePositionMap();
+        notifyDataSetChanged();
     }
 
-    public class FavoritesDiffCallback extends DiffUtil.Callback {
+    public int getPosition(@Nullable String favoriteId) {
+        if (favoriteId == null) return 0;
 
-        private List<Favorite> oldList;
-        private List<Favorite> newList;
-
-        public FavoritesDiffCallback(List<Favorite> oldList, List<Favorite> newList) {
-            this.oldList = oldList;
-            this.newList = newList;
+        Integer position = positionMap.get(favoriteId);
+        if (position == null) {
+            Log.e(TAG, "No position is found for Favorite [" + favoriteId + "]");
+            return 0;
         }
+        return position;
+    }
 
-        @Override
-        public int getOldListSize() {
-            return oldList.size();
+    private void updatePositionMap() {
+        if (favorites == null) return;
+
+        int size = favorites.size();
+        if (positionMap == null) {
+            positionMap = new LinkedHashMap<>(size);
+        } else {
+            positionMap.clear();
         }
-
-        @Override
-        public int getNewListSize() {
-            return newList.size();
+        for (int i = 0; i < size; i++) {
+            Favorite favorite = favorites.get(i);
+            positionMap.put(favorite.getId(), i);
         }
-
-        @Override
-        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-            return oldList.get(oldItemPosition).getId()
-                    .equals(newList.get(newItemPosition).getId());
-        }
-
-        @Override
-        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            Favorite oldFavorite = oldList.get(oldItemPosition);
-            Favorite newFavorite = newList.get(newItemPosition);
-
-            return oldFavorite.equals(newFavorite);
-        }
-    } // class
+    } // updatePositionMap
 }

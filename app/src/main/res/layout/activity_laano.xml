@@ -17,6 +17,7 @@
             android:orientation="vertical">
 
             <android.support.design.widget.AppBarLayout
+                android:id="@+id/app_bar_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -51,11 +52,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/fab_margin"
+                android:layout_gravity="end|bottom"
                 android:src="@drawable/ic_add"
-                app:fabSize="normal"
-                app:layout_anchor="@id/laano_view_pager"
-                app:layout_anchorGravity="bottom|right|end"
-                app:layout_behavior="@string/scroll_aware_fab_behavior" />
+                app:fabSize="normal" />
         </android.support.design.widget.CoordinatorLayout>
 
         <!-- Navigation Drawer -->

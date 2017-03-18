@@ -1,25 +1,26 @@
 package com.bytesforge.linkasanote.sync.files;
 
-import android.accounts.Account;
-import android.content.ContentValues;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-import com.bytesforge.linkasanote.data.source.local.LocalContract;
-import com.bytesforge.linkasanote.sync.SyncState;
+import com.bytesforge.linkasanote.utils.CloudUtils;
+import com.bytesforge.linkasanote.utils.UuidUtils;
 import com.google.common.base.Objects;
+
+import java.io.File;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class JsonFile extends SyncState implements Parcelable, Comparable<JsonFile> {
+public class JsonFile implements Parcelable, Comparable<JsonFile> {
 
     private static final String MIME_TYPE = "application/json";
+    private static final String FILE_EXTENSION = ".json";
 
     public static final String PATH_SEPARATOR = "/";
 
-    private Uri uri;
     private long length;
     private String localPath;
     private String remotePath;
@@ -44,15 +45,22 @@ public class JsonFile extends SyncState implements Parcelable, Comparable<JsonFi
             throw new IllegalArgumentException(
                     "Remote path must be absolute [" + remotePath + "]");
         }
-        uri = null;
         length = 0;
         localPath = null;
         this.remotePath = remotePath;
         eTag = null;
     }
 
+    public JsonFile(@NonNull String localPath, @NonNull String remotePath) {
+        this(remotePath);
+        checkNotNull(localPath);
+
+        this.localPath = localPath;
+        File localFile = new File(localPath);
+        length = localFile.length();
+    }
+
     protected JsonFile(Parcel in) {
-        uri = Uri.parse(in.readString());
         length = in.readLong();
         localPath = in.readString();
         remotePath = in.readString();
@@ -66,7 +74,6 @@ public class JsonFile extends SyncState implements Parcelable, Comparable<JsonFi
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(uri.toString());
         dest.writeLong(length);
         dest.writeString(localPath);
         dest.writeString(remotePath);
@@ -94,14 +101,6 @@ public class JsonFile extends SyncState implements Parcelable, Comparable<JsonFi
     }
 
     // Getters & Setters
-
-    public Uri getUri() {
-        return uri;
-    }
-
-    public void setUri(Uri uri) {
-        this.uri = uri;
-    }
 
     public String getRemotePath() {
         return remotePath;
@@ -131,15 +130,30 @@ public class JsonFile extends SyncState implements Parcelable, Comparable<JsonFi
         this.eTag = eTag;
     }
 
-    public String getKey(@NonNull Account account) {
-        checkNotNull(account);
-        return account.name + getRemotePath();
+    @NonNull
+    public static String getFileName(@NonNull String id) {
+        return checkNotNull(id) + FILE_EXTENSION;
     }
 
     @NonNull
-    public ContentValues getUpdateValues() {
-        ContentValues values = getSyncStateValues();
-        values.put(LocalContract.COMMON_NAME_ETAG, getETag());
-        return values;
+    public static String getTempFileName(@NonNull String id) {
+        return checkNotNull(id) + "." + CloudUtils.getApplicationId();
+    }
+
+    @Nullable
+    public static String getId(String mimeType, String filePath) {
+        if (mimeType == null || filePath == null) return null;
+        if (!mimeType.equals(MIME_TYPE)) return null;
+
+        String id = Uri.parse(filePath).getLastPathSegment();
+        if (id != null && id.endsWith(FILE_EXTENSION)) {
+            id = id.substring(0, id.length() - FILE_EXTENSION.length());
+        } else {
+            return null;
+        }
+        if (UuidUtils.isKeyValidUuid(id)) {
+            return id;
+        }
+        return null;
     }
 }

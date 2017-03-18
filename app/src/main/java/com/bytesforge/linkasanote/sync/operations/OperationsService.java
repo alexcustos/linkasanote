@@ -98,7 +98,7 @@ public class OperationsService extends Service {
             if (hasListener()) {
                 handler.post(() -> listener.onRemoteOperationFinish(operation, result));
             }
-        }
+        } // dispatchResult
     }
 
     @Override
@@ -145,12 +145,10 @@ public class OperationsService extends Service {
             synchronized (pendingOperations) {
                 operationItem = pendingOperations.poll();
             }
-
             if (operationItem != null) {
                 RemoteOperationResult result = executeOperationItem(operationItem);
                 operationItem.dispatchResult(result);
             }
-
             Log.d(TAG, "End of processing message with id " + msg.arg1);
         }
 
@@ -177,7 +175,6 @@ public class OperationsService extends Service {
                 result = new RemoteOperationResult(e);
                 // TODO: check if the item should be placed back to the queue for some reason
             }
-
             return result;
         } // executePendingOperation
     } // Handler
@@ -204,7 +201,6 @@ public class OperationsService extends Service {
             throw new InvalidParameterException(
                     "At least one of the following EXTRA must be specified: ACCOUNT, SERVER_URL");
         }
-
         Account account = intent.getParcelableExtra(EXTRA_ACCOUNT);
         String serverUrl = intent.getStringExtra(EXTRA_SERVER_URL);
         Target target = new Target(
@@ -219,11 +215,9 @@ public class OperationsService extends Service {
                     intent.getStringExtra(EXTRA_SERVER_VERSION));
             operation = new CheckCredentialsOperation(credentials, serverVersion);
         }
-
         if (operation == null) {
             throw new UnsupportedOperationException("OperationItem not supported: " + action);
         }
-
         return new OperationItem(target, operation, listener, handler);
     }
 

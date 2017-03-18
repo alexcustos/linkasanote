@@ -1,11 +1,13 @@
 package com.bytesforge.linkasanote.data.source;
 
+import android.accounts.AccountManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Singleton;
 
@@ -25,8 +27,12 @@ public class RepositoryModule {
     @Provides
     @Singleton
     @Cloud
-    public DataSource provideCloudDataSource(Context context, SharedPreferences sharedPreferences) {
-        return new CloudDataSource(context, sharedPreferences);
+    public DataSource provideCloudDataSource(
+            Context context, SharedPreferences sharedPreferences,
+            ContentResolver contentResolver, BaseSchedulerProvider schedulerProvider,
+            AccountManager accountManager) {
+        return new CloudDataSource(context, sharedPreferences,
+                contentResolver, schedulerProvider, accountManager);
     }
 
     @Provides

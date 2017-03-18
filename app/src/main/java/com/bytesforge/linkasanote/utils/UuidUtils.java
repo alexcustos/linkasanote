@@ -37,11 +37,11 @@ public class UuidUtils {
             return new UUID(byteBuffer.getLong(), byteBuffer.getLong());
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "Invalid UUID key was detected [" + key + "]", e);
-            return null;
         }
+        return null;
     }
 
     public static boolean isKeyValidUuid(String key) {
-        return key.length() == KEY_LENGTH && uuidFromKey(key) != null;
+        return key.length() == KEY_LENGTH; // && uuidFromKey(key) != null;
     }
 }

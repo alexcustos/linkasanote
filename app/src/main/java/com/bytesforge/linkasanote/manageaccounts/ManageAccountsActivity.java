@@ -31,7 +31,6 @@ public class ManageAccountsActivity extends AppCompatActivity {
     @Inject
     ManageAccountsPresenter presenter;
 
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +56,7 @@ public class ManageAccountsActivity extends AppCompatActivity {
         // Presenter
         LaanoApplication application = (LaanoApplication) getApplication();
         application.getApplicationComponent()
-                .getManageAccountsComponent(new ManageAccountsPresenterModule(this, fragment))
+                .getManageAccountsComponent(new ManageAccountsPresenterModule(fragment))
                 .inject(this);
         // Accounts
         if (savedInstanceState != null) {

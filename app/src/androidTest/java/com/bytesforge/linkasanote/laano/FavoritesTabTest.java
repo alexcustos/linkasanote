@@ -9,12 +9,12 @@ import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.ApplicationComponent;
 import com.bytesforge.linkasanote.ApplicationModule;
 import com.bytesforge.linkasanote.DaggerApplicationComponent;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Cloud;
 import com.bytesforge.linkasanote.data.source.DataSource;
@@ -36,7 +36,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.Single;
+import io.reactivex.Observable;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
@@ -99,18 +99,20 @@ public class FavoritesTabTest {
 
     public FavoritesTabTest() {
         MockitoAnnotations.initMocks(this);
-        FAVORITES = TestUtils.buildFavorites();
+        FAVORITES = AndroidTestUtils.buildFavorites();
     }
 
     private ApplicationComponent setupMockApplicationComponent(Repository repository) {
         ApplicationComponent oldApplicationComponent = laanoApplication.getApplicationComponent();
-        /*RepositoryModule repositoryModule = Mockito.spy(new RepositoryModule());
+        /* EXAMPLE: how to partially mock the module
+        RepositoryModule repositoryModule = Mockito.spy(new RepositoryModule());
         Mockito.doReturn(repository).when(repositoryModule)
                 .provideRepository(any(DataSource.class), any(DataSource.class));*/
         ApplicationComponent applicationComponent = DaggerApplicationComponent.builder()
                 .applicationModule(new ApplicationModule(laanoApplication))
                 .settingsModule(new SettingsModule())
                 .repositoryModule(new RepositoryModule() {
+
                     @Override
                     public Repository provideRepository(
                             @Local DataSource localDataSource,
@@ -159,13 +161,13 @@ public class FavoritesTabTest {
 
     @Test
     public void addFavoritesToFavoritesRecyclerView_CheckIfPersistOnOrientationChange() {
-        when(mockRepository.getFavorites()).thenReturn(Single.just(FAVORITES));
+        when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(FAVORITES));
         laanoActivityTestRule.launchActivity(null);
 
         for (Favorite favorite : FAVORITES) {
             onView(withItemTextRV(favorite.getName())).check(matches(isDisplayed()));
         }
-        TestUtils.rotateOrientation(laanoActivityTestRule);
+        AndroidTestUtils.rotateOrientation(laanoActivityTestRule);
         for (Favorite favorite : FAVORITES) {
             onView(withItemTextRV(favorite.getName())).check(matches(isDisplayed()));
         }
@@ -175,7 +177,7 @@ public class FavoritesTabTest {
     public void clickOnActionModeMenuItem_switchesToActionMode() {
         List<Favorite> favorites = new ArrayList<>();
         favorites.add(FAVORITES.get(0));
-        when(mockRepository.getFavorites()).thenReturn(Single.just(favorites));
+        when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
         laanoActivityTestRule.launchActivity(null);
 
         openActionBarOverflowOrOptionsMenu(context);
@@ -193,7 +195,7 @@ public class FavoritesTabTest {
     public void longClickOnRecyclerViewItem_switchesToActionModeAndSelectCurrentOne() {
         List<Favorite> favorites = new ArrayList<>();
         favorites.add(FAVORITES.get(0));
-        when(mockRepository.getFavorites()).thenReturn(Single.just(favorites));
+        when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
         laanoActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.rv_favorites))
@@ -210,12 +212,12 @@ public class FavoritesTabTest {
     public void actionMode_persistsOnOrientationChange() {
         List<Favorite> favorites = new ArrayList<>();
         favorites.add(FAVORITES.get(0));
-        when(mockRepository.getFavorites()).thenReturn(Single.just(favorites));
+        when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
         laanoActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.rv_favorites))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));
-        TestUtils.rotateOrientation(laanoActivityTestRule);
+        AndroidTestUtils.rotateOrientation(laanoActivityTestRule);
         onView(withText(context.getResources()
                 .getString(R.string.laano_favorites_action_mode_selected, 1)))
                 .check(matches(isDisplayed()));
@@ -228,7 +230,7 @@ public class FavoritesTabTest {
     public void tagChange_disablesActionMode() {
         List<Favorite> favorites = new ArrayList<>();
         favorites.add(FAVORITES.get(0));
-        when(mockRepository.getFavorites()).thenReturn(Single.just(favorites));
+        when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
         laanoActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.rv_favorites))

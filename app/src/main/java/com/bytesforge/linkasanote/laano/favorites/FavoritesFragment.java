@@ -133,7 +133,9 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
 
         adapter.swapItems(favorites);
         viewModel.setFavoriteListSize(favorites.size());
-        if (viewModel.isActionMode()) enableActionMode();
+        if (viewModel.isActionMode()) {
+            enableActionMode();
+        }
     }
 
     @Override
@@ -196,6 +198,11 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     public void selectionChanged(int position) {
         adapter.notifyItemChanged(position);
         updateActionModeTitle();
+    }
+
+    @Override
+    public int getPosition(String favoriteId) {
+        return adapter.getPosition(favoriteId);
     }
 
     private void updateActionModeTitle() {

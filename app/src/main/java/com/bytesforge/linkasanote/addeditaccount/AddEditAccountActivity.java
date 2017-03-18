@@ -47,6 +47,9 @@ public class AddEditAccountActivity extends AppCompatActivity implements
     @Inject
     NextcloudPresenter presenter;
 
+    @Inject
+    AccountManager accountManager;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,8 +71,9 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         }
         // Presenter
         LaanoApplication application = (LaanoApplication) getApplication();
-        application.getApplicationComponent().getAddEditAccountComponent(
-                new NextcloudPresenterModule(this, nextcloudFragment, account))
+        application.getApplicationComponent()
+                .getAddEditAccountComponent(
+                        new NextcloudPresenterModule(nextcloudFragment, account))
                 .inject(this);
     }
 
@@ -127,7 +131,6 @@ public class AddEditAccountActivity extends AppCompatActivity implements
     }
 
     private boolean accountCanBeProcessed() {
-        AccountManager accountManager = AccountManager.get(this);
         Account[] accounts = CloudUtils.getAccountsWithPermissionCheck(this, accountManager);
 
         return !presenter.isNewAccount()

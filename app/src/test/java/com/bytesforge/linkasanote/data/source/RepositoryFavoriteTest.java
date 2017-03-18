@@ -12,12 +12,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,7 +53,7 @@ public class RepositoryFavoriteTest {
         setFavoritesAvailable(localDataSource, FAVORITES);
         setFavoritesNotAvailable(cloudDataSource);
 
-        testFavoritesObserver = repository.getFavorites().test();
+        testFavoritesObserver = repository.getFavorites().toList().test();
         verify(localDataSource).getFavorites();
         testFavoritesObserver.assertValue(FAVORITES);
     }
@@ -75,30 +77,29 @@ public class RepositoryFavoriteTest {
         repository.saveFavorite(favorite);
         verify(localDataSource).saveFavorite(favorite);
         verify(cloudDataSource).saveFavorite(favorite);
-        assertThat(repository.cachedFavorites.size(), is(1));
+        assertThat(repository.favoriteCacheIsDirty, is(true));
     }
 
     @Test
     public void deleteAllFavorites_deleteFavoritesFromLocalAndCloudStorage() {
-        for (Favorite favorite : FAVORITES) {
-            repository.saveFavorite(favorite);
-        }
+        setFavoritesAvailable(localDataSource, FAVORITES);
+        testFavoritesObserver = repository.getFavorites().toList().test();
         assertThat(repository.cachedFavorites.size(), is(FAVORITES.size()));
 
         repository.deleteAllFavorites();
         verify(localDataSource).deleteAllFavorites();
-        verify(cloudDataSource).deleteAllFavorites();
+        verify(cloudDataSource, never()).deleteAllFavorites();
         assertThat(repository.cachedFavorites.size(), is(0));
     }
 
     // Data setup
 
     private void setFavoritesAvailable(DataSource dataSource, List<Favorite> favorites) {
-        when(dataSource.getFavorites()).thenReturn(Single.just(favorites));
+        when(dataSource.getFavorites()).thenReturn(Observable.fromIterable(favorites));
     }
 
     private void setFavoritesNotAvailable(DataSource dataSource) {
-        when(dataSource.getFavorites()).thenReturn(Single.just(Collections.emptyList()));
+        when(dataSource.getFavorites()).thenReturn(Observable.fromIterable(Collections.emptyList()));
     }
 
     private void setFavoriteAvailable(DataSource dataSource, Favorite favorite) {

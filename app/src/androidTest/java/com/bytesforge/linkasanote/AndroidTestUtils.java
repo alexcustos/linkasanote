@@ -29,7 +29,7 @@ import java.util.List;
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.runner.lifecycle.Stage.RESUMED;
 
-public class TestUtils {
+public class AndroidTestUtils {
 
     public static String KEY_PREFIX = CommonUtils.charRepeat('A', 21);
 
