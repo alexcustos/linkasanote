@@ -28,14 +28,22 @@ public final class Favorite {
     private static final String TAG = Favorite.class.getSimpleName();
 
     public static final String CLOUD_DIRECTORY = "favorites";
+
+    private static final int JSON_VERSION = 1;
+    private static final String JSON_CONTAINER_VERSION = "version";
+    private static final String JSON_CONTAINER_FAVORITE = "favorite";
+
     private static final String JSON_PROPERTY_ID = "id";
+    private static final String JSON_PROPERTY_CREATED = "created";
+    private static final String JSON_PROPERTY_UPDATED = "updated";
     private static final String JSON_PROPERTY_NAME = "name";
     private static final String JSON_PROPERTY_TAGS = "tags";
 
     @NonNull
     private final String id;
 
-    private final long added;
+    private final long created;
+    private final long updated;
 
     @Nullable
     private final String name;
@@ -47,29 +55,32 @@ public final class Favorite {
     private final SyncState state;
 
     public Favorite(String name, List<Tag> tags) {
-        this(generateKey(), name, tags);
+        this(generateKey(), currentTimeMillis(), currentTimeMillis(), name, tags, new SyncState());
     }
 
     public Favorite(String id, String name, List<Tag> tags) {
-        this(id, name, tags, new SyncState());
+        // NOTE: updating syncState must not change entry update time
+        this(id, 0, currentTimeMillis(), name, tags, new SyncState());
     }
 
     public Favorite(String id, String name, List<Tag> tags, SyncState state) {
-        this(id, currentTimeMillis(), name, tags, state);
+        this(id, 0, currentTimeMillis(), name, tags, state);
     }
 
     public Favorite(
-            @NonNull String id, long added, @Nullable String name, @Nullable List<Tag> tags,
-            @NonNull SyncState state) {
+            @NonNull String id, long created, long updated, @Nullable String name,
+            @Nullable List<Tag> tags, @NonNull SyncState state) {
         this.id = checkNotNull(id);
-        this.added = added;
+        this.created = created;
+        this.updated = updated;
         this.name = name;
         this.tags = tags;
         this.state = checkNotNull(state);
     }
 
     public Favorite(Favorite favorite, @NonNull SyncState state) {
-        this(favorite.getId(), favorite.getAdded(), favorite.getName(), favorite.getTags(), state);
+        this(favorite.getId(), favorite.getCreated(), favorite.getUpdated(), favorite.getName(),
+                favorite.getTags(), state);
     }
 
     public static Favorite from(Cursor cursor, List<Tag> tags) {
@@ -77,22 +88,25 @@ public final class Favorite {
 
         String id = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID));
-        long added = cursor.getLong(cursor.getColumnIndexOrThrow(
-                LocalContract.FavoriteEntry.COLUMN_NAME_ADDED));
+        long created = cursor.getLong(cursor.getColumnIndexOrThrow(
+                LocalContract.FavoriteEntry.COLUMN_NAME_CREATED));
+        long updated = cursor.getLong(cursor.getColumnIndexOrThrow(
+                LocalContract.FavoriteEntry.COLUMN_NAME_UPDATED));
         String name = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.FavoriteEntry.COLUMN_NAME_NAME));
 
-        return new Favorite(id, added, name, tags, state);
+        return new Favorite(id, created, updated, name, tags, state);
     }
 
     public static Favorite from(ContentValues values, List<Tag> tags) {
         SyncState state = SyncState.from(values);
 
         String id = values.getAsString(LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID);
-        long added = values.getAsLong(LocalContract.FavoriteEntry.COLUMN_NAME_ADDED);
+        long created = values.getAsLong(LocalContract.FavoriteEntry.COLUMN_NAME_CREATED);
+        long updated = values.getAsLong(LocalContract.FavoriteEntry.COLUMN_NAME_UPDATED);
         String name = values.getAsString(LocalContract.FavoriteEntry.COLUMN_NAME_NAME);
 
-        return new Favorite(id, added, name, tags, state);
+        return new Favorite(id, created, updated, name, tags, state);
     }
 
     @Nullable
@@ -107,16 +121,29 @@ public final class Favorite {
     }
 
     @Nullable
-    public static Favorite from(JSONObject jsonFavorite, SyncState state) {
+    public static Favorite from(JSONObject jsonContainer, SyncState state) {
+        int version;
         try {
+            version = jsonContainer.getInt(JSON_CONTAINER_VERSION);
+        } catch (JSONException e) {
+            Log.v(TAG, "Exception while checking Favorite JSON object version");
+            return null;
+        }
+        if (version != JSON_VERSION) {
+            Log.v(TAG, "An unsupported version of JSON object was detected [" + version + "]");
+        }
+        try {
+            JSONObject jsonFavorite = jsonContainer.getJSONObject(JSON_CONTAINER_FAVORITE);
             String id = jsonFavorite.getString(JSON_PROPERTY_ID);
+            long created = jsonFavorite.getLong(JSON_PROPERTY_CREATED);
+            long updated = jsonFavorite.getLong(JSON_PROPERTY_UPDATED);
             String name = jsonFavorite.getString(JSON_PROPERTY_NAME);
             JSONArray jsonTags = jsonFavorite.getJSONArray(JSON_PROPERTY_TAGS);
             List<Tag> tags = new ArrayList<>();
             for (int i = 0; i < jsonTags.length(); i++) {
                 tags.add(Tag.from(jsonTags.getJSONObject(i)));
             }
-            return new Favorite(id, name, tags, state);
+            return new Favorite(id, created, updated, name, tags, state);
         } catch (JSONException e) {
             Log.v(TAG, "Exception while processing Favorite JSON object");
             return null;
@@ -127,7 +154,12 @@ public final class Favorite {
         ContentValues values = state.getContentValues();
 
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID, getId());
-        values.put(LocalContract.FavoriteEntry.COLUMN_NAME_ADDED, getAdded());
+        long created = getCreated();
+        if (created > 0) {
+            // NOTE: CURRENT_TIMESTAMP will add another dateTime format to maintain
+            values.put(LocalContract.FavoriteEntry.COLUMN_NAME_CREATED, created);
+        }
+        values.put(LocalContract.FavoriteEntry.COLUMN_NAME_UPDATED, getUpdated());
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_NAME, getName());
 
         return values;
@@ -177,8 +209,12 @@ public final class Favorite {
         return id;
     }
 
-    public long getAdded() {
-        return added;
+    public long getCreated() {
+        return created;
+    }
+
+    public long getUpdated() {
+        return updated;
     }
 
     @Nullable
@@ -206,19 +242,25 @@ public final class Favorite {
         if (isEmpty()) return null;
         assert tags != null;
 
-        JSONObject jsonFavorite = new JSONObject();
+        JSONObject jsonContainer = new JSONObject();
         try {
+            JSONObject jsonFavorite = new JSONObject();
             jsonFavorite.put(JSON_PROPERTY_ID, id);
+            jsonFavorite.put(JSON_PROPERTY_CREATED, created);
+            jsonFavorite.put(JSON_PROPERTY_UPDATED, updated);
             jsonFavorite.put(JSON_PROPERTY_NAME, name);
             JSONArray jsonTags = new JSONArray();
             for (Tag tag : tags) {
                 jsonTags.put(tag.getJsonObject());
             }
             jsonFavorite.put(JSON_PROPERTY_TAGS, jsonTags);
+            // Container
+            jsonContainer.put(JSON_CONTAINER_VERSION, JSON_VERSION);
+            jsonContainer.put(JSON_CONTAINER_FAVORITE, jsonFavorite);
         } catch (JSONException e) {
             return null;
         }
-        return jsonFavorite;
+        return jsonContainer;
     }
 
     public boolean isEmpty() {

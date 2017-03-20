@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.utils;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 import java.net.IDN;
@@ -44,5 +45,9 @@ public class CommonUtils {
         Arrays.fill(buffer, ch);
 
         return new String(buffer);
+    }
+
+    public static String getTempDir(@NonNull Context context) {
+        return checkNotNull(context).getCacheDir().getAbsolutePath();
     }
 }

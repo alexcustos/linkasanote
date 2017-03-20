@@ -2,6 +2,7 @@ package com.bytesforge.linkasanote.data.source.cloud;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -10,6 +11,7 @@ import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation;
 import com.bytesforge.linkasanote.utils.CloudUtils;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.owncloud.android.lib.common.OwnCloudClient;
@@ -22,36 +24,36 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
-import io.reactivex.annotations.NonNull;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class CloudFavorites {
+public class CloudFavorites {
 
     private static final String TAG = CloudFavorites.class.getSimpleName();
 
     private static final String CLOUD_DIRECTORY = JsonFile.PATH_SEPARATOR + Favorite.CLOUD_DIRECTORY;
     private static final String SETTING_LAST_SYNCED_ETAG = "FAVORITES_LAST_SYNCED_ETAG";
 
-    private CloudFavorites() {
+    private final Context context;
+
+    public CloudFavorites(@NonNull Context context) {
+        this.context = checkNotNull(context);
     }
 
     @Nullable
-    public static RemoteOperationResult uploadFavorite(
-            @NonNull final Favorite favorite, @NonNull final OwnCloudClient ocClient,
-            @NonNull final Context context) {
+    public RemoteOperationResult uploadFavorite(
+            @NonNull final Favorite favorite, @NonNull final OwnCloudClient ocClient) {
         checkNotNull(favorite);
         checkNotNull(ocClient);
-        checkNotNull(context);
 
         final JSONObject favoriteJson = favorite.getJsonObject();
         if (favoriteJson == null) {
             Log.e(TAG, "Favorite cannot be saved, it's probably empty");
             return null;
         }
-        final String localPath = context.getCacheDir().getAbsolutePath() + File.separator +
+        final String localPath = CommonUtils.getTempDir(context) + File.separator +
                 JsonFile.getTempFileName(favorite.getId());
         final File localFile = new File(localPath);
         try {
@@ -60,7 +62,7 @@ public final class CloudFavorites {
             Log.e(TAG, "Cannot create temporary file [" + localPath + "]");
             return null;
         }
-        final String remotePath = CloudFavorites.getRemotePath(context, favorite.getId());
+        final String remotePath = getRemotePath(favorite.getId());
         final JsonFile jsonFile = new JsonFile(localPath, remotePath);
         UploadFileOperation operation = new UploadFileOperation(jsonFile);
         RemoteOperationResult result = operation.execute(ocClient);
@@ -71,15 +73,13 @@ public final class CloudFavorites {
     }
 
     @Nullable
-    public static Favorite downloadFavorite(
-            @NonNull final String favoriteId, @NonNull final OwnCloudClient ocClient,
-            @NonNull final Context context) {
+    public Favorite downloadFavorite(
+            @NonNull final String favoriteId, @NonNull final OwnCloudClient ocClient) {
         checkNotNull(favoriteId);
         checkNotNull(ocClient);
-        checkNotNull(context);
 
-        final String remotePath = getRemotePath(context, favoriteId);
-        final String localDirectory = context.getCacheDir().getAbsolutePath();
+        final String remotePath = getRemotePath(favoriteId);
+        final String localDirectory = CommonUtils.getTempDir(context);
         final String localPath = localDirectory + remotePath;
 
         DownloadRemoteFileOperation operation =
@@ -112,14 +112,12 @@ public final class CloudFavorites {
     }
 
     @NonNull
-    public static RemoteOperationResult deleteFavorite(
-            @NonNull final String favoriteId, @NonNull final OwnCloudClient ocClient,
-            @NonNull final Context context) {
+    public RemoteOperationResult deleteFavorite(
+            @NonNull final String favoriteId, @NonNull final OwnCloudClient ocClient) {
         checkNotNull(favoriteId);
         checkNotNull(ocClient);
-        checkNotNull(context);
 
-        final String remotePath = CloudFavorites.getRemotePath(context, favoriteId);
+        final String remotePath = getRemotePath(favoriteId);
         RemoveRemoteFileOperation operation = new RemoveRemoteFileOperation(remotePath);
         RemoteOperationResult result = operation.execute(ocClient);
         if (result.isSuccess()
@@ -129,49 +127,53 @@ public final class CloudFavorites {
         return result;
     }
 
-    public static String getRemoteFileName(@NonNull final String favoriteId) {
-        checkNotNull(favoriteId);
-        return JsonFile.getFileName(favoriteId);
+    public String getRemoteFileName(@NonNull final String favoriteId) {
+        return JsonFile.getFileName(checkNotNull(favoriteId));
     }
 
-    public static String getDataSourceDirectory(@NonNull final Context context) {
-        checkNotNull(context);
+    public String getDataSourceDirectory() {
         return CloudUtils.getSyncDirectory(context) + CLOUD_DIRECTORY;
     }
 
-    public static String getRemotePath(
-            @NonNull final Context context, @NonNull final String favoriteId) {
-        checkNotNull(context);
+    public String getRemotePath(@NonNull final String favoriteId) {
         checkNotNull(favoriteId);
 
-        return getDataSourceDirectory(context) + JsonFile.PATH_SEPARATOR +
-                getRemoteFileName(favoriteId);
+        return getDataSourceDirectory() + JsonFile.PATH_SEPARATOR + getRemoteFileName(favoriteId);
     }
 
-    public synchronized static boolean isCloudDataSourceChanged(
-            @NonNull final Context context, @NonNull final String eTag) {
-        checkNotNull(context);
+    public boolean isCloudDataSourceChanged(@NonNull final String eTag) {
         checkNotNull(eTag);
 
-        String lastSyncedETag = getLastSyncedETag(context);
+        String lastSyncedETag = getLastSyncedETag();
         return lastSyncedETag == null || !lastSyncedETag.equals(eTag);
     }
 
-    public static String getLastSyncedETag(@NonNull final Context context) {
-        checkNotNull(context);
-
+    @Nullable
+    public String getLastSyncedETag() {
         SharedPreferences sharedPreferences = CloudUtils.getCloudSharedPreferences(context);
         return sharedPreferences.getString(SETTING_LAST_SYNCED_ETAG, null);
     }
 
-    public static void updateLastSyncedETag(
-            @NonNull final Context context, @NonNull final String eTag) {
-        checkNotNull(context);
+    public synchronized void updateLastSyncedETag(@NonNull final String eTag) {
         checkNotNull(eTag);
 
         SharedPreferences sharedPreferences = CloudUtils.getCloudSharedPreferences(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(SETTING_LAST_SYNCED_ETAG, eTag);
         editor.apply();
+    }
+
+    @Nullable
+    public String getDataSourceETag(@NonNull OwnCloudClient ocClient) {
+        checkNotNull(ocClient);
+
+        return CloudDataSource.getDataSourceETag(ocClient, getDataSourceDirectory(), true);
+    }
+
+    @NonNull
+    public Map<String, String> getDataSourceMap(@NonNull OwnCloudClient ocClient) {
+        checkNotNull(ocClient);
+
+        return CloudDataSource.getDataSourceMap(ocClient, getDataSourceDirectory());
     }
 }

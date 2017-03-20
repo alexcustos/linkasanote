@@ -22,7 +22,10 @@ import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.owncloud.android.lib.common.OwnCloudAccount;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
+import com.owncloud.android.lib.common.UserInfo;
 import com.owncloud.android.lib.common.accounts.AccountUtils;
+import com.owncloud.android.lib.common.operations.RemoteOperationResult;
+import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,6 +48,10 @@ public final class CloudUtils {
 
     public static String getAccountType(Context context) {
         return context.getString(R.string.authenticator_account_type);
+    }
+
+    public static String getAccountName(@NonNull Account account) {
+        return checkNotNull(account).name;
     }
 
     @Nullable
@@ -127,5 +134,18 @@ public final class CloudUtils {
         String defaultSyncDirectory = resources.getString(R.string.default_sync_directory);
         return JsonFile.PATH_SEPARATOR + sharedPreferences.getString(
                 resources.getString(R.string.pref_key_sync_directory), defaultSyncDirectory);
+    }
+
+    public static void updateUserProfile(
+            Account account, OwnCloudClient ocClient, AccountManager accountManager) {
+        GetRemoteUserInfoOperation operation = new GetRemoteUserInfoOperation();
+        RemoteOperationResult result = operation.execute(ocClient);
+        if (result.isSuccess()) {
+            UserInfo userInfo = (UserInfo) result.getData().get(0);
+            accountManager.setUserData(
+                    account, AccountUtils.Constants.KEY_DISPLAY_NAME, userInfo.getDisplayName());
+        } else {
+            Log.e(TAG, "Error while retrieving user info from server [" + result.getCode().name() + "]");
+        }
     }
 }

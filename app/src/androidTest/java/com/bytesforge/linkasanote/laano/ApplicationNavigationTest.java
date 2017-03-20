@@ -7,6 +7,7 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.view.Gravity;
 
+import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
 import com.bytesforge.linkasanote.laano.links.LinksFragment;
@@ -138,6 +139,7 @@ public class ApplicationNavigationTest {
                 .check(matches(isClosed(Gravity.START)))
                 .perform(DrawerActions.open());
         onView(withId(R.id.nav_view)).perform(navigateTo(R.id.add_account_menu_item));
+        AndroidTestUtils.sleep(150); // TODO: find the better way
         onView(withId(R.id.application_logo)).check(matches(withText(R.string.app_name)));
 
     }

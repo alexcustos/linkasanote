@@ -43,7 +43,8 @@ public class LocalDataSourceTest {
     @Before
     public void setupLocalDataSource() {
         FAVORITES = AndroidTestUtils.buildFavorites();
-        localDataSource = new LocalDataSource(contentResolver);
+        LocalFavorites localFavorites = new LocalFavorites(context, contentResolver);
+        localDataSource = new LocalDataSource(contentResolver, localFavorites);
         cleanupLocalDataSource();
     }
 

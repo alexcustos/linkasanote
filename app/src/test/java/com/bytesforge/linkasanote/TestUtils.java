@@ -10,21 +10,21 @@ import java.util.List;
 
 public class TestUtils {
 
-    public static String KEY_PREFIX = CommonUtils.charRepeat('A', 21);
+    public static final String KEY_PREFIX = CommonUtils.charRepeat('A', 21);
+    public static final List<Tag> FAVORITE_TAGS = new ArrayList<Tag>() {{
+        add(new Tag("first"));
+        add(new Tag("second"));
+    }};
+    public static final List<Tag> FAVORITE_TAGS2 = new ArrayList<Tag>() {{
+        addAll(FAVORITE_TAGS);
+        add(new Tag("third"));
+    }};
+    public static final List<Tag> FAVORITE_TAGS3 = new ArrayList<Tag>() {{
+        addAll(FAVORITE_TAGS2);
+        add(new Tag("fourth"));
+    }};
 
     public static List<Favorite> buildFavorites() {
-        final List<Tag> FAVORITE_TAGS = new ArrayList<Tag>() {{
-            add(new Tag("first"));
-            add(new Tag("second"));
-        }};
-        final List<Tag> FAVORITE_TAGS2 = new ArrayList<Tag>() {{
-            addAll(FAVORITE_TAGS);
-            add(new Tag("third"));
-        }};
-        final List<Tag> FAVORITE_TAGS3 = new ArrayList<Tag>() {{
-            addAll(FAVORITE_TAGS2);
-            add(new Tag("fourth"));
-        }};
         return new ArrayList<Favorite>() {{
             add(new Favorite(KEY_PREFIX + 'A', "Favorite", FAVORITE_TAGS));
             add(new Favorite(KEY_PREFIX + 'B', "Favorite #2", FAVORITE_TAGS2));

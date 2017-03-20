@@ -14,7 +14,7 @@ ext {
     jsr250ApiVersion = '1.0'
     mockitoVersion = '2.7.12'
     dexmakerVersion = '2.2.0'
-    //powermockVersion = '1.7.0RC2'
+    powermockVersion = '1.7.0RC4'
     rxjavaVersion = '2.0.6'
     rxandroidVersion = '2.0.1'
     nextcloudLibraryVersion = '1.0.11'

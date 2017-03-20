@@ -2,10 +2,9 @@ package com.bytesforge.linkasanote.data.source.cloud;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Favorite;
@@ -20,12 +19,15 @@ import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
+import com.owncloud.android.lib.resources.files.CreateRemoteFolderOperation;
 import com.owncloud.android.lib.resources.files.ReadRemoteFileOperation;
 import com.owncloud.android.lib.resources.files.ReadRemoteFolderOperation;
 import com.owncloud.android.lib.resources.files.RemoteFile;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import javax.inject.Singleton;
@@ -44,19 +46,20 @@ public class CloudDataSource implements DataSource {
 
     private final Context context;
     private final BaseSchedulerProvider schedulerProvider;
-    private final ContentResolver contentResolver;
-
     private final AccountManager accountManager;
+    private final LocalFavorites localFavorites;
+    private final CloudFavorites cloudFavorites;
+
     private final CompositeDisposable disposable;
 
     public CloudDataSource(
-            Context context, SharedPreferences sharedPreferences,
-            ContentResolver contentResolver, BaseSchedulerProvider schedulerProvider,
-            AccountManager accountManager) {
+            Context context, BaseSchedulerProvider schedulerProvider, AccountManager accountManager,
+            LocalFavorites localFavorites, CloudFavorites cloudFavorites) {
         this.context = context;
         this.schedulerProvider = schedulerProvider;
-        this.contentResolver = contentResolver;
         this.accountManager = accountManager;
+        this.localFavorites = localFavorites;
+        this.cloudFavorites = cloudFavorites;
 
         disposable = new CompositeDisposable();
     }
@@ -129,7 +132,7 @@ public class CloudDataSource implements DataSource {
             SyncState oldState = null;
             boolean isReady = false;
             try {
-                oldState = LocalFavorites.getFavoriteSyncState(contentResolver, favoriteId).blockingGet();
+                oldState = localFavorites.getFavoriteSyncState(favoriteId).blockingGet();
             } catch (NoSuchElementException e) {
                 isReady = true;
             } catch (NullPointerException e) {
@@ -140,7 +143,7 @@ public class CloudDataSource implements DataSource {
             }
             if (!isReady) return null;
             // Check cloud
-            final String remotePath = CloudFavorites.getRemotePath(context, favoriteId);
+            final String remotePath = cloudFavorites.getRemotePath(favoriteId);
             try {
                 RemoteFile file = CloudDataSource.getRemoteFile(ocClient, remotePath).blockingGet();
                 if (oldState == null || !file.getEtag().equals(oldState.getETag())) {
@@ -149,7 +152,7 @@ public class CloudDataSource implements DataSource {
             } catch (NoSuchElementException e) {
                 // NOTE: It's expected state if there is no file in the cloud
             }
-            return CloudFavorites.uploadFavorite(favorite, ocClient, context);
+            return cloudFavorites.uploadFavorite(favorite, ocClient);
         });
 
         Disposable disposable = uploadFavorite
@@ -160,13 +163,13 @@ public class CloudDataSource implements DataSource {
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        numRows = LocalFavorites
-                                .updateFavorite(contentResolver, favorite.getId(), state)
+                        numRows = localFavorites
+                                .updateFavorite(favorite.getId(), state)
                                 .blockingGet();
                     } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                         SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-                        numRows = LocalFavorites
-                                .updateFavorite(contentResolver, favorite.getId(), state)
+                        numRows = localFavorites
+                                .updateFavorite(favorite.getId(), state)
                                 .blockingGet();
                     }
                     if (numRows != 1) {
@@ -201,7 +204,7 @@ public class CloudDataSource implements DataSource {
             SyncState state = null;
             boolean isReady = false;
             try {
-                state = LocalFavorites.getFavoriteSyncState(contentResolver, favoriteId).blockingGet();
+                state = localFavorites.getFavoriteSyncState(favoriteId).blockingGet();
             } catch (NoSuchElementException e) {
                 isReady = true;
             } catch (NullPointerException e) {
@@ -212,7 +215,7 @@ public class CloudDataSource implements DataSource {
             }
             if (!isReady) return null;
             // Check cloud
-            final String remotePath = CloudFavorites.getRemotePath(context, favoriteId);
+            final String remotePath = cloudFavorites.getRemotePath(favoriteId);
             try {
                 RemoteFile file = CloudDataSource.getRemoteFile(ocClient, remotePath).blockingGet();
                 if (state != null && !file.getEtag().equals(state.getETag())) {
@@ -221,7 +224,7 @@ public class CloudDataSource implements DataSource {
             } catch (NoSuchElementException e) {
                 return new RemoteOperationResult(RemoteOperationResult.ResultCode.OK);
             }
-            return CloudFavorites.deleteFavorite(favoriteId, ocClient, context);
+            return cloudFavorites.deleteFavorite(favoriteId, ocClient);
         });
 
         Disposable disposable = deleteFavorite
@@ -229,14 +232,10 @@ public class CloudDataSource implements DataSource {
                 .subscribe(result -> {
                     int numRows = -1;
                     if (result.isSuccess()) {
-                        numRows = LocalFavorites
-                                .deleteFavorite(contentResolver, favoriteId)
-                                .blockingGet();
+                        numRows = localFavorites.deleteFavorite(favoriteId).blockingGet();
                     } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                         SyncState state = new SyncState(SyncState.State.CONFLICTED_DELETE);
-                        numRows = LocalFavorites
-                                .updateFavorite(contentResolver, favoriteId, state)
-                                .blockingGet();
+                        numRows = localFavorites.updateFavorite(favoriteId, state).blockingGet();
                     }
                     if (numRows != 1) {
                         Log.e(TAG, "Unexpected number of rows were processed [" + numRows + "]");
@@ -272,7 +271,6 @@ public class CloudDataSource implements DataSource {
     public void deleteAllTags() {
         throw new RuntimeException("deleteAllTags() was called but this operation cannot be applied to the cloud");
     }
-
 
     // Statics
 
@@ -312,5 +310,51 @@ public class CloudDataSource implements DataSource {
             }
             return objectIterator;
         });
+    }
+
+    @Nullable
+    public static String getDataSourceETag(
+            OwnCloudClient ocClient, String dataSourceDirectory, boolean createDataSource) {
+        if (dataSourceDirectory == null) return null;
+
+        final ReadRemoteFileOperation readOperation =
+                new ReadRemoteFileOperation(dataSourceDirectory);
+        RemoteOperationResult result = readOperation.execute(ocClient);
+        if (result.isSuccess()) {
+            RemoteFile file = (RemoteFile) result.getData().get(0);
+            return file.getEtag();
+        } else if (result.getCode() == RemoteOperationResult.ResultCode.FILE_NOT_FOUND
+                && createDataSource) {
+            CreateRemoteFolderOperation writeOperation =
+                    new CreateRemoteFolderOperation(dataSourceDirectory, true);
+            result = writeOperation.execute(ocClient);
+            if (result.isSuccess()) {
+                Log.i(TAG, "New folder has been created");
+                return getDataSourceETag(ocClient, dataSourceDirectory, false);
+            }
+        }
+        return null;
+    }
+
+    @NonNull
+    public static Map<String, String> getDataSourceMap(
+            @NonNull OwnCloudClient ocClient, @NonNull String dataSourceDirectory) {
+        checkNotNull(ocClient);
+        checkNotNull(dataSourceDirectory);
+
+        final Map<String, String> dataSourceMap = new HashMap<>();
+        getRemoteFiles(ocClient, dataSourceDirectory).subscribe(file -> {
+            String fileMimeType = file.getMimeType();
+            String fileRemotePath = file.getRemotePath();
+            String id = JsonFile.getId(fileMimeType, fileRemotePath);
+            // TODO: check file size and reject if above reasonable limit
+            if (id != null) {
+                dataSourceMap.put(id, file.getEtag());
+            } else {
+                Log.w(TAG, "A problem was found in cloud dataSource "
+                        + "[" + fileRemotePath + ", mimeType=" + fileMimeType + "]");
+            }
+        }, throwable -> { /* skip the corrupted files */ });
+        return dataSourceMap;
     }
 }

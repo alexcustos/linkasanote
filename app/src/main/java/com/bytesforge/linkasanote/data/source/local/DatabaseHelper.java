@@ -43,7 +43,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "CREATE TABLE " + LocalContract.FavoriteEntry.TABLE_NAME + " (" +
                     LocalContract.FavoriteEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
-                    LocalContract.FavoriteEntry.COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_UPDATED + DATETIME_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_NAME + TEXT_TYPE + "," + // UNIQUE
                     LocalContract.FavoriteEntry.COLUMN_NAME_ETAG + TEXT_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + INTEGER_TYPE + "," +
@@ -58,7 +59,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String SQL_CREATE_TAG_ENTRIES =
             "CREATE TABLE " + LocalContract.TagEntry.TABLE_NAME + " (" +
                     LocalContract.TagEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
-                    LocalContract.TagEntry.COLUMN_NAME_ADDED + DATETIME_TYPE + "," +
+                    LocalContract.TagEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
                     LocalContract.TagEntry.COLUMN_NAME_NAME + TEXT_TYPE + " UNIQUE" +
             ");";
 
@@ -97,7 +98,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return "CREATE TABLE " + leftTable + "_" + rightTable + " (" +
                 BaseColumns._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
-                LocalContract.MANY_TO_MANY_COMMON_NAME_ADDED + DATETIME_TYPE + "," +
+                LocalContract.COMMON_NAME_CREATED + DATETIME_TYPE + "," +
                 LID + INTEGER_TYPE + " REFERENCES " + leftTable + "(" + BaseColumns._ID + ")," +
                 RID + INTEGER_TYPE + " REFERENCES " + rightTable + "(" + BaseColumns._ID + ")," +
                 "UNIQUE (" + LID + "," + RID + ") ON CONFLICT ABORT);";

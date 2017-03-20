@@ -6,6 +6,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
@@ -17,13 +18,23 @@ import java.util.NoSuchElementException;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 
-public final class LocalFavorites {
+import static com.google.common.base.Preconditions.checkNotNull;
 
-    private LocalFavorites() {
+public class LocalFavorites {
+
+    private final Context context;
+    private final ContentResolver contentResolver;
+
+    public LocalFavorites(@NonNull Context context, @NonNull ContentResolver contentResolver) {
+        this.context = checkNotNull(context);
+        this.contentResolver = checkNotNull(contentResolver);
     }
 
-    public static Observable<Favorite> getFavorites(
-            final ContentResolver contentResolver,
+    public Observable<Favorite> getFavorites() {
+        return getFavorites(null, null, null);
+    }
+
+    public Observable<Favorite> getFavorites(
             final String selection, final String[] selectionArgs, final String sortOrder) {
         return Observable.generate(() -> {
             return contentResolver.query(
@@ -49,8 +60,7 @@ public final class LocalFavorites {
         }, Cursor::close);
     }
 
-    public static Single<Favorite> getFavorite(
-            final ContentResolver contentResolver, final String favoriteId) {
+    public Single<Favorite> getFavorite(final String favoriteId) {
         return Single.fromCallable(() -> {
             Cursor cursor = contentResolver.query(
                     LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId),
@@ -73,8 +83,7 @@ public final class LocalFavorites {
         });
     }
 
-    public static Single<Long> saveFavorite(
-            final ContentResolver contentResolver, final Favorite favorite) {
+    public Single<Long> saveFavorite(final Favorite favorite) {
         return Single.fromCallable(() -> {
             ContentValues values = favorite.getContentValues();
             Uri favoriteUri = contentResolver.insert(
@@ -94,8 +103,7 @@ public final class LocalFavorites {
         });
     }
 
-    public static Single<Integer> updateFavorite(
-            final ContentResolver contentResolver, final String favoriteId, final SyncState state) {
+    public Single<Integer> updateFavorite(final String favoriteId, final SyncState state) {
         return Single.fromCallable(() -> {
             ContentValues values = state.getContentValues();
             Uri uri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
@@ -103,37 +111,33 @@ public final class LocalFavorites {
         });
     }
 
-    public static Single<Integer> deleteFavorite(
-            final ContentResolver contentResolver, final String favoriteId) {
+    public Single<Integer> deleteFavorite(final String favoriteId) {
         Uri uri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
         return LocalDataSource.delete(contentResolver, uri);
     }
 
-    public static Single<Integer> deleteFavorites(final ContentResolver contentResolver) {
+    public Single<Integer> deleteFavorites() {
         Uri uri = LocalContract.FavoriteEntry.buildFavoritesUri();
         return LocalDataSource.delete(contentResolver, uri);
     }
 
-    public static Single<SyncState> getFavoriteSyncState(
-            final ContentResolver contentResolver, final String favoriteId) {
+    public Single<SyncState> getFavoriteSyncState(final String favoriteId) {
         Uri uri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
         return LocalDataSource.getSyncState(contentResolver, uri);
     }
 
-    public static Observable<SyncState> getFavoriteSyncStates(
-            final ContentResolver contentResolver) {
+    public Observable<SyncState> getFavoriteSyncStates() {
         Uri uri = LocalContract.FavoriteEntry.buildFavoritesUri();
         return LocalDataSource.getSyncStates(contentResolver, uri, null, null, null);
     }
 
-    public static Observable<String> getFavoriteIds(final ContentResolver contentResolver) {
+    public Observable<String> getFavoriteIds() {
         Uri uri = LocalContract.FavoriteEntry.buildFavoritesUri();
         return LocalDataSource.getIds(contentResolver, uri);
     }
 
     // TODO: search filter must work similar, so it must be called with the ContentProvider
-    public static Single<Integer> getNextDuplicated(
-            final Context context, final String favoriteName) {
+    public Single<Integer> getNextDuplicated(final String favoriteName) {
         return Single.fromCallable(() -> {
             DatabaseHelper databaseHelper = new DatabaseHelper(context);
             SQLiteDatabase db = databaseHelper.getReadableDatabase();

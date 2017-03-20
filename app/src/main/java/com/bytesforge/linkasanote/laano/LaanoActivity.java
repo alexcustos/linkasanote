@@ -49,7 +49,7 @@ import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity;
 import com.bytesforge.linkasanote.settings.SettingsActivity;
-import com.bytesforge.linkasanote.sync.SyncAdapter;
+import com.bytesforge.linkasanote.sync.SyncNotifications;
 import com.bytesforge.linkasanote.utils.AppBarLayoutOnStateChangeListener;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 
@@ -95,11 +95,11 @@ public class LaanoActivity extends AppCompatActivity implements
         super.onResume();
 
         IntentFilter syncIntentFilter = new IntentFilter();
-        syncIntentFilter.addAction(SyncAdapter.ACTION_SYNC_START);
-        syncIntentFilter.addAction(SyncAdapter.ACTION_SYNC_END);
-        syncIntentFilter.addAction(SyncAdapter.ACTION_SYNC_LINK);
-        syncIntentFilter.addAction(SyncAdapter.ACTION_SYNC_FAVORITE);
-        syncIntentFilter.addAction(SyncAdapter.ACTION_SYNC_NOTE);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_START);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_END);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_LINK);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_FAVORITE);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_NOTE);
         syncBroadcastReceiver = new SyncBroadcastReceiver();
         registerReceiver(syncBroadcastReceiver, syncIntentFilter);
     }
@@ -301,15 +301,15 @@ public class LaanoActivity extends AppCompatActivity implements
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action.equals(SyncAdapter.ACTION_SYNC_START)) {
+            if (action.equals(SyncNotifications.ACTION_SYNC_START)) {
 
-            } else if (action.equals(SyncAdapter.ACTION_SYNC_END)) {
+            } else if (action.equals(SyncNotifications.ACTION_SYNC_END)) {
 
-            } else if (action.equals(SyncAdapter.ACTION_SYNC_LINK)) {
+            } else if (action.equals(SyncNotifications.ACTION_SYNC_LINK)) {
 
-            } else if (action.equals(SyncAdapter.ACTION_SYNC_FAVORITE)) {
+            } else if (action.equals(SyncNotifications.ACTION_SYNC_FAVORITE)) {
 
-            } else if (action.equals(SyncAdapter.ACTION_SYNC_NOTE)) {
+            } else if (action.equals(SyncNotifications.ACTION_SYNC_NOTE)) {
 
             }
         } // onReceive

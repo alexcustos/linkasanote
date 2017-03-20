@@ -311,10 +311,10 @@ public class Provider extends ContentProvider {
         // Reference
         final String refTable = leftTable + "_" + tagTable;
         ContentValues refValues = new ContentValues();
-        refValues.put(LocalContract.MANY_TO_MANY_COMMON_NAME_ADDED, currentTimeMillis());
+        refValues.put(LocalContract.COMMON_NAME_CREATED, currentTimeMillis());
         refValues.put(leftTable + BaseColumns._ID, leftId);
         refValues.put(tagTable + BaseColumns._ID, tagId);
-        insertEntry(db, refTable, refValues); // NOTE: refTable rowId can be ignored
+        insertEntry(db, refTable, refValues); // NOTE: it's refTable rowId can be ignored
 
         return tagId;
     }
@@ -328,7 +328,7 @@ public class Provider extends ContentProvider {
         long rowId = updateEntry(db, tableName, idField, idValue, values);
         if (rowId <= 0) {
             rowId = insertEntry(db, tableName, values);
-        } else {
+        } else { // NOTE: updateEntry mainly for update the state
             // NOTE: will be recreated with the new set of tags
             deleteTagReferences(db, tableName, rowId);
         }

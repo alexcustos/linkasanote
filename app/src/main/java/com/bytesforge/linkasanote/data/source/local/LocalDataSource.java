@@ -29,10 +29,12 @@ public class LocalDataSource implements DataSource {
 
     private static final String TAG = LocalDataSource.class.getSimpleName();
 
-    private ContentResolver contentResolver;
+    private final ContentResolver contentResolver;
+    private final LocalFavorites localFavorites;
 
-    public LocalDataSource(ContentResolver contentResolver) {
+    public LocalDataSource(ContentResolver contentResolver, LocalFavorites localFavorites) {
         this.contentResolver = contentResolver;
+        this.localFavorites = localFavorites;
     }
 
     // Links
@@ -109,22 +111,20 @@ public class LocalDataSource implements DataSource {
         final String[] selectionArgs = {"0", "1"};
         final String sortOrder = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " ASC";
 
-        return LocalFavorites.getFavorites(contentResolver, selection, selectionArgs, sortOrder);
+        return localFavorites.getFavorites(selection, selectionArgs, sortOrder);
     }
 
     @Override
     public Single<Favorite> getFavorite(final @NonNull String favoriteId) {
         checkNotNull(favoriteId);
-        return LocalFavorites.getFavorite(contentResolver, favoriteId);
+        return localFavorites.getFavorite(favoriteId);
     }
 
     @Override
     public void saveFavorite(final @NonNull Favorite favorite) {
         checkNotNull(favorite);
 
-        long rowId = LocalFavorites
-                .saveFavorite(contentResolver, favorite)
-                .blockingGet();
+        long rowId = localFavorites.saveFavorite(favorite).blockingGet();
         if (rowId <= 0) {
             Log.e(TAG, "Favorite was not saved [" + favorite.getId() + "]");
         }
@@ -132,7 +132,7 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public void deleteAllFavorites() {
-        LocalFavorites.deleteFavorites(contentResolver).blockingGet();
+        localFavorites.deleteFavorites().blockingGet();
     }
 
     @Override
@@ -141,22 +141,17 @@ public class LocalDataSource implements DataSource {
 
         SyncState state;
         try {
-            state = LocalFavorites
-                    .getFavoriteSyncState(contentResolver, favoriteId)
-                    .blockingGet();
+            state = localFavorites.getFavoriteSyncState(favoriteId).blockingGet();
         } catch (NoSuchElementException e) {
             return; // Nothing to delete
         } // let throw NullPointerException
         int numRows;
         if (!state.isSynced() && state.getETag() == null) {
             // NOTE: if one has never been synced
-            numRows = LocalFavorites
-                    .deleteFavorite(contentResolver, favoriteId)
-                    .blockingGet();
+            numRows = localFavorites.deleteFavorite(favoriteId).blockingGet();
         } else {
             SyncState deletedState = new SyncState(SyncState.State.DELETED);
-            numRows = LocalFavorites
-                    .updateFavorite(contentResolver, favoriteId, deletedState)
+            numRows = localFavorites.updateFavorite(favoriteId, deletedState)
                     .blockingGet();
         }
         if (numRows != 1) {

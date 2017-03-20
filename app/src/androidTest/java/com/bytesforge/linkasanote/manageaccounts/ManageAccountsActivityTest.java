@@ -52,7 +52,7 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("MissingPermission")
 public class ManageAccountsActivityTest {
 
-    private static final String USER_NAME = "demo";
+    private static final String USERNAME = "demo";
 
     private Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
     private LaanoApplication laanoApplication = (LaanoApplication) context.getApplicationContext();
@@ -97,7 +97,7 @@ public class ManageAccountsActivityTest {
     public ManageAccountsActivityTest() {
         MockitoAnnotations.initMocks(this);
         ACCOUNT_TYPE = getAccountType(context);
-        ACCOUNTS = new Account[]{new Account(USER_NAME + "@demo.nextcloud.com", ACCOUNT_TYPE)};
+        ACCOUNTS = new Account[]{new Account(USERNAME + "@demo.nextcloud.com", ACCOUNT_TYPE)};
     }
 
     private ApplicationComponent setupMockApplicationComponent(AccountManager accountManager) {
@@ -151,7 +151,7 @@ public class ManageAccountsActivityTest {
             onView(withId(R.id.add_account_view)).check(
                     matches(withText(R.string.item_manage_accounts_add)));
         }
-        onView(withId(R.id.user_name)).check(matches(withText(USER_NAME)));
+        onView(withId(R.id.user_name)).check(matches(withText(USERNAME)));
         onView(withId(R.id.account_name)).check(matches(withText(ACCOUNTS[0].name)));
     }
 
@@ -172,7 +172,7 @@ public class ManageAccountsActivityTest {
         manageAccountsActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.account_edit_button)).perform(click());
-        onView(withId(R.id.account_username)).check(matches(withText(USER_NAME)));
+        onView(withId(R.id.account_username)).check(matches(withText(USERNAME)));
     }
 
     @Test

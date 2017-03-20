@@ -16,9 +16,10 @@ public final class LocalContract {
     public static final String CONTENT_SCHEME = "content://";
     public static final Uri BASE_CONTENT_URI = Uri.parse(CONTENT_SCHEME + CONTENT_AUTHORITY);
 
-    public static final String MANY_TO_MANY_COMMON_NAME_ADDED = "added";
     // NOTE: entry_id must not be part of SyncState
     public static final String COMMON_NAME_ENTRY_ID = "entry_id";
+    public static final String COMMON_NAME_CREATED = "created";
+    public static final String COMMON_NAME_UPDATED = "updated";
     public static final String COMMON_NAME_ETAG = "etag";
     public static final String COMMON_NAME_DUPLICATED = "duplicated";
     public static final String COMMON_NAME_CONFLICTED = "conflicted";
@@ -139,7 +140,8 @@ public final class LocalContract {
         public static final String TABLE_NAME = "favorite";
 
         public static final String COLUMN_NAME_ENTRY_ID = LocalContract.COMMON_NAME_ENTRY_ID;
-        public static final String COLUMN_NAME_ADDED = "added";
+        public static final String COLUMN_NAME_CREATED = LocalContract.COMMON_NAME_CREATED;
+        public static final String COLUMN_NAME_UPDATED = LocalContract.COMMON_NAME_UPDATED;
         public static final String COLUMN_NAME_NAME = "name";
         public static final String COLUMN_NAME_ETAG = LocalContract.COMMON_NAME_ETAG;
         public static final String COLUMN_NAME_DUPLICATED = LocalContract.COMMON_NAME_DUPLICATED;
@@ -158,7 +160,8 @@ public final class LocalContract {
         public static String[] FAVORITE_COLUMNS = new String[]{
                 FavoriteEntry._ID,
                 FavoriteEntry.COLUMN_NAME_ENTRY_ID,
-                FavoriteEntry.COLUMN_NAME_ADDED,
+                FavoriteEntry.COLUMN_NAME_CREATED,
+                FavoriteEntry.COLUMN_NAME_UPDATED,
                 FavoriteEntry.COLUMN_NAME_NAME,
                 FavoriteEntry.COLUMN_NAME_ETAG,
                 FavoriteEntry.COLUMN_NAME_DUPLICATED,
@@ -197,7 +200,7 @@ public final class LocalContract {
 
         public static final String TABLE_NAME = "tag";
 
-        public static final String COLUMN_NAME_ADDED = "added";
+        public static final String COLUMN_NAME_CREATED = LocalContract.COMMON_NAME_CREATED;
         public static final String COLUMN_NAME_NAME = "name";
 
         public static final String CONTENT_TYPE =
@@ -210,7 +213,7 @@ public final class LocalContract {
 
         public static String[] TAG_COLUMNS = new String[]{
                 TABLE_NAME + "." + TagEntry._ID,
-                TABLE_NAME + "." + TagEntry.COLUMN_NAME_ADDED,
+                TABLE_NAME + "." + TagEntry.COLUMN_NAME_CREATED,
                 TABLE_NAME + "." + TagEntry.COLUMN_NAME_NAME};
 
         public static Uri buildTagsUri() {

@@ -91,9 +91,11 @@
     <string name="toolbar_item_action_mode">Switch to edit mode</string>
     <string name="sync_adapter_title_failed_default">Synchronization failed</string>
     <string name="sync_adapter_title_failed_login">login again</string>
-    <string name="sync_adapter_text_failed_client">Cannot access the account, please login in again</string>
+    <string name="sync_adapter_text_failed_login">Cannot access the account, please login in again</string>
     <string name="sync_adapter_title_failed_database">reinstall application</string>
-    <string name="sync_adapter_text_failed_db">The database is corrupted, please reinstall the application</string>
+    <string name="sync_adapter_text_failed_database">The database is corrupted, please reinstall the application</string>
+    <string name="sync_adapter_title_failed_cloud">check cloud</string>
+    <string name="sync_adapter_text_failed_cloud">Cannot access to cloud storage, please check if it works</string>
     <plurals name="sync_adapter_text_failed_favorites">
         <item quantity="one">There was an error with one Favorite</item>
         <item quantity="other">There was an error with %d Favorites</item>

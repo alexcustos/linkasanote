@@ -19,9 +19,11 @@ import static java.lang.System.currentTimeMillis;
 public final class Tag implements Serializable {
 
     private static final String TAG = Tag.class.getSimpleName();
+
+    // NOTE: tag is saved to the other containers, so it has no version
     private static final String JSON_PROPERTY_NAME = "name";
 
-    private final long added;
+    private final long created;
 
     @Nullable
     private final String name;
@@ -30,31 +32,32 @@ public final class Tag implements Serializable {
         this(currentTimeMillis(), name);
     }
 
-    public Tag(long added, @Nullable String name) {
-        this.added = added;
+    public Tag(long created, @Nullable String name) {
+        this.created = created;
         this.name = name;
     }
 
     public static Tag from(Cursor cursor) {
-        long added = cursor.getLong(cursor.getColumnIndexOrThrow(
-                LocalContract.TagEntry.COLUMN_NAME_ADDED));
+        long created = cursor.getLong(cursor.getColumnIndexOrThrow(
+                LocalContract.TagEntry.COLUMN_NAME_CREATED));
 
         String name = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.TagEntry.COLUMN_NAME_NAME));
 
-        return new Tag(added, name);
+        return new Tag(created, name);
     }
 
     public static Tag from(ContentValues values) {
-        long added = values.getAsLong(LocalContract.TagEntry.COLUMN_NAME_ADDED);
+        long created = values.getAsLong(LocalContract.TagEntry.COLUMN_NAME_CREATED);
 
         String name = values.getAsString(LocalContract.TagEntry.COLUMN_NAME_NAME);
 
-        return new Tag(added, name);
+        return new Tag(created, name);
     }
 
     public static Tag from(JSONObject jsonTag) {
         try {
+            // NOTE: created
             String name = jsonTag.getString(JSON_PROPERTY_NAME);
             return new Tag(name);
         } catch (JSONException e) {
@@ -66,15 +69,15 @@ public final class Tag implements Serializable {
     public ContentValues getContentValues() {
         ContentValues values = new ContentValues();
 
-        values.put(LocalContract.TagEntry.COLUMN_NAME_ADDED, getAdded());
+        values.put(LocalContract.TagEntry.COLUMN_NAME_CREATED, getCreated());
 
         values.put(LocalContract.TagEntry.COLUMN_NAME_NAME, getName());
 
         return values;
     }
 
-    public long getAdded() {
-        return added;
+    public long getCreated() {
+        return created;
     }
 
     @Nullable
