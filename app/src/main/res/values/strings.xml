@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">Link as a Note</string>
     <string name="placeholder_text">This is a placeholder</string>
+    <string name="placeholder_title">placeholder</string>
+    <string name="error_database">Cannot access to database, please reinstall the application</string>
     <string name="snackbar_no_permission">Unable to continue, required permission was not granted</string>
     <string name="snackbar_something_wrong">Something went wrong, please try again</string>
     <string name="drawer_header_title">LaaNo</string>
@@ -13,6 +15,10 @@
     <string name="snackbar_button_ok">OK</string>
     <string name="dialog_button_ok">OK</string>
     <string name="dialog_button_cancel">Cancel</string>
+    <string name="dialog_button_delete">Delete</string>
+    <string name="dialog_button_upload">Upload</string>
+    <string name="dialog_button_download">Download</string>
+    <string name="dialog_button_retry">Retry</string>
     <string name="laano_tab_links_title">Links</string>
     <string name="laano_tab_favorites_title">Favorites</string>
     <string name="laano_tab_notes_title">Notes</string>
@@ -88,7 +94,7 @@
     <string name="action_mode_favorites_delete">Delete</string>
     <string name="laano_favorites_action_mode_selected">%d selected</string>
     <string name="toolbar_item_sync">Start synchronization</string>
-    <string name="toolbar_item_action_mode">Switch to edit mode</string>
+    <string name="toolbar_favorites_item_action_mode">Switch to edit mode</string>
     <string name="sync_adapter_title_failed_default">Synchronization failed</string>
     <string name="sync_adapter_title_failed_login">login again</string>
     <string name="sync_adapter_text_failed_login">Cannot access the account, please login in again</string>
@@ -96,8 +102,31 @@
     <string name="sync_adapter_text_failed_database">The database is corrupted, please reinstall the application</string>
     <string name="sync_adapter_title_failed_cloud">check cloud</string>
     <string name="sync_adapter_text_failed_cloud">Cannot access to cloud storage, please check if it works</string>
+    <string name="tab_laano_icon_description_sync">Synchronization is in progress</string>
+    <string name="laano_actionbar_manager_sync_title">Up: %1$d / dl: %2$d</string>
+    <string name="toolbar_favorites_item_filter">Favorite filter</string>
+    <string name="filter_favorites_all">All</string>
+    <string name="filter_favorites_conflicted">Conflicted</string>
+    <string name="favorites_delete_confirmation_title">Delete confirmation</string>
+    <string name="dialog_favorite_conflict_title_local">Local:</string>
+    <string name="dialog_favorite_conflict_title_cloud">Cloud:</string>
+    <string name="dialog_favorite_conflict_status_loading">Loading…</string>
+    <string name="dialog_favorite_conflict_state_no_conflict">no conflict</string>
+    <string name="dialog_favorite_conflict_state_deleted">deleted</string>
+    <string name="dialog_favorite_conflict_state_updated">updated</string>
+    <string name="dialog_favorite_conflict_state_duplicated">duplicated</string>
+    <string name="dialog_favorite_conflict_state_not_found">not found</string>
+    <string name="dialog_favorite_conflict_state_error">error</string>
+    <string name="dialog_favorite_conflict_status_error_download">There was an error while downloading</string>
+    <string name="dialog_favorite_conflict_resolved_success">Conflict is successfully resolved</string>
+    <string name="dialog_favorite_conflict_resolved_error">There was an error while trying to resolve</string>
+
     <plurals name="sync_adapter_text_failed_favorites">
-        <item quantity="one">There was an error with one Favorite</item>
+        <item quantity="one">There was an error with %d Favorite</item>
         <item quantity="other">There was an error with %d Favorites</item>
+    </plurals>
+    <plurals name="favorites_delete_confirmation_message">
+        <item quantity="one">Are you sure you want to permanently delete selected Favorite?</item>
+        <item quantity="other">Are you sure you want to permanently delete %d selected Favorites?</item>
     </plurals>
 </resources>

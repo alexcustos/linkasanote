@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.favorites.FavoriteId;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.tokenautocomplete.TokenCompleteTextView;
@@ -114,12 +115,9 @@ public final class AddEditFavoritePresenter implements
                         EspressoIdlingResource.decrement();
                     }
                 })
-                // TODO: check if favorite is nullable here
                 .subscribe(favorite -> {
-                    if (favorite != null) {
-                        view.setupFavoriteState(favorite);
-                        viewModel.checkAddButton();
-                    }
+                    view.setupFavoriteState(favorite);
+                    viewModel.checkAddButton();
                 }, throwable -> {
                     favoriteId = null;
                     viewModel.showFavoriteNotFoundSnackbar();

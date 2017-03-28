@@ -3,6 +3,7 @@ package com.bytesforge.linkasanote.laano.favorites;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.LaanoActionBarManager;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
@@ -20,7 +21,7 @@ import io.reactivex.Observable;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +35,9 @@ public class FavoritesPresenterTest {
 
     @Mock
     private FavoritesContract.ViewModel viewModel;
+
+    @Mock
+    private LaanoActionBarManager laanoActionBarManager;
 
     private FavoritesPresenter presenter;
 
@@ -53,12 +57,14 @@ public class FavoritesPresenterTest {
         // TODO: check if it's needed at all
         when(view.isActive()).thenReturn(true);
 
-        presenter = new FavoritesPresenter(repository, view, viewModel, schedulerProvider);
+        presenter = new FavoritesPresenter(
+                repository, view, viewModel, schedulerProvider, laanoActionBarManager);
     }
 
     @Test
     public void loadAllFavoritesFromRepository_loadsItIntoView() {
         when(repository.getFavorites()).thenReturn(Observable.fromIterable(FAVORITES));
+        when(viewModel.getFilterType()).thenReturn(FavoritesFilterType.FAVORITES_ALL);
         presenter.loadFavorites(true);
         verify(view).showFavorites(FAVORITES);
     }
@@ -81,20 +87,16 @@ public class FavoritesPresenterTest {
     public void clickOnEditFavorite_showEditFavoriteUi() {
         final String favoriteId = FAVORITES.get(0).getId();
         presenter.onEditClick(favoriteId);
-        verify(view).showEditFavorite(favoriteId);
+        verify(view).showEditFavorite(eq(favoriteId));
     }
 
     @Test
-    public void clickOnDeleteFavorite_removesSelectedFavorites() {
+    public void clickOnDeleteFavorite_showsConfirmFavoritesRemoval() {
         int[] selectedIds = new int[]{0, 5, 10};
         String favoriteId = TestUtils.KEY_PREFIX + 'A';
         when(viewModel.getSelectedIds()).thenReturn(selectedIds);
         when(view.removeFavorite(anyInt())).thenReturn(favoriteId);
         presenter.onDeleteClick();
-        for (int selectedId : selectedIds) {
-            verify(viewModel).removeSelection(selectedId);
-            verify(view).removeFavorite(selectedId);
-        }
-        verify(repository, times(selectedIds.length)).deleteFavorite(favoriteId);
+        verify(view).confirmFavoritesRemoval(eq(selectedIds));
     }
 }

@@ -40,4 +40,13 @@ public final class LinksPresenter implements LinksContract.Presenter {
     public void addLink() {
 
     }
+
+    @Override
+    public boolean isConflicted() {
+        return false;
+    }
+
+    @Override
+    public void updateTabNormalState() {
+    }
 }

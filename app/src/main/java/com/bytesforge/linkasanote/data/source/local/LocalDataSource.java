@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -115,13 +116,13 @@ public class LocalDataSource implements DataSource {
     }
 
     @Override
-    public Single<Favorite> getFavorite(final @NonNull String favoriteId) {
+    public Single<Favorite> getFavorite(@NonNull final String favoriteId) {
         checkNotNull(favoriteId);
         return localFavorites.getFavorite(favoriteId);
     }
 
     @Override
-    public void saveFavorite(final @NonNull Favorite favorite) {
+    public void saveFavorite(@NonNull final Favorite favorite) {
         checkNotNull(favorite);
 
         long rowId = localFavorites.saveFavorite(favorite).blockingGet();
@@ -157,6 +158,11 @@ public class LocalDataSource implements DataSource {
         if (numRows != 1) {
             Log.e(TAG, "Unexpected number of rows processed [" + numRows + ", id=" + favoriteId + "]");
         }
+    }
+
+    @Override
+    public Single<Boolean> isConflictedFavorites() {
+        return localFavorites.isConflictedFavorites();
     }
 
     // Tags
@@ -248,5 +254,23 @@ public class LocalDataSource implements DataSource {
             emitter.onNext(id);
             return cursor;
         }, Cursor::close);
+    }
+
+    // NOTE: won't work with *_ITEM queries
+    public static Single<Boolean> isConflicted(
+            final ContentResolver contentResolver, final Uri uri) {
+        final String[] columns = new String[]{"COUNT(" + BaseColumns._ID + ")"};
+        final String selection = LocalContract.COMMON_NAME_CONFLICTED + " = ?";
+        final String[] selectionArgs = {"1"};
+
+        return Single.fromCallable(() -> {
+            try (Cursor cursor = contentResolver.query(
+                    uri, columns, selection, selectionArgs, null)) {
+                if (cursor == null) {
+                    return null; // NOTE: NullPointerException
+                }
+                return cursor.moveToLast() && cursor.getLong(0) > 0;
+            }
+        });
     }
 }

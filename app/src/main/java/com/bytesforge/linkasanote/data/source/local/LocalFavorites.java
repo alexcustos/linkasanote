@@ -4,12 +4,12 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.data.source.Provider;
 import com.bytesforge.linkasanote.sync.SyncState;
 
 import java.util.List;
@@ -62,23 +62,19 @@ public class LocalFavorites {
 
     public Single<Favorite> getFavorite(final String favoriteId) {
         return Single.fromCallable(() -> {
-            Cursor cursor = contentResolver.query(
+            try (Cursor cursor = contentResolver.query(
                     LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId),
-                    LocalContract.FavoriteEntry.FAVORITE_COLUMNS, null, null, null);
-            if (cursor == null) return null; // NOTE: NullPointerException
-
-            if (!cursor.moveToLast()) {
-                cursor.close();
-                throw new NoSuchElementException("The requested favorite was not found");
-            }
-            String rowId = LocalContract.rowIdFrom(cursor);
-            Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
-            List<Tag> tags = LocalTags.getTags(contentResolver, favoriteTagsUri)
-                    .toList().blockingGet();
-            try {
+                    LocalContract.FavoriteEntry.FAVORITE_COLUMNS, null, null, null)) {
+                if (cursor == null) {
+                    return null; // NOTE: NullPointerException
+                } else if (!cursor.moveToLast()) {
+                    throw new NoSuchElementException("The requested favorite was not found");
+                }
+                String rowId = LocalContract.rowIdFrom(cursor);
+                Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
+                List<Tag> tags = LocalTags.getTags(contentResolver, favoriteTagsUri)
+                        .toList().blockingGet();
                 return Favorite.from(cursor, tags);
-            } finally {
-                cursor.close();
             }
         });
     }
@@ -136,21 +132,48 @@ public class LocalFavorites {
         return LocalDataSource.getIds(contentResolver, uri);
     }
 
-    // TODO: search filter must work similar, so it must be called with the ContentProvider
-    public Single<Integer> getNextDuplicated(final String favoriteName) {
-        return Single.fromCallable(() -> {
-            DatabaseHelper databaseHelper = new DatabaseHelper(context);
-            SQLiteDatabase db = databaseHelper.getReadableDatabase();
+    public Single<Boolean> isConflictedFavorites() {
+        Uri uri = LocalContract.FavoriteEntry.buildFavoritesUri();
+        return LocalDataSource.isConflicted(contentResolver, uri);
+    }
 
-            String selection = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " = ?";
-            String[] selectionArgs = {favoriteName};
-            try (Cursor cursor = db.query(
-                    LocalContract.FavoriteEntry.TABLE_NAME, new String[]{"MAX(duplicated) + 1"},
-                    selection, selectionArgs, null, null, null)) {
+    public Single<Integer> getNextDuplicated(final String favoriteName) {
+        final String[] columns = new String[]{"MAX(" + LocalContract.COMMON_NAME_DUPLICATED + ") + 1"};
+        final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " = ?";
+        final String[] selectionArgs = {favoriteName};
+
+        return Single.fromCallable(() -> {
+            try (Cursor cursor = Provider.rawQuery(context,
+                    LocalContract.FavoriteEntry.TABLE_NAME,
+                    columns, selection, selectionArgs, null)) {
                 if (cursor.moveToLast()) {
                     return cursor.getInt(0);
                 }
                 return 0;
+            }
+        });
+    }
+
+    public Single<Favorite> getMainFavorite(final String favoriteName) {
+        final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " = ?" +
+                " AND " + LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + " = ?";
+        final String[] selectionArgs = {favoriteName, "0"};
+
+        return Single.fromCallable(() -> {
+            try (Cursor cursor = Provider.rawQuery(context,
+                    LocalContract.FavoriteEntry.TABLE_NAME,
+                    LocalContract.FavoriteEntry.FAVORITE_COLUMNS,
+                    selection, selectionArgs, null)) {
+                if (cursor == null) {
+                    return null; // NOTE: NullPointerException
+                } else if (!cursor.moveToLast()) {
+                    throw new NoSuchElementException("The requested favorite was not found");
+                }
+                String rowId = LocalContract.rowIdFrom(cursor);
+                Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
+                List<Tag> tags = LocalTags.getTags(contentResolver, favoriteTagsUri)
+                        .toList().blockingGet();
+                return Favorite.from(cursor, tags);
             }
         });
     }

@@ -29,6 +29,7 @@ public interface DataSource {
     void saveFavorite(@NonNull Favorite favorite);
     void deleteAllFavorites();
     void deleteFavorite(@NonNull String favoriteId);
+    Single<Boolean> isConflictedFavorites();
 
     Observable<Tag> getTags();
     Single<Tag> getTag(@NonNull String tagId);

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:bind="http://schemas.android.com/tools">
 
     <data>
         <import type="android.view.View" />
@@ -9,8 +10,10 @@
     </data>
 
     <RelativeLayout
+        android:id="@+id/snackbar_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        bind:snackbarId="@{viewModel.snackbarId}">
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/rv_favorites"
@@ -25,7 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:layout_gravity="center"
-            android:drawableTop="@drawable/ic_favorite"
+            android:drawableTop="@drawable/ic_favorite_48dp"
             android:text="@string/favorites_empty_title"
             android:visibility="@{viewModel.favoriteListEmpty ? View.VISIBLE : View.GONE}" />
     </RelativeLayout>

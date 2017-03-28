@@ -3,6 +3,8 @@ package com.bytesforge.linkasanote.laano.favorites;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.LaanoActionBarManager;
+import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
@@ -21,6 +23,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     private final FavoritesContract.View view;
     private final FavoritesContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
+    private final LaanoActionBarManager actionBarManager;
 
     @NonNull
     private final CompositeDisposable disposable;
@@ -30,12 +33,13 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     @Inject
     FavoritesPresenter(
             Repository repository, FavoritesContract.View view,
-            FavoritesContract.ViewModel viewModel,
-            BaseSchedulerProvider schedulerProvider) {
+            FavoritesContract.ViewModel viewModel, BaseSchedulerProvider schedulerProvider,
+            LaanoActionBarManager actionBarManager) {
         this.repository = repository;
         this.view = view;
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
+        this.actionBarManager = actionBarManager;
         disposable = new CompositeDisposable();
     }
 
@@ -44,6 +48,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         view.setPresenter(this);
         view.setViewModel(viewModel);
         viewModel.setPresenter(this);
+        viewModel.setActionBarManager(actionBarManager);
     }
 
     @Override
@@ -79,13 +84,21 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     private void loadFavorites(boolean forceUpdate, final boolean showLoading) {
         EspressoIdlingResource.increment();
         disposable.clear();
+        if (forceUpdate) {
+            repository.refreshFavorites();
+        }
 
         Disposable disposable = repository.getFavorites()
+                .filter(favorite -> {
+                    switch (viewModel.getFilterType()) {
+                        case FAVORITES_CONFLICTED:
+                            return favorite.isConflicted();
+                        case FAVORITES_ALL:
+                        default:
+                            return true;
+                    }
+                })
                 .toList()
-                // TODO: implement filter
-                //.flatMap(Observable::from)
-                //.filter(favorite -> {...})
-                //.toList()
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 // NoSuchElementException, NullPointerException
@@ -103,10 +116,12 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     }
 
     @Override
-    public void onFavoriteClick(String favoriteId) {
+    public void onFavoriteClick(String favoriteId, boolean isConflicted) {
         // TODO: normal mode selection must highlight current favorite filter
         if (viewModel.isActionMode()) {
             onFavoriteSelected(favoriteId);
+        } else if (isConflicted){
+            view.showConflictResolution(favoriteId);
         }
     }
 
@@ -144,16 +159,40 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     @Override
     public void onDeleteClick() {
         int[] selectedIds = viewModel.getSelectedIds();
+        view.confirmFavoritesRemoval(selectedIds);
+    } // onDeleteClick
+
+    @Override
+    public void deleteFavorites(int[] selectedIds) {
         for (int selectedId : selectedIds) {
             viewModel.removeSelection(selectedId);
             String favoriteId = view.removeFavorite(selectedId);
-            // TODO: check NullPointerException
-            repository.deleteFavorite(favoriteId);
+            try {
+                repository.deleteFavorite(favoriteId);
+            } catch (NullPointerException e) {
+                viewModel.showDatabaseErrorSnackbar();
+            }
         }
-    } // onDeleteClick
+    }
 
     @Override
     public int getPosition(String favoriteId) {
         return view.getPosition(favoriteId);
+    }
+
+    @Override
+    public boolean isConflicted() {
+        return repository.isConflictedFavorites().blockingGet();
+    }
+
+    @Override
+    public void setFilterType(@NonNull FavoritesFilterType filterType) {
+        viewModel.setFilterType(filterType);
+    }
+
+    @Override
+    public void updateTabNormalState() {
+        actionBarManager.setTabNormalState(
+                LaanoFragmentPagerAdapter.FAVORITES_TAB, isConflicted());
     }
 }

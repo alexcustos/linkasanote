@@ -3,6 +3,8 @@ package com.bytesforge.linkasanote.addeditfavorite;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import com.bytesforge.linkasanote.laano.favorites.FavoriteId;
+
 import dagger.Module;
 import dagger.Provides;
 

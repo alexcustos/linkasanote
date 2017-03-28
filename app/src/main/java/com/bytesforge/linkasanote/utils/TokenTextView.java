@@ -1,10 +1,10 @@
 package com.bytesforge.linkasanote.utils;
 
 import android.content.Context;
+import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
-import android.widget.TextView;
 
-public class TokenTextView extends TextView {
+public class TokenTextView extends AppCompatTextView {
 
     public TokenTextView(Context context, AttributeSet attrs) {
         super(context, attrs);

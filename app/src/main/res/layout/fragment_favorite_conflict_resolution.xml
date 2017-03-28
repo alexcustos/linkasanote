@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable name="presenter"
+            type="com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionContract.Presenter" />
+        <variable name="viewModel"
+            type="com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionViewModel" />
+    </data>
+
+    <!-- Local -->
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/dialog_padding">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="@dimen/dialog_padding_content">
+
+                <LinearLayout
+                    android:id="@+id/local_title_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="@dimen/dialog_padding_title">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/dialog_favorite_conflict_title_local"
+                        style="@style/ConflictResolutionTitle.Source" />
+                    <TextView
+                        android:id="@+id/local_state"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@{viewModel.localState}"
+                        style="@style/ConflictResolutionTitle" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/local_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/local_title_layout"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentEnd="true"
+                    android:text="@{viewModel.localStatus}"
+                    android:visibility="@{viewModel.localStatus == null ? View.GONE : View.VISIBLE}"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/local_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/local_title_layout"
+                    android:textAppearance="?android:attr/textAppearanceListItem"
+                    android:text="@{viewModel.localName}"
+                    android:paddingBottom="@dimen/dialog_padding_name" />
+                <TextView
+                    android:id="@+id/local_tags"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/local_name"
+                    android:layout_alignParentBottom="true"
+                    android:text="@{viewModel.localTags}" />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:paddingTop="@dimen/dialog_padding_button_bar_top"
+                android:paddingBottom="@dimen/dialog_padding_button_bar_bottom"
+                style="?android:attr/buttonBarStyle">
+
+                <Button
+                    android:id="@+id/local_delete_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dialog_button_delete"
+                    android:visibility="@{viewModel.localDeleteButton ? View.VISIBLE : View.GONE }"
+                    android:onClick="@{() -> presenter.onLocalDeleteClick()}"
+                    android:enabled="@{viewModel.buttonsActive}"
+                    style="?android:attr/buttonBarButtonStyle" />
+                <Button
+                    android:id="@+id/local_upload_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dialog_button_upload"
+                    android:visibility="@{viewModel.localUploadButton ? View.VISIBLE : View.GONE }"
+                    android:onClick="@{() -> presenter.onLocalUploadClick()}"
+                    android:enabled="@{viewModel.buttonsActive}"
+                    style="?android:attr/buttonBarButtonStyle" />
+            </LinearLayout>
+
+           <!-- Cloud -->
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="@dimen/dialog_padding_content">
+
+                <LinearLayout
+                    android:id="@+id/cloud_title_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="@dimen/dialog_padding_title">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/dialog_favorite_conflict_title_cloud"
+                        style="@style/ConflictResolutionTitle.Source" />
+                    <TextView
+                        android:id="@+id/cloud_state"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@{viewModel.cloudState}"
+                        style="@style/ConflictResolutionTitle" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/cloud_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/cloud_title_layout"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentEnd="true"
+                    android:text="@{viewModel.cloudStatus}"
+                    android:visibility="@{viewModel.cloudStatus == null ? View.GONE : View.VISIBLE}"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/cloud_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/cloud_title_layout"
+                    android:textAppearance="?android:attr/textAppearanceListItem"
+                    android:text="@{viewModel.cloudName}"
+                    android:paddingBottom="@dimen/dialog_padding_name" />
+                <TextView
+                    android:id="@+id/cloud_tags"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/cloud_name"
+                    android:layout_alignParentBottom="true"
+                    android:text="@{viewModel.cloudTags}" />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:paddingTop="@dimen/dialog_padding_button_bar_top"
+                android:paddingBottom="@dimen/dialog_padding_button_bar_bottom"
+                style="?android:attr/buttonBarStyle">
+
+                <Button
+                    android:id="@+id/cloud_delete_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dialog_button_delete"
+                    android:visibility="@{viewModel.cloudDeleteButton ? View.VISIBLE : View.GONE }"
+                    android:onClick="@{() -> presenter.onCloudDeleteClick()}"
+                    android:enabled="@{viewModel.buttonsActive}"
+                    style="?android:attr/buttonBarButtonStyle" />
+                <Button
+                    android:id="@+id/cloud_download_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dialog_button_download"
+                    android:visibility="@{viewModel.cloudDownloadButton ? View.VISIBLE : View.GONE }"
+                    android:onClick="@{() -> presenter.onCloudDownloadClick()}"
+                    android:enabled="@{viewModel.buttonsActive}"
+                    style="?android:attr/buttonBarButtonStyle" />
+                <Button
+                    android:id="@+id/cloud_retry_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dialog_button_retry"
+                    android:visibility="@{viewModel.cloudRetryButton ? View.VISIBLE : View.GONE }"
+                    android:onClick="@{() -> presenter.onCloudRetryClick()}"
+                    android:enabled="@{viewModel.buttonsActive}"
+                    style="?android:attr/buttonBarButtonStyle" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</layout>

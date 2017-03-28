@@ -1,14 +1,18 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -23,6 +27,8 @@ import com.bytesforge.linkasanote.addeditfavorite.AddEditFavoriteActivity;
 import com.bytesforge.linkasanote.addeditfavorite.AddEditFavoriteFragment;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoFavoritesBinding;
+import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionActivity;
+import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +39,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
 
     public static final int REQUEST_ADD_FAVORITE = 1;
     public static final int REQUEST_EDIT_FAVORITE = 2;
+    public static final int REQUEST_FAVORITE_CONFLICT_RESOLUTION = 3;
 
     private FavoritesContract.Presenter presenter;
     private FavoritesContract.ViewModel viewModel;
@@ -100,12 +107,16 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.toolbar_favorite_action_mode:
+            case R.id.toolbar_favorites_filter:
+                showFilteringPopupMenu();
+                break;
+            case R.id.toolbar_favorites_action_mode:
                 enableActionMode();
-                return true;
+                break;
             default:
                 return super.onOptionsItemSelected(item);
         }
+        return true;
     }
 
     @Override
@@ -142,9 +153,22 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_ADD_FAVORITE:
+                if (resultCode == Activity.RESULT_OK) {
+                    adapter.notifyDataSetChanged();
+                }
                 break;
             case REQUEST_EDIT_FAVORITE:
                 if (resultCode == Activity.RESULT_OK) {
+                    adapter.notifyDataSetChanged();
+                }
+                break;
+            case REQUEST_FAVORITE_CONFLICT_RESOLUTION:
+                adapter.notifyDataSetChanged();
+                presenter.updateTabNormalState();
+                if (resultCode == Activity.RESULT_OK) {
+                    viewModel.showConflictResolutionSuccessfulSnackbar();
+                } else if (resultCode == FavoritesConflictResolutionActivity.RESULT_FAILED){
+                    viewModel.showConflictResolutionErrorSnackbar();
                 }
                 break;
             default:
@@ -161,6 +185,27 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
                 rvFavorites.getContext(), layoutManager.getOrientation());
         rvFavorites.addItemDecoration(dividerItemDecoration);
+    }
+
+
+    private void showFilteringPopupMenu() {
+        PopupMenu menu = new PopupMenu(
+                getContext(), getActivity().findViewById(R.id.toolbar_favorites_filter));
+        menu.getMenuInflater().inflate(R.menu.filter_favorites, menu.getMenu());
+        menu.setOnMenuItemClickListener(item -> {
+
+            switch (item.getItemId()) {
+                case R.id.favorites_all:
+                    presenter.setFilterType(FavoritesFilterType.FAVORITES_ALL);
+                    break;
+                case R.id.favorites_conflicted:
+                    presenter.setFilterType(FavoritesFilterType.FAVORITES_CONFLICTED);
+                    break;
+            }
+            presenter.loadFavorites(false);
+            return true;
+        });
+        menu.show();
     }
 
     @Override
@@ -223,6 +268,28 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         return favorite.getId();
     }
 
+    @Override
+    public void confirmFavoritesRemoval(int[] selectedIds) {
+        FavoriteRemovalConfirmationDialog dialog =
+                FavoriteRemovalConfirmationDialog.newInstance(selectedIds);
+        dialog.setTargetFragment(this, FavoriteRemovalConfirmationDialog.DIALOG_REQUEST_CODE);
+        dialog.show(getFragmentManager(), FavoriteRemovalConfirmationDialog.DIALOG_TAG);
+    }
+
+    public void removeFavorites(int[] selectedIds) {
+        presenter.deleteFavorites(selectedIds);
+    }
+
+    @Override
+    public void showConflictResolution(@NonNull String favoriteId) {
+        checkNotNull(favoriteId);
+
+        // TODO: replace it with alertDialog
+        Intent intent = new Intent(getContext(), FavoritesConflictResolutionActivity.class);
+        intent.putExtra(FavoritesConflictResolutionFragment.ARGUMENT_FAVORITE_ID, favoriteId);
+        startActivityForResult(intent, REQUEST_FAVORITE_CONFLICT_RESOLUTION);
+    }
+
     public class FavoritesActionModeCallback implements ActionMode.Callback {
 
         @Override
@@ -253,6 +320,45 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             destroyActionMode();
+        }
+    }
+
+    public static class FavoriteRemovalConfirmationDialog extends DialogFragment {
+
+        private static final String ARGUMENT_SELECTED_IDS = "SELECTED_IDS";
+
+        public static final String DIALOG_TAG = "FAVORITE_REMOVAL_CONFIRMATION";
+        public static final int DIALOG_REQUEST_CODE = 0;
+
+        private int[] selectedIds;
+
+        public static FavoriteRemovalConfirmationDialog newInstance(int[] selectedIds) {
+            Bundle args = new Bundle();
+            args.putIntArray(ARGUMENT_SELECTED_IDS, selectedIds);
+            FavoriteRemovalConfirmationDialog dialog = new FavoriteRemovalConfirmationDialog();
+            dialog.setArguments(args);
+            return dialog;
+        }
+
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            selectedIds = getArguments().getIntArray(ARGUMENT_SELECTED_IDS);
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            int length = selectedIds.length;
+            return new AlertDialog.Builder(getContext())
+                    .setTitle(R.string.favorites_delete_confirmation_title)
+                    .setMessage(getResources().getQuantityString(
+                            R.plurals.favorites_delete_confirmation_message, length, length))
+                    .setIcon(R.drawable.ic_warning)
+                    .setPositiveButton(R.string.dialog_button_ok, (dialog, which) ->
+                            ((FavoritesFragment) getTargetFragment()).removeFavorites(selectedIds))
+                    .setNegativeButton(R.string.dialog_button_cancel, null)
+                    .create();
         }
     }
 }

@@ -27,8 +27,8 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
-    public CloudFavorites provideCloudFavorites(Context context) {
-        return new CloudFavorites(context);
+    public CloudFavorites provideCloudFavorites(Context context, AccountManager accountManager) {
+        return new CloudFavorites(context, accountManager);
     }
 
     @Provides
@@ -43,10 +43,9 @@ public class RepositoryModule {
     @Singleton
     @Cloud
     public DataSource provideCloudDataSource(
-            Context context, BaseSchedulerProvider schedulerProvider, AccountManager accountManager,
+            Context context, BaseSchedulerProvider schedulerProvider,
             LocalFavorites localFavorites, CloudFavorites cloudFavorites) {
-        return new CloudDataSource(context, schedulerProvider, accountManager,
-                localFavorites, cloudFavorites);
+        return new CloudDataSource(context, schedulerProvider, localFavorites, cloudFavorites);
     }
 
     @Provides

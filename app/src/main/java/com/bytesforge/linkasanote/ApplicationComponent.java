@@ -11,8 +11,11 @@ import com.bytesforge.linkasanote.addeditfavorite.AddEditFavoritePresenterModule
 import com.bytesforge.linkasanote.data.source.ProviderModule;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.data.source.RepositoryModule;
+import com.bytesforge.linkasanote.laano.LaanoActionBarManagerModule;
 import com.bytesforge.linkasanote.laano.LaanoComponent;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenterModule;
+import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionComponent;
+import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionPresenterModule;
 import com.bytesforge.linkasanote.laano.links.LinksPresenterModule;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsComponent;
@@ -46,6 +49,10 @@ public interface ApplicationComponent {
     LaanoComponent getLaanoComponent(
             LinksPresenterModule linksPresenterModule,
             FavoritesPresenterModule favoritesPresenterModule,
-            NotesPresenterModule notesPresenterModule);
+            NotesPresenterModule notesPresenterModule,
+            LaanoActionBarManagerModule laanoActionBarManagerModule);
     ManageAccountsComponent getManageAccountsComponent(ManageAccountsPresenterModule module);
+    FavoritesConflictResolutionComponent getFavoritesConflictResolutionComponent(
+            FavoritesConflictResolutionPresenterModule favoritesConflictResolutionPresenterModule);
+
 }

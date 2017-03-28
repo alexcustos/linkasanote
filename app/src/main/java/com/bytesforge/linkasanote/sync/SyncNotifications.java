@@ -17,40 +17,52 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SyncNotifications {
 
-    public static final String ACTION_SYNC_START = BuildConfig.APPLICATION_ID + ".ACTION_SYNC_START";
-    public static final String ACTION_SYNC_END = BuildConfig.APPLICATION_ID + ".ACTION_SYNC_END";
-    public static final String ACTION_SYNC_LINK = BuildConfig.APPLICATION_ID + ".ACTION_SYNC_LINK";
-    public static final String ACTION_SYNC_FAVORITE = BuildConfig.APPLICATION_ID + ".ACTION_SYNC_FAVORITE";
-    public static final String ACTION_SYNC_NOTE = BuildConfig.APPLICATION_ID + ".ACTION_SYNC_NOTE";
+    public static final String ACTION_SYNC_LINKS =
+            BuildConfig.APPLICATION_ID + ".ACTION_SYNC_LINKS";
+    public static final String ACTION_SYNC_FAVORITES =
+            BuildConfig.APPLICATION_ID + ".ACTION_SYNC_FAVORITES";
+    public static final String ACTION_SYNC_NOTES =
+            BuildConfig.APPLICATION_ID + ".ACTION_SYNC_NOTES";
+
+    public static final String ACTION_SYNC_UPLOADED =
+            BuildConfig.APPLICATION_ID + ".ACTION_SYNC_UPLOADED";
+    public static final String ACTION_SYNC_DOWNLOADED =
+            BuildConfig.APPLICATION_ID + ".ACTION_SYNC_DOWNLOADED";
 
     public static final String EXTRA_ACCOUNT_NAME = "ACCOUNT_NAME";
     public static final String EXTRA_ID = "ID";
     public static final String EXTRA_STATUS = "STATUS";
 
-    public static final int STATUS_CREATED = 0;
-    public static final int STATUS_UPDATED = 1;
-    public static final int STATUS_DELETED = 2;
+    public static final int STATUS_SYNC_START = 10;
+    public static final int STATUS_SYNC_END = 11;
+    public static final int STATUS_CREATED = 20;
+    public static final int STATUS_UPDATED = 21;
+    public static final int STATUS_DELETED = 22;
+    public static final int STATUS_UPLOADED = 30;
+    public static final int STATUS_DOWNLOADED = 31;
 
     private static final int NOTIFICATION_SYNC = 0;
 
     private final Context context;
     private final NotificationManagerCompat notificationManager;
+    private String accountName;
 
     public SyncNotifications(Context context) {
         this.context = context;
         notificationManager = NotificationManagerCompat.from(context);
     }
 
-    public void sendSyncBroadcast(String action, String accountName) {
-        sendSyncBroadcast(action, accountName, null, -1);
+    public void sendSyncBroadcast(String action, int status) {
+        sendSyncBroadcast(action, status, null);
     }
 
-    public void sendSyncBroadcast(String action, String accountName, String id, int status) {
-        Intent intent = new Intent(action);
+    public void sendSyncBroadcast(String action, int status, String id) {
+        checkNotNull(accountName);
 
+        Intent intent = new Intent(action);
         intent.putExtra(EXTRA_ACCOUNT_NAME, accountName);
-        if (id != null) intent.putExtra(EXTRA_ID, id);
         if (status >= 0) intent.putExtra(EXTRA_STATUS, status);
+        if (id != null) intent.putExtra(EXTRA_ID, id);
 
         context.sendBroadcast(intent);
     }
@@ -68,8 +80,7 @@ public class SyncNotifications {
         String notificationTitle = title == null ? defaultTitle : defaultTitle + ": " + title;
 
         Notification notification = new NotificationCompat.Builder(context)
-                // TODO: change to simplified application icon
-                .setSmallIcon(R.drawable.ic_sync_white)
+                .setSmallIcon(R.drawable.ic_error_white)
                 .setLargeIcon(getLauncherBitmap())
                 .setColor(context.getResources().getColor(R.color.color_primary, context.getTheme()))
                 .setTicker(notificationTitle)
@@ -85,5 +96,9 @@ public class SyncNotifications {
             return ((BitmapDrawable) logo).getBitmap();
         }
         return null;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 }

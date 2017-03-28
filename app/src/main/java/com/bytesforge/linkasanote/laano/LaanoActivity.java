@@ -84,10 +84,13 @@ public class LaanoActivity extends AppCompatActivity implements
     NotesPresenter notesPresenter;
 
     @Inject
+    LaanoActionBarManager actionBarManager;
+
+    @Inject
     AccountManager accountManager;
 
-    private SyncBroadcastReceiver syncBroadcastReceiver;
     private int activeTab;
+    private SyncBroadcastReceiver syncBroadcastReceiver;
     private ActivityLaanoBinding binding;
 
     @Override
@@ -95,11 +98,9 @@ public class LaanoActivity extends AppCompatActivity implements
         super.onResume();
 
         IntentFilter syncIntentFilter = new IntentFilter();
-        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_START);
-        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_END);
-        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_LINK);
-        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_FAVORITE);
-        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_NOTE);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_LINKS);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_FAVORITES);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_NOTES);
         syncBroadcastReceiver = new SyncBroadcastReceiver();
         registerReceiver(syncBroadcastReceiver, syncIntentFilter);
     }
@@ -126,44 +127,38 @@ public class LaanoActivity extends AppCompatActivity implements
         // Toolbar
         setSupportActionBar(binding.toolbar);
         ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+        assert actionBar != null;
+        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+        actionBar.setDisplayHomeAsUpEnabled(true);
         // Navigation Drawer
-        if (binding.drawerLayout != null) {
-            setupDrawerLayout(binding.drawerLayout);
-        }
-        if (binding.navView != null) {
-            setupDrawerContent(binding.navView);
-        }
+        setupDrawerLayout(binding.drawerLayout);
+        setupDrawerContent(binding.navView);
         // ViewPager
-        LaanoFragmentPagerAdapter adapter = new LaanoFragmentPagerAdapter(
+        LaanoFragmentPagerAdapter pagerAdapter = new LaanoFragmentPagerAdapter(
                 getSupportFragmentManager(), getApplicationContext());
-        if (binding.laanoViewPager != null) {
-            ViewPager viewPager = binding.laanoViewPager;
-            setupViewPager(viewPager, adapter);
-            // TabLayout
-            if (binding.tabLayout != null) {
-                setupTabLayout(binding.tabLayout, viewPager);
-            }
-        }
+        ViewPager viewPager = binding.laanoViewPager;
+        setupViewPager(viewPager, pagerAdapter);
+        viewPager.setCurrentItem(activeTab);
+        // TabLayout
+        setupTabLayout(binding.tabLayout, viewPager);
         // Presenters
         LaanoApplication application = (LaanoApplication) getApplication();
         application.getApplicationComponent()
                 .getLaanoComponent(
-                        new LinksPresenterModule(adapter.getLinksFragment()),
-                        new FavoritesPresenterModule(this, adapter.getFavoritesFragment()),
-                        new NotesPresenterModule(adapter.getNotesFragment()))
+                        new LinksPresenterModule(pagerAdapter.getLinksFragment()),
+                        new FavoritesPresenterModule(this, pagerAdapter.getFavoritesFragment()),
+                        new NotesPresenterModule(pagerAdapter.getNotesFragment()),
+                        new LaanoActionBarManagerModule(this, actionBar, binding.tabLayout, pagerAdapter))
                 .inject(this);
         // FAB
-        if (binding.fabAdd != null) {
-            setupFabAdd(binding.fabAdd);
-            // AppBar
-            if (binding.appBarLayout != null) {
-                setupAppBarLayout(binding.appBarLayout, binding.fabAdd);
-            }
-        } // if
+        setupFabAdd(binding.fabAdd);
+        // AppBar
+        setupAppBarLayout(binding.appBarLayout, binding.fabAdd);
+        // ActionBarManager
+        linksPresenter.updateTabNormalState();
+        favoritesPresenter.updateTabNormalState();
+        notesPresenter.updateTabNormalState();
+        actionBarManager.showTitle(activeTab);
     }
 
     @Override
@@ -269,11 +264,13 @@ public class LaanoActivity extends AppCompatActivity implements
     private void notifyTabSelected(int position) {
         switch (position) {
             case LaanoFragmentPagerAdapter.LINKS_TAB:
+                linksPresenter.onTabSelected();
                 break;
             case LaanoFragmentPagerAdapter.FAVORITES_TAB:
                 favoritesPresenter.onTabSelected();
                 break;
             case LaanoFragmentPagerAdapter.NOTES_TAB:
+                notesPresenter.onTabSelected();
                 break;
             default:
                 throw new IllegalStateException("Unexpected tab was selected");
@@ -283,11 +280,13 @@ public class LaanoActivity extends AppCompatActivity implements
     private void notifyTabDeselected(int position) {
         switch (position) {
             case LaanoFragmentPagerAdapter.LINKS_TAB:
+                linksPresenter.onTabDeselected();
                 break;
             case LaanoFragmentPagerAdapter.FAVORITES_TAB:
                 favoritesPresenter.onTabDeselected();
                 break;
             case LaanoFragmentPagerAdapter.NOTES_TAB:
+                notesPresenter.onTabDeselected();
                 break;
             default:
                 throw new IllegalStateException("Unexpected tab was selected");
@@ -301,16 +300,49 @@ public class LaanoActivity extends AppCompatActivity implements
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action.equals(SyncNotifications.ACTION_SYNC_START)) {
+            int status = intent.getIntExtra(SyncNotifications.EXTRA_STATUS, -1);
+            String id = intent.getStringExtra(SyncNotifications.EXTRA_ID);
 
-            } else if (action.equals(SyncNotifications.ACTION_SYNC_END)) {
-
-            } else if (action.equals(SyncNotifications.ACTION_SYNC_LINK)) {
-
-            } else if (action.equals(SyncNotifications.ACTION_SYNC_FAVORITE)) {
-
-            } else if (action.equals(SyncNotifications.ACTION_SYNC_NOTE)) {
-
+            int tabPosition;
+            switch (action) {
+                case SyncNotifications.ACTION_SYNC_LINKS:
+                    tabPosition = LaanoFragmentPagerAdapter.LINKS_TAB;
+                    if (status == SyncNotifications.STATUS_SYNC_END) {
+                        //linksPresenter.loadLinks(true);
+                        //linksPresenter.updateTabNormalState();
+                        actionBarManager.setTabNormalState(
+                                tabPosition, linksPresenter.isConflicted());
+                    }
+                    break;
+                case SyncNotifications.ACTION_SYNC_FAVORITES:
+                    tabPosition = LaanoFragmentPagerAdapter.FAVORITES_TAB;
+                    if (status == SyncNotifications.STATUS_SYNC_END) {
+                        favoritesPresenter.loadFavorites(true);
+                        favoritesPresenter.updateTabNormalState();
+                    }
+                    break;
+                case SyncNotifications.ACTION_SYNC_NOTES:
+                    tabPosition = LaanoFragmentPagerAdapter.NOTES_TAB;
+                    if (status == SyncNotifications.STATUS_SYNC_END) {
+                        //notesPresenter.loadNotes(true);
+                        //notesPresenter.updateTabNormalState();
+                        actionBarManager.setTabNormalState(
+                                tabPosition, notesPresenter.isConflicted());
+                    }
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "Unexpected action has been received in SyncBroadcastReceiver [" + action + "]");
+            }
+            if (status == SyncNotifications.STATUS_SYNC_START) {
+                actionBarManager.setTabSyncState(tabPosition);
+            } else if (status == SyncNotifications.STATUS_UPLOADED) {
+                actionBarManager.incUploaded(tabPosition);
+            } else if (status == SyncNotifications.STATUS_DOWNLOADED) {
+                actionBarManager.incDownloaded(tabPosition);
+            }
+            if (tabPosition == activeTab) {
+                actionBarManager.showTitle(activeTab);
             }
         } // onReceive
     }
@@ -318,10 +350,10 @@ public class LaanoActivity extends AppCompatActivity implements
     // Setup
 
     private void setupAppBarLayout(
-            @NonNull AppBarLayout appBarLayout,
-            @NonNull FloatingActionButton fab) {
+            @NonNull AppBarLayout appBarLayout, @NonNull FloatingActionButton fab) {
         checkNotNull(appBarLayout);
         checkNotNull(fab);
+
         appBarLayout.addOnOffsetChangedListener(new AppBarLayoutOnStateChangeListener() {
 
             @Override
@@ -336,17 +368,16 @@ public class LaanoActivity extends AppCompatActivity implements
     }
 
     private void setupViewPager(
-            @NonNull ViewPager viewPager, @NonNull LaanoFragmentPagerAdapter adapter) {
+            @NonNull ViewPager viewPager, @NonNull LaanoFragmentPagerAdapter pagerAdapter) {
         checkNotNull(viewPager);
-        checkNotNull(adapter);
+        checkNotNull(pagerAdapter);
 
-        viewPager.setAdapter(adapter);
+        viewPager.setAdapter(pagerAdapter);
         // NOTE: Fragments are needed immediately to build Presenters
-        adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.LINKS_TAB);
-        adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.FAVORITES_TAB);
-        adapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.NOTES_TAB);
-        adapter.finishUpdate(viewPager);
-        viewPager.setCurrentItem(activeTab);
+        pagerAdapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.LINKS_TAB);
+        pagerAdapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.FAVORITES_TAB);
+        pagerAdapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.NOTES_TAB);
+        pagerAdapter.finishUpdate(viewPager);
         // Listener
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
@@ -359,6 +390,7 @@ public class LaanoActivity extends AppCompatActivity implements
                 if (activeTab != position) {
                     notifyTabDeselected(activeTab);
                     notifyTabSelected(position);
+                    actionBarManager.showTitle(position);
                     activeTab = position;
                 }
             }

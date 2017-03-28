@@ -43,6 +43,7 @@
 
         <activity android:name=".addeditfavorite.AddEditFavoriteActivity" />
         <activity android:name=".manageaccounts.ManageAccountsActivity" />
+        <activity android:name=".laano.favorites.conflictresolution.FavoritesConflictResolutionActivity" />
 
         <provider
             android:authorities="${applicationId}.provider"

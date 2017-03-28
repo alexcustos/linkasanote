@@ -76,8 +76,8 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
     @Nullable
     @Override
     public View onCreateView(
-            LayoutInflater inflater,
-            @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+            LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_add_edit_favorite, container, false);
         viewModel.setInstanceState(savedInstanceState);

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/favorites_all"
+        android:title="@string/filter_favorites_all" />
+    <item
+        android:id="@+id/favorites_conflicted"
+        android:title="@string/filter_favorites_conflicted" />
+</menu>

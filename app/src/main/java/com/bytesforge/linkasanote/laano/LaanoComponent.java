@@ -11,7 +11,8 @@ import dagger.Subcomponent;
 @Subcomponent(modules = {
         LinksPresenterModule.class,
         FavoritesPresenterModule.class,
-        NotesPresenterModule.class})
+        NotesPresenterModule.class,
+        LaanoActionBarManagerModule.class})
 public interface LaanoComponent {
 
     void inject(LaanoActivity activity);

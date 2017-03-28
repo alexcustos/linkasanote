@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
@@ -162,6 +163,7 @@ public class FavoritesTabTest {
     @Test
     public void addFavoritesToFavoritesRecyclerView_CheckIfPersistOnOrientationChange() {
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(FAVORITES));
+        when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
         for (Favorite favorite : FAVORITES) {
@@ -178,11 +180,12 @@ public class FavoritesTabTest {
         List<Favorite> favorites = new ArrayList<>();
         favorites.add(FAVORITES.get(0));
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
+        when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
         openActionBarOverflowOrOptionsMenu(context);
         // NOTE: R.id.toolbar_favorite_action_mode does not work
-        onView(withText(R.string.toolbar_item_action_mode)).perform(click());
+        onView(withText(R.string.toolbar_favorites_item_action_mode)).perform(click());
         onView(withText(context.getResources()
                 .getString(R.string.laano_favorites_action_mode_selected, 0)))
                 .check(matches(isDisplayed()));
@@ -196,6 +199,7 @@ public class FavoritesTabTest {
         List<Favorite> favorites = new ArrayList<>();
         favorites.add(FAVORITES.get(0));
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
+        when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.rv_favorites))
@@ -213,6 +217,7 @@ public class FavoritesTabTest {
         List<Favorite> favorites = new ArrayList<>();
         favorites.add(FAVORITES.get(0));
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
+        when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.rv_favorites))
@@ -231,6 +236,7 @@ public class FavoritesTabTest {
         List<Favorite> favorites = new ArrayList<>();
         favorites.add(FAVORITES.get(0));
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
+        when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.rv_favorites))

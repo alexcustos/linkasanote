@@ -208,11 +208,10 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
         public static AccountRemovalConfirmationDialog newInstance(@NonNull Account account) {
             checkNotNull(account);
 
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(ARGUMENT_REMOVAL_CONFIRMATION_ACCOUNT, account);
+            Bundle args = new Bundle();
+            args.putParcelable(ARGUMENT_REMOVAL_CONFIRMATION_ACCOUNT, account);
             AccountRemovalConfirmationDialog dialog = new AccountRemovalConfirmationDialog();
-            dialog.setArguments(bundle);
-
+            dialog.setArguments(args);
             return dialog;
         }
 

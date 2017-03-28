@@ -47,4 +47,10 @@
     <style name="Button.RecyclerView" parent="Widget.AppCompat.ImageButton">
         <item name="android:background">@null</item>
     </style>
+
+    <style name="ConflictResolutionTitle" parent="Base.TextAppearance.AppCompat.Title" />
+
+    <style name="ConflictResolutionTitle.Source" parent="ConflictResolutionTitle" >
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>

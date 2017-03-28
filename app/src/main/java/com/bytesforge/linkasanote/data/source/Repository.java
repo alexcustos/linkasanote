@@ -193,6 +193,14 @@ public class Repository implements DataSource {
         if (!isKeyValidUuid(favoriteId)) {
             throw new InvalidParameterException("getFavorite() called with invalid UUID");
         }
+        return getFavorite(favoriteId, false);
+    }
+
+    public Single<Favorite> getFavorite(@NonNull String favoriteId, boolean forceCacheUpdate) {
+        checkNotNull(favoriteId);
+
+        if (forceCacheUpdate) return getAndCacheLocalFavorite(favoriteId);
+
         final Favorite cachedFavorite = getCachedFavorite(favoriteId);
         if (cachedFavorite != null) {
             return Single.just(cachedFavorite);
@@ -256,7 +264,7 @@ public class Repository implements DataSource {
 
     @Override
     public void deleteAllFavorites() {
-        localDataSource.deleteAllFavorites(); // blocking operation
+        localDataSource.deleteAllFavorites(); // blocking
         //cloudDataSource.deleteAllFavorites();
 
         if (cachedFavorites == null) {
@@ -269,8 +277,24 @@ public class Repository implements DataSource {
     public void deleteFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
 
-        localDataSource.deleteFavorite(favoriteId);
+        localDataSource.deleteFavorite(favoriteId); // blocking
         cloudDataSource.deleteFavorite(favoriteId);
+
+        deleteCachedFavorite(favoriteId);
+    }
+
+    @Override
+    public Single<Boolean> isConflictedFavorites() {
+        return localDataSource.isConflictedFavorites();
+    }
+
+    // TODO: implement cache invalidation for one specific item
+    public void refreshFavorites() {
+        favoriteCacheIsDirty = true;
+    }
+
+    public void deleteCachedFavorite(@NonNull String favoriteId) {
+        checkNotNull(favoriteId);
 
         if (cachedFavorites == null) {
             cachedFavorites = new LinkedHashMap<>();

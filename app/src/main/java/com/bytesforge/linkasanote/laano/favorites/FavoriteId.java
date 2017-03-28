@@ -1,4 +1,4 @@
-package com.bytesforge.linkasanote.addeditfavorite;
+package com.bytesforge.linkasanote.laano.favorites;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;

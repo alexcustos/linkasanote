@@ -119,6 +119,8 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
                         R.string.add_edit_favorite_warning_not_existed,
                         Snackbar.LENGTH_LONG).show();
                 break;
+            default:
+                throw new IllegalArgumentException("Unexpected snackbar has been requested");
         }
     }
 

@@ -3,14 +3,21 @@ package com.bytesforge.linkasanote.laano.favorites;
 import android.content.Context;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
+import android.databinding.BindingAdapter;
+import android.databinding.BindingConversion;
 import android.databinding.ObservableBoolean;
 import android.databinding.ObservableInt;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.util.SparseBooleanArray;
+import android.widget.RelativeLayout;
 
 import com.bytesforge.linkasanote.BR;
+import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.laano.LaanoActionBarManager;
 import com.bytesforge.linkasanote.utils.SparseBooleanParcelableArray;
 
 import java.util.LinkedList;
@@ -24,22 +31,61 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     private static final String STATE_ACTION_MODE = "ACTION_MODE";
     private static final String STATE_LIST_SIZE = "LIST_SIZE";
     private static final String STATE_SELECTED_IDS = "SELECTED_IDS";
+    private static final String STATE_FILTER_TYPE = "FILTER_TYPE";
 
     public final ObservableBoolean actionMode = new ObservableBoolean();
     public final ObservableInt favoriteListSize = new ObservableInt(0);
 
     private FavoritesContract.Presenter presenter;
+    private LaanoActionBarManager actionBarManager;
     private Context context;
 
     private SparseBooleanArray selectedIds;
+    private FavoritesFilterType filterType;
+
+    public enum SnackbarId {
+        DATABASE_ERROR, CONFLICT_RESOLUTION_SUCCESSFUL, CONFLICT_RESOLUTION_ERROR};
+
+    @Bindable
+    public SnackbarId snackbarId;
 
     public FavoritesViewModel(@NonNull Context context) {
         this.context = checkNotNull(context);
     }
 
+    @BindingConversion
+    public static ColorDrawable convertColorToDrawable(int color) {
+        return new ColorDrawable(color);
+    }
+
     @Bindable
     public boolean isFavoriteListEmpty() {
         return favoriteListSize.get() <= 0;
+    }
+
+    @BindingAdapter({"snackbarId"})
+    public static void showSnackbar(RelativeLayout view, SnackbarId snackbarId) {
+        if (snackbarId == null) return;
+
+        switch (snackbarId) {
+            case DATABASE_ERROR:
+                Snackbar.make(view, R.string.error_database, Snackbar.LENGTH_INDEFINITE)
+                        .setAction(R.string.snackbar_button_ok, v -> { /* just inform */ })
+                        .show();
+                break;
+            case CONFLICT_RESOLUTION_SUCCESSFUL:
+                Snackbar.make(view,
+                        R.string.dialog_favorite_conflict_resolved_success,
+                        Snackbar.LENGTH_LONG).show();
+                break;
+            case CONFLICT_RESOLUTION_ERROR:
+                Snackbar.make(view,
+                        R.string.dialog_favorite_conflict_resolved_error,
+                        Snackbar.LENGTH_LONG).show();
+                break;
+            default:
+                throw new IllegalArgumentException("Unexpected snackbar has been requested");
+        }
     }
 
     @Override
@@ -58,6 +104,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         outState.putBoolean(STATE_ACTION_MODE, actionMode.get());
         outState.putInt(STATE_LIST_SIZE, favoriteListSize.get());
         outState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray(selectedIds));
+        outState.putInt(STATE_FILTER_TYPE, filterType.ordinal());
     }
 
     @Override
@@ -67,6 +114,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         actionMode.set(state.getBoolean(STATE_ACTION_MODE));
         favoriteListSize.set(state.getInt(STATE_LIST_SIZE));
         selectedIds = state.getParcelable(STATE_SELECTED_IDS);
+        setFilterType(FavoritesFilterType.values()[state.getInt(STATE_FILTER_TYPE)]);
 
         notifyChange();
     }
@@ -77,6 +125,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         defaultState.putBoolean(STATE_ACTION_MODE, false);
         defaultState.putInt(STATE_LIST_SIZE, 0);
         defaultState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray());
+        defaultState.putInt(STATE_FILTER_TYPE, FavoritesFilterType.FAVORITES_ALL.ordinal());
 
         return defaultState;
     }
@@ -84,6 +133,11 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     @Override
     public void setPresenter(@NonNull FavoritesContract.Presenter presenter) {
         this.presenter = checkNotNull(presenter);
+    }
+
+    @Override
+    public void setActionBarManager(@NonNull LaanoActionBarManager actionBarManager) {
+        this.actionBarManager = checkNotNull(actionBarManager);
     }
 
     public void setFavoriteListSize(int favoriteListSize) {
@@ -99,13 +153,26 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     @Override
     public void enableActionMode() {
         actionMode.set(true);
+        snackbarId = null; // TODO: get rid of this workaround
         notifyChange(); // NOTE: otherwise, the only current Item will be notified
     }
 
     @Override
     public void disableActionMode() {
         actionMode.set(false);
+        snackbarId = null;
         notifyChange();
+    }
+
+    @Override
+    public FavoritesFilterType getFilterType() {
+        return filterType;
+    }
+
+    @Override
+    public void setFilterType(FavoritesFilterType filterType) {
+        this.filterType = filterType;
+        actionBarManager.setFavoriteFilterType(filterType);
     }
 
     // Selection
@@ -153,5 +220,23 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
             }
         }
         return ids.stream().mapToInt(i -> i).toArray();
+    }
+
+    @Override
+    public void showDatabaseErrorSnackbar() {
+        snackbarId = SnackbarId.DATABASE_ERROR;
+        notifyPropertyChanged(BR.snackbarId);
+    }
+
+    @Override
+    public void showConflictResolutionSuccessfulSnackbar() {
+        snackbarId = SnackbarId.CONFLICT_RESOLUTION_SUCCESSFUL;
+        notifyPropertyChanged(BR.snackbarId);
+    }
+
+    @Override
+    public void showConflictResolutionErrorSnackbar() {
+        snackbarId = SnackbarId.CONFLICT_RESOLUTION_ERROR;
+        notifyPropertyChanged(BR.snackbarId);
     }
 }

@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.laano.LaanoActionBarManager;
 import com.bytesforge.linkasanote.laano.LaanoTabPresenter;
 
 import java.util.List;
@@ -25,9 +26,13 @@ public interface FavoritesContract {
         void selectionChanged(int position);
         String removeFavorite(int position);
         int getPosition(String favoriteId);
+        void confirmFavoritesRemoval(int[] selectedIds);
+        void showConflictResolution(@NonNull String favoriteId);
     }
 
     interface ViewModel extends BaseView<Presenter> {
+
+        void setActionBarManager(@NonNull LaanoActionBarManager actionBarManager);
 
         void setInstanceState(@Nullable Bundle savedInstanceState);
         void saveInstanceState(@NonNull Bundle outState);
@@ -44,6 +49,11 @@ public interface FavoritesContract {
         void removeSelection(int position);
         int getSelectedCount();
         int[] getSelectedIds();
+        void showDatabaseErrorSnackbar();
+        void showConflictResolutionSuccessfulSnackbar();
+        void showConflictResolutionErrorSnackbar();
+        FavoritesFilterType getFilterType();
+        void setFilterType(FavoritesFilterType filterType);
     }
 
     interface Presenter extends LaanoTabPresenter {
@@ -51,7 +61,7 @@ public interface FavoritesContract {
         void addFavorite();
         void loadFavorites(boolean forceUpdate);
 
-        void onFavoriteClick(String favoriteId);
+        void onFavoriteClick(String favoriteId, boolean isConflicted);
         boolean onFavoriteLongClick(String favoriteId);
         void onCheckboxClick(String favoriteId);
 
@@ -60,5 +70,7 @@ public interface FavoritesContract {
         void onToNotesClick(@NonNull String favoriteId);
         void onDeleteClick();
         int getPosition(String favoriteId);
+        void setFilterType(@NonNull FavoritesFilterType filtering);
+        void deleteFavorites(int[] selectedIds);
     }
 }

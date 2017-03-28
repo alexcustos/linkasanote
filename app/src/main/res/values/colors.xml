@@ -1,28 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="color_primary">#3F51B5</color>
-    <color name="color_primary_dark">#303F9F</color>
-    <color name="color_accent">#FF4081</color>
-    <color name="tabs_text">#E0E0E0</color>
-    <color name="tabs_text_selected">#FFFFFF</color>
+    <color name="color_primary">@color/indigo_500</color>
+    <color name="color_primary_dark">@color/indigo_700</color>
+    <color name="color_accent">@color/red_A200</color>
+    <color name="tabs_text">@color/indigo_200</color>
+    <color name="tabs_text_selected">@android:color/white</color>
     <color name="token">@color/indigo_300</color>
     <color name="token_stroke">@color/indigo_300</color>
     <color name="token_selected">@color/indigo_400</color>
     <color name="token_stroke_selected">@color/indigo_400</color>
+    <color name="item_conflicted">@color/red_100</color>
 
-    <!-- Indigo -->
-    <color name="indigo_50">#e8eaf6</color>
-    <color name="indigo_100">#c5cae9</color>
-    <color name="indigo_200">#9fa8da</color>
-    <color name="indigo_300">#7986cb</color>
-    <color name="indigo_400">#5c6bc0</color>
-    <color name="indigo_500">#3f51b5</color>
-    <color name="indigo_600">#3949ab</color>
-    <color name="indigo_700">#303f9f</color>
+    <!-- Indigo: primary -->
+    <color name="indigo_50">#E8EAF6</color>
+    <color name="indigo_100">#C5CAE9</color>
+    <color name="indigo_200">#9FA8DA</color>
+    <color name="indigo_300">#7986CB</color>
+    <color name="indigo_400">#5C6BC0</color>
+    <color name="indigo_500">#3F51B5</color>
+    <color name="indigo_600">#3949AB</color>
+    <color name="indigo_700">#303F9F</color>
     <color name="indigo_800">#283593</color>
-    <color name="indigo_900">#1a237e</color>
-    <color name="indigo_A100">#8c9eff</color>
-    <color name="indigo_A200">#536dfe</color>
-    <color name="indigo_A400">#3d5afe</color>
-    <color name="indigo_A700">#304ffe</color>
+    <color name="indigo_900">#1A237E</color>
+    <color name="indigo_A100">#8C9EFF</color>
+    <color name="indigo_A200">#536DFE</color>
+    <color name="indigo_A400">#3D5AFE</color>
+    <color name="indigo_A700">#304FFE</color>
+
+    <!-- Red: accent -->
+    <color name="red_50">#FFEBEE</color>
+    <color name="red_100">#FFCDD2</color>
+    <color name="red_200">#EF9A9A</color>
+    <color name="red_300">#E57373</color>
+    <color name="red_400">#EF5350</color>
+    <color name="red_500">#F44336</color>
+    <color name="red_600">#E53935</color>
+    <color name="red_700">#D32F2F</color>
+    <color name="red_800">#C62828</color>
+    <color name="red_900">#B71C1C</color>
+    <color name="red_A100">#FF8A80</color>
+    <color name="red_A200">#FF5252</color>
+    <color name="red_A400">#FF1744</color>
+    <color name="red_A700">#D50000</color>
 </resources>

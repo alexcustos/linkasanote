@@ -11,8 +11,8 @@ import dagger.Component;
 @Singleton
 @Component(modules = {
         ApplicationModule.class,
-        RepositoryModule.class,
-        ProviderModule.class})
+        ProviderModule.class,
+        RepositoryModule.class})
 public interface SyncServiceComponent {
 
     void inject(SyncService syncService);

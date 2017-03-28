@@ -40,4 +40,14 @@ public final class NotesPresenter implements NotesContract.Presenter {
     public void addNote() {
 
     }
+
+    @Override
+    public boolean isConflicted() {
+        return false;
+    }
+
+    @Override
+    public void updateTabNormalState() {
+
+    }
 }

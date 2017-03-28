@@ -17,7 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/item_favorites_layout_height"
         android:orientation="vertical"
-        android:onClick="@{() -> presenter.onFavoriteClick(favorite.id)}"
+        android:background="@{favorite.conflicted ? @color/item_conflicted : @android:color/transparent}"
+        android:onClick="@{() -> presenter.onFavoriteClick(favorite.id, favorite.conflicted)}"
         android:onLongClick="@{() -> presenter.onFavoriteLongClick(favorite.id)}">
         <!--android:background="?android:attr/selectableItemBackground"-->
 
@@ -31,7 +32,7 @@
             android:paddingEnd="@dimen/recycler_view_button_padding"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
             android:paddingBottom="@dimen/recycler_view_button_padding_vertical"
-            android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
+            android:visibility="@{viewModel.actionMode || favorite.conflicted ? View.INVISIBLE : View.VISIBLE}"
             android:onClick="@{() -> presenter.onToLinksClick(favorite.id)}"
             style="@style/Button.RecyclerView"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -91,7 +92,7 @@
             android:paddingEnd="@dimen/recycler_view_right_button_padding_end"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
             android:paddingBottom="@dimen/recycler_view_button_padding_vertical"
-            android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
+            android:visibility="@{viewModel.actionMode || favorite.conflicted ? View.INVISIBLE : View.VISIBLE}"
             android:onClick="@{() -> presenter.onToNotesClick(favorite.id)}"
             style="@style/Button.RecyclerView"
             app:layout_constraintRight_toRightOf="parent"

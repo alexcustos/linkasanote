@@ -1,7 +1,5 @@
 package com.bytesforge.linkasanote.data.source.cloud;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,7 +13,6 @@ import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
-import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
@@ -46,18 +43,16 @@ public class CloudDataSource implements DataSource {
 
     private final Context context;
     private final BaseSchedulerProvider schedulerProvider;
-    private final AccountManager accountManager;
     private final LocalFavorites localFavorites;
     private final CloudFavorites cloudFavorites;
 
     private final CompositeDisposable disposable;
 
     public CloudDataSource(
-            Context context, BaseSchedulerProvider schedulerProvider, AccountManager accountManager,
+            Context context, BaseSchedulerProvider schedulerProvider,
             LocalFavorites localFavorites, CloudFavorites cloudFavorites) {
         this.context = context;
         this.schedulerProvider = schedulerProvider;
-        this.accountManager = accountManager;
         this.localFavorites = localFavorites;
         this.cloudFavorites = cloudFavorites;
 
@@ -111,22 +106,46 @@ public class CloudDataSource implements DataSource {
 
     @Override
     public Single<Favorite> getFavorite(@NonNull String favoriteId) {
-        return null;
+        checkNotNull(favoriteId);
+
+        return cloudFavorites.downloadFavorite(favoriteId);
     }
 
     @Override
-    public void saveFavorite(final @NonNull Favorite favorite) {
+    public void saveFavorite(@NonNull final Favorite favorite) {
         checkNotNull(favorite);
 
-        if (!CloudUtils.isApplicationConnected(context)) return;
-
         // NOTE: do not cache, because it can be changed in any time
-        Single<RemoteOperationResult> uploadFavorite = Single.fromCallable(() -> {
-            // TODO: add multi-accounts support: upload to all accounts but sync with the default one
-            final Account account = CloudUtils.getDefaultAccount(context, accountManager);
-            if (account == null) return null;
-            final OwnCloudClient ocClient = CloudUtils.getOwnCloudClient(account, context);
-            if (ocClient == null) return null;
+        Disposable disposable = getSaveFavorite(favorite)
+                .subscribeOn(schedulerProvider.computation())
+                //.observeOn(schedulerProvider.ui())
+                .subscribe(result -> {
+                    int numRows = -1;
+                    if (result.isSuccess()) {
+                        JsonFile jsonFile = (JsonFile) result.getData().get(0);
+                        SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
+                        numRows = localFavorites.updateFavorite(favorite.getId(), state)
+                                .blockingGet();
+                    } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
+                        SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
+                        numRows = localFavorites.updateFavorite(favorite.getId(), state)
+                                .blockingGet();
+                    }
+                    if (numRows != 1) {
+                        Log.d(TAG, "Unexpected number of rows were updated [" + numRows + "]");
+                    }
+                }, throwable -> {
+                    if (throwable instanceof NullPointerException) {
+                        Log.e(TAG, "Current state is not suitable for upload [" + favorite.getId() + "]");
+                    } else {
+                        Log.e(TAG, "An unknown error while preparing to upload. ", throwable);
+                    }
+                });
+        this.disposable.add(disposable);
+    }
+
+    private Single<RemoteOperationResult> getSaveFavorite(@NonNull final Favorite favorite) {
+        return Single.fromCallable(() -> {
             // Check local
             String favoriteId = favorite.getId();
             SyncState oldState = null;
@@ -143,46 +162,16 @@ public class CloudDataSource implements DataSource {
             }
             if (!isReady) return null;
             // Check cloud
-            final String remotePath = cloudFavorites.getRemotePath(favoriteId);
             try {
-                RemoteFile file = CloudDataSource.getRemoteFile(ocClient, remotePath).blockingGet();
+                RemoteFile file = cloudFavorites.readFavoriteFile(favoriteId).blockingGet();
                 if (oldState == null || !file.getEtag().equals(oldState.getETag())) {
                     return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
                 }
             } catch (NoSuchElementException e) {
                 // NOTE: It's expected state if there is no file in the cloud
             }
-            return cloudFavorites.uploadFavorite(favorite, ocClient);
+            return cloudFavorites.uploadFavorite(favorite).blockingGet();
         });
-
-        Disposable disposable = uploadFavorite
-                .subscribeOn(schedulerProvider.computation())
-                //.observeOn(schedulerProvider.ui())
-                .subscribe(result -> {
-                    int numRows = -1;
-                    if (result.isSuccess()) {
-                        JsonFile jsonFile = (JsonFile) result.getData().get(0);
-                        SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        numRows = localFavorites
-                                .updateFavorite(favorite.getId(), state)
-                                .blockingGet();
-                    } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
-                        SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-                        numRows = localFavorites
-                                .updateFavorite(favorite.getId(), state)
-                                .blockingGet();
-                    }
-                    if (numRows != 1) {
-                        Log.d(TAG, "Unexpected number of rows were updated [" + numRows + "]");
-                    }
-                }, throwable -> {
-                    if (throwable instanceof NullPointerException) {
-                        Log.e(TAG, "Current state is not suitable for upload [" + favorite.getId() + "]");
-                    } else {
-                        Log.e(TAG, "An unknown error while preparing to upload. ", throwable);
-                    }
-                });
-        this.disposable.add(disposable);
     }
 
     @Override
@@ -193,41 +182,7 @@ public class CloudDataSource implements DataSource {
     public void deleteFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
 
-        if (!CloudUtils.isApplicationConnected(context)) return;
-
-        Single<RemoteOperationResult> deleteFavorite = Single.fromCallable(() -> {
-            final Account account = CloudUtils.getDefaultAccount(context, accountManager);
-            if (account == null) return null;
-            final OwnCloudClient ocClient = CloudUtils.getOwnCloudClient(account, context);
-            if (ocClient == null) return null;
-            // Check local
-            SyncState state = null;
-            boolean isReady = false;
-            try {
-                state = localFavorites.getFavoriteSyncState(favoriteId).blockingGet();
-            } catch (NoSuchElementException e) {
-                isReady = true;
-            } catch (NullPointerException e) {
-                return null;
-            }
-            if (state != null && state.isDeleted()) {
-                isReady = true;
-            }
-            if (!isReady) return null;
-            // Check cloud
-            final String remotePath = cloudFavorites.getRemotePath(favoriteId);
-            try {
-                RemoteFile file = CloudDataSource.getRemoteFile(ocClient, remotePath).blockingGet();
-                if (state != null && !file.getEtag().equals(state.getETag())) {
-                    return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
-                }
-            } catch (NoSuchElementException e) {
-                return new RemoteOperationResult(RemoteOperationResult.ResultCode.OK);
-            }
-            return cloudFavorites.deleteFavorite(favoriteId, ocClient);
-        });
-
-        Disposable disposable = deleteFavorite
+        Disposable disposable = getDeleteFavorite(favoriteId)
                 .subscribeOn(schedulerProvider.computation())
                 .subscribe(result -> {
                     int numRows = -1;
@@ -248,6 +203,40 @@ public class CloudDataSource implements DataSource {
                     }
                 });
         this.disposable.add(disposable);
+    }
+
+    private Single<RemoteOperationResult> getDeleteFavorite(@NonNull final String favoriteId) {
+        return Single.fromCallable(() -> {
+            // Check local
+            SyncState state = null;
+            boolean isReady = false;
+            try {
+                state = localFavorites.getFavoriteSyncState(favoriteId).blockingGet();
+            } catch (NoSuchElementException e) {
+                isReady = true;
+            } catch (NullPointerException e) {
+                return null;
+            }
+            if (state != null && state.isDeleted()) {
+                isReady = true;
+            }
+            if (!isReady) return null;
+            // Check cloud
+            try {
+                RemoteFile file = cloudFavorites.readFavoriteFile(favoriteId).blockingGet();
+                if (state != null && !file.getEtag().equals(state.getETag())) {
+                    return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
+                }
+            } catch (NoSuchElementException e) {
+                return new RemoteOperationResult(RemoteOperationResult.ResultCode.OK);
+            }
+            return cloudFavorites.deleteFavorite(favoriteId).blockingGet();
+        });
+    }
+
+    @Override
+    public Single<Boolean> isConflictedFavorites() {
+        return null;
     }
 
     // Tags
@@ -273,20 +262,6 @@ public class CloudDataSource implements DataSource {
     }
 
     // Statics
-
-    public static Single<RemoteFile> getRemoteFile(
-            final OwnCloudClient ocClient, final String remotePath) {
-        return Single.fromCallable(() -> {
-            final ReadRemoteFileOperation operation = new ReadRemoteFileOperation(remotePath);
-            final RemoteOperationResult result = operation.execute(ocClient);
-            if (result.isSuccess()) {
-                return (RemoteFile) result.getData().get(0);
-            } else if (result.getCode() == RemoteOperationResult.ResultCode.FILE_NOT_FOUND) {
-                throw new NoSuchElementException("The requested file was not found");
-            }
-            return null;
-        });
-    }
 
     public static Observable<RemoteFile> getRemoteFiles(
             final OwnCloudClient ocClient, final String remotePath) {

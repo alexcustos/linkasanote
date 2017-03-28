@@ -296,7 +296,7 @@ public class Provider extends ContentProvider {
     }
 
     private long appendTag(
-            final @NonNull SQLiteDatabase db,
+            @NonNull final SQLiteDatabase db,
             final String leftTable, final String leftId, final ContentValues values) {
         checkNotNull(db);
         // Tag
@@ -328,7 +328,7 @@ public class Provider extends ContentProvider {
         long rowId = updateEntry(db, tableName, idField, idValue, values);
         if (rowId <= 0) {
             rowId = insertEntry(db, tableName, values);
-        } else { // NOTE: updateEntry mainly for update the state
+        } else { // NOTE: updateEntry mainly is for the update of the state
             // NOTE: will be recreated with the new set of tags
             deleteTagReferences(db, tableName, rowId);
         }
@@ -373,7 +373,7 @@ public class Provider extends ContentProvider {
     }
 
     private int deleteTagReferences(
-            final @NonNull SQLiteDatabase db, final String leftTable, final long leftId) {
+            @NonNull final SQLiteDatabase db, final String leftTable, final long leftId) {
         checkNotNull(db);
 
         final String tagTable = LocalContract.TagEntry.TABLE_NAME;
@@ -413,5 +413,13 @@ public class Provider extends ContentProvider {
 
         return refTable + " LEFT OUTER JOIN " + tagTable +
                 " ON " + refTable + "." + TAG_ID + "=" + tagTable + "." + BaseColumns._ID;
+    }
+
+    public static Cursor rawQuery(
+            @NonNull Context context, @NonNull String table, @NonNull String[] columns,
+            @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String orderBy) {
+        DatabaseHelper databaseHelper = new DatabaseHelper(context);
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        return db.query(table, columns, selection, selectionArgs, null, null, orderBy);
     }
 }
