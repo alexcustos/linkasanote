@@ -11,11 +11,14 @@
 
         <item name="windowActionModeOverlay">true</item>
         <item name="android:actionModeBackground">@color/color_primary</item>
+
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="Laano.Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
-        <item name="android:background">@color/color_primary</item>
-    </style>
+    <style name="Laano.NavHeader" parent="ThemeOverlay.AppCompat.Dark" />
+    <style name="Laano.Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Laano.Popup" parent="ThemeOverlay.AppCompat.Light" />
 
     <style name="Laano.TabLayout" parent="Base.Widget.Design.TabLayout">
         <item name="tabMode">fixed</item>
@@ -37,7 +40,7 @@
     </style>
 
     <!-- Styles -->
-    <style name="Button" parent="Base.Widget.AppCompat.Button" />
+    <style name="Button" parent="Widget.AppCompat.Button" />
 
     <style name="Button.About" parent="Button">
         <item name="android:background">@android:color/transparent</item>
@@ -48,9 +51,25 @@
         <item name="android:background">@null</item>
     </style>
 
-    <style name="ConflictResolutionTitle" parent="Base.TextAppearance.AppCompat.Title" />
-
+    <style name="ConflictResolutionTitle" parent="TextAppearance.AppCompat.Title">
+    </style>
     <style name="ConflictResolutionTitle.Source" parent="ConflictResolutionTitle" >
         <item name="android:textStyle">bold</item>
+    </style>
+    <style name="ConflictResolutionSubhead" parent="TextAppearance.AppCompat.Subhead" />
+
+    <style name="DrawerText" parent="TextAppearance.AppCompat.Subhead">
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="DrawerText.Username" parent="DrawerText">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="DrawerText.AppName" parent="DrawerText">
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="DrawerText.LastSynced" parent="DrawerText">
+        <item name="android:textSize">12sp</item>
     </style>
 </resources>

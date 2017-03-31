@@ -18,6 +18,7 @@ import android.util.Log;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.manageaccounts.AccountItem;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.owncloud.android.lib.common.OwnCloudAccount;
 import com.owncloud.android.lib.common.OwnCloudClient;
@@ -31,12 +32,15 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
 
 public final class CloudUtils {
 
     private static final String TAG = CloudUtils.class.getSimpleName();
 
     private static final String SETTINGS_CLOUD = "SETTINGS_CLOUD";
+    private static final String SETTING_LAST_SYNC_TIME = "LAST_SYNC_TIME";
+    private static final String SETTING_LAST_SYNC_STATUS = "LAST_SYNC_STATUS";
 
     private CloudUtils() {
     }
@@ -147,5 +151,44 @@ public final class CloudUtils {
         } else {
             Log.e(TAG, "Error while retrieving user info from server [" + result.getCode().name() + "]");
         }
+    }
+
+    public static AccountItem getAccountItem(@NonNull Account account, @NonNull Context context) {
+        checkNotNull(account);
+        checkNotNull(context);
+
+        AccountItem accountItem = new AccountItem(account);
+        try {
+            OwnCloudAccount ocAccount = new OwnCloudAccount(account, context);
+            accountItem.setDisplayName(ocAccount.getDisplayName());
+        } catch (AccountUtils.AccountNotFoundException e) {
+            accountItem.setDisplayName(getAccountUsername(account.name));
+        }
+        return accountItem;
+    }
+
+    public static synchronized void updateLastSyncStatus(
+            @NonNull Context context, int lastSyncStatus) {
+        checkNotNull(context);
+
+        SharedPreferences sharedPreferences = getCloudSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong(SETTING_LAST_SYNC_TIME, currentTimeMillis());
+        editor.putInt(SETTING_LAST_SYNC_STATUS, lastSyncStatus);
+        editor.apply();
+    }
+
+    public static int getLastSyncStatus(@NonNull Context context) {
+        checkNotNull(context);
+
+        SharedPreferences sharedPreferences = CloudUtils.getCloudSharedPreferences(context);
+        return sharedPreferences.getInt(SETTING_LAST_SYNC_STATUS, 0);
+    }
+
+    public static long getLastSyncTime(@NonNull Context context) {
+        checkNotNull(context);
+
+        SharedPreferences sharedPreferences = CloudUtils.getCloudSharedPreferences(context);
+        return sharedPreferences.getLong(SETTING_LAST_SYNC_TIME, 0);
     }
 }

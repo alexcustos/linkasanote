@@ -3,7 +3,7 @@ package com.bytesforge.linkasanote.laano.favorites;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Repository;
-import com.bytesforge.linkasanote.laano.LaanoActionBarManager;
+import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
@@ -37,7 +37,7 @@ public class FavoritesPresenterTest {
     private FavoritesContract.ViewModel viewModel;
 
     @Mock
-    private LaanoActionBarManager laanoActionBarManager;
+    private LaanoUiManager laanoUiManager;
 
     private FavoritesPresenter presenter;
 
@@ -58,7 +58,7 @@ public class FavoritesPresenterTest {
         when(view.isActive()).thenReturn(true);
 
         presenter = new FavoritesPresenter(
-                repository, view, viewModel, schedulerProvider, laanoActionBarManager);
+                repository, view, viewModel, schedulerProvider, laanoUiManager);
     }
 
     @Test

@@ -16,6 +16,7 @@ import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -51,6 +52,7 @@ import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity;
 import com.bytesforge.linkasanote.settings.SettingsActivity;
 import com.bytesforge.linkasanote.sync.SyncNotifications;
 import com.bytesforge.linkasanote.utils.AppBarLayoutOnStateChangeListener;
+import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 
 import java.io.IOException;
@@ -84,7 +86,7 @@ public class LaanoActivity extends AppCompatActivity implements
     NotesPresenter notesPresenter;
 
     @Inject
-    LaanoActionBarManager actionBarManager;
+    LaanoUiManager laanoUiManager;
 
     @Inject
     AccountManager accountManager;
@@ -92,12 +94,14 @@ public class LaanoActivity extends AppCompatActivity implements
     private int activeTab;
     private SyncBroadcastReceiver syncBroadcastReceiver;
     private ActivityLaanoBinding binding;
+    private LaanoViewModel viewModel;
 
     @Override
     protected void onResume() {
         super.onResume();
 
         IntentFilter syncIntentFilter = new IntentFilter();
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC);
         syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_LINKS);
         syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_FAVORITES);
         syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_NOTES);
@@ -123,13 +127,17 @@ public class LaanoActivity extends AppCompatActivity implements
             applyInstanceState(savedInstanceState);
         }
         binding = DataBindingUtil.setContentView(this, R.layout.activity_laano);
+        viewModel = new LaanoViewModel(this);
+        viewModel.setInstanceState(savedInstanceState);
+        binding.setViewModel(viewModel);
 
         // Toolbar
         setSupportActionBar(binding.toolbar);
         ActionBar actionBar = getSupportActionBar();
-        assert actionBar != null;
-        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
-        actionBar.setDisplayHomeAsUpEnabled(true);
+        if (actionBar != null) {
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
         // Navigation Drawer
         setupDrawerLayout(binding.drawerLayout);
         setupDrawerContent(binding.navView);
@@ -148,23 +156,26 @@ public class LaanoActivity extends AppCompatActivity implements
                         new LinksPresenterModule(pagerAdapter.getLinksFragment()),
                         new FavoritesPresenterModule(this, pagerAdapter.getFavoritesFragment()),
                         new NotesPresenterModule(pagerAdapter.getNotesFragment()),
-                        new LaanoActionBarManagerModule(this, actionBar, binding.tabLayout, pagerAdapter))
+                        new LaanoUiManagerModule(this, binding.tabLayout,
+                                binding.navView.getMenu(), viewModel.headerViewModel, pagerAdapter))
                 .inject(this);
         // FAB
         setupFabAdd(binding.fabAdd);
         // AppBar
         setupAppBarLayout(binding.appBarLayout, binding.fabAdd);
-        // ActionBarManager
+        // UiManager
         linksPresenter.updateTabNormalState();
         favoritesPresenter.updateTabNormalState();
         notesPresenter.updateTabNormalState();
-        actionBarManager.showTitle(activeTab);
+        laanoUiManager.updateTitle(activeTab);
+        updateDefaultAccount();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(STATE_ACTIVE_TAB, activeTab);
+        viewModel.saveInstanceState(outState);
     }
 
     private void applyInstanceState(@NonNull Bundle state) {
@@ -185,17 +196,13 @@ public class LaanoActivity extends AppCompatActivity implements
             case android.R.id.home:
                 drawerLayout.openDrawer(GravityCompat.START);
                 return true;
-            case R.id.toolbar_laano_sync:
-                Account account = getDefaultAccount(this, accountManager);
-                if (account != null) {
-                    triggerSync(account);
-                }
-                return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private static void triggerSync(Account account) {
+    private static void triggerSync(@NonNull Account account) {
+        checkNotNull(account);
+
         Bundle extras = new Bundle();
         extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         extras.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
@@ -208,7 +215,7 @@ public class LaanoActivity extends AppCompatActivity implements
 
         if (ACTION_MANAGE_ACCOUNTS == requestCode && RESULT_OK == resultCode
                 && data.getBooleanExtra(ManageAccountsActivity.KEY_ACCOUNT_LIST_CHANGED, false)) {
-            updateAccountList();
+            updateDefaultAccount();
         }
     }
 
@@ -219,8 +226,10 @@ public class LaanoActivity extends AppCompatActivity implements
         return true;
     }
 
-    private void updateAccountList() {
-        // TODO: update status in Navigation Drawer
+    private void updateDefaultAccount() {
+        Account account = CloudUtils.getDefaultAccount(this, accountManager);
+        laanoUiManager.updateDefaultAccount(account);
+        laanoUiManager.updateLastSyncStatus();
     }
 
     // Get Accounts Permission
@@ -303,30 +312,43 @@ public class LaanoActivity extends AppCompatActivity implements
             int status = intent.getIntExtra(SyncNotifications.EXTRA_STATUS, -1);
             String id = intent.getStringExtra(SyncNotifications.EXTRA_ID);
 
+            if (action.equals(SyncNotifications.ACTION_SYNC)) {
+                switch (status) {
+                    case SyncNotifications.STATUS_SYNC_START:
+                        laanoUiManager.setSyncDrawerMenu();
+                        break;
+                    case SyncNotifications.STATUS_SYNC_STOP:
+                        laanoUiManager.updateLastSyncStatus();
+                        laanoUiManager.setNormalDrawerMenu();
+                        break;
+                }
+                return;
+            }
+            laanoUiManager.setSyncDrawerMenu(); // NOTE: if the first SYNC_START was missed
             int tabPosition;
             switch (action) {
                 case SyncNotifications.ACTION_SYNC_LINKS:
                     tabPosition = LaanoFragmentPagerAdapter.LINKS_TAB;
-                    if (status == SyncNotifications.STATUS_SYNC_END) {
+                    if (status == SyncNotifications.STATUS_SYNC_STOP) {
                         //linksPresenter.loadLinks(true);
                         //linksPresenter.updateTabNormalState();
-                        actionBarManager.setTabNormalState(
+                        laanoUiManager.setTabNormalState(
                                 tabPosition, linksPresenter.isConflicted());
                     }
                     break;
                 case SyncNotifications.ACTION_SYNC_FAVORITES:
                     tabPosition = LaanoFragmentPagerAdapter.FAVORITES_TAB;
-                    if (status == SyncNotifications.STATUS_SYNC_END) {
+                    if (status == SyncNotifications.STATUS_SYNC_STOP) {
                         favoritesPresenter.loadFavorites(true);
                         favoritesPresenter.updateTabNormalState();
                     }
                     break;
                 case SyncNotifications.ACTION_SYNC_NOTES:
                     tabPosition = LaanoFragmentPagerAdapter.NOTES_TAB;
-                    if (status == SyncNotifications.STATUS_SYNC_END) {
+                    if (status == SyncNotifications.STATUS_SYNC_STOP) {
                         //notesPresenter.loadNotes(true);
                         //notesPresenter.updateTabNormalState();
-                        actionBarManager.setTabNormalState(
+                        laanoUiManager.setTabNormalState(
                                 tabPosition, notesPresenter.isConflicted());
                     }
                     break;
@@ -335,14 +357,14 @@ public class LaanoActivity extends AppCompatActivity implements
                             "Unexpected action has been received in SyncBroadcastReceiver [" + action + "]");
             }
             if (status == SyncNotifications.STATUS_SYNC_START) {
-                actionBarManager.setTabSyncState(tabPosition);
+                laanoUiManager.setTabSyncState(tabPosition);
             } else if (status == SyncNotifications.STATUS_UPLOADED) {
-                actionBarManager.incUploaded(tabPosition);
+                laanoUiManager.incUploaded(tabPosition);
             } else if (status == SyncNotifications.STATUS_DOWNLOADED) {
-                actionBarManager.incDownloaded(tabPosition);
+                laanoUiManager.incDownloaded(tabPosition);
             }
             if (tabPosition == activeTab) {
-                actionBarManager.showTitle(activeTab);
+                laanoUiManager.updateTitle(activeTab);
             }
         } // onReceive
     }
@@ -390,7 +412,7 @@ public class LaanoActivity extends AppCompatActivity implements
                 if (activeTab != position) {
                     notifyTabDeselected(activeTab);
                     notifyTabSelected(position);
-                    actionBarManager.showTitle(position);
+                    laanoUiManager.updateTitle(position);
                     activeTab = position;
                 }
             }
@@ -437,11 +459,6 @@ public class LaanoActivity extends AppCompatActivity implements
         navigationView.setNavigationItemSelectedListener(
                 (menuItem) -> {
                     switch (menuItem.getItemId()) {
-                        case R.id.settings_menu_item:
-                            Intent settingsIntent =
-                                    new Intent(getApplicationContext(), SettingsActivity.class);
-                            startActivity(settingsIntent);
-                            break;
                         case R.id.add_account_menu_item:
                             accountManager.addAccount(getAccountType(this),
                                     null, null, null, this, addAccountCallback, new Handler());
@@ -449,10 +466,26 @@ public class LaanoActivity extends AppCompatActivity implements
                         case R.id.manage_accounts_menu_item:
                             checkGetAccountsPermissionAndLaunchActivity();
                             break;
-                        default:
+                        case R.id.sync_menu_item:
+                            if (!CloudUtils.isApplicationConnected(this)) {
+                                showApplicationOfflineSnackbar();
+                            } else {
+                                Account account = getDefaultAccount(this, accountManager);
+                                if (account != null) {
+                                    triggerSync(account);
+                                }
+                            }
                             break;
+                        case R.id.settings_menu_item:
+                            Intent settingsIntent =
+                                    new Intent(getApplicationContext(), SettingsActivity.class);
+                            startActivity(settingsIntent);
+                            break;
+                        case R.id.about_menu_item:
+                            break;
+                        default:
                     }
-                    menuItem.setChecked(true);
+                    //menuItem.setChecked(true);
                     drawerLayout.closeDrawers();
 
                     return true;
@@ -506,27 +539,38 @@ public class LaanoActivity extends AppCompatActivity implements
     // Callbacks
 
     private AccountManagerCallback<Bundle> addAccountCallback = future -> {
-        if (future == null) return;
         try {
             future.getResult(); // NOTE: see exceptions
+            updateDefaultAccount();
             showAccountSuccessfullyAddedSnackbar();
         } catch (OperationCanceledException e) {
-            Log.d(TAG, "Account creation canceled");
+            Log.d(TAG, "Account creation was canceled by user");
         } catch (IOException | AuthenticatorException e) {
-            Log.e(TAG, "Account creation finished with an exception", e);
+            Log.e(TAG, "Account creation was finished with an exception", e);
+            Throwable throwable = e.getCause();
+            if (throwable != null) {
+                Snackbar.make(binding.laanoViewPager, throwable.getMessage(), Snackbar.LENGTH_LONG)
+                        .show();
+            }
         }
     };
 
     // SnackBars
 
     private void showPermissionDeniedSnackbar() {
-        Snackbar.make(binding.laanoViewPager, R.string.snackbar_no_permission, Snackbar.LENGTH_LONG)
-                .show();
+        showSnackbar(R.string.snackbar_no_permission, Snackbar.LENGTH_LONG);
     }
 
     private void showAccountSuccessfullyAddedSnackbar() {
-        Snackbar.make(binding.laanoViewPager, R.string.laano_account_added, Snackbar.LENGTH_LONG)
-                .show();
+        showSnackbar(R.string.laano_account_added, Snackbar.LENGTH_LONG);
+    }
+
+    private void showApplicationOfflineSnackbar() {
+        showSnackbar(R.string.laano_offline, Snackbar.LENGTH_LONG);
+    }
+
+    private void showSnackbar(@StringRes int stringId, int duration) {
+        Snackbar.make(binding.laanoViewPager, stringId, duration).show();
     }
 
     // Testing

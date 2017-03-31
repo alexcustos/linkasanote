@@ -68,7 +68,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_below="@id/local_title_layout"
-                    android:textAppearance="?android:attr/textAppearanceListItem"
+                    android:textAppearance="@style/ConflictResolutionSubhead"
                     android:text="@{viewModel.localName}"
                     android:paddingBottom="@dimen/dialog_padding_name" />
                 <TextView
@@ -154,7 +154,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_below="@id/cloud_title_layout"
-                    android:textAppearance="?android:attr/textAppearanceListItem"
+                    android:textAppearance="@style/ConflictResolutionSubhead"
                     android:text="@{viewModel.cloudName}"
                     android:paddingBottom="@dimen/dialog_padding_name" />
                 <TextView

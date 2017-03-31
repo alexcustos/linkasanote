@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="drawer_header_height">164dp</dimen>
     <dimen name="drawer_header_padding">16dp</dimen>
+    <dimen name="drawer_header_subtitle_height">56dp</dimen>
+    <dimen name="drawer_header_status_margin_top">28dp</dimen>
     <dimen name="screen_edge_padding">16dp</dimen>
     <dimen name="add_edit_account_title_text_size">28sp</dimen>
     <dimen name="add_edit_account_description_padding">24dp</dimen>
     <dimen name="add_edit_account_status_min_height">32dp</dimen>
     <dimen name="add_edit_account_status_icon_padding">8dp</dimen>
-    <dimen name="main_button_top_margin">16dp</dimen>
+    <dimen name="main_button_margin_top">16dp</dimen>
     <dimen name="main_button_padding">16dp</dimen>
     <dimen name="item_favorites_vertical_padding">8dp</dimen>
     <dimen name="token_corners_radius">4dp</dimen>

@@ -110,6 +110,12 @@ public class NextcloudFragment extends Fragment implements
         this.accountManager = checkNotNull(accountManager);
     }
 
+    @Override
+    public void setAccountAuthenticatorResponse(
+            AccountAuthenticatorResponse accountAuthenticatorResponse) {
+        this.accountAuthenticatorResponse = accountAuthenticatorResponse;
+    }
+
     @Nullable
     @Override
     public View onCreateView(
@@ -134,17 +140,6 @@ public class NextcloudFragment extends Fragment implements
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         viewModel.saveInstanceState(outState);
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        accountAuthenticatorResponse = getActivity().getIntent()
-                .getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE);
-        if (accountAuthenticatorResponse != null) {
-            accountAuthenticatorResponse.onRequestContinued();
-        }
     }
 
     private void finishActivity(@NonNull Intent result) {

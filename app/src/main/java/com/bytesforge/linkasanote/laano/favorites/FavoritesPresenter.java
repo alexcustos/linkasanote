@@ -3,8 +3,8 @@ package com.bytesforge.linkasanote.laano.favorites;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.source.Repository;
-import com.bytesforge.linkasanote.laano.LaanoActionBarManager;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
+import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
@@ -23,7 +23,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     private final FavoritesContract.View view;
     private final FavoritesContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
-    private final LaanoActionBarManager actionBarManager;
+    private final LaanoUiManager laanoUiManager;
 
     @NonNull
     private final CompositeDisposable disposable;
@@ -34,12 +34,12 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     FavoritesPresenter(
             Repository repository, FavoritesContract.View view,
             FavoritesContract.ViewModel viewModel, BaseSchedulerProvider schedulerProvider,
-            LaanoActionBarManager actionBarManager) {
+            LaanoUiManager laanoUiManager) {
         this.repository = repository;
         this.view = view;
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
-        this.actionBarManager = actionBarManager;
+        this.laanoUiManager = laanoUiManager;
         disposable = new CompositeDisposable();
     }
 
@@ -48,7 +48,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         view.setPresenter(this);
         view.setViewModel(viewModel);
         viewModel.setPresenter(this);
-        viewModel.setActionBarManager(actionBarManager);
+        viewModel.setLaanoUiManager(laanoUiManager);
     }
 
     @Override
@@ -188,11 +188,12 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     @Override
     public void setFilterType(@NonNull FavoritesFilterType filterType) {
         viewModel.setFilterType(filterType);
+        laanoUiManager.updateTitle(LaanoFragmentPagerAdapter.FAVORITES_TAB);
     }
 
     @Override
     public void updateTabNormalState() {
-        actionBarManager.setTabNormalState(
+        laanoUiManager.setTabNormalState(
                 LaanoFragmentPagerAdapter.FAVORITES_TAB, isConflicted());
     }
 }

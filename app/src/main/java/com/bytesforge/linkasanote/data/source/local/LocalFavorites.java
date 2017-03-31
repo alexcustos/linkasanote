@@ -107,6 +107,15 @@ public class LocalFavorites {
         });
     }
 
+    public Single<Integer> resetFavoritesSyncState() {
+        return Single.fromCallable(() -> {
+            SyncState state = new SyncState(SyncState.State.UNSYNCED);
+            ContentValues values = state.getContentValues();
+            Uri uri = LocalContract.FavoriteEntry.buildFavoritesUri();
+            return contentResolver.update(uri, values, null, null);
+        });
+    }
+
     public Single<Integer> deleteFavorite(final String favoriteId) {
         Uri uri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
         return LocalDataSource.delete(contentResolver, uri);

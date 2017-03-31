@@ -305,6 +305,7 @@ public class CloudDataSource implements DataSource {
             result = writeOperation.execute(ocClient);
             if (result.isSuccess()) {
                 Log.i(TAG, "New folder has been created");
+                // NOTE: recursion, but with !createDataSource
                 return getDataSourceETag(ocClient, dataSourceDirectory, false);
             }
         }

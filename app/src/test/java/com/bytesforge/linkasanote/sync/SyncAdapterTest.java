@@ -92,6 +92,8 @@ public class SyncAdapterTest {
         when(CloudUtils.getAccountName(isNull())).thenReturn(ACCOUNT_NAME);
         when(cloudFavorites.getDataSourceETag(ownCloudClient)).thenReturn(E_TAGL);
         when(cloudFavorites.isCloudDataSourceChanged(E_TAGL)).thenReturn(true);
+        when(localFavorites.resetFavoritesSyncState()).thenReturn(Single.fromCallable(() -> 0));
+        when(localFavorites.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
 
         syncAdapter = new SyncAdapter(context, true,
                 accountManager, syncNotifications, localFavorites, cloudFavorites);

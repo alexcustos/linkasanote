@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- NOTE: workaround since LOLLIPOP -->
+    <color name="abc_input_method_navigation_guard" tools:override="true">@color/color_primary_dark</color>
+
     <color name="color_primary">@color/indigo_500</color>
     <color name="color_primary_dark">@color/indigo_700</color>
     <color name="color_accent">@color/red_A200</color>
@@ -10,6 +14,13 @@
     <color name="token_selected">@color/indigo_400</color>
     <color name="token_stroke_selected">@color/indigo_400</color>
     <color name="item_conflicted">@color/red_100</color>
+    <color name="sync_state_neutral">@android:color/white</color>
+    <color name="sync_state_success">@color/green_500</color>
+    <color name="sync_state_error">@color/red_400</color>
+    <color name="sync_state_conflict">@color/red_400</color>
+
+    <!-- Misc -->
+    <color name="green_500">#4CAF50</color>
 
     <!-- Indigo: primary -->
     <color name="indigo_50">#E8EAF6</color>

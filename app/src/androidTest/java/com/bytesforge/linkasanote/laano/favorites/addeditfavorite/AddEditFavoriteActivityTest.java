@@ -1,4 +1,4 @@
-package com.bytesforge.linkasanote.addeditfavorite;
+package com.bytesforge.linkasanote.laano.favorites.addeditfavorite;
 
 import android.support.test.espresso.Espresso;
 import android.support.test.filters.LargeTest;

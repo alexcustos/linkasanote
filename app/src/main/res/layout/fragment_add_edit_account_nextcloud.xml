@@ -134,7 +134,7 @@
                 android:layout_gravity="center_horizontal"
                 android:text="@string/add_edit_account_nextcloud_login_button"
                 android:padding="@dimen/main_button_padding"
-                android:layout_marginTop="@dimen/main_button_top_margin"
+                android:layout_marginTop="@dimen/main_button_margin_top"
                 android:enabled="@{viewModel.loginButton}"
                 android:onClick="@{() -> viewModel.onLoginButtonClick()}" />
 

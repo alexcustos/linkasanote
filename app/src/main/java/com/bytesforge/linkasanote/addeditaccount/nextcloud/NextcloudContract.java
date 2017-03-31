@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
 import android.accounts.Account;
+import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,6 +18,8 @@ public interface NextcloudContract {
 
         void setViewModel(@NonNull NextcloudContract.ViewModel viewModel);
         void setAccountManager(@NonNull AccountManager accountManager);
+        void setAccountAuthenticatorResponse(
+                AccountAuthenticatorResponse accountAuthenticatorResponse);
         boolean isActive();
 
         void addAccount(

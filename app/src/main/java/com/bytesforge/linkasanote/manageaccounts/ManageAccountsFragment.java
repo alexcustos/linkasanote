@@ -30,8 +30,6 @@ import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment;
 import com.bytesforge.linkasanote.databinding.FragmentManageAccountsBinding;
 import com.bytesforge.linkasanote.utils.CloudUtils;
-import com.owncloud.android.lib.common.OwnCloudAccount;
-import com.owncloud.android.lib.common.accounts.AccountUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,7 +40,6 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
-import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountUsername;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ManageAccountsFragment extends Fragment implements ManageAccountsContract.View {
@@ -132,13 +129,7 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
             }
             List<AccountItem> accountItems = new LinkedList<>();
             for (Account account : accounts) {
-                AccountItem accountItem = new AccountItem(account);
-                try {
-                    OwnCloudAccount ocAccount = new OwnCloudAccount(account, getContext());
-                    accountItem.setDisplayName(ocAccount.getDisplayName());
-                } catch (AccountUtils.AccountNotFoundException e) {
-                    accountItem.setDisplayName(getAccountUsername(account.name));
-                }
+                AccountItem accountItem = CloudUtils.getAccountItem(account, getContext());
                 accountItems.add(accountItem);
             }
             if (getResources().getBoolean(R.bool.multiaccount_support) || accounts.length <= 0) {

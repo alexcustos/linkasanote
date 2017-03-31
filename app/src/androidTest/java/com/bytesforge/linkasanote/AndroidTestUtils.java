@@ -94,7 +94,7 @@ public class AndroidTestUtils {
 
     // Permissions
 
-    private static final int PERMISSION_DIALOG_DELAY = 3000;
+    private static final int PERMISSION_DIALOG_DELAY = 1000;
     private static final int GRANT_BUTTON_INDEX = 1;
 
     private static boolean hasNeededPermission(String permissionNeeded) {

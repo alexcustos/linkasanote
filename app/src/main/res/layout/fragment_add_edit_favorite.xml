@@ -7,7 +7,7 @@
         <import type="android.view.View" />
 
         <variable name="viewModel"
-            type="com.bytesforge.linkasanote.addeditfavorite.AddEditFavoriteViewModel" />
+            type="com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteViewModel" />
     </data>
 
     <ScrollView
@@ -45,7 +45,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <com.bytesforge.linkasanote.addeditfavorite.FavoriteTagsCompletionView
+                <com.bytesforge.linkasanote.laano.favorites.addeditfavorite.FavoriteTagsCompletionView
                     android:id="@+id/favorite_tags"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:padding="@dimen/main_button_padding"
-                android:layout_marginTop="@dimen/main_button_top_margin"
+                android:layout_marginTop="@dimen/main_button_margin_top"
                 android:text="@{viewModel.addButtonText}"
                 android:enabled="@{viewModel.addButton}"
                 android:onClick="@{() -> viewModel.onAddButtonClick()}" />

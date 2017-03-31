@@ -45,7 +45,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     public final ObservableBoolean refreshButton = new ObservableBoolean(false);
     public final ObservableBoolean loginButton = new ObservableBoolean(false);
 
-    private Context context;
+    private final Context context;
     private NextcloudContract.Presenter presenter;
 
     public enum SnackbarId {NORMALIZED_URL, SOMETHING_WRONG};

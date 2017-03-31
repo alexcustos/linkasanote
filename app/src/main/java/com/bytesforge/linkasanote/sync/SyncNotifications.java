@@ -17,6 +17,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SyncNotifications {
 
+    public static final String ACTION_SYNC = BuildConfig.APPLICATION_ID + ".ACTION_SYNC";
     public static final String ACTION_SYNC_LINKS =
             BuildConfig.APPLICATION_ID + ".ACTION_SYNC_LINKS";
     public static final String ACTION_SYNC_FAVORITES =
@@ -24,17 +25,12 @@ public class SyncNotifications {
     public static final String ACTION_SYNC_NOTES =
             BuildConfig.APPLICATION_ID + ".ACTION_SYNC_NOTES";
 
-    public static final String ACTION_SYNC_UPLOADED =
-            BuildConfig.APPLICATION_ID + ".ACTION_SYNC_UPLOADED";
-    public static final String ACTION_SYNC_DOWNLOADED =
-            BuildConfig.APPLICATION_ID + ".ACTION_SYNC_DOWNLOADED";
-
     public static final String EXTRA_ACCOUNT_NAME = "ACCOUNT_NAME";
     public static final String EXTRA_ID = "ID";
     public static final String EXTRA_STATUS = "STATUS";
 
     public static final int STATUS_SYNC_START = 10;
-    public static final int STATUS_SYNC_END = 11;
+    public static final int STATUS_SYNC_STOP = 11;
     public static final int STATUS_CREATED = 20;
     public static final int STATUS_UPDATED = 21;
     public static final int STATUS_DELETED = 22;

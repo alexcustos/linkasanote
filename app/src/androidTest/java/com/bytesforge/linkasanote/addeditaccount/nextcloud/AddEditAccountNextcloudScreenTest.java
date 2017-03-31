@@ -80,7 +80,6 @@ public class AddEditAccountNextcloudScreenTest {
         NextcloudContract.Presenter presenter = fragment.getPresenter();
         assertThat(presenter, notNullValue());
 
-        // TODO: check if race condition is possible
         fragment.setOperationsService(serviceMock);
         viewCaptor = ArgumentCaptor.forClass(NextcloudFragment.class);
     }

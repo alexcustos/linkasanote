@@ -1,4 +1,4 @@
-package com.bytesforge.linkasanote.addeditfavorite;
+package com.bytesforge.linkasanote.laano.favorites.addeditfavorite;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;

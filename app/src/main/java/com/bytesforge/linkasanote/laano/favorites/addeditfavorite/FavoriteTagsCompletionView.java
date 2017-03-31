@@ -1,4 +1,4 @@
-package com.bytesforge.linkasanote.addeditfavorite;
+package com.bytesforge.linkasanote.laano.favorites.addeditfavorite;
 
 import android.content.Context;
 import android.util.AttributeSet;

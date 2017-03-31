@@ -6,14 +6,14 @@ import android.content.SharedPreferences;
 
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountComponent;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterModule;
-import com.bytesforge.linkasanote.addeditfavorite.AddEditFavoriteComponent;
-import com.bytesforge.linkasanote.addeditfavorite.AddEditFavoritePresenterModule;
 import com.bytesforge.linkasanote.data.source.ProviderModule;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.data.source.RepositoryModule;
-import com.bytesforge.linkasanote.laano.LaanoActionBarManagerModule;
 import com.bytesforge.linkasanote.laano.LaanoComponent;
+import com.bytesforge.linkasanote.laano.LaanoUiManagerModule;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenterModule;
+import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteComponent;
+import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoritePresenterModule;
 import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionComponent;
 import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionPresenterModule;
 import com.bytesforge.linkasanote.laano.links.LinksPresenterModule;
@@ -50,7 +50,7 @@ public interface ApplicationComponent {
             LinksPresenterModule linksPresenterModule,
             FavoritesPresenterModule favoritesPresenterModule,
             NotesPresenterModule notesPresenterModule,
-            LaanoActionBarManagerModule laanoActionBarManagerModule);
+            LaanoUiManagerModule laanoUiManagerModule);
     ManageAccountsComponent getManageAccountsComponent(ManageAccountsPresenterModule module);
     FavoritesConflictResolutionComponent getFavoritesConflictResolutionComponent(
             FavoritesConflictResolutionPresenterModule favoritesConflictResolutionPresenterModule);

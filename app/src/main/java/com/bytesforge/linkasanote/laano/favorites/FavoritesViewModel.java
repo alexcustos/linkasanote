@@ -17,7 +17,7 @@ import android.widget.RelativeLayout;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.laano.LaanoActionBarManager;
+import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.utils.SparseBooleanParcelableArray;
 
 import java.util.LinkedList;
@@ -37,7 +37,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     public final ObservableInt favoriteListSize = new ObservableInt(0);
 
     private FavoritesContract.Presenter presenter;
-    private LaanoActionBarManager actionBarManager;
+    private LaanoUiManager laanoUiManager;
     private Context context;
 
     private SparseBooleanArray selectedIds;
@@ -135,9 +135,8 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         this.presenter = checkNotNull(presenter);
     }
 
-    @Override
-    public void setActionBarManager(@NonNull LaanoActionBarManager actionBarManager) {
-        this.actionBarManager = checkNotNull(actionBarManager);
+    public void setLaanoUiManager(@NonNull LaanoUiManager laanoUiManager) {
+        this.laanoUiManager = checkNotNull(laanoUiManager);
     }
 
     public void setFavoriteListSize(int favoriteListSize) {
@@ -172,7 +171,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     @Override
     public void setFilterType(FavoritesFilterType filterType) {
         this.filterType = filterType;
-        actionBarManager.setFavoriteFilterType(filterType);
+        laanoUiManager.setFavoriteFilterType(filterType);
     }
 
     // Selection

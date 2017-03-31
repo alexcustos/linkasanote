@@ -2,6 +2,7 @@ package com.bytesforge.linkasanote.addeditaccount;
 
 import android.Manifest;
 import android.accounts.Account;
+import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -41,6 +42,7 @@ public class AddEditAccountActivity extends AppCompatActivity implements
 
     private static final String TAG = AddEditAccountActivity.class.getSimpleName();
 
+    private AccountAuthenticatorResponse accountAuthenticatorResponse = null;
     private ActivityAddEditAccountBinding binding;
     private Bundle currentViewModelSate;
 
@@ -61,11 +63,17 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         if (REQUEST_UPDATE_NEXTCLOUD_ACCOUNT == requestCode) {
             account = startIntent.getParcelableExtra(NextcloudFragment.ARGUMENT_EDIT_ACCOUNT_ACCOUNT);
         }
+        accountAuthenticatorResponse = startIntent.getParcelableExtra(
+                AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE);
+        if (accountAuthenticatorResponse != null) {
+            accountAuthenticatorResponse.onRequestContinued();
+        }
         // Fragment (View)
         NextcloudFragment nextcloudFragment = (NextcloudFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.content_frame);
         if (nextcloudFragment == null) {
             nextcloudFragment = NextcloudFragment.newInstance();
+            nextcloudFragment.setAccountAuthenticatorResponse(accountAuthenticatorResponse);
             ActivityUtils.addFragmentToActivity(
                     getSupportFragmentManager(), nextcloudFragment, R.id.content_frame);
         }
@@ -96,7 +104,7 @@ public class AddEditAccountActivity extends AppCompatActivity implements
             requestGetAccountsPermission();
         } else if (!accountCanBeProcessed()) {
             disableActivity();
-            showUnsupportedMultipleAccountsSnackbar();
+            exitWithUnsupportedMultipleAccountsError();
         }
     }
 
@@ -121,9 +129,9 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         if (requestCode == REQUEST_PERMISSION_GET_ACCOUNTS) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (accountCanBeProcessed()) enableActivity();
-                else showUnsupportedMultipleAccountsSnackbar();
+                else exitWithUnsupportedMultipleAccountsError();
             } else {
-                showNotEnoughPermissionsSnackbar();
+                exitWithNotEnoughPermissionsError();
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -153,30 +161,20 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         }
     }
 
-    private void showNotEnoughPermissionsSnackbar() {
-        Snackbar.make(binding.contentFrame,
-                R.string.snackbar_no_permission, Snackbar.LENGTH_LONG)
-                .addCallback(new Snackbar.Callback() {
-
-                    @Override
-                    public void onDismissed(Snackbar transientBottomBar, int event) {
-                        super.onDismissed(transientBottomBar, event);
-                        cancelActivity();
-                    }
-                }).show();
+    private void exitWithNotEnoughPermissionsError() {
+        if (accountAuthenticatorResponse != null) {
+            accountAuthenticatorResponse.onError(AccountManager.ERROR_CODE_UNSUPPORTED_OPERATION,
+                    getResources().getString(R.string.snackbar_no_permission));
+        }
+        cancelActivity();
     }
 
-    private void showUnsupportedMultipleAccountsSnackbar() {
-        Snackbar.make(binding.contentFrame,
-                R.string.add_edit_accounts_unsupported_multiple_accounts, Snackbar.LENGTH_LONG)
-                .addCallback(new Snackbar.Callback() {
-
-                    @Override
-                    public void onDismissed(Snackbar transientBottomBar, int event) {
-                        super.onDismissed(transientBottomBar, event);
-                        cancelActivity();
-                    }
-                }).show();
+    private void exitWithUnsupportedMultipleAccountsError() {
+        if (accountAuthenticatorResponse != null) {
+            accountAuthenticatorResponse.onError(AccountManager.ERROR_CODE_UNSUPPORTED_OPERATION,
+                    getResources().getString(R.string.add_edit_accounts_unsupported_multiple_accounts));
+        }
+        cancelActivity();
     }
 
     private void cancelActivity() {

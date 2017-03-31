@@ -23,10 +23,10 @@ import android.view.ViewGroup;
 
 import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.addeditfavorite.AddEditFavoriteActivity;
-import com.bytesforge.linkasanote.addeditfavorite.AddEditFavoriteFragment;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoFavoritesBinding;
+import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteActivity;
+import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteFragment;
 import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionActivity;
 import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionFragment;
 
@@ -253,7 +253,8 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     private void updateActionModeTitle() {
         if (actionMode != null) {
             actionMode.setTitle(getContext().getResources().getString(
-                    R.string.laano_favorites_action_mode_selected, viewModel.getSelectedCount()));
+                    R.string.laano_favorites_action_mode_selected,
+                    viewModel.getSelectedCount(), adapter.getItemCount()));
             if (adapter.getItemCount() <= 0) {
                 disableActionMode();
             }

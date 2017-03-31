@@ -12,7 +12,7 @@ import dagger.Subcomponent;
         LinksPresenterModule.class,
         FavoritesPresenterModule.class,
         NotesPresenterModule.class,
-        LaanoActionBarManagerModule.class})
+        LaanoUiManagerModule.class})
 public interface LaanoComponent {
 
     void inject(LaanoActivity activity);

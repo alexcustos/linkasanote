@@ -6,7 +6,8 @@
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".addeditfavorite.AddEditFavoriteActivity">
+        android:fitsSystemWindows="true"
+        tools:context=".laano.favorites.addeditfavorite.AddEditFavoriteActivity">
 
         <LinearLayout
             android:layout_width="match_parent"

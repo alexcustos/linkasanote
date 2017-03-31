@@ -6,8 +6,8 @@ import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Favorite;
-import com.bytesforge.linkasanote.laano.LaanoActionBarManager;
 import com.bytesforge.linkasanote.laano.LaanoTabPresenter;
+import com.bytesforge.linkasanote.laano.LaanoUiManager;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ public interface FavoritesContract {
 
     interface ViewModel extends BaseView<Presenter> {
 
-        void setActionBarManager(@NonNull LaanoActionBarManager actionBarManager);
+        void setLaanoUiManager(@NonNull LaanoUiManager laanoUiManager);
 
         void setInstanceState(@Nullable Bundle savedInstanceState);
         void saveInstanceState(@NonNull Bundle outState);

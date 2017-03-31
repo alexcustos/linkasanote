@@ -187,7 +187,7 @@ public class FavoritesTabTest {
         // NOTE: R.id.toolbar_favorite_action_mode does not work
         onView(withText(R.string.toolbar_favorites_item_action_mode)).perform(click());
         onView(withText(context.getResources()
-                .getString(R.string.laano_favorites_action_mode_selected, 0)))
+                .getString(R.string.laano_favorites_action_mode_selected, 0, favorites.size())))
                 .check(matches(isDisplayed()));
         onView(withId(R.id.favorites_delete)).check(matches(isDisplayed()));
         onView(withId(R.id.favorite_checkbox)).check(matches(isNotChecked()));
@@ -205,7 +205,7 @@ public class FavoritesTabTest {
         onView(withId(R.id.rv_favorites))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));
         onView(withText(context.getResources()
-                .getString(R.string.laano_favorites_action_mode_selected, 1)))
+                .getString(R.string.laano_favorites_action_mode_selected, 1, favorites.size())))
                 .check(matches(isDisplayed()));
         onView(withId(R.id.favorites_delete)).check(matches(isDisplayed()));
         onView(withId(R.id.favorite_checkbox)).check(matches(isChecked()));
@@ -224,7 +224,7 @@ public class FavoritesTabTest {
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));
         AndroidTestUtils.rotateOrientation(laanoActivityTestRule);
         onView(withText(context.getResources()
-                .getString(R.string.laano_favorites_action_mode_selected, 1)))
+                .getString(R.string.laano_favorites_action_mode_selected, 1, favorites.size())))
                 .check(matches(isDisplayed()));
         onView(withId(R.id.favorites_delete)).check(matches(isDisplayed()));
         onView(withId(R.id.favorite_checkbox)).check(matches(isChecked()));

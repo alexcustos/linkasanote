@@ -12,11 +12,22 @@
             android:icon="@drawable/ic_edit"
             android:title="@string/drawer_actions_manage_accounts" />
     </group>
+    <group android:id="@+id/sync_menu_group">
+        <item
+            android:id="@+id/sync_menu_item"
+            android:icon="@drawable/ic_sync"
+            android:title="@string/drawer_actions_sync_start"
+            android:enabled="false" />
+    </group>
     <group android:id="@+id/application_menu_group">
 
         <item
             android:id="@+id/settings_menu_item"
             android:icon="@drawable/ic_settings"
             android:title="@string/drawer_actions_settings" />
+        <item
+            android:id="@+id/about_menu_item"
+            android:icon="@drawable/ic_info"
+            android:title="@string/drawer_actions_about" />
     </group>
 </menu>

@@ -16,6 +16,7 @@ import android.util.Log;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.utils.CloudUtils;
@@ -32,6 +33,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static final String TAG = SyncAdapter.class.getSimpleName();
+    public static final int LAST_SYNC_STATUS_SUCCESS = 0;
+    public static final int LAST_SYNC_STATUS_ERROR = 1;
+    public static final int LAST_SYNC_STATUS_CONFLICT = 2;
 
     private final Context context;
     private final SyncNotifications syncNotifications;
@@ -43,6 +47,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private Account account;
     private OwnCloudClient ocClient;
     private boolean dbAccessError;
+    private boolean favoriteEmptySource;
     private int favoriteFailsCount; // NOTE: may be failed at different points, so global
 
     // NOTE: Note should contain linkId to notify related Link, Link contain noteIds just for integrity check
@@ -76,13 +81,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
         //Start
         syncNotifications.sendSyncBroadcast(
-                SyncNotifications.ACTION_SYNC_LINKS, SyncNotifications.STATUS_SYNC_START);
+                SyncNotifications.ACTION_SYNC, SyncNotifications.STATUS_SYNC_START);
         syncNotifications.sendSyncBroadcast(
                 SyncNotifications.ACTION_SYNC_FAVORITES, SyncNotifications.STATUS_SYNC_START);
-        syncNotifications.sendSyncBroadcast(
-                SyncNotifications.ACTION_SYNC_NOTES, SyncNotifications.STATUS_SYNC_START);
         CloudUtils.updateUserProfile(account, ocClient, accountManager);
         // Favorites
+        favoriteEmptySource = false;
         final String favoritesDataStorageETag = cloudFavorites.getDataSourceETag(ocClient);
         if (favoritesDataStorageETag == null) {
             syncNotifications.notifyFailedSynchronization(
@@ -90,40 +94,80 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     resources.getString(R.string.sync_adapter_text_failed_cloud));
             return;
         }
-        if (cloudFavorites.isCloudDataSourceChanged(favoritesDataStorageETag)) {
-            Log.i(TAG, "Favorite DataSource has been changed [" + favoritesDataStorageETag + "]");
-            favoriteFailsCount = 0;
-            syncFavorites();
-        }
+        favoriteFailsCount = 0;
+        boolean isFavoriteCloudChanged =
+                cloudFavorites.isCloudDataSourceChanged(favoritesDataStorageETag);
+        syncFavorites(isFavoriteCloudChanged);
         syncNotifications.sendSyncBroadcast(
-                SyncNotifications.ACTION_SYNC_FAVORITES, SyncNotifications.STATUS_SYNC_END);
-        if (!dbAccessError && favoriteFailsCount == 0) {
+                SyncNotifications.ACTION_SYNC_FAVORITES, SyncNotifications.STATUS_SYNC_STOP);
+        if (!dbAccessError && !favoriteEmptySource && favoriteFailsCount == 0) {
             cloudFavorites.updateLastSyncedETag(favoritesDataStorageETag);
         }
-        // Links
         // Notes
-
-        // End
         syncNotifications.sendSyncBroadcast(
-                SyncNotifications.ACTION_SYNC_LINKS, SyncNotifications.STATUS_SYNC_END);
+                SyncNotifications.ACTION_SYNC_NOTES, SyncNotifications.STATUS_SYNC_START);
         syncNotifications.sendSyncBroadcast(
-                SyncNotifications.ACTION_SYNC_NOTES, SyncNotifications.STATUS_SYNC_END);
+                SyncNotifications.ACTION_SYNC_NOTES, SyncNotifications.STATUS_SYNC_STOP);
+        // Links
+        syncNotifications.sendSyncBroadcast(
+                SyncNotifications.ACTION_SYNC_LINKS, SyncNotifications.STATUS_SYNC_START);
+        syncNotifications.sendSyncBroadcast(
+                SyncNotifications.ACTION_SYNC_LINKS, SyncNotifications.STATUS_SYNC_STOP);
+        // Stop
+        saveLastSyncStatus();
+        syncNotifications.sendSyncBroadcast(
+                SyncNotifications.ACTION_SYNC, SyncNotifications.STATUS_SYNC_STOP);
         // Error notifications
-        if (favoriteFailsCount > 0) {
-            syncNotifications.notifyFailedSynchronization(resources.getQuantityString(
-                    R.plurals.sync_adapter_text_failed_favorites,
-                    favoriteFailsCount, favoriteFailsCount));
-        }
         if (dbAccessError) {
             syncNotifications.notifyFailedSynchronization(
                     resources.getString(R.string.sync_adapter_title_failed_database),
                     resources.getString(R.string.sync_adapter_text_failed_database));
         }
+        if (favoriteEmptySource) {
+            syncNotifications.notifyFailedSynchronization(
+                    resources.getString(R.string.sync_adapter_title_empty_storage),
+                    resources.getString(R.string.sync_adapter_text_empty_storage));
+        }
+        if (favoriteFailsCount > 0) {
+            syncNotifications.notifyFailedSynchronization(resources.getQuantityString(
+                    R.plurals.sync_adapter_text_failed_favorites,
+                    favoriteFailsCount, favoriteFailsCount));
+        }
     }
 
-    private void syncFavorites() {
-        final Map<String, String> cloudDataSourceMap = cloudFavorites.getDataSourceMap(ocClient);
+    private void saveLastSyncStatus() {
+        int lastSyncStatus;
+        if (dbAccessError || favoriteEmptySource) {
+            lastSyncStatus = LAST_SYNC_STATUS_ERROR;
+        } else {
+            boolean isConflictedFavorites = localFavorites.isConflictedFavorites().blockingGet();
+            if (isConflictedFavorites) {
+                lastSyncStatus = LAST_SYNC_STATUS_CONFLICT;
+            } else {
+                lastSyncStatus = LAST_SYNC_STATUS_SUCCESS;
+            }
+        }
+        CloudUtils.updateLastSyncStatus(context, lastSyncStatus);
+    }
 
+    private void syncFavorites(boolean isCloudChanged) {
+        if (!isCloudChanged) {
+            final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED + " = ?";
+            final String[] selectionArgs = {"0"};
+            localFavorites.getFavorites(selection, selectionArgs, null).subscribe(
+                    favorite -> syncFavorite(favorite, favorite.getETag()),
+                    throwable -> setDbAccessError(true));
+            return;
+        }
+        final Map<String, String> cloudDataSourceMap = cloudFavorites.getDataSourceMap(ocClient);
+        // Protection of the local storage
+        if (cloudDataSourceMap.isEmpty()) {
+            int numRows = localFavorites.resetFavoritesSyncState().blockingGet();
+            if (numRows > 0) {
+                favoriteEmptySource = true;
+                return;
+            }
+        }
         // Sync Local
         localFavorites.getFavorites().subscribe(favorite -> {
             String cloudETag = cloudDataSourceMap.get(favorite.getId());

@@ -273,6 +273,10 @@ public class Provider extends ContentProvider {
 
         int numRows;
         switch (uriMatcher.match(uri)) {
+            case FAVORITE:
+                numRows = db.update(LocalContract.FavoriteEntry.TABLE_NAME,
+                        values, selection, selectionArgs);
+                break;
             case FAVORITE_ITEM:
                 db.beginTransaction();
                 try {
