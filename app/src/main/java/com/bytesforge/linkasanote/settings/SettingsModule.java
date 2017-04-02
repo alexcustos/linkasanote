@@ -17,4 +17,10 @@ public class SettingsModule {
     SharedPreferences provideSharedPreferences(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context);
     }
+
+    @Provides
+    @Singleton
+    Settings provideSettings(Context context, SharedPreferences sharedPreferences) {
+        return new Settings(context, sharedPreferences);
+    }
 }

@@ -7,11 +7,10 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import com.bytesforge.linkasanote.ApplicationModule;
-import com.bytesforge.linkasanote.data.source.ProviderModule;
-import com.bytesforge.linkasanote.data.source.RepositoryModule;
+import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
+import com.bytesforge.linkasanote.settings.Settings;
 
 import javax.inject.Inject;
 
@@ -20,6 +19,12 @@ public class SyncService extends Service {
     // TODO: check out best practice about this warning
     private static SyncAdapter syncAdapter = null;
     private static final Object syncAdapterLock = new Object();
+
+    @Inject
+    Context context;
+
+    @Inject
+    Settings settings;
 
     @Inject
     AccountManager accountManager;
@@ -33,17 +38,13 @@ public class SyncService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Context context = getApplicationContext();
-        DaggerSyncServiceComponent.builder()
-                .applicationModule(new ApplicationModule(context))
-                .repositoryModule(new RepositoryModule())
-                .providerModule(new ProviderModule())
-                .build().inject(this);
+        LaanoApplication application = (LaanoApplication) getApplication();
+        application.getApplicationComponent().inject(this);
 
         synchronized (syncAdapterLock) {
             if (syncAdapter == null) {
                 SyncNotifications syncNotifications = new SyncNotifications(context);
-                syncAdapter = new SyncAdapter(context, true,
+                syncAdapter = new SyncAdapter(context, settings, true,
                         accountManager, syncNotifications, localFavorites, cloudFavorites);
             }
         } // synchronized

@@ -27,7 +27,7 @@ public final class Favorite {
 
     private static final String TAG = Favorite.class.getSimpleName();
 
-    public static final String CLOUD_DIRECTORY = "favorites";
+    public static final String CLOUD_DIRECTORY_NAME = "favorites";
 
     private static final int JSON_VERSION = 1;
     private static final String JSON_CONTAINER_VERSION = "version";

@@ -6,9 +6,7 @@ import android.accounts.AccountManager;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
@@ -19,7 +17,6 @@ import android.util.Log;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.manageaccounts.AccountItem;
-import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.owncloud.android.lib.common.OwnCloudAccount;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
@@ -32,15 +29,10 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.System.currentTimeMillis;
 
 public final class CloudUtils {
 
     private static final String TAG = CloudUtils.class.getSimpleName();
-
-    private static final String SETTINGS_CLOUD = "SETTINGS_CLOUD";
-    private static final String SETTING_LAST_SYNC_TIME = "LAST_SYNC_TIME";
-    private static final String SETTING_LAST_SYNC_STATUS = "LAST_SYNC_STATUS";
 
     private CloudUtils() {
     }
@@ -128,18 +120,6 @@ public final class CloudUtils {
         return null;
     }
 
-    public static SharedPreferences getCloudSharedPreferences(Context context) {
-        return context.getSharedPreferences(SETTINGS_CLOUD, Context.MODE_PRIVATE);
-    }
-
-    public static String getSyncDirectory(Context context) {
-        SharedPreferences sharedPreferences = getCloudSharedPreferences(context);
-        Resources resources = context.getResources();
-        String defaultSyncDirectory = resources.getString(R.string.default_sync_directory);
-        return JsonFile.PATH_SEPARATOR + sharedPreferences.getString(
-                resources.getString(R.string.pref_key_sync_directory), defaultSyncDirectory);
-    }
-
     public static void updateUserProfile(
             Account account, OwnCloudClient ocClient, AccountManager accountManager) {
         GetRemoteUserInfoOperation operation = new GetRemoteUserInfoOperation();
@@ -165,30 +145,5 @@ public final class CloudUtils {
             accountItem.setDisplayName(getAccountUsername(account.name));
         }
         return accountItem;
-    }
-
-    public static synchronized void updateLastSyncStatus(
-            @NonNull Context context, int lastSyncStatus) {
-        checkNotNull(context);
-
-        SharedPreferences sharedPreferences = getCloudSharedPreferences(context);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putLong(SETTING_LAST_SYNC_TIME, currentTimeMillis());
-        editor.putInt(SETTING_LAST_SYNC_STATUS, lastSyncStatus);
-        editor.apply();
-    }
-
-    public static int getLastSyncStatus(@NonNull Context context) {
-        checkNotNull(context);
-
-        SharedPreferences sharedPreferences = CloudUtils.getCloudSharedPreferences(context);
-        return sharedPreferences.getInt(SETTING_LAST_SYNC_STATUS, 0);
-    }
-
-    public static long getLastSyncTime(@NonNull Context context) {
-        checkNotNull(context);
-
-        SharedPreferences sharedPreferences = CloudUtils.getCloudSharedPreferences(context);
-        return sharedPreferences.getLong(SETTING_LAST_SYNC_TIME, 0);
     }
 }

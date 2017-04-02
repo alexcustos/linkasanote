@@ -18,6 +18,7 @@ import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.owncloud.android.lib.common.OwnCloudClient;
@@ -33,18 +34,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static final String TAG = SyncAdapter.class.getSimpleName();
-    public static final int LAST_SYNC_STATUS_SUCCESS = 0;
-    public static final int LAST_SYNC_STATUS_ERROR = 1;
-    public static final int LAST_SYNC_STATUS_CONFLICT = 2;
+    public static final int LAST_SYNC_STATUS_UNKNOWN = 0;
+    public static final int LAST_SYNC_STATUS_SUCCESS = 1;
+    public static final int LAST_SYNC_STATUS_ERROR = 2;
+    public static final int LAST_SYNC_STATUS_CONFLICT = 3;
 
     private final Context context;
+    private final Settings settings;
     private final SyncNotifications syncNotifications;
     private final LocalFavorites localFavorites;
     private final CloudFavorites cloudFavorites;
     private final AccountManager accountManager;
     private final Resources resources;
 
-    private Account account;
     private OwnCloudClient ocClient;
     private boolean dbAccessError;
     private boolean favoriteEmptySource;
@@ -52,11 +54,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     // NOTE: Note should contain linkId to notify related Link, Link contain noteIds just for integrity check
     public SyncAdapter(
-            Context context, boolean autoInitialize,
+            Context context, Settings settings, boolean autoInitialize,
             AccountManager accountManager, SyncNotifications syncNotifications,
             LocalFavorites localFavorites, CloudFavorites cloudFavorites) {
         super(context, autoInitialize);
         this.context = context;
+        this.settings = settings;
         this.accountManager = accountManager;
         this.syncNotifications = syncNotifications;
         this.localFavorites = localFavorites;
@@ -68,7 +71,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(
             Account account, Bundle extras, String authority,
             ContentProviderClient provider, SyncResult syncResult) {
-        this.account = account;
         dbAccessError = false;
         syncNotifications.setAccountName(CloudUtils.getAccountName(account));
 
@@ -147,7 +149,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 lastSyncStatus = LAST_SYNC_STATUS_SUCCESS;
             }
         }
-        CloudUtils.updateLastSyncStatus(context, lastSyncStatus);
+        settings.updateLastSyncTime();
+        settings.setLastSyncStatus(lastSyncStatus);
     }
 
     private void syncFavorites(boolean isCloudChanged) {

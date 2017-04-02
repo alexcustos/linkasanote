@@ -3,12 +3,12 @@ package com.bytesforge.linkasanote.data.source.cloud;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation;
@@ -40,15 +40,19 @@ public class CloudFavorites {
 
     private static final String TAG = CloudFavorites.class.getSimpleName();
 
-    private static final String CLOUD_DIRECTORY = JsonFile.PATH_SEPARATOR + Favorite.CLOUD_DIRECTORY;
-    private static final String SETTING_LAST_SYNCED_ETAG = "FAVORITES_LAST_SYNCED_ETAG";
+    private static final String CLOUD_DIRECTORY =
+            JsonFile.PATH_SEPARATOR + Favorite.CLOUD_DIRECTORY_NAME;
 
     private final Context context;
     private final AccountManager accountManager;
+    private final Settings settings;
 
-    public CloudFavorites(@NonNull Context context, @NonNull AccountManager accountManager) {
+    public CloudFavorites(
+            @NonNull Context context, @NonNull AccountManager accountManager,
+            @NonNull Settings settings) {
         this.context = checkNotNull(context);
         this.accountManager = checkNotNull(accountManager);
+        this.settings = settings;
     }
 
     public Single<RemoteOperationResult> uploadFavorite(@NonNull final Favorite favorite) {
@@ -208,7 +212,7 @@ public class CloudFavorites {
     }
 
     public String getDataSourceDirectory() {
-        return CloudUtils.getSyncDirectory(context) + CLOUD_DIRECTORY;
+        return settings.getSyncDirectory() + CLOUD_DIRECTORY;
     }
 
     public String getRemotePath(@NonNull final String favoriteId) {
@@ -220,23 +224,13 @@ public class CloudFavorites {
     public boolean isCloudDataSourceChanged(@NonNull final String eTag) {
         checkNotNull(eTag);
 
-        String lastSyncedETag = getLastSyncedETag();
+        String lastSyncedETag = settings.getFavoritesLastSyncedETag();
         return lastSyncedETag == null || !lastSyncedETag.equals(eTag);
-    }
-
-    @Nullable
-    public String getLastSyncedETag() {
-        SharedPreferences sharedPreferences = CloudUtils.getCloudSharedPreferences(context);
-        return sharedPreferences.getString(SETTING_LAST_SYNCED_ETAG, null);
     }
 
     public synchronized void updateLastSyncedETag(@NonNull final String eTag) {
         checkNotNull(eTag);
-
-        SharedPreferences sharedPreferences = CloudUtils.getCloudSharedPreferences(context);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(SETTING_LAST_SYNCED_ETAG, eTag);
-        editor.apply();
+        settings.setFavoritesLastSyncedETag(eTag);
     }
 
     @Nullable

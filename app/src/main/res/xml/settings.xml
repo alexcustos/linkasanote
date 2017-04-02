@@ -1,56 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory
-        android:key="pref_key_application"
-        android:title="@string/pref_category_application">
+    <PreferenceCategory android:title="@string/pref_category_application">
 
         <CheckBoxPreference
-            android:key="pref_key_expand_urls"
-            android:title="@string/pref_title_urls_expanding"
-            android:summary="@string/pref_summary_urls_expanding"
-            android:defaultValue="false" />
+            android:key="@string/pref_key_expand_links"
+            android:title="@string/pref_title_links_expanding"
+            android:summary="@string/pref_summary_links_expanding" />
 
         <CheckBoxPreference
-            android:key="pref_key_expand_notes"
+            android:key="@string/pref_key_expand_notes"
             android:title="@string/pref_title_notes_expanding"
-            android:summary="@string/pref_summary_notes_expanding"
-            android:defaultValue="false" />
+            android:summary="@string/pref_summary_notes_expanding" />
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:key="pref_key_system"
-        android:title="@string/pref_title_system">
+    <PreferenceCategory android:title="@string/pref_title_system">
 
         <CheckBoxPreference
-            android:key="pref_key_clipboard"
-            android:title="@string/pref_title_clipboard"
-            android:summary="@string/pref_summary_clipboard"
-            android:defaultValue="true" />
+            android:key="@string/pref_key_clipboard_monitor"
+            android:title="@string/pref_title_clipboard_monitor"
+            android:summary="@string/pref_summary_clipboard_monitor" />
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:key="pref_key_synchronization"
-        android:title="@string/pref_title_synchronization">
+    <PreferenceCategory android:title="@string/pref_title_synchronization">
 
         <EditTextPreference
             android:key="@string/pref_key_sync_directory"
             android:title="@string/pref_title_sync_directory"
-            android:defaultValue="@string/default_sync_directory"
-            android:summary="@string/placeholder_text" />
-    </PreferenceCategory>
+            android:summary="@string/placeholder_text"
+            android:inputType="textNoSuggestions" />
 
-    <PreferenceCategory
-        android:key="pref_key_information"
-        android:title="@string/pref_title_information">
-
-        <Preference
-            android:key="pref_key_help"
-            android:title="@string/pref_title_help" />
-
-        <Preference
-            android:key="pref_key_about"
-            android:title="@string/pref_title_about"
-            android:summary="@string/placeholder_text" />
+        <ListPreference
+            android:key="@string/pref_key_sync_interval"
+            android:title="@string/pref_title_sync_interval"
+            android:summary="@string/placeholder_text"
+            android:persistent="false"
+            android:entries="@array/pref_sync_interval_names"
+            android:entryValues="@array/pref_sync_interval_seconds" />
     </PreferenceCategory>
 </PreferenceScreen>

@@ -1,8 +1,6 @@
 package com.bytesforge.linkasanote;
 
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.support.annotation.VisibleForTesting;
 
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountComponent;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterModule;
@@ -20,8 +18,9 @@ import com.bytesforge.linkasanote.laano.links.LinksPresenterModule;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsComponent;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenterModule;
+import com.bytesforge.linkasanote.settings.SettingsFragment;
 import com.bytesforge.linkasanote.settings.SettingsModule;
-import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
+import com.bytesforge.linkasanote.sync.SyncService;
 import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
 
 import javax.inject.Singleton;
@@ -37,11 +36,11 @@ import dagger.Component;
         SchedulerProviderModule.class})
 public interface ApplicationComponent {
 
-    Context getContext();
-    SharedPreferences getSharedPreferences();
+    @VisibleForTesting
     Repository getRepository();
-    ContentResolver getContentResolver();
-    BaseSchedulerProvider getSchedulerProvider();
+
+    void inject(SyncService syncService);
+    void inject(SettingsFragment settingsFragment);
 
     // Subcomponents
     AddEditAccountComponent getAddEditAccountComponent(NextcloudPresenterModule module);

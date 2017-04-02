@@ -13,6 +13,7 @@ import android.view.Menu;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFilterType;
 import com.bytesforge.linkasanote.manageaccounts.AccountItem;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -20,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class LaanoUiManager {
 
     private final LaanoActivity laanoActivity;
+    private final Settings settings;
     private final Resources resources;
     private final ActionBar actionBar;
     private final TabLayout tabLayout;
@@ -38,10 +40,12 @@ public class LaanoUiManager {
 
     public LaanoUiManager(
             @NonNull LaanoActivity laanoActivity,
+            @NonNull Settings settings,
             @NonNull TabLayout tabLayout, @NonNull Menu drawerMenu,
             @NonNull LaanoDrawerHeaderViewModel headerViewModel,
             @NonNull LaanoFragmentPagerAdapter pagerAdapter) {
         this.laanoActivity = checkNotNull(laanoActivity);
+        this.settings = settings;
         this.tabLayout = checkNotNull(tabLayout);
         this.drawerMenu = checkNotNull(drawerMenu);
         this.headerViewModel = checkNotNull(headerViewModel);
@@ -133,8 +137,8 @@ public class LaanoUiManager {
     }
 
     public void updateLastSyncStatus() {
-        long lastSyncTime = CloudUtils.getLastSyncTime(laanoActivity);
-        int lastSyncStatus = CloudUtils.getLastSyncStatus(laanoActivity);
+        long lastSyncTime = settings.getLastSyncTime();
+        int lastSyncStatus = settings.getLastSyncStatus();
         headerViewModel.showLastSyncStatus(lastSyncTime, lastSyncStatus);
     }
 

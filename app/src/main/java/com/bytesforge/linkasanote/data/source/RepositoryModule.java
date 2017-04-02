@@ -8,6 +8,7 @@ import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Singleton;
@@ -27,8 +28,9 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
-    public CloudFavorites provideCloudFavorites(Context context, AccountManager accountManager) {
-        return new CloudFavorites(context, accountManager);
+    public CloudFavorites provideCloudFavorites(
+            Context context, AccountManager accountManager, Settings settings) {
+        return new CloudFavorites(context, accountManager, settings);
     }
 
     @Provides

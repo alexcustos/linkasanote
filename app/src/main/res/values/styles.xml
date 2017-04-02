@@ -32,7 +32,8 @@
 
     <style name="Laano.Settings" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
-        <item name="dialogLayout">@layout/settings_dialog_edittext</item>
+        <!-- NOTE: this fix breaks ListPreference since Support Library 25.0.1 -->
+        <!--<item name="dialogLayout">@layout/settings_dialog_edittext</item>-->
 
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_dark</item>

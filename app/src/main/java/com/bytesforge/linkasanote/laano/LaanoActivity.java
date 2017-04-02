@@ -49,6 +49,7 @@ import com.bytesforge.linkasanote.laano.links.LinksPresenterModule;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.settings.SettingsActivity;
 import com.bytesforge.linkasanote.sync.SyncNotifications;
 import com.bytesforge.linkasanote.utils.AppBarLayoutOnStateChangeListener;
@@ -60,7 +61,6 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
-import static com.bytesforge.linkasanote.utils.CloudUtils.getDefaultAccount;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LaanoActivity extends AppCompatActivity implements
@@ -90,6 +90,9 @@ public class LaanoActivity extends AppCompatActivity implements
 
     @Inject
     AccountManager accountManager;
+
+    @Inject
+    Settings settings;
 
     private int activeTab;
     private SyncBroadcastReceiver syncBroadcastReceiver;
@@ -200,8 +203,9 @@ public class LaanoActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-    private static void triggerSync(@NonNull Account account) {
-        checkNotNull(account);
+    private void triggerSync() {
+        Account account = CloudUtils.getDefaultAccount(this, accountManager);
+        if (account == null) return;
 
         Bundle extras = new Bundle();
         extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
@@ -452,6 +456,15 @@ public class LaanoActivity extends AppCompatActivity implements
         startActivityForResult(manageAccountsIntent, ACTION_MANAGE_ACCOUNTS);
     }
 
+    private void startSettingsActivity() {
+        Intent settingsIntent =
+                new Intent(this, SettingsActivity.class);
+        settingsIntent.putExtra(
+                SettingsActivity.EXTRA_ACCOUNT,
+                CloudUtils.getDefaultAccount(this, accountManager));
+        startActivity(settingsIntent);
+    }
+
     private void setupDrawerContent(@NonNull NavigationView navigationView) {
         checkNotNull(navigationView);
 
@@ -470,24 +483,16 @@ public class LaanoActivity extends AppCompatActivity implements
                             if (!CloudUtils.isApplicationConnected(this)) {
                                 showApplicationOfflineSnackbar();
                             } else {
-                                Account account = getDefaultAccount(this, accountManager);
-                                if (account != null) {
-                                    triggerSync(account);
-                                }
+                                triggerSync();
                             }
                             break;
                         case R.id.settings_menu_item:
-                            Intent settingsIntent =
-                                    new Intent(getApplicationContext(), SettingsActivity.class);
-                            startActivity(settingsIntent);
+                            startSettingsActivity();
                             break;
                         case R.id.about_menu_item:
                             break;
-                        default:
                     }
-                    //menuItem.setChecked(true);
                     drawerLayout.closeDrawers();
-
                     return true;
                 }
         );

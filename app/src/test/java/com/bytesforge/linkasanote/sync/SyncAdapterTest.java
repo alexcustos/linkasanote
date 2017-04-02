@@ -9,6 +9,7 @@ import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.owncloud.android.lib.common.OwnCloudClient;
@@ -50,6 +51,9 @@ public class SyncAdapterTest {
 
     @Mock
     Context context;
+
+    @Mock
+    Settings settings;
 
     @Mock
     AccountManager accountManager;
@@ -95,7 +99,7 @@ public class SyncAdapterTest {
         when(localFavorites.resetFavoritesSyncState()).thenReturn(Single.fromCallable(() -> 0));
         when(localFavorites.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
 
-        syncAdapter = new SyncAdapter(context, true,
+        syncAdapter = new SyncAdapter(context, settings, true,
                 accountManager, syncNotifications, localFavorites, cloudFavorites);
     }
 
