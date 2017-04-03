@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable name="presenter"
+            type="com.bytesforge.linkasanote.about.AboutContract.Presenter" />
+        <variable name="viewModel"
+            type="com.bytesforge.linkasanote.about.AboutViewModel" />
+    </data>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/screen_edge_padding">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/about_margin_vertical_title"
+                android:layout_marginBottom="@dimen/about_margin_vertical_title"
+                android:text="@string/app_name"
+                android:textAppearance="@style/AboutText.Title" />
+            <TextView
+                android:id="@+id/app_version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@{viewModel.appVersionText}" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/about_margin_vertical_text"
+                android:layout_marginBottom="@dimen/about_margin_vertical_text"
+                android:text="@string/app_url"
+                android:autoLink="web" />
+
+            <TextView
+                android:id="@+id/app_copyright"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{viewModel.appCopyrightText}"
+                android:textAppearance="@style/AboutText.Copyright" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/about_margin_vertical_text"
+                android:text="@string/about_license_info_version" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/about_margin_vertical_text"
+                android:text="@string/about_info_warranty" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:paddingTop="@dimen/dialog_padding_button_bar_top"
+                android:paddingBottom="@dimen/dialog_padding_button_bar_bottom"
+                style="?android:attr/buttonBarStyle">
+
+                <Button
+                    android:id="@+id/license_terms_gpl_v3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_button_license_terms"
+                    android:onClick="@{() -> presenter.onLicenseTermsGplV3Click()}"
+                    style="?android:attr/buttonBarButtonStyle" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/about_notices_title"
+                android:textAppearance="@style/AboutText.Notices" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/about_margin_vertical_text"
+                android:text="@string/libraries_apache_v2" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/about_margin_vertical_text"
+                android:text="@string/about_notices_license_apache"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:paddingTop="@dimen/dialog_padding_button_bar_top"
+                android:paddingBottom="@dimen/dialog_padding_button_bar_bottom"
+                style="?android:attr/buttonBarStyle">
+
+                <Button
+                    android:id="@+id/license_terms_apache_v2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_button_license_terms"
+                    android:onClick="@{() -> presenter.onLicenseTermsApacheV2Click()}"
+                    style="?android:attr/buttonBarButtonStyle" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</layout>

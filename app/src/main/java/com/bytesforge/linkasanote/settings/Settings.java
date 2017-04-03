@@ -7,7 +7,7 @@ import android.content.PeriodicSync;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
@@ -15,6 +15,8 @@ import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 
 import java.util.List;
+
+import io.reactivex.Single;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -64,28 +66,33 @@ public class Settings {
                 : JsonFile.PATH_SEPARATOR + syncDirectory;
     }
 
-    @Nullable
-    public Long getSyncInterval(Account account) {
-        if (account == null
-                || ContentResolver.getIsSyncable(account, LocalContract.CONTENT_AUTHORITY) <= 0) {
-            return null;
-        }
-        Long manualInterval = Long.parseLong(resources.getString(
-                R.string.pref_sync_interval_manual_mode));
-        if (ContentResolver.getSyncAutomatically(account, LocalContract.CONTENT_AUTHORITY)) {
-            List<PeriodicSync> periodicSyncs = ContentResolver.getPeriodicSyncs(
-                    account, LocalContract.CONTENT_AUTHORITY);
-            if (periodicSyncs.isEmpty()) {
-                return manualInterval;
-            } else {
-                return periodicSyncs.get(0).period;
+    @NonNull
+    Single<Long> getSyncInterval(Account account, boolean isDelay) {
+        return Single.fromCallable(() -> {
+            if (account == null) return null;
+
+            if (ContentResolver.getIsSyncable(account, LocalContract.CONTENT_AUTHORITY) <= 0) {
+                return null;
             }
-        } else {
-            return manualInterval;
-        }
+            // NOTE: getPeriodSyncs returns old value if is called immediately after add...
+            if (isDelay) {
+                Thread.sleep(25); // TODO: find a better way, it is not good at all
+            }
+            Long manualInterval = Long.parseLong(
+                    resources.getString(R.string.pref_sync_interval_manual_mode));
+            if (ContentResolver.getSyncAutomatically(account, LocalContract.CONTENT_AUTHORITY)) {
+                List<PeriodicSync> periodicSyncs = ContentResolver
+                        .getPeriodicSyncs(account, LocalContract.CONTENT_AUTHORITY);
+
+                if (periodicSyncs.isEmpty()) return manualInterval;
+                else return periodicSyncs.get(0).period;
+            } else {
+                return manualInterval;
+            }
+        });
     }
 
-    public void setSyncInterval(Account account, long seconds) {
+    void setSyncInterval(Account account, long seconds) {
         if (account == null) return;
 
         Long manualInterval = Long.parseLong(resources.getString(

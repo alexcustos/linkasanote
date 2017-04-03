@@ -40,6 +40,7 @@ import android.view.View;
 import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.about.AboutActivity;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.databinding.ActivityLaanoBinding;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenter;
@@ -457,11 +458,15 @@ public class LaanoActivity extends AppCompatActivity implements
     }
 
     private void startSettingsActivity() {
-        Intent settingsIntent =
-                new Intent(this, SettingsActivity.class);
+        Intent settingsIntent = new Intent(this, SettingsActivity.class);
         settingsIntent.putExtra(
                 SettingsActivity.EXTRA_ACCOUNT,
                 CloudUtils.getDefaultAccount(this, accountManager));
+        startActivity(settingsIntent);
+    }
+
+    private void startAboutActivity() {
+        Intent settingsIntent = new Intent(this, AboutActivity.class);
         startActivity(settingsIntent);
     }
 
@@ -490,6 +495,7 @@ public class LaanoActivity extends AppCompatActivity implements
                             startSettingsActivity();
                             break;
                         case R.id.about_menu_item:
+                            startAboutActivity();
                             break;
                     }
                     drawerLayout.closeDrawers();

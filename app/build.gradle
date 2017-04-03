@@ -9,13 +9,14 @@ android {
         applicationId "com.bytesforge.linkasanote"
         minSdkVersion MIN_SDK_VERSION
         targetSdkVersion SDK_VERSION
-        versionCode 1
-        versionName "0.1"
+        versionCode buildVersionCode()
+        versionName VERSION_NAME
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         //jackOptions {
         //    enabled true
         //}
+        buildConfigField "long", "BUILD_TIMESTAMP", System.currentTimeMillis() + "L"
     }
 
     compileOptions {

@@ -1,6 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 ext {
+    // NOTE: xxx.yy.zz; -SNAPSHOT; -RCxx
+    VERSION_NAME = "0.0.1-SNAPSHOT"
     SDK_VERSION = 25
     MIN_SDK_VERSION = 24
     BUILD_TOOL_VERSION = '25.0.2'
@@ -20,6 +22,29 @@ ext {
     nextcloudLibraryVersion = '1.0.11'
     uiAutomatorVersion = '2.1.2'
     daggerMockVersion = '0.6.4'
+}
+
+ext {
+    buildVersionCode = {
+        // versionCode MAX: 2 100 000 000
+        // Release: xxx.yy.zz.99
+        // -SNAPSHOT: *.00
+        // -RCxx: *.(1-98)
+        def candidate = "99"
+        def (major, minor, patch) = VERSION_NAME.toLowerCase().replaceAll('-', '').tokenize('.')
+        if (patch.endsWith("snapshot")) {
+            candidate = "0"
+            patch = patch.replaceAll("[^0-9]", "");
+        } else {
+            def rc
+            (patch, rc) = patch.tokenize("rc")
+            if (rc) {
+                candidate = rc
+            }
+        }
+        (major, minor, patch, candidate) = [major, minor, patch, candidate].collect{it.toInteger()}
+        (major * 1000000) + (minor * 10000) + (patch * 100) + candidate
+    }
 }
 
 buildscript {

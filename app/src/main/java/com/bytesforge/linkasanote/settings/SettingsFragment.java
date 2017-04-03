@@ -14,6 +14,7 @@ import android.view.View;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.owncloud.android.lib.resources.files.FileUtils;
 
 import java.util.Arrays;
@@ -28,11 +29,15 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     private static final String ARGUMENT_SETTINGS_ACCOUNT = "ACCOUNT";
 
+    private ListPreference prefSyncInterval;
     private Account account;
     private Resources resources;
 
     @Inject
     Settings settings;
+
+    @Inject
+    BaseSchedulerProvider schedulerProvider;
 
     public static SettingsFragment newInstance(@Nullable Account account) {
         Bundle args = new Bundle();
@@ -91,17 +96,38 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             return true;
         });
 
-        ListPreference prefSyncInterval = (ListPreference) findPreference(
+        prefSyncInterval = (ListPreference) findPreference(
                 resources.getString(R.string.pref_key_sync_interval));
-        Long syncInterval = settings.getSyncInterval(account);
-        if (syncInterval != null) {
-            View view = getView();
+        prefSyncInterval.setOnPreferenceChangeListener((preference, newValue) -> {
+            String newSyncInterval = (String) newValue;
+            String[] seconds = resources.getStringArray(R.array.pref_sync_interval_seconds);
+            int newIndex = getSyncIntervalIndex(seconds, newSyncInterval);
+            String oldSyncInterval = prefSyncInterval.getValue();
+            if (!newSyncInterval.equals(oldSyncInterval)) {
+                settings.setSyncInterval(account, Long.parseLong(seconds[newIndex]));
+                populateSyncInterval(account, true);
+            }
+            return false;
+        });
+        populateSyncInterval(account);
+    }
+
+    private void populateSyncInterval(@Nullable Account account) {
+        populateSyncInterval(account, false);
+    }
+
+    private void populateSyncInterval(@Nullable Account account, boolean isDelay) {
+        settings.getSyncInterval(account, isDelay)
+                .subscribeOn(schedulerProvider.computation())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(syncInterval -> {
             String[] seconds = resources.getStringArray(R.array.pref_sync_interval_seconds);
             String[] names = resources.getStringArray(R.array.pref_sync_interval_names);
             int index = getSyncIntervalIndex(seconds, syncInterval.toString());
-            Long cleanSyncInterval = Long.parseLong(seconds[index]);
-            if (!Objects.equals(syncInterval, cleanSyncInterval)) {
-                settings.setSyncInterval(account, cleanSyncInterval);
+            Long validatedSyncInterval = Long.parseLong(seconds[index]);
+            if (!Objects.equals(syncInterval, validatedSyncInterval)) {
+                settings.setSyncInterval(account, validatedSyncInterval);
+                View view = getView();
                 if (view != null) {
                     Snackbar.make(view, R.string.settings_fragment_snackbar_interval_error,
                             Snackbar.LENGTH_LONG).show();
@@ -109,26 +135,17 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             }
             prefSyncInterval.setValue(seconds[index]);
             prefSyncInterval.setSummary(names[index]);
-
-            prefSyncInterval.setOnPreferenceChangeListener((preference, newValue) -> {
-                String newSyncInterval = (String) newValue;
-                int newIndex = getSyncIntervalIndex(seconds, newSyncInterval);
-                settings.setSyncInterval(account, Long.parseLong(seconds[newIndex]));
-                // TODO: field must be repopulated
-                // NOTE: getSyncInterval returns old value if is called immediately after set
-                prefSyncInterval.setValue(seconds[newIndex]);
-                prefSyncInterval.setSummary(names[newIndex]);
-                return false;
-            });
-        } else {
+        }, throwable -> {
             prefSyncInterval.setEnabled(false);
             prefSyncInterval.setSummary(
                     getString(R.string.settings_fragment_sync_interval_not_available));
-        }
+        });
     }
 
-    private int getSyncIntervalIndex(String[] seconds, @NonNull String syncInterval) {
+    private int getSyncIntervalIndex(@NonNull String[] seconds, @NonNull String syncInterval) {
+        checkNotNull(seconds);
         checkNotNull(syncInterval);
+
         String manualInterval = resources.getString(R.string.pref_sync_interval_manual_mode);
         List<String> secondList = Arrays.asList(seconds);
         int index = secondList.indexOf(syncInterval);

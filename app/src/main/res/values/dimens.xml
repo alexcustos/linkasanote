@@ -35,4 +35,6 @@
     <dimen name="dialog_padding_button_bar_top">8dp</dimen>
     <dimen name="dialog_padding_button_bar_bottom">0dp</dimen>
     <dimen name="dialog_padding_name">8dp</dimen>
+    <dimen name="about_margin_vertical_text">16dp</dimen>
+    <dimen name="about_margin_vertical_title">4dp</dimen>
 </resources>

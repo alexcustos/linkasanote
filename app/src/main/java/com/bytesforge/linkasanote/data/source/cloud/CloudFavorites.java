@@ -217,7 +217,6 @@ public class CloudFavorites {
 
     public String getRemotePath(@NonNull final String favoriteId) {
         checkNotNull(favoriteId);
-
         return getDataSourceDirectory() + JsonFile.PATH_SEPARATOR + getRemoteFileName(favoriteId);
     }
 
@@ -236,14 +235,12 @@ public class CloudFavorites {
     @Nullable
     public String getDataSourceETag(@NonNull OwnCloudClient ocClient) {
         checkNotNull(ocClient);
-
         return CloudDataSource.getDataSourceETag(ocClient, getDataSourceDirectory(), true);
     }
 
     @NonNull
     public Map<String, String> getDataSourceMap(@NonNull OwnCloudClient ocClient) {
         checkNotNull(ocClient);
-
         return CloudDataSource.getDataSourceMap(ocClient, getDataSourceDirectory());
     }
 

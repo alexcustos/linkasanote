@@ -2,6 +2,8 @@ package com.bytesforge.linkasanote;
 
 import android.support.annotation.VisibleForTesting;
 
+import com.bytesforge.linkasanote.about.AboutComponent;
+import com.bytesforge.linkasanote.about.AboutPresenterModule;
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountComponent;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterModule;
 import com.bytesforge.linkasanote.data.source.ProviderModule;
@@ -53,5 +55,5 @@ public interface ApplicationComponent {
     ManageAccountsComponent getManageAccountsComponent(ManageAccountsPresenterModule module);
     FavoritesConflictResolutionComponent getFavoritesConflictResolutionComponent(
             FavoritesConflictResolutionPresenterModule favoritesConflictResolutionPresenterModule);
-
+    AboutComponent getAboutComponent(AboutPresenterModule module);
 }
