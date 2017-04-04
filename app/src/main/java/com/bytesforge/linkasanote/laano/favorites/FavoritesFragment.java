@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
@@ -14,6 +15,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -102,6 +104,42 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.toolbar_favorites, menu);
+        MenuItem searchMenuItem = menu.findItem(R.id.toolbar_favorites_search);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchMenuItem);
+        MenuItemCompat.setOnActionExpandListener(
+                searchMenuItem, new MenuItemCompat.OnActionExpandListener() {
+
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                getActivity().supportInvalidateOptionsMenu();
+                viewModel.setSearchText(null);
+                presenter.loadFavorites(false);
+                return true;
+            }
+        });
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                viewModel.setSearchText(query);
+                presenter.loadFavorites(false);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return true;
+            }
+        });
+        if (viewModel.getSearchText() != null) {
+            searchMenuItem.expandActionView();
+            searchView.setQuery(viewModel.getSearchText(), false);
+        }
     }
 
     @Override
@@ -186,7 +224,6 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
                 rvFavorites.getContext(), layoutManager.getOrientation());
         rvFavorites.addItemDecoration(dividerItemDecoration);
     }
-
 
     private void showFilteringPopupMenu() {
         PopupMenu menu = new PopupMenu(

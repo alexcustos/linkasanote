@@ -9,7 +9,7 @@
             type="com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel" />
     </data>
 
-    <RelativeLayout
+    <FrameLayout
         android:id="@+id/snackbar_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -19,17 +19,33 @@
             android:id="@+id/rv_favorites"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_centerInParent="true"
+            android:layout_gravity="center"
             android:scrollbars="vertical"
             android:visibility="@{viewModel.favoriteListEmpty ? View.GONE : View.VISIBLE}" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
             android:layout_gravity="center"
             android:drawableTop="@drawable/ic_favorite_48dp"
             android:text="@string/favorites_empty_title"
             android:visibility="@{viewModel.favoriteListEmpty ? View.VISIBLE : View.GONE}" />
-    </RelativeLayout>
+
+        <FrameLayout
+            android:id="@+id/progress_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            android:background="@android:color/black"
+            android:clickable="true"
+            android:visibility="gone"
+            bind:progressOverlay="@{viewModel.progressOverlay}">
+
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminate="true" />
+        </FrameLayout>
+    </FrameLayout>
 </layout>

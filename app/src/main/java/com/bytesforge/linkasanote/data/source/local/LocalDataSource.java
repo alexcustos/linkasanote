@@ -151,7 +151,7 @@ public class LocalDataSource implements DataSource {
             // NOTE: if one has never been synced
             numRows = localFavorites.deleteFavorite(favoriteId).blockingGet();
         } else {
-            SyncState deletedState = new SyncState(SyncState.State.DELETED);
+            SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
             numRows = localFavorites.updateFavorite(favoriteId, deletedState)
                     .blockingGet();
         }

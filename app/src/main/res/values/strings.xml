@@ -113,6 +113,7 @@
     <string name="tab_laano_icon_description_sync">Synchronization is in progress</string>
     <string name="laano_actionbar_manager_sync_title">Up: %1$d / dl: %2$d</string>
     <string name="toolbar_favorites_item_filter">Favorite filter</string>
+    <string name="toolbar_favorites_search">Search</string>
     <string name="filter_favorites_all">All</string>
     <string name="filter_favorites_conflicted">Conflicted</string>
     <string name="favorites_delete_confirmation_title">Delete confirmation</string>
@@ -144,7 +145,7 @@
     <string name="about_info_warranty">This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</string>
     <string name="about_button_license_terms">license terms</string>
     <string name="about_notices_title">Notices</string>
-    <string name="about_notices_license_apache">Licensed under the Apache License, Version 2.0. You may not use this application except in compliance with the License.</string>
+    <string name="about_notices_license_apache">Licensed under the Apache License, Version 2.0. You may not use this program except in compliance with the License.</string>
     <string name="about_app_version">Version %s</string>
     <string name="about_app_copyright">Copyright © %1$s %2$s</string>
     <string name="about_fragment_error_license">Could not read license file: %s</string>

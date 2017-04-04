@@ -74,7 +74,7 @@ public class Settings {
             if (ContentResolver.getIsSyncable(account, LocalContract.CONTENT_AUTHORITY) <= 0) {
                 return null;
             }
-            // NOTE: getPeriodSyncs returns old value if is called immediately after add...
+            // NOTE: getPeriodSyncs returns old value if is called immediately after addPeriodSync
             if (isDelay) {
                 Thread.sleep(25); // TODO: find a better way, it is not good at all
             }

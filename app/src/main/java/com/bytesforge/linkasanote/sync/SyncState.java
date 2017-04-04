@@ -29,7 +29,7 @@ public class SyncState {
         this(-1, null, 0, false, false, false);
     }
 
-    public SyncState(
+    private SyncState(
             long rowId, @Nullable String eTag,
             int duplicated, boolean conflicted, boolean deleted, boolean synced) {
         this.rowId = rowId;
@@ -40,29 +40,28 @@ public class SyncState {
         this.synced = synced;
     }
 
-    public SyncState(State state) {
-        rowId = -1;
-        eTag = null;
-        duplicated = 0;
+    public SyncState(SyncState syncState, State state) {
+        rowId = syncState.getRowId();
+        eTag = syncState.getETag();
+        duplicated = syncState.getDuplicated();
         switch (state) {
             case UNSYNCED: // cds
-                conflicted = false;
-                deleted = false;
+                conflicted = syncState.isConflicted();
+                deleted = syncState.isDeleted();
                 synced = false;
                 break;
             case SYNCED: // cdS
-                conflicted = false;
+                conflicted = syncState.isConflicted();
                 deleted = false;
                 synced = true;
                 break;
             case DELETED: // cDs, cDS successfully deleted (delete record)
-                conflicted = false;
+                conflicted = syncState.isConflicted();
                 deleted = true;
                 synced = false;
                 break;
             case CONFLICTED_UPDATE: // Cds, CdS successfully resolved (syncedState)
                 // NOTE: Local record was updated and Cloud one was modified or deleted
-                // TODO: Conflicted record must preload Cloud copy and check if conflict still exists
                 conflicted = true;
                 deleted = false;
                 synced = false;
@@ -76,6 +75,11 @@ public class SyncState {
             default:
                 throw new IllegalArgumentException("Unexpected state was provided [" + state.name() + "]");
         }
+
+    }
+
+    public SyncState(State state) {
+        this(new SyncState(), state);
     }
 
     public SyncState(@Nullable String eTag, int duplicated) {

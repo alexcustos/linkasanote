@@ -7,6 +7,7 @@ import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
+import com.google.common.base.Strings;
 
 import java.util.ArrayList;
 
@@ -87,9 +88,19 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         if (forceUpdate) {
             repository.refreshFavorites();
         }
-
+        if (showLoading) {
+            viewModel.showProgressOverlay();
+        }
         Disposable disposable = repository.getFavorites()
+                .subscribeOn(schedulerProvider.computation())
                 .filter(favorite -> {
+                    String searchText = viewModel.getSearchText();
+                    if (!Strings.isNullOrEmpty(searchText)) {
+                        String favoriteName = favorite.getName();
+                        if (favoriteName != null && !favoriteName.contains(searchText)) {
+                            return false;
+                        }
+                    }
                     switch (viewModel.getFilterType()) {
                         case FAVORITES_CONFLICTED:
                             return favorite.isConflicted();
@@ -99,19 +110,19 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
                     }
                 })
                 .toList()
-                .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                // NoSuchElementException, NullPointerException
-                .doOnError(throwable -> view.showFavorites(new ArrayList<>()))
                 .doFinally(() -> {
                     if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
                         EspressoIdlingResource.decrement();
                     }
+                    if (showLoading) {
+                        viewModel.hideProgressOverlay();
+                    }
                 })
-                // NOTE: BiConsumer must be here or OnErrorNotImplementedException
-                .subscribe((favorites, throwable) -> {
-                    if (favorites != null) view.showFavorites(favorites);
-                });
+                // NoSuchElementException, NullPointerException
+                .subscribe(
+                        view::showFavorites,
+                        throwable -> view.showFavorites(new ArrayList<>()));
         this.disposable.add(disposable);
     }
 

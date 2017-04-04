@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.databinding.BindingAdapter;
@@ -13,11 +14,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.util.SparseBooleanArray;
-import android.widget.RelativeLayout;
+import android.view.View;
+import android.widget.FrameLayout;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
+import com.bytesforge.linkasanote.utils.ActivityUtils;
 import com.bytesforge.linkasanote.utils.SparseBooleanParcelableArray;
 
 import java.util.LinkedList;
@@ -28,20 +31,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // NOTE: global viewModel, applied to fragment and every Item
 public class FavoritesViewModel extends BaseObservable implements FavoritesContract.ViewModel {
 
+    private static final float PROGRESS_OVERLAY_ALPHA = 0.4f;
+    private static final long PROGRESS_OVERLAY_DURATION = 200; // ms
+    private static final long PROGRESS_OVERLAY_SHOW_DELAY = 200; // ms
+
     private static final String STATE_ACTION_MODE = "ACTION_MODE";
     private static final String STATE_LIST_SIZE = "LIST_SIZE";
     private static final String STATE_SELECTED_IDS = "SELECTED_IDS";
     private static final String STATE_FILTER_TYPE = "FILTER_TYPE";
+    private static final String STATE_SEARCH_TEXT = "SEARCH_TEXT";
+    private static final String STATE_PROGRESS_OVERLAY = "PROGRESS_OVERLAY";
 
     public final ObservableBoolean actionMode = new ObservableBoolean();
-    public final ObservableInt favoriteListSize = new ObservableInt(0);
+    public final ObservableInt favoriteListSize = new ObservableInt();
 
     private FavoritesContract.Presenter presenter;
     private LaanoUiManager laanoUiManager;
-    private Context context;
+    private Resources resources;
 
     private SparseBooleanArray selectedIds;
     private FavoritesFilterType filterType;
+    private String searchText;
 
     public enum SnackbarId {
         DATABASE_ERROR, CONFLICT_RESOLUTION_SUCCESSFUL, CONFLICT_RESOLUTION_ERROR};
@@ -49,8 +59,11 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     @Bindable
     public SnackbarId snackbarId;
 
+    @Bindable
+    public boolean progressOverlay;
+
     public FavoritesViewModel(@NonNull Context context) {
-        this.context = checkNotNull(context);
+        resources = checkNotNull(context).getResources();
     }
 
     @BindingConversion
@@ -64,7 +77,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     }
 
     @BindingAdapter({"snackbarId"})
-    public static void showSnackbar(RelativeLayout view, SnackbarId snackbarId) {
+    public static void showSnackbar(FrameLayout view, SnackbarId snackbarId) {
         if (snackbarId == null) return;
 
         switch (snackbarId) {
@@ -88,6 +101,16 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         }
     }
 
+    @BindingAdapter({"progressOverlay"})
+    public static void showProgressOverlay(FrameLayout view, boolean progressOverlay) {
+        if (progressOverlay) {
+            ActivityUtils.animateAlpha(view, View.VISIBLE, PROGRESS_OVERLAY_ALPHA,
+                    PROGRESS_OVERLAY_DURATION, PROGRESS_OVERLAY_SHOW_DELAY);
+        } else {
+            ActivityUtils.animateAlpha(view, View.GONE, 0, PROGRESS_OVERLAY_DURATION, 0);
+        }
+    }
+
     @Override
     public void setInstanceState(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState == null) {
@@ -105,6 +128,8 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         outState.putInt(STATE_LIST_SIZE, favoriteListSize.get());
         outState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray(selectedIds));
         outState.putInt(STATE_FILTER_TYPE, filterType.ordinal());
+        outState.putString(STATE_SEARCH_TEXT, searchText);
+        outState.putBoolean(STATE_PROGRESS_OVERLAY, progressOverlay);
     }
 
     @Override
@@ -115,6 +140,8 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         favoriteListSize.set(state.getInt(STATE_LIST_SIZE));
         selectedIds = state.getParcelable(STATE_SELECTED_IDS);
         setFilterType(FavoritesFilterType.values()[state.getInt(STATE_FILTER_TYPE)]);
+        searchText = state.getString(STATE_SEARCH_TEXT);
+        progressOverlay = state.getBoolean(STATE_PROGRESS_OVERLAY);
 
         notifyChange();
     }
@@ -123,9 +150,12 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         Bundle defaultState = new Bundle();
 
         defaultState.putBoolean(STATE_ACTION_MODE, false);
-        defaultState.putInt(STATE_LIST_SIZE, 0);
+        // NOTE: do not show empty list warning if empty state is not confirmed
+        defaultState.putInt(STATE_LIST_SIZE, Integer.MAX_VALUE);
         defaultState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray());
         defaultState.putInt(STATE_FILTER_TYPE, FavoritesFilterType.FAVORITES_ALL.ordinal());
+        defaultState.putString(STATE_SEARCH_TEXT, null);
+        defaultState.putBoolean(STATE_PROGRESS_OVERLAY, false);
 
         return defaultState;
     }
@@ -172,6 +202,16 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     public void setFilterType(FavoritesFilterType filterType) {
         this.filterType = filterType;
         laanoUiManager.setFavoriteFilterType(filterType);
+    }
+
+    @Override
+    public String getSearchText() {
+        return searchText;
+    }
+
+    @Override
+    public void setSearchText(String searchText) {
+        this.searchText = searchText;
     }
 
     // Selection
@@ -237,5 +277,21 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     public void showConflictResolutionErrorSnackbar() {
         snackbarId = SnackbarId.CONFLICT_RESOLUTION_ERROR;
         notifyPropertyChanged(BR.snackbarId);
+    }
+
+    @Override
+    public void showProgressOverlay() {
+        if (!progressOverlay) {
+            progressOverlay = true;
+            notifyPropertyChanged(BR.progressOverlay);
+        }
+    }
+
+    @Override
+    public void hideProgressOverlay() {
+        if (progressOverlay) {
+            progressOverlay = false;
+            notifyPropertyChanged(BR.progressOverlay);
+        }
     }
 }

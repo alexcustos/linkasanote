@@ -52,8 +52,13 @@ public interface FavoritesContract {
         void showDatabaseErrorSnackbar();
         void showConflictResolutionSuccessfulSnackbar();
         void showConflictResolutionErrorSnackbar();
+        void showProgressOverlay();
+        void hideProgressOverlay();
+
         FavoritesFilterType getFilterType();
         void setFilterType(FavoritesFilterType filterType);
+        String getSearchText();
+        void setSearchText(String searchText);
     }
 
     interface Presenter extends LaanoTabPresenter {
