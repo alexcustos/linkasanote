@@ -117,7 +117,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
         completionView.setTokenClickStyle(TokenCompleteTextView.TokenClickStyle.Select);
         completionView.setDeletionStyle(TokenCompleteTextView.TokenDeleteStyle.SelectThenDelete);
         completionView.allowCollapse(false);
-        char[] splitChars = {' '};
+        char[] splitChars = {','};
         completionView.setSplitChar(splitChars);
         completionView.allowDuplicates(false);
         completionView.performBestGuess(false);
@@ -145,7 +145,8 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
                 StringBuilder filteredStringBuilder = new StringBuilder();
                 for (int i = start; i < end; i++) {
                     char currentChar = source.charAt(i);
-                    if (Character.isLetterOrDigit(currentChar)) {
+                    if (Character.isLetterOrDigit(currentChar)
+                            || Character.isSpaceChar(currentChar)) {
                         filteredStringBuilder.append(currentChar);
                         binding.favoriteTagsLayout.setError(null);
                     } else {

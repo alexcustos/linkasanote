@@ -8,6 +8,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
@@ -21,6 +22,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import io.reactivex.observers.TestObserver;
+
+import static junit.framework.TestCase.assertNotNull;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -43,8 +46,9 @@ public class LocalDataSourceTest {
     @Before
     public void setupLocalDataSource() {
         FAVORITES = AndroidTestUtils.buildFavorites();
-        LocalFavorites localFavorites = new LocalFavorites(context, contentResolver);
-        localDataSource = new LocalDataSource(contentResolver, localFavorites);
+        LocalTags localTags = new LocalTags(contentResolver);
+        LocalFavorites localFavorites = new LocalFavorites(context, contentResolver, localTags);
+        localDataSource = new LocalDataSource(contentResolver, localFavorites, localTags);
         cleanupLocalDataSource();
     }
 
@@ -76,6 +80,9 @@ public class LocalDataSourceTest {
         testFavoritesObserver.assertValue(Collections.emptyList());
         for (Favorite favorite : FAVORITES) {
             localDataSource.saveFavorite(favorite);
+            List<Tag> tags = favorite.getTags();
+            assertNotNull(tags);
+            Collections.sort(tags);
         }
         // Test
         testFavoritesObserver = localDataSource.getFavorites().toList().test();
@@ -87,6 +94,9 @@ public class LocalDataSourceTest {
         // Preconditions
         for (Favorite favorite : FAVORITES) {
             localDataSource.saveFavorite(favorite);
+            List<Tag> tags = favorite.getTags();
+            assertNotNull(tags);
+            Collections.sort(tags);
         }
         testFavoritesObserver = localDataSource.getFavorites().toList().test();
         testFavoritesObserver.assertValue(FAVORITES);
@@ -101,6 +111,9 @@ public class LocalDataSourceTest {
         // Preconditions
         for (Favorite favorite : FAVORITES) {
             localDataSource.saveFavorite(favorite);
+            List<Tag> tags = favorite.getTags();
+            assertNotNull(tags);
+            Collections.sort(tags);
         }
         testFavoritesObserver = localDataSource.getFavorites().toList().test();
         testFavoritesObserver.assertValue(FAVORITES);

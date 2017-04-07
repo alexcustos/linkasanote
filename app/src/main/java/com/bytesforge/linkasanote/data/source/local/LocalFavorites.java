@@ -24,10 +24,14 @@ public class LocalFavorites {
 
     private final Context context;
     private final ContentResolver contentResolver;
+    private final LocalTags localTags;
 
-    public LocalFavorites(@NonNull Context context, @NonNull ContentResolver contentResolver) {
+    public LocalFavorites(
+            @NonNull Context context, @NonNull ContentResolver contentResolver,
+            @NonNull LocalTags localTags) {
         this.context = checkNotNull(context);
         this.contentResolver = checkNotNull(contentResolver);
+        this.localTags = checkNotNull(localTags);
     }
 
     public Observable<Favorite> getFavorites() {
@@ -52,8 +56,7 @@ public class LocalFavorites {
             }
             String rowId = LocalContract.rowIdFrom(cursor);
             Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
-            List<Tag> tags = LocalTags.getTags(contentResolver, favoriteTagsUri)
-                    .toList().blockingGet();
+            List<Tag> tags = localTags.getTags(favoriteTagsUri).toList().blockingGet();
             favoriteEmitter.onNext(Favorite.from(cursor, tags));
 
             return cursor;
@@ -72,8 +75,7 @@ public class LocalFavorites {
                 }
                 String rowId = LocalContract.rowIdFrom(cursor);
                 Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
-                List<Tag> tags = LocalTags.getTags(contentResolver, favoriteTagsUri)
-                        .toList().blockingGet();
+                List<Tag> tags = localTags.getTags(favoriteTagsUri).toList().blockingGet();
                 return Favorite.from(cursor, tags);
             }
         });
@@ -92,7 +94,7 @@ public class LocalFavorites {
             List<Tag> tags = favorite.getTags();
             if (tags != null) {
                 for (Tag tag : tags) {
-                    LocalTags.saveTag(contentResolver, tag, uri).blockingGet();
+                    localTags.saveTag(tag, uri).blockingGet();
                 }
             }
             return Long.parseLong(rowId);
@@ -180,8 +182,7 @@ public class LocalFavorites {
                 }
                 String rowId = LocalContract.rowIdFrom(cursor);
                 Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
-                List<Tag> tags = LocalTags.getTags(contentResolver, favoriteTagsUri)
-                        .toList().blockingGet();
+                List<Tag> tags = localTags.getTags(favoriteTagsUri).toList().blockingGet();
                 return Favorite.from(cursor, tags);
             }
         });

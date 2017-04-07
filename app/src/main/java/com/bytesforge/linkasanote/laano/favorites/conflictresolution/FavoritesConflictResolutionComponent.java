@@ -8,5 +8,5 @@ import dagger.Subcomponent;
 @Subcomponent(modules = {FavoritesConflictResolutionPresenterModule.class})
 public interface FavoritesConflictResolutionComponent {
 
-    void inject(FavoritesConflictResolutionActivity favoritesConflictResolutionActivity);
+    void inject(FavoritesConflictResolutionDialog favoritesConflictResolutionDialog);
 }

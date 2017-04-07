@@ -15,6 +15,7 @@ import java.util.NoSuchElementException;
 
 import javax.inject.Inject;
 
+import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
@@ -57,7 +58,6 @@ public final class FavoritesConflictResolutionPresenter implements
 
     @Inject
     void setupView() {
-        view.setPresenter(this);
         view.setViewModel(viewModel);
         viewModel.setPresenter(this);
     }
@@ -78,6 +78,26 @@ public final class FavoritesConflictResolutionPresenter implements
             return;
         }
         loadLocalFavorite(); // first step, then cloud one will be loaded
+    }
+
+    @Override
+    public Single<Boolean> autoResolve() {
+        return Single.fromCallable(() -> {
+            Favorite favorite = localFavorites.getFavorite(favoriteId).blockingGet();
+            if (favorite.isDuplicated()) {
+                try {
+                    localFavorites.getMainFavorite(favorite.getName()).blockingGet();
+                } catch (NoSuchElementException e) {
+                    SyncState state = new SyncState(SyncState.State.SYNCED);
+                    int numRows = localFavorites.updateFavorite(favoriteId, state).blockingGet();
+                    if (numRows == 1) {
+                        repository.refreshFavorites();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
     }
 
     private void loadLocalFavorite() {
@@ -116,6 +136,7 @@ public final class FavoritesConflictResolutionPresenter implements
                     .subscribe(this::populateLocalFavorite, throwable -> {
                         if (throwable instanceof NoSuchElementException) {
                             // NOTE: main position is empty, so the conflict can be resolved automatically
+                            // TODO: remove in favor of autoResolve
                             SyncState state = new SyncState(SyncState.State.SYNCED);
                             int numRows = localFavorites.updateFavorite(favoriteId, state).blockingGet();
                             if (numRows == 1) {

@@ -171,7 +171,12 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     public void onDeleteClick() {
         int[] selectedIds = viewModel.getSelectedIds();
         view.confirmFavoritesRemoval(selectedIds);
-    } // onDeleteClick
+    }
+
+    @Override
+    public void onSelectAllClick() {
+        viewModel.toggleSelection();
+    }
 
     @Override
     public void deleteFavorites(int[] selectedIds) {

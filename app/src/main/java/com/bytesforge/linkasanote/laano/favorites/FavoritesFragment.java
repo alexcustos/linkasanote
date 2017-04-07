@@ -29,8 +29,7 @@ import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoFavoritesBinding;
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteActivity;
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteFragment;
-import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionActivity;
-import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionFragment;
+import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionDialog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -203,9 +202,10 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
             case REQUEST_FAVORITE_CONFLICT_RESOLUTION:
                 adapter.notifyDataSetChanged();
                 presenter.updateTabNormalState();
-                if (resultCode == Activity.RESULT_OK) {
+                presenter.loadFavorites(false);
+                if (resultCode == FavoritesConflictResolutionDialog.RESULT_OK) {
                     viewModel.showConflictResolutionSuccessfulSnackbar();
-                } else if (resultCode == FavoritesConflictResolutionActivity.RESULT_FAILED){
+                } else if (resultCode == FavoritesConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
                 }
                 break;
@@ -322,10 +322,10 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     public void showConflictResolution(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
 
-        // TODO: replace it with alertDialog
-        Intent intent = new Intent(getContext(), FavoritesConflictResolutionActivity.class);
-        intent.putExtra(FavoritesConflictResolutionFragment.ARGUMENT_FAVORITE_ID, favoriteId);
-        startActivityForResult(intent, REQUEST_FAVORITE_CONFLICT_RESOLUTION);
+        FavoritesConflictResolutionDialog dialog =
+                FavoritesConflictResolutionDialog.newInstance(favoriteId);
+        dialog.setTargetFragment(this, REQUEST_FAVORITE_CONFLICT_RESOLUTION);
+        dialog.show(getFragmentManager(), FavoritesConflictResolutionDialog.DIALOG_TAG);
     }
 
     public class FavoritesActionModeCallback implements ActionMode.Callback {
@@ -339,6 +339,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             menu.findItem(R.id.favorites_delete).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+            menu.findItem(R.id.favorites_select_all).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
             return true;
         }
 
@@ -347,6 +348,11 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
             switch (item.getItemId()) {
                 case R.id.favorites_delete:
                     presenter.onDeleteClick();
+                    break;
+                case R.id.favorites_select_all:
+                    presenter.onSelectAllClick();
+                    adapter.notifyDataSetChanged();
+                    updateActionModeTitle();
                     break;
                 default:
                     throw new UnsupportedOperationException(

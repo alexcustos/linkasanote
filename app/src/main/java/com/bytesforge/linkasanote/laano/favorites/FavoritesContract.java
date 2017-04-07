@@ -44,6 +44,7 @@ public interface FavoritesContract {
         void disableActionMode();
 
         boolean isSelected(String favoriteId);
+        void toggleSelection();
         void toggleSelection(int position);
         void removeSelection();
         void removeSelection(int position);
@@ -74,6 +75,7 @@ public interface FavoritesContract {
         void onToLinksClick(@NonNull String favoriteId);
         void onToNotesClick(@NonNull String favoriteId);
         void onDeleteClick();
+        void onSelectAllClick();
         int getPosition(String favoriteId);
         void setFilterType(@NonNull FavoritesFilterType filtering);
         void deleteFavorites(int[] selectedIds);

@@ -2,6 +2,7 @@ package com.bytesforge.linkasanote.data;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -14,9 +15,10 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
-public final class Tag implements Serializable {
+public final class Tag implements Serializable, Comparable<Tag> {
 
     private static final String TAG = Tag.class.getSimpleName();
 
@@ -119,5 +121,18 @@ public final class Tag implements Serializable {
     @Override
     public String toString() {
         return name;
+    }
+
+    @Override
+    public int compareTo(@NonNull Tag obj) {
+        checkNotNull(obj);
+
+        String objName = obj.getName();
+        if (this == obj) return 0;
+        if (name == null && objName == null) return 0;
+        if (name == null ^ objName == null) {
+            return name == null ? -1 : 1;
+        }
+        return name.compareTo(objName);
     }
 }

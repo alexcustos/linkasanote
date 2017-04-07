@@ -23,7 +23,7 @@ import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
-public final class Favorite {
+public final class Favorite implements Comparable<Favorite> {
 
     private static final String TAG = Favorite.class.getSimpleName();
 
@@ -282,5 +282,18 @@ public final class Favorite {
     @Override
     public int hashCode() {
         return Objects.hashCode(id, name);
+    }
+
+    @Override
+    public int compareTo(@NonNull Favorite obj) {
+        checkNotNull(obj);
+
+        String objName = obj.getName();
+        if (this == obj) return 0;
+        if (name == null && objName == null) return 0;
+        if (name == null ^ objName == null) {
+            return name == null ? -1 : 1;
+        }
+        return name.compareTo(objName);
     }
 }

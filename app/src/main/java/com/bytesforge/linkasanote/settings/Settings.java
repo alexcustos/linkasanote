@@ -22,6 +22,8 @@ import static java.lang.System.currentTimeMillis;
 
 public class Settings {
 
+    public static final float GLOBAL_IMAGE_BUTTON_ALPHA_DISABLED = 0.3f;
+
     private static final String DEFAULT_SYNC_DIRECTORY = "/.laano_sync";
     private static final boolean DEFAULT_EXPAND_LINKS = false;
     private static final boolean DEFAULT_EXPAND_NOTES = false;

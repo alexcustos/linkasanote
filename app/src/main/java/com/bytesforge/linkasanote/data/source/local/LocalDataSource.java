@@ -32,10 +32,14 @@ public class LocalDataSource implements DataSource {
 
     private final ContentResolver contentResolver;
     private final LocalFavorites localFavorites;
+    private final LocalTags localTags;
 
-    public LocalDataSource(ContentResolver contentResolver, LocalFavorites localFavorites) {
-        this.contentResolver = contentResolver;
-        this.localFavorites = localFavorites;
+    public LocalDataSource(
+            @NonNull ContentResolver contentResolver, @NonNull LocalFavorites localFavorites,
+            @NonNull LocalTags localTags) {
+        this.contentResolver = checkNotNull(contentResolver);
+        this.localFavorites = checkNotNull(localFavorites);
+        this.localTags = checkNotNull(localTags);
     }
 
     // Links
@@ -169,24 +173,22 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public Observable<Tag> getTags() {
-        return LocalTags.getTags(contentResolver, LocalContract.TagEntry.buildTagsUri());
+        return localTags.getTags(LocalContract.TagEntry.buildTagsUri());
     }
 
     @Override
     public Single<Tag> getTag(@NonNull String tagName) {
-        checkNotNull(tagName);
-        return LocalTags.getTag(contentResolver, tagName);
+        return localTags.getTag(checkNotNull(tagName));
     }
 
     @Override
     public void saveTag(@NonNull Tag tag) {
-        checkNotNull(tag);
-        LocalTags.saveTag(contentResolver, tag, LocalContract.TagEntry.buildTagsUri());
+        localTags.saveTag(checkNotNull(tag), LocalContract.TagEntry.buildTagsUri());
     }
 
     @Override
     public void deleteAllTags() {
-        LocalTags.deleteTags(contentResolver).blockingGet();
+        localTags.deleteTags().blockingGet();
     }
 
     // Statics

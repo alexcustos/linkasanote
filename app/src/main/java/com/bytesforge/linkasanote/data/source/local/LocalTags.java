@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Tag;
 
@@ -12,15 +13,28 @@ import java.util.NoSuchElementException;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 
-public final class LocalTags {
+import static com.google.common.base.Preconditions.checkNotNull;
 
-    private LocalTags() {
+public class LocalTags {
+
+    private final ContentResolver contentResolver;
+
+    public LocalTags(@NonNull ContentResolver contentResolver) {
+        this.contentResolver = checkNotNull(contentResolver);
     }
 
-    public static Observable<Tag> getTags(final ContentResolver contentResolver, final Uri uri) {
+
+    public Observable<Tag> getTags(final Uri uri) {
+        final String sortOrder = LocalContract.TagEntry.COLUMN_NAME_NAME + " ASC";
+        return getTags(uri, null, null, sortOrder);
+    }
+
+    public Observable<Tag> getTags(
+            final Uri uri,
+            final String selection, final String[] selectionArgs, final String sortOrder) {
         return Observable.generate(() -> {
             return contentResolver.query(
-                    uri, LocalContract.TagEntry.TAG_COLUMNS, null, null, null);
+                    uri, LocalContract.TagEntry.TAG_COLUMNS, selection, selectionArgs, sortOrder);
         }, (cursor, tagEmitter) -> {
             if (cursor == null) {
                 tagEmitter.onError(new NullPointerException("An error while retrieving the cursor"));
@@ -35,7 +49,7 @@ public final class LocalTags {
         }, Cursor::close);
     }
 
-    public static Single<Tag> getTag(final ContentResolver contentResolver, String tagName) {
+    public Single<Tag> getTag(String tagName) {
         return Single.fromCallable(() -> {
             Cursor cursor = contentResolver.query(
                     LocalContract.TagEntry.buildTagsUriWith(tagName),
@@ -54,20 +68,19 @@ public final class LocalTags {
         });
     }
 
-    public static Single<Uri> saveTag(final ContentResolver contentResolver, final Tag tag, final Uri uri) {
+    public Single<Uri> saveTag(final Tag tag, final Uri uri) {
         return Single.fromCallable(() -> {
             ContentValues values = tag.getContentValues();
             return contentResolver.insert(uri, values);
         });
     }
 
-    public static Single<Integer> deleteTag(
-            final ContentResolver contentResolver, final String tagName) {
+    public Single<Integer> deleteTag(final String tagName) {
         Uri uri = LocalContract.TagEntry.buildTagsUriWith(tagName);
         return LocalDataSource.delete(contentResolver, uri);
     }
 
-    public static Single<Integer> deleteTags(final ContentResolver contentResolver) {
+    public Single<Integer> deleteTags() {
         Uri uri = LocalContract.TagEntry.buildTagsUri();
         return LocalDataSource.delete(contentResolver, uri);
     }

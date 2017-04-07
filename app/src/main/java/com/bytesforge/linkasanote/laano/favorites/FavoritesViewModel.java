@@ -16,10 +16,12 @@ import android.support.design.widget.Snackbar;
 import android.util.SparseBooleanArray;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.ActivityUtils;
 import com.bytesforge.linkasanote.utils.SparseBooleanParcelableArray;
 
@@ -109,6 +111,16 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         } else {
             ActivityUtils.animateAlpha(view, View.GONE, 0, PROGRESS_OVERLAY_DURATION, 0);
         }
+    }
+
+    @BindingAdapter({"enabled"})
+    public static void setImageButtonEnabled(ImageButton view, boolean enabled) {
+        view.setClickable(enabled);
+        view.setFocusable(enabled);
+        view.setEnabled(enabled);
+
+        if (enabled) view.setAlpha(1.0f);
+        else view.setAlpha(Settings.GLOBAL_IMAGE_BUTTON_ALPHA_DISABLED);
     }
 
     @Override
@@ -224,6 +236,19 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
 
     private boolean isSelected(int position) {
         return selectedIds.get(position);
+    }
+
+    @Override
+    public void toggleSelection() {
+        int listSize = favoriteListSize.get();
+        if (listSize == Integer.MAX_VALUE || listSize <= 0) return;
+        if (selectedIds.size() > listSize / 2) {
+            selectedIds.clear();
+        } else {
+            for (int i = 0; i < listSize; i++) {
+                selectedIds.put(i, true);
+            }
+        }
     }
 
     @Override

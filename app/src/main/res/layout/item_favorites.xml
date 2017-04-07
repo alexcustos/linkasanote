@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:bind="http://schemas.android.com/tools">
 
     <data>
 
@@ -32,9 +33,10 @@
             android:paddingEnd="@dimen/recycler_view_button_padding"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
             android:paddingBottom="@dimen/recycler_view_button_padding_vertical"
-            android:visibility="@{viewModel.actionMode || favorite.conflicted ? View.INVISIBLE : View.VISIBLE}"
+            android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
             android:onClick="@{() -> presenter.onToLinksClick(favorite.id)}"
             style="@style/Button.RecyclerView"
+            bind:enabled="@{!favorite.conflicted}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent" />
@@ -92,9 +94,10 @@
             android:paddingEnd="@dimen/recycler_view_right_button_padding_end"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
             android:paddingBottom="@dimen/recycler_view_button_padding_vertical"
-            android:visibility="@{viewModel.actionMode || favorite.conflicted ? View.INVISIBLE : View.VISIBLE}"
+            android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
             android:onClick="@{() -> presenter.onToNotesClick(favorite.id)}"
             style="@style/Button.RecyclerView"
+            bind:enabled="@{!favorite.conflicted}"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

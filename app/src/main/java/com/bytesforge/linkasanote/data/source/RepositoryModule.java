@@ -8,6 +8,7 @@ import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
+import com.bytesforge.linkasanote.data.source.local.LocalTags;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
@@ -21,9 +22,15 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
+    public LocalTags provideLocalTags(ContentResolver contentResolver) {
+        return new LocalTags(contentResolver);
+    }
+
+    @Provides
+    @Singleton
     public LocalFavorites provideLocalFavorites(
-            Context context, ContentResolver contentResolver) {
-        return new LocalFavorites(context, contentResolver);
+            Context context, ContentResolver contentResolver, LocalTags localTags) {
+        return new LocalFavorites(context, contentResolver, localTags);
     }
 
     @Provides
@@ -37,8 +44,8 @@ public class RepositoryModule {
     @Singleton
     @Local
     public DataSource provideLocalDataSource(
-            ContentResolver contentResolver, LocalFavorites localFavorites) {
-        return new LocalDataSource(contentResolver, localFavorites);
+            ContentResolver contentResolver, LocalFavorites localFavorites, LocalTags localTags) {
+        return new LocalDataSource(contentResolver, localFavorites, localTags);
     }
 
     @Provides
