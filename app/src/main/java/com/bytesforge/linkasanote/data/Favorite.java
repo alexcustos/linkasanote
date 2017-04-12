@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
@@ -59,10 +60,11 @@ public final class Favorite implements Comparable<Favorite> {
     }
 
     public Favorite(String id, String name, List<Tag> tags) {
-        // NOTE: updating syncState must not change entry update time
+        // NOTE: updating syncState must not change update entry
         this(id, 0, currentTimeMillis(), name, tags, new SyncState());
     }
 
+    @VisibleForTesting
     public Favorite(String id, String name, List<Tag> tags, SyncState state) {
         this(id, 0, currentTimeMillis(), name, tags, state);
     }
@@ -74,7 +76,7 @@ public final class Favorite implements Comparable<Favorite> {
         this.created = created;
         this.updated = updated;
         this.name = name;
-        this.tags = tags;
+        this.tags = (tags == null || tags.isEmpty() ? null : tags);
         this.state = checkNotNull(state);
     }
 
@@ -131,6 +133,7 @@ public final class Favorite implements Comparable<Favorite> {
         }
         if (version != JSON_VERSION) {
             Log.v(TAG, "An unsupported version of JSON object was detected [" + version + "]");
+            return null;
         }
         try {
             JSONObject jsonFavorite = jsonContainer.getJSONObject(JSON_CONTAINER_FAVORITE);
@@ -163,16 +166,6 @@ public final class Favorite implements Comparable<Favorite> {
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_NAME, getName());
 
         return values;
-    }
-
-    public static List<Tag> tagsFrom(Cursor cursor) {
-        List<Tag> tags = new ArrayList<>();
-
-        cursor.moveToPosition(-1);
-        while (cursor.moveToNext()) {
-            tags.add(Tag.from(cursor));
-        }
-        return tags;
     }
 
     public long getRowId() {
@@ -227,14 +220,13 @@ public final class Favorite implements Comparable<Favorite> {
         return tags;
     }
 
-    @NonNull
+    @Nullable
     public String getTagsAsString() {
         if (tags != null) {
             Joiner joiner = Joiner.on(", ");
             return joiner.join(tags);
-        } else {
-            return "";
         }
+        return null;
     }
 
     @Nullable

@@ -14,10 +14,12 @@ import io.reactivex.Single;
 
 public interface DataSource {
 
-    Single<List<Link>> getLinks();
+    Observable<Link> getLinks();
     Single<Link> getLink(@NonNull String linkId);
     void saveLink(@NonNull Link link);
     void deleteAllLinks();
+    void deleteLink(@NonNull String linkId);
+    Single<Boolean> isConflictedLinks();
 
     Single<List<Note>> getNotes();
     Single<Note> getNote(@NonNull String noteId);

@@ -81,4 +81,18 @@
     <style name="AboutText.Notices" parent="TextAppearance.AppCompat.Title">
         <item name="android:textColor">?android:textColorSecondary</item>
     </style>
+
+    <!-- Favorites -->
+    <style name="FavoritesText" parent="TextAppearance.AppCompat.Small" />
+    <style name="FavoritesText.Name" parent="TextAppearance.AppCompat.Subhead">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <!-- Links -->
+    <style name="LinksText" parent="TextAppearance.AppCompat.Body1" />
+    <style name="LinksText.Name" parent="TextAppearance.AppCompat.Subhead">
+        <item name="android:textSize">18sp</item>
+    </style>
+    <style name="LinksText.Count" parent="TextAppearance.AppCompat.Subhead" />
+    <style name="LinksText.Caption" parent="TextAppearance.AppCompat.Button" />
 </resources>

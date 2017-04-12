@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:bind="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable name="viewModel"
+            type="com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkViewModel" />
+    </data>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <android.support.design.widget.CoordinatorLayout
+            android:id="@+id/snackbar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            bind:snackbarId="@{viewModel.snackbarId}">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/screen_edge_padding">
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    bind:linkError="@{viewModel.linkErrorText}">
+
+                    <EditText
+                        android:id="@+id/link_link"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/add_edit_link_link_hint"
+                        android:inputType="text|textNoSuggestions"
+                        android:maxLines="1"
+                        android:text="@={viewModel.linkLink}"
+                        android:afterTextChanged="@{() -> viewModel.afterLinkChanged()}" />
+                </android.support.design.widget.TextInputLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_toStartOf="@+id/checkbox_disabled"
+                        android:layout_centerVertical="true"
+                        android:text="@string/add_edit_link_disabled_hint" />
+                    <CheckBox
+                        android:id="@+id/checkbox_disabled"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:checked="@={viewModel.linkDisabled}"
+                        android:gravity="center_vertical" />
+                </RelativeLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <EditText
+                        android:id="@+id/link_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/add_edit_link_name_hint"
+                        android:inputType="text|textNoSuggestions"
+                        android:maxLines="1"
+                        android:text="@={viewModel.linkName}" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:id="@+id/link_tags_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.bytesforge.linkasanote.laano.links.addeditlink.LinkTagsCompletionView
+                        android:id="@+id/link_tags"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lineSpacingExtra="4dp"
+                        android:gravity="top"
+                        android:hint="@string/add_edit_link_tags_hint"
+                        android:inputType="text|textNoSuggestions|textMultiLine" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.v7.widget.AppCompatButton
+                    android:id="@+id/add_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:padding="@dimen/main_button_padding"
+                    android:layout_marginTop="@dimen/main_button_margin_top"
+                    android:text="@{viewModel.addButtonText}"
+                    android:enabled="@{viewModel.addButton}"
+                    android:onClick="@{() -> viewModel.onAddButtonClick()}" />
+            </LinearLayout>
+        </android.support.design.widget.CoordinatorLayout>
+    </ScrollView>
+</layout>

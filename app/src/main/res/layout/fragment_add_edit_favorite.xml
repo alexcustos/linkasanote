@@ -15,57 +15,61 @@
         android:layout_height="match_parent"
         android:fillViewport="true">
 
-        <LinearLayout
+        <android.support.design.widget.CoordinatorLayout
             android:id="@+id/snackbar_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/screen_edge_padding"
             bind:snackbarId="@{viewModel.snackbarId}">
 
-            <android.support.design.widget.TextInputLayout
-                android:id="@+id/favorite_name_layout"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                bind:nameError="@{viewModel.nameErrorText}">
+                android:orientation="vertical"
+                android:padding="@dimen/screen_edge_padding">
 
-                <EditText
-                    android:id="@+id/favorite_name"
+                <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/add_edit_favorite_name_hint"
-                    android:inputType="text|textNoSuggestions"
-                    android:maxLines="1"
-                    android:text="@={viewModel.favoriteName}"
-                    android:afterTextChanged="@{() -> viewModel.afterNameChanged()}" />
-            </android.support.design.widget.TextInputLayout>
+                    bind:nameError="@{viewModel.nameErrorText}">
 
-            <android.support.design.widget.TextInputLayout
-                android:id="@+id/favorite_tags_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                    <EditText
+                        android:id="@+id/favorite_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/add_edit_favorite_name_hint"
+                        android:inputType="text|textNoSuggestions"
+                        android:maxLines="1"
+                        android:text="@={viewModel.favoriteName}"
+                        android:afterTextChanged="@{() -> viewModel.afterNameChanged()}" />
+                </android.support.design.widget.TextInputLayout>
 
-                <com.bytesforge.linkasanote.laano.favorites.addeditfavorite.FavoriteTagsCompletionView
-                    android:id="@+id/favorite_tags"
+                <android.support.design.widget.TextInputLayout
+                    android:id="@+id/favorite_tags_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:lineSpacingExtra="4dp"
-                    android:gravity="top"
-                    android:hint="@string/add_edit_favorite_tags_hint"
-                    android:inputType="text|textNoSuggestions|textMultiLine"
-                    android:afterTextChanged="@{() -> viewModel.afterTagsChanged()}" />
-            </android.support.design.widget.TextInputLayout>
+                    android:layout_height="wrap_content">
 
-            <android.support.v7.widget.AppCompatButton
-                android:id="@+id/add_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:padding="@dimen/main_button_padding"
-                android:layout_marginTop="@dimen/main_button_margin_top"
-                android:text="@{viewModel.addButtonText}"
-                android:enabled="@{viewModel.addButton}"
-                android:onClick="@{() -> viewModel.onAddButtonClick()}" />
-        </LinearLayout>
+                    <com.bytesforge.linkasanote.laano.favorites.addeditfavorite.FavoriteTagsCompletionView
+                        android:id="@+id/favorite_tags"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lineSpacingExtra="4dp"
+                        android:gravity="top"
+                        android:hint="@string/add_edit_favorite_tags_hint"
+                        android:inputType="text|textNoSuggestions|textMultiLine"
+                        android:afterTextChanged="@{() -> viewModel.afterTagsChanged()}" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.v7.widget.AppCompatButton
+                    android:id="@+id/add_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:padding="@dimen/main_button_padding"
+                    android:layout_marginTop="@dimen/main_button_margin_top"
+                    android:text="@{viewModel.addButtonText}"
+                    android:enabled="@{viewModel.addButton}"
+                    android:onClick="@{() -> viewModel.onAddButtonClick()}" />
+            </LinearLayout>
+        </android.support.design.widget.CoordinatorLayout>
     </ScrollView>
 </layout>

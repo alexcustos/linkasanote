@@ -31,10 +31,12 @@ public class Settings {
 
     private static final String SETTING_LAST_SYNC_TIME = "LAST_SYNC_TIME";
     private static final String SETTING_LAST_SYNC_STATUS = "LAST_SYNC_STATUS";
+    private static final String SETTING_LINKS_LAST_SYNCED_ETAG = "LINKS_LAST_SYNCED_ETAG";
     private static final String SETTING_FAVORITES_LAST_SYNCED_ETAG = "FAVORITES_LAST_SYNCED_ETAG";
 
     private static final long DEFAULT_LAST_SYNC_TIME = 0;
     private static final int DEFAULT_LAST_SYNC_STATUS = SyncAdapter.LAST_SYNC_STATUS_UNKNOWN;
+    private static final String DEFAULT_LINKS_LAST_SYNCED_ETAG  = null;
     private static final String DEFAULT_FAVORITES_LAST_SYNCED_ETAG  = null;
 
     private final Resources resources;
@@ -125,6 +127,17 @@ public class Settings {
     public synchronized void updateLastSyncTime() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putLong(SETTING_LAST_SYNC_TIME, currentTimeMillis());
+        editor.apply();
+    }
+
+    public String getLinksLastSyncedETag() {
+        return sharedPreferences.getString(
+                SETTING_LINKS_LAST_SYNCED_ETAG, DEFAULT_LINKS_LAST_SYNCED_ETAG);
+    }
+
+    public void setLinksLastSyncedETag(String linksLastSyncedETag) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(SETTING_LINKS_LAST_SYNCED_ETAG, linksLastSyncedETag);
         editor.apply();
     }
 

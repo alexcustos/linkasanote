@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
@@ -9,7 +10,8 @@ import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Strings;
 
-import java.util.ArrayList;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import javax.inject.Inject;
 
@@ -96,8 +98,10 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
                 .filter(favorite -> {
                     String searchText = viewModel.getSearchText();
                     if (!Strings.isNullOrEmpty(searchText)) {
+                        searchText = searchText.toLowerCase();
                         String favoriteName = favorite.getName();
-                        if (favoriteName != null && !favoriteName.contains(searchText)) {
+                        if (favoriteName != null
+                                && !favoriteName.toLowerCase().contains(searchText)) {
                             return false;
                         }
                     }
@@ -119,10 +123,13 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
                         viewModel.hideProgressOverlay();
                     }
                 })
-                // NoSuchElementException, NullPointerException
-                .subscribe(
-                        view::showFavorites,
-                        throwable -> view.showFavorites(new ArrayList<>()));
+                .subscribe(view::showFavorites, throwable -> {
+                    // NullPointerException
+                    StringWriter sw = new StringWriter();
+                    throwable.printStackTrace(new PrintWriter(sw));
+                    Log.e(TAG, throwable.toString());
+                    viewModel.showDatabaseErrorSnackbar();
+                });
         this.disposable.add(disposable);
     }
 

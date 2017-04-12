@@ -16,43 +16,29 @@ public final class LocalContract {
     public static final String CONTENT_SCHEME = "content://";
     public static final Uri BASE_CONTENT_URI = Uri.parse(CONTENT_SCHEME + CONTENT_AUTHORITY);
 
-    // NOTE: entry_id must not be part of SyncState
-    public static final String COMMON_NAME_ENTRY_ID = "entry_id";
-    public static final String COMMON_NAME_CREATED = "created";
-    public static final String COMMON_NAME_UPDATED = "updated";
-    public static final String COMMON_NAME_ETAG = "etag";
-    public static final String COMMON_NAME_DUPLICATED = "duplicated";
-    public static final String COMMON_NAME_CONFLICTED = "conflicted";
-    public static final String COMMON_NAME_DELETED = "deleted";
-    public static final String COMMON_NAME_SYNCED = "synced";
 
     public static String[] SYNC_STATE_COLUMNS = new String[]{
-            BaseColumns._ID,
-            COMMON_NAME_ETAG,
-            COMMON_NAME_DUPLICATED,
-            COMMON_NAME_CONFLICTED,
-            COMMON_NAME_DELETED,
-            COMMON_NAME_SYNCED};
+            BaseEntry._ID,
+            BaseEntry.COLUMN_NAME_ETAG,
+            BaseEntry.COLUMN_NAME_DUPLICATED,
+            BaseEntry.COLUMN_NAME_CONFLICTED,
+            BaseEntry.COLUMN_NAME_DELETED,
+            BaseEntry.COLUMN_NAME_SYNCED};
 
     private LocalContract() {
     }
 
     public static String rowIdFrom(Cursor cursor) {
-        return cursor.getString(cursor.getColumnIndexOrThrow(BaseColumns._ID));
+        return cursor.getString(cursor.getColumnIndexOrThrow(BaseEntry._ID));
     }
 
-    public static abstract class LinkEntry implements BaseColumns {
+    public static abstract class LinkEntry implements BaseEntry {
 
         public static final String TABLE_NAME = "link";
 
-        public static final String COLUMN_NAME_ENTRY_ID = "entry_id";
-        public static final String COLUMN_NAME_CREATED = "created";
-        public static final String COLUMN_NAME_UPDATED = "updated";
-        public static final String COLUMN_NAME_VALUE = "value";
-        public static final String COLUMN_NAME_TITLE = "title";
+        public static final String COLUMN_NAME_LINK = "link";
+        public static final String COLUMN_NAME_NAME = "name";
         public static final String COLUMN_NAME_DISABLED = "disabled";
-        public static final String COLUMN_NAME_DELETED = "deleted";
-        public static final String COLUMN_NAME_SYNCED = "synced";
 
         public static final String CONTENT_TYPE =
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + LinkEntry.TABLE_NAME;
@@ -67,39 +53,48 @@ public final class LocalContract {
                 LinkEntry.COLUMN_NAME_ENTRY_ID,
                 LinkEntry.COLUMN_NAME_CREATED,
                 LinkEntry.COLUMN_NAME_UPDATED,
-                LinkEntry.COLUMN_NAME_VALUE,
-                LinkEntry.COLUMN_NAME_TITLE,
+                LinkEntry.COLUMN_NAME_LINK,
+                LinkEntry.COLUMN_NAME_NAME,
                 LinkEntry.COLUMN_NAME_DISABLED,
+                LinkEntry.COLUMN_NAME_ETAG,
+                LinkEntry.COLUMN_NAME_DUPLICATED,
+                LinkEntry.COLUMN_NAME_CONFLICTED,
                 LinkEntry.COLUMN_NAME_DELETED,
                 LinkEntry.COLUMN_NAME_SYNCED};
 
-        public static Uri buildLinksUri() {
+        public static Uri buildUri() {
             return CONTENT_URI.buildUpon().build();
         }
 
-        public static Uri buildLinksUriWith(long rowId) {
+        public static Uri buildUriWith(long rowId) {
             return ContentUris.withAppendedId(CONTENT_URI, rowId);
         }
 
-        public static Uri buildLinksUriWith(String id) {
+        public static Uri buildUriWith(String id) {
             return CONTENT_URI.buildUpon().appendPath(id).build();
         }
 
-        public static String getLinkId(@NonNull Uri uri) {
+        public static Uri buildTagsDirUriWith(long rowId) {
+            return ContentUris.withAppendedId(CONTENT_URI, rowId).buildUpon()
+                    .appendEncodedPath(TagEntry.TABLE_NAME).build();
+        }
+
+        public static Uri buildTagsDirUriWith(String id) {
+            return CONTENT_URI.buildUpon()
+                    .appendPath(id).appendEncodedPath(TagEntry.TABLE_NAME).build();
+        }
+
+        public static String getIdFrom(@NonNull Uri uri) {
             return checkNotNull(uri).getPathSegments().get(1);
         }
     }
 
-    public static abstract class NoteEntry implements BaseColumns {
+    public static abstract class NoteEntry implements BaseEntry {
 
         public static final String TABLE_NAME = "note";
 
-        public static final String COLUMN_NAME_ENTRY_ID = "entry_id";
-        public static final String COLUMN_NAME_CREATED = "created";
-        public static final String COLUMN_NAME_UPDATED = "updated";
-        public static final String COLUMN_NAME_EXCERPT = "excerpt";
-        public static final String COLUMN_NAME_DELETED = "deleted";
-        public static final String COLUMN_NAME_SYNCED = "synced";
+        public static final String COLUMN_NAME_NOTE = "note";
+        public static final String COLUMN_NAME_LINK_ID = "link_id";
 
         public static final String CONTENT_TYPE =
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + NoteEntry.TABLE_NAME;
@@ -114,40 +109,46 @@ public final class LocalContract {
                 NoteEntry.COLUMN_NAME_ENTRY_ID,
                 NoteEntry.COLUMN_NAME_CREATED,
                 NoteEntry.COLUMN_NAME_UPDATED,
-                NoteEntry.COLUMN_NAME_EXCERPT,
+                NoteEntry.COLUMN_NAME_NOTE,
+                NoteEntry.COLUMN_NAME_LINK_ID,
+                NoteEntry.COLUMN_NAME_ETAG,
+                NoteEntry.COLUMN_NAME_DUPLICATED,
+                NoteEntry.COLUMN_NAME_CONFLICTED,
                 NoteEntry.COLUMN_NAME_DELETED,
                 NoteEntry.COLUMN_NAME_SYNCED};
 
-        public static Uri buildNotesUri() {
+        public static Uri buildUri() {
             return CONTENT_URI.buildUpon().build();
         }
 
-        public static Uri buildNotesUriWith(long rowId) {
+        public static Uri buildUriWith(long rowId) {
             return ContentUris.withAppendedId(CONTENT_URI, rowId);
         }
 
-        public static Uri buildNotesUriWith(String id) {
+        public static Uri buildUriWith(String id) {
             return CONTENT_URI.buildUpon().appendPath(id).build();
         }
 
-        public static String getNoteId(@NonNull Uri uri) {
+        public static Uri buildTagsDirUriWith(long rowId) {
+            return ContentUris.withAppendedId(CONTENT_URI, rowId).buildUpon()
+                    .appendEncodedPath(TagEntry.TABLE_NAME).build();
+        }
+
+        public static Uri buildTagsDirUriWith(String id) {
+            return CONTENT_URI.buildUpon()
+                    .appendPath(id).appendEncodedPath(TagEntry.TABLE_NAME).build();
+        }
+
+        public static String getIdFrom(@NonNull Uri uri) {
             return checkNotNull(uri).getPathSegments().get(1);
         }
     }
 
-    public static abstract class FavoriteEntry implements BaseColumns {
+    public static abstract class FavoriteEntry implements BaseEntry {
 
         public static final String TABLE_NAME = "favorite";
 
-        public static final String COLUMN_NAME_ENTRY_ID = LocalContract.COMMON_NAME_ENTRY_ID;
-        public static final String COLUMN_NAME_CREATED = LocalContract.COMMON_NAME_CREATED;
-        public static final String COLUMN_NAME_UPDATED = LocalContract.COMMON_NAME_UPDATED;
         public static final String COLUMN_NAME_NAME = "name";
-        public static final String COLUMN_NAME_ETAG = LocalContract.COMMON_NAME_ETAG;
-        public static final String COLUMN_NAME_DUPLICATED = LocalContract.COMMON_NAME_DUPLICATED;
-        public static final String COLUMN_NAME_CONFLICTED = LocalContract.COMMON_NAME_CONFLICTED;
-        public static final String COLUMN_NAME_DELETED = LocalContract.COMMON_NAME_DELETED;
-        public static final String COLUMN_NAME_SYNCED = LocalContract.COMMON_NAME_SYNCED;
 
         public static final String CONTENT_TYPE =
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + FavoriteEntry.TABLE_NAME;
@@ -169,15 +170,15 @@ public final class LocalContract {
                 FavoriteEntry.COLUMN_NAME_DELETED,
                 FavoriteEntry.COLUMN_NAME_SYNCED};
 
-        public static Uri buildFavoritesUri() {
+        public static Uri buildUri() {
             return CONTENT_URI.buildUpon().build();
         }
 
-        public static Uri buildFavoritesUriWith(long rowId) {
+        public static Uri buildUriWith(long rowId) {
             return ContentUris.withAppendedId(CONTENT_URI, rowId);
         }
 
-        public static Uri buildFavoritesUriWith(String id) {
+        public static Uri buildUriWith(String id) {
             return CONTENT_URI.buildUpon().appendPath(id).build();
         }
 
@@ -191,7 +192,7 @@ public final class LocalContract {
                     .appendPath(id).appendEncodedPath(TagEntry.TABLE_NAME).build();
         }
 
-        public static String getFavoriteId(@NonNull Uri uri) {
+        public static String getIdFrom(@NonNull Uri uri) {
             return checkNotNull(uri).getPathSegments().get(1);
         }
     }
@@ -200,7 +201,7 @@ public final class LocalContract {
 
         public static final String TABLE_NAME = "tag";
 
-        public static final String COLUMN_NAME_CREATED = LocalContract.COMMON_NAME_CREATED;
+        public static final String COLUMN_NAME_CREATED = BaseEntry.COLUMN_NAME_CREATED;
         public static final String COLUMN_NAME_NAME = "name";
 
         public static final String CONTENT_TYPE =
@@ -216,20 +217,19 @@ public final class LocalContract {
                 TABLE_NAME + "." + TagEntry.COLUMN_NAME_CREATED,
                 TABLE_NAME + "." + TagEntry.COLUMN_NAME_NAME};
 
-        public static Uri buildTagsUri() {
+        public static Uri buildUri() {
             return CONTENT_URI.buildUpon().build();
         }
 
-        public static Uri buildTagsUriWith(long rowId) {
+        public static Uri buildUriWith(long rowId) {
             return ContentUris.withAppendedId(CONTENT_URI, rowId);
         }
 
-        // TODO: filter user input but not here
-        public static Uri buildTagsUriWith(String name) {
+        public static Uri buildUriWith(String name) {
             return CONTENT_URI.buildUpon().appendPath(name).build();
         }
 
-        public static String getTagId(@NonNull Uri uri) {
+        public static String getIdFrom(@NonNull Uri uri) {
             return checkNotNull(uri).getPathSegments().get(1);
         }
     }

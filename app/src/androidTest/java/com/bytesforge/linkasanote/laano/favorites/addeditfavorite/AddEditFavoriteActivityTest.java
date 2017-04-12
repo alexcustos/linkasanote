@@ -51,7 +51,7 @@ public class AddEditFavoriteActivityTest {
     @Test
     public void orientationChange_editTextFieldsPersists() throws InterruptedException {
         // NOTE: last tag is incomplete if there is no a space at the end
-        String tags = Arrays.stream(FAVORITE_TAGS).collect(Collectors.joining(" "));
+        String tags = Arrays.stream(FAVORITE_TAGS).collect(Collectors.joining(","));
         fillFavoriteFields(FAVORITE_NAME, tags);
 
         AndroidTestUtils.rotateOrientation(addEditFavoriteActivityTestRule);

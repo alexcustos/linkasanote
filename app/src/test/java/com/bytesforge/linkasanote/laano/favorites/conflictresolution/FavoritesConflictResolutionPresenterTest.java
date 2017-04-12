@@ -53,7 +53,7 @@ public class FavoritesConflictResolutionPresenterTest {
         MockitoAnnotations.initMocks(this);
         schedulerProvider = new ImmediateSchedulerProvider();
         favoriteId = TestUtils.KEY_PREFIX + 'A';
-        defaultFavorite = new Favorite(favoriteId, "Favorite", TestUtils.FAVORITE_TAGS);
+        defaultFavorite = new Favorite(favoriteId, "Favorite", TestUtils.TAGS);
         presenter = new FavoritesConflictResolutionPresenter(
                 repository, localFavorites, cloudFavorites,
                 view, viewModel, schedulerProvider, defaultFavorite.getId());
@@ -95,7 +95,7 @@ public class FavoritesConflictResolutionPresenterTest {
         SyncState state = new SyncState(E_TAGL, 1); // duplicated
         Favorite favorite = new Favorite(defaultFavorite, state);
         Favorite mainFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'B', "Favorite", TestUtils.FAVORITE_TAGS);
+                TestUtils.KEY_PREFIX + 'B', "Favorite", TestUtils.TAGS);
         when(localFavorites.getFavorite(eq(favoriteId)))
                 .thenReturn(Single.fromCallable(() -> favorite));
         when(localFavorites.getMainFavorite(eq(favorite.getName())))

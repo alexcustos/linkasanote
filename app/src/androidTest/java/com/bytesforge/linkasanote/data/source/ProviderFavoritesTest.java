@@ -111,7 +111,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
     }
 
     private int deleteFavorite(String favoriteId) {
-        final Uri favoriteUri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
+        final Uri favoriteUri = LocalContract.FavoriteEntry.buildUriWith(favoriteId);
 
         String selection = LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + " = ?";
         String[] selectionArgs = new String[]{favoriteId};
@@ -120,13 +120,13 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
 
     @NonNull
     private String insertFavoriteOnly(Favorite favorite) {
-        final Uri favoritesUri = LocalContract.FavoriteEntry.buildFavoritesUri();
+        final Uri favoritesUri = LocalContract.FavoriteEntry.buildUri();
 
         Uri newFavoriteUri = contentResolver.insert(
                 favoritesUri, favorite.getContentValues());
         assertNotNull(newFavoriteUri);
 
-        String newFavoriteRowId = LocalContract.FavoriteEntry.getFavoriteId(newFavoriteUri);
+        String newFavoriteRowId = LocalContract.FavoriteEntry.getIdFrom(newFavoriteUri);
         assertNotNull(newFavoriteRowId);
         assertTrue(Long.parseLong(newFavoriteRowId) > 0);
         return newFavoriteRowId;
@@ -140,7 +140,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
         Uri newTagUri = contentResolver.insert(favoriteTagsUri, values);
         assertNotNull(newTagUri);
 
-        String newTagRowId = LocalContract.TagEntry.getTagId(newTagUri);
+        String newTagRowId = LocalContract.TagEntry.getIdFrom(newTagUri);
         assertNotNull(newTagRowId);
         assertTrue(Long.parseLong(newTagRowId) > 0);
         return newTagRowId;
@@ -164,7 +164,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
     private Favorite queryFavoriteOnly(String favoriteId, List<Tag> tags) {
         assertNotNull(favoriteId);
         assertNotNull(tags);
-        final Uri favoriteUri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
+        final Uri favoriteUri = LocalContract.FavoriteEntry.buildUriWith(favoriteId);
 
         Cursor cursor = provider.query(favoriteUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
@@ -180,7 +180,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
     @NonNull
     private Favorite queryFavoriteWithTags(String favoriteId) {
         assertNotNull(favoriteId);
-        final Uri favoriteUri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
+        final Uri favoriteUri = LocalContract.FavoriteEntry.buildUriWith(favoriteId);
 
         Cursor cursor = provider.query(favoriteUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
@@ -210,7 +210,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
 
     @NonNull
     private List<Tag> queryAllTags() {
-        final Uri tagsUri = LocalContract.TagEntry.buildTagsUri();
+        final Uri tagsUri = LocalContract.TagEntry.buildUri();
         Cursor cursor = provider.query(tagsUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
 

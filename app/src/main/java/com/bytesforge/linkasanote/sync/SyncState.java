@@ -2,11 +2,10 @@ package com.bytesforge.linkasanote.sync;
 
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.bytesforge.linkasanote.data.source.local.LocalContract;
+import com.bytesforge.linkasanote.data.source.local.BaseEntry;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -109,41 +108,41 @@ public class SyncState {
         // NOTE: rowId must not be here
         if (eTag != null) {
             // NOTE: lets DB maintain the default value
-            values.put(LocalContract.COMMON_NAME_ETAG, eTag);
+            values.put(BaseEntry.COLUMN_NAME_ETAG, eTag);
         }
-        values.put(LocalContract.COMMON_NAME_DUPLICATED, duplicated);
-        values.put(LocalContract.COMMON_NAME_CONFLICTED, conflicted);
-        values.put(LocalContract.COMMON_NAME_DELETED, deleted);
-        values.put(LocalContract.COMMON_NAME_SYNCED, synced);
+        values.put(BaseEntry.COLUMN_NAME_DUPLICATED, duplicated);
+        values.put(BaseEntry.COLUMN_NAME_CONFLICTED, conflicted);
+        values.put(BaseEntry.COLUMN_NAME_DELETED, deleted);
+        values.put(BaseEntry.COLUMN_NAME_SYNCED, synced);
 
         return values;
     }
 
     public static SyncState from(Cursor cursor) {
-        long rowId = cursor.getLong(cursor.getColumnIndexOrThrow(BaseColumns._ID));
+        long rowId = cursor.getLong(cursor.getColumnIndexOrThrow(BaseEntry._ID));
 
         String eTag = cursor.getString(cursor.getColumnIndexOrThrow(
-                LocalContract.COMMON_NAME_ETAG));
+                BaseEntry.COLUMN_NAME_ETAG));
         int duplicated = cursor.getInt(cursor.getColumnIndexOrThrow(
-                LocalContract.COMMON_NAME_DUPLICATED));
+                BaseEntry.COLUMN_NAME_DUPLICATED));
         boolean conflicted = cursor.getInt(cursor.getColumnIndexOrThrow(
-                LocalContract.COMMON_NAME_CONFLICTED)) == 1;
+                BaseEntry.COLUMN_NAME_CONFLICTED)) == 1;
         boolean deleted = cursor.getInt(cursor.getColumnIndexOrThrow(
-                LocalContract.COMMON_NAME_DELETED)) == 1;
+                BaseEntry.COLUMN_NAME_DELETED)) == 1;
         boolean synced = cursor.getInt(cursor.getColumnIndexOrThrow(
-                LocalContract.COMMON_NAME_SYNCED)) == 1;
+                BaseEntry.COLUMN_NAME_SYNCED)) == 1;
 
         return new SyncState(rowId, eTag, duplicated, conflicted, deleted, synced);
     }
 
     public static SyncState from(ContentValues values) {
-        long rowId = values.getAsLong(BaseColumns._ID);
+        long rowId = values.getAsLong(BaseEntry._ID);
 
-        String eTag = values.getAsString(LocalContract.COMMON_NAME_ETAG);
-        int duplicated = values.getAsInteger(LocalContract.COMMON_NAME_DUPLICATED);
-        boolean conflicted = values.getAsBoolean(LocalContract.COMMON_NAME_CONFLICTED);
-        boolean deleted = values.getAsBoolean(LocalContract.COMMON_NAME_DELETED);
-        boolean synced = values.getAsBoolean(LocalContract.COMMON_NAME_SYNCED);
+        String eTag = values.getAsString(BaseEntry.COLUMN_NAME_ETAG);
+        int duplicated = values.getAsInteger(BaseEntry.COLUMN_NAME_DUPLICATED);
+        boolean conflicted = values.getAsBoolean(BaseEntry.COLUMN_NAME_CONFLICTED);
+        boolean deleted = values.getAsBoolean(BaseEntry.COLUMN_NAME_DELETED);
+        boolean synced = values.getAsBoolean(BaseEntry.COLUMN_NAME_SYNCED);
 
         return new SyncState(rowId, eTag, duplicated, conflicted, deleted, synced);
     }

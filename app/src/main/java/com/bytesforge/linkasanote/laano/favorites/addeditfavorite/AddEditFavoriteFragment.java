@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.databinding.FragmentAddEditFavoriteBinding;
 import com.bytesforge.linkasanote.utils.CommonUtils;
@@ -94,24 +93,6 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
         return binding.getRoot();
     }
 
-    @Override
-    public void setupFavoriteState(@NonNull Favorite favorite) {
-        checkNotNull(favorite);
-
-        Bundle state = getFavoriteState(favorite);
-        viewModel.applyInstanceState(state);
-        viewModel.setFavoriteTags(favorite.getTags());
-    }
-
-    private Bundle getFavoriteState(@NonNull Favorite favorite) {
-        checkNotNull(favorite);
-
-        Bundle state = viewModel.getDefaultInstanceState();
-        state.putString(AddEditFavoriteViewModel.STATE_FAVORITE_NAME, favorite.getName());
-
-        return state;
-    }
-
     private void setupTagsCompletionView(FavoriteTagsCompletionView completionView) {
         // Options
         completionView.setTokenClickStyle(TokenCompleteTextView.TokenClickStyle.Select);
@@ -145,8 +126,8 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
                 StringBuilder filteredStringBuilder = new StringBuilder();
                 for (int i = start; i < end; i++) {
                     char currentChar = source.charAt(i);
-                    if (Character.isLetterOrDigit(currentChar)
-                            || Character.isSpaceChar(currentChar)) {
+                    boolean isSpaceChar = Character.isSpaceChar(currentChar);
+                    if (Character.isLetterOrDigit(currentChar) || isSpaceChar) {
                         filteredStringBuilder.append(currentChar);
                         binding.favoriteTagsLayout.setError(null);
                     } else {

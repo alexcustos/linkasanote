@@ -10,10 +10,10 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.bytesforge.linkasanote.data.source.local.BaseEntry;
 import com.bytesforge.linkasanote.data.source.local.DatabaseHelper;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.google.common.base.Strings;
@@ -145,7 +145,13 @@ public class Provider extends ContentProvider {
             case LINK_ITEM:
                 tableName = LocalContract.LinkEntry.TABLE_NAME;
                 selection = LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID + " = ?";
-                selectionArgs = new String[]{LocalContract.LinkEntry.getLinkId(uri)};
+                selectionArgs = new String[]{LocalContract.LinkEntry.getIdFrom(uri)};
+                break;
+            case LINK_TAG:
+                String linkTable = LocalContract.LinkEntry.TABLE_NAME;
+                tableName = sqlJoinManyToManyWithTags(linkTable);
+                selection = linkTable + LocalContract.LinkEntry._ID + " = ?";
+                selectionArgs = new String[]{LocalContract.LinkEntry.getIdFrom(uri)};
                 break;
             case FAVORITE:
                 tableName = LocalContract.FavoriteEntry.TABLE_NAME;
@@ -153,13 +159,13 @@ public class Provider extends ContentProvider {
             case FAVORITE_ITEM:
                 tableName = LocalContract.FavoriteEntry.TABLE_NAME;
                 selection = LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + " = ?";
-                selectionArgs = new String[]{LocalContract.FavoriteEntry.getFavoriteId(uri)};
+                selectionArgs = new String[]{LocalContract.FavoriteEntry.getIdFrom(uri)};
                 break;
             case FAVORITE_TAG:
                 String favoriteTable = LocalContract.FavoriteEntry.TABLE_NAME;
                 tableName = sqlJoinManyToManyWithTags(favoriteTable);
                 selection = favoriteTable + LocalContract.FavoriteEntry._ID + " = ?";
-                selectionArgs = new String[]{LocalContract.FavoriteEntry.getFavoriteId(uri)};
+                selectionArgs = new String[]{LocalContract.FavoriteEntry.getIdFrom(uri)};
                 break;
             case TAG:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
@@ -167,7 +173,7 @@ public class Provider extends ContentProvider {
             case TAG_ITEM:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
                 selection = LocalContract.TagEntry.COLUMN_NAME_NAME + " = ?";
-                selectionArgs = new String[]{LocalContract.TagEntry.getTagId(uri)};
+                selectionArgs = new String[]{LocalContract.TagEntry.getIdFrom(uri)};
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown query uri [" + uri + "]");
@@ -198,7 +204,18 @@ public class Provider extends ContentProvider {
                     rowId = updateOrInsert(db, LocalContract.LinkEntry.TABLE_NAME,
                             LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID, values);
                     db.setTransactionSuccessful();
-                    returnUri = LocalContract.LinkEntry.buildLinksUriWith(rowId);
+                    returnUri = LocalContract.LinkEntry.buildUriWith(rowId);
+                } finally {
+                    db.endTransaction();
+                }
+                break;
+            case LINK_TAG:
+                db.beginTransaction();
+                try {
+                    rowId = appendTag(db, LocalContract.LinkEntry.TABLE_NAME,
+                            LocalContract.LinkEntry.getIdFrom(uri), values);
+                    db.setTransactionSuccessful();
+                    returnUri = LocalContract.TagEntry.buildUriWith(rowId);
                 } finally {
                     db.endTransaction();
                 }
@@ -209,7 +226,7 @@ public class Provider extends ContentProvider {
                     rowId = updateOrInsert(db, LocalContract.FavoriteEntry.TABLE_NAME,
                             LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID, values);
                     db.setTransactionSuccessful();
-                    returnUri = LocalContract.FavoriteEntry.buildFavoritesUriWith(rowId);
+                    returnUri = LocalContract.FavoriteEntry.buildUriWith(rowId);
                 } finally {
                     db.endTransaction();
                 }
@@ -218,9 +235,9 @@ public class Provider extends ContentProvider {
                 db.beginTransaction();
                 try {
                     rowId = appendTag(db, LocalContract.FavoriteEntry.TABLE_NAME,
-                            LocalContract.FavoriteEntry.getFavoriteId(uri), values);
+                            LocalContract.FavoriteEntry.getIdFrom(uri), values);
                     db.setTransactionSuccessful();
-                    returnUri = LocalContract.TagEntry.buildTagsUriWith(rowId);
+                    returnUri = LocalContract.TagEntry.buildUriWith(rowId);
                 } finally {
                     db.endTransaction();
                 }
@@ -242,6 +259,11 @@ public class Provider extends ContentProvider {
             case LINK:
                 tableName = LocalContract.LinkEntry.TABLE_NAME;
                 break;
+            case LINK_ITEM:
+                tableName = LocalContract.LinkEntry.TABLE_NAME;
+                selection = LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID + " = ?";
+                selectionArgs = new String[]{LocalContract.LinkEntry.getIdFrom(uri)};
+                break;
             case NOTE:
                 tableName = LocalContract.NoteEntry.TABLE_NAME;
                 break;
@@ -251,7 +273,7 @@ public class Provider extends ContentProvider {
             case FAVORITE_ITEM:
                 tableName = LocalContract.FavoriteEntry.TABLE_NAME;
                 selection = LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + " = ?";
-                selectionArgs = new String[]{LocalContract.FavoriteEntry.getFavoriteId(uri)};
+                selectionArgs = new String[]{LocalContract.FavoriteEntry.getIdFrom(uri)};
                 break;
             case TAG:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
@@ -273,6 +295,23 @@ public class Provider extends ContentProvider {
 
         int numRows;
         switch (uriMatcher.match(uri)) {
+            case LINK:
+                numRows = db.update(LocalContract.LinkEntry.TABLE_NAME,
+                        values, selection, selectionArgs);
+                break;
+            case LINK_ITEM:
+                db.beginTransaction();
+                try {
+                    String idValue = LocalContract.LinkEntry.getIdFrom(uri);
+                    long rowId = updateEntry(db, LocalContract.LinkEntry.TABLE_NAME,
+                            LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID, idValue,
+                            values);
+                    numRows = rowId > 0 ? 1 : 0;
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                break;
             case FAVORITE:
                 numRows = db.update(LocalContract.FavoriteEntry.TABLE_NAME,
                         values, selection, selectionArgs);
@@ -280,7 +319,7 @@ public class Provider extends ContentProvider {
             case FAVORITE_ITEM:
                 db.beginTransaction();
                 try {
-                    String idValue = LocalContract.FavoriteEntry.getFavoriteId(uri);
+                    String idValue = LocalContract.FavoriteEntry.getIdFrom(uri);
                     long rowId = updateEntry(db, LocalContract.FavoriteEntry.TABLE_NAME,
                             LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID, idValue,
                             values);
@@ -315,9 +354,9 @@ public class Provider extends ContentProvider {
         // Reference
         final String refTable = leftTable + "_" + tagTable;
         ContentValues refValues = new ContentValues();
-        refValues.put(LocalContract.COMMON_NAME_CREATED, currentTimeMillis());
-        refValues.put(leftTable + BaseColumns._ID, leftId);
-        refValues.put(tagTable + BaseColumns._ID, tagId);
+        refValues.put(BaseEntry.COLUMN_NAME_CREATED, currentTimeMillis());
+        refValues.put(leftTable + BaseEntry._ID, leftId);
+        refValues.put(tagTable + BaseEntry._ID, tagId);
         insertEntry(db, refTable, refValues); // NOTE: it's refTable rowId can be ignored
 
         return tagId;
@@ -366,7 +405,7 @@ public class Provider extends ContentProvider {
         long rowId = queryRowId(db, tableName, idField, idValue);
         if (rowId <= 0) return 0;
 
-        final String selection = BaseColumns._ID + " = ?";
+        final String selection = BaseEntry._ID + " = ?";
         final String[] selectionArgs = new String[]{Long.toString(rowId)};
         int numRows = db.update(tableName, values, selection, selectionArgs);
         if (numRows <= 0) {
@@ -383,7 +422,7 @@ public class Provider extends ContentProvider {
         final String tagTable = LocalContract.TagEntry.TABLE_NAME;
         final String refTable = leftTable + "_" + tagTable;
 
-        final String selection = leftTable + BaseColumns._ID + " = ?";
+        final String selection = leftTable + BaseEntry._ID + " = ?";
         final String[] selectionArgs = new String[]{Long.toString(leftId)};
 
         return db.delete(refTable, selection, selectionArgs);
@@ -399,11 +438,11 @@ public class Provider extends ContentProvider {
         final String selection = idField + " = ?";
         final String[] selectionArgs = new String[]{idValue};
         Cursor exists = db.query(
-                tableName, new String[]{BaseColumns._ID},
+                tableName, new String[]{BaseEntry._ID},
                 selection, selectionArgs, null, null, null);
         long rowId = 0;
         if (exists.moveToLast()) {
-            int rowIdIndex = exists.getColumnIndexOrThrow(BaseColumns._ID);
+            int rowIdIndex = exists.getColumnIndexOrThrow(BaseEntry._ID);
             rowId = exists.getLong(rowIdIndex);
         }
         exists.close();
@@ -412,11 +451,11 @@ public class Provider extends ContentProvider {
 
     private static String sqlJoinManyToManyWithTags(final String leftTable) {
         final String tagTable = LocalContract.TagEntry.TABLE_NAME;
-        final String TAG_ID = tagTable + BaseColumns._ID;
+        final String TAG_ID = tagTable + BaseEntry._ID;
         final String refTable = leftTable + "_" + tagTable;
 
         return refTable + " LEFT OUTER JOIN " + tagTable +
-                " ON " + refTable + "." + TAG_ID + "=" + tagTable + "." + BaseColumns._ID;
+                " ON " + refTable + "." + TAG_ID + "=" + tagTable + "." + BaseEntry._ID;
     }
 
     public static Cursor rawQuery(

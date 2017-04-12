@@ -1,5 +1,7 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
+import android.util.Log;
+
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Repository;
@@ -9,10 +11,14 @@ import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +31,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({Log.class})
 public class FavoritesPresenterTest {
 
     @Mock
@@ -53,6 +61,7 @@ public class FavoritesPresenterTest {
     @Before
     public void setupFavoritesPresenter() {
         MockitoAnnotations.initMocks(this);
+        PowerMockito.mockStatic(Log.class);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
         // TODO: check if it's needed at all
         when(view.isActive()).thenReturn(true);

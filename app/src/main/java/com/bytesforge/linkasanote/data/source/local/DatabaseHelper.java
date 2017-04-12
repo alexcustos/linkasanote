@@ -3,7 +3,6 @@ package com.bytesforge.linkasanote.data.source.local;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.provider.BaseColumns;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -21,20 +20,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
                     LocalContract.LinkEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
                     LocalContract.LinkEntry.COLUMN_NAME_UPDATED + DATETIME_TYPE + "," +
-                    LocalContract.LinkEntry.COLUMN_NAME_VALUE + TEXT_TYPE + " UNIQUE," +
-                    LocalContract.LinkEntry.COLUMN_NAME_TITLE + TEXT_TYPE + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_LINK + TEXT_TYPE + "," + // UNIQUE
+                    LocalContract.LinkEntry.COLUMN_NAME_NAME + TEXT_TYPE + "," +
                     LocalContract.LinkEntry.COLUMN_NAME_DISABLED + BOOLEAN_TYPE + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_ETAG + TEXT_TYPE + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + INTEGER_TYPE + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_CONFLICTED + BOOLEAN_TYPE + "," +
                     LocalContract.LinkEntry.COLUMN_NAME_DELETED + BOOLEAN_TYPE + "," +
-                    LocalContract.LinkEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
+                    LocalContract.LinkEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE + "," +
+                    "UNIQUE (" + LocalContract.LinkEntry.COLUMN_NAME_LINK + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + "," +
+                    LocalContract.LinkEntry.COLUMN_NAME_SYNCED + ") ON CONFLICT ABORT" +
             ");";
 
+    // NOTE: note entry must not be unique, but duplicate filter is needed
     private static final String SQL_CREATE_NOTE_ENTRIES =
             "CREATE TABLE " + LocalContract.NoteEntry.TABLE_NAME + " (" +
                     LocalContract.NoteEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
                     LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " UNIQUE," +
                     LocalContract.NoteEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
                     LocalContract.NoteEntry.COLUMN_NAME_UPDATED + DATETIME_TYPE + "," +
-                    LocalContract.NoteEntry.COLUMN_NAME_EXCERPT + TEXT_TYPE + "," +
+                    LocalContract.NoteEntry.COLUMN_NAME_NOTE + TEXT_TYPE + "," +
+                    LocalContract.NoteEntry.COLUMN_NAME_LINK_ID + INTEGER_TYPE + " REFERENCES " +
+                    LocalContract.LinkEntry.TABLE_NAME + "(" + LocalContract.LinkEntry._ID + ") ON DELETE SET NULL," +
+                    LocalContract.NoteEntry.COLUMN_NAME_ETAG + TEXT_TYPE + "," +
+                    LocalContract.NoteEntry.COLUMN_NAME_DUPLICATED + INTEGER_TYPE + "," +
+                    LocalContract.NoteEntry.COLUMN_NAME_CONFLICTED + BOOLEAN_TYPE + "," +
                     LocalContract.NoteEntry.COLUMN_NAME_DELETED + BOOLEAN_TYPE + "," +
                     LocalContract.NoteEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
             ");";
@@ -63,11 +74,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.TagEntry.COLUMN_NAME_NAME + TEXT_TYPE + " UNIQUE" +
             ");";
 
-    private static final String SQL_CREATE_LINK_NOTE_ENTRIES = sqlCreateTableManyToMany(
-            LocalContract.LinkEntry.TABLE_NAME, LocalContract.NoteEntry.TABLE_NAME);
-    private static final String SQL_CREATE_LINK_NOTE_TRIGGER = sqlCreateTriggerManyToMany(
-            LocalContract.LinkEntry.TABLE_NAME, LocalContract.NoteEntry.TABLE_NAME);
-
     private static final String SQL_CREATE_LINK_TAG_ENTRIES =
             sqlCreateTableManyToManyWithTags(LocalContract.LinkEntry.TABLE_NAME);
     private static final String SQL_CREATE_LINK_TAG_TRIGGER =
@@ -93,14 +99,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static String sqlCreateTableManyToMany(
             final String leftTable, final String rightTable) {
-        final String LID = leftTable + BaseColumns._ID;
-        final String RID = rightTable + BaseColumns._ID;
+        final String LID = leftTable + BaseEntry._ID;
+        final String RID = rightTable + BaseEntry._ID;
 
         return "CREATE TABLE " + leftTable + "_" + rightTable + " (" +
-                BaseColumns._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
-                LocalContract.COMMON_NAME_CREATED + DATETIME_TYPE + "," +
-                LID + INTEGER_TYPE + " REFERENCES " + leftTable + "(" + BaseColumns._ID + ")," +
-                RID + INTEGER_TYPE + " REFERENCES " + rightTable + "(" + BaseColumns._ID + ")," +
+                BaseEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
+                BaseEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
+                // TODO: replace trigger with ON DELETE CASCADE
+                LID + INTEGER_TYPE + " REFERENCES " + leftTable + "(" + BaseEntry._ID + ")," +
+                RID + INTEGER_TYPE + " REFERENCES " + rightTable + "(" + BaseEntry._ID + ")," +
                 "UNIQUE (" + LID + "," + RID + ") ON CONFLICT ABORT);";
     }
 
@@ -110,12 +117,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static String sqlCreateTriggerManyToMany(
             final String leftTable, final String rightTable) {
-        final String LID = leftTable + BaseColumns._ID;
+        final String LID = leftTable + BaseEntry._ID;
         final String refTable = leftTable + "_" + rightTable;
 
         return "CREATE TRIGGER " + refTable + "_delete AFTER DELETE ON " + leftTable +
                 " BEGIN DELETE FROM " + refTable +
-                " WHERE " + refTable + "." + LID + "=OLD." + BaseColumns._ID + "; END;";
+                " WHERE " + refTable + "." + LID + "=OLD." + BaseEntry._ID + "; END;";
     }
 
     @Override
@@ -131,8 +138,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_NOTE_TAG_TRIGGER);
         db.execSQL(SQL_CREATE_FAVORITE_TAG_TRIGGER);
         db.execSQL(SQL_CREATE_FAVORITE_TAG_ENTRIES);
-        db.execSQL(SQL_CREATE_LINK_NOTE_ENTRIES);
-        db.execSQL(SQL_CREATE_LINK_NOTE_TRIGGER);
     }
 
     @Override
@@ -146,8 +151,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         final String linkRefTable = LocalContract.LinkEntry.TABLE_NAME + "_" + tagTable;
         final String noteRefTable = LocalContract.NoteEntry.TABLE_NAME + "_" + tagTable;
         final String favoriteRefTable = LocalContract.FavoriteEntry.TABLE_NAME + "_" + tagTable;
-        final String linkNoteRefTable = LocalContract.LinkEntry.TABLE_NAME + "_"
-                + LocalContract.NoteEntry.TABLE_NAME;
 
         db.execSQL("DROP TABLE IS EXISTS " + linkRefTable);
         db.execSQL("DROP TRIGGER IF EXISTS " + linkRefTable + "_delete");
@@ -155,8 +158,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TRIGGER IF EXISTS " + noteRefTable + "_delete");
         db.execSQL("DROP TABLE IS EXISTS " + favoriteRefTable);
         db.execSQL("DROP TRIGGER IF EXISTS " + favoriteRefTable + "_delete");
-        db.execSQL("DROP TABLE IS EXISTS " + linkNoteRefTable);
-        db.execSQL("DROP TRIGGER IS EXISTS " + linkNoteRefTable + "_delete");
 
         onCreate(db);
     }

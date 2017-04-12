@@ -12,9 +12,11 @@ import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
+import com.bytesforge.linkasanote.laano.links.LinksFragment;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
@@ -47,6 +50,7 @@ public class LaanoActivityTest {
     private Repository repository;
 
     private final List<Favorite> FAVORITES;
+    private final List<Link> LINKS;
 
     @Rule
     public ActivityTestRule<LaanoActivity> laanoActivityTestRule =
@@ -63,10 +67,12 @@ public class LaanoActivityTest {
 
     public LaanoActivityTest() {
         FAVORITES = AndroidTestUtils.buildFavorites();
+        LINKS = AndroidTestUtils.buildLinks();
     }
 
     private void cleanupRepository(Repository repository) {
         // TODO: fix data loss on non-test DB
+        repository.deleteAllLinks();
         repository.deleteAllFavorites();
         repository.deleteAllTags();
     }
@@ -84,7 +90,21 @@ public class LaanoActivityTest {
     }
 
     @Test
-    public void fabButton_addFavoritesToFavoritesRecyclerView() {
+    public void fabButton_addsEntriesToSelectedRecyclerView() {
+        fabButton_addsLinksToLinksRecyclerView();
+        fabButton_addsFavoritesToFavoritesRecyclerView();
+    }
+
+    private void fabButton_addsLinksToLinksRecyclerView() {
+        repository.linkCacheIsDirty = true;
+        setupLinksTab();
+        LINKS.forEach(this::createLink);
+        for (Link link : LINKS) {
+            onView(withItemTextRV(link.getName())).check(matches(isDisplayed()));
+        }
+    }
+
+    private void fabButton_addsFavoritesToFavoritesRecyclerView() {
         repository.favoriteCacheIsDirty = true;
         setupFavoritesTab();
         FAVORITES.forEach(this::createFavorite);
@@ -92,6 +112,51 @@ public class LaanoActivityTest {
             onView(withItemTextRV(favorite.getName())).check(matches(isDisplayed()));
         }
     }
+
+    // Links
+
+    private void setupLinksTab() {
+        // Activity
+        LaanoActivity laanoActivity = laanoActivityTestRule.getActivity();
+        assertNotNull(laanoActivity);
+
+        Resources resources = laanoActivity.getResources();
+        assertNotNull(resources);
+        String LINKS_TITLE = resources.getString(R.string.laano_tab_links_title);
+
+        // Tab
+        onView(withItemTextId(LINKS_TITLE, R.id.tab_layout))
+                .perform(click())
+                .check(matches(isDisplayed()));
+        assertThat((laanoActivity.getCurrentFragment()).getTitle(), Matchers.equalTo(LINKS_TITLE));
+        assertThat(laanoActivity.getCurrentFragment(), instanceOf(LinksFragment.class));
+    }
+
+    private void createLink(Link link) {
+        assertNotNull(link);
+        List<Tag> tags = link.getTags();
+        assertNotNull(tags);
+        String linkLink = link.getLink();
+        assertNotNull(linkLink);
+        String linkName = link.getName();
+        assertNotNull(linkName);
+        boolean linkDisabled = link.isDisabled();
+        // NOTE: last tag complete if there is a comma at the end
+        String tagLine = tags.stream().map(Tag::getName).collect(Collectors.joining(",")) + ",";
+        onView(withId(R.id.fab_add)).perform(click());
+        onView(withId(R.id.link_link)).check(matches(isDisplayed()));
+        onView(withId(R.id.link_link)).perform(scrollTo(), typeText(linkLink), closeSoftKeyboard());
+        if (linkDisabled) {
+            // .check(matches(isNotChecked()))
+            onView(withId(R.id.checkbox_disabled)).perform(scrollTo(), click());
+        }
+        onView(withId(R.id.link_name)).check(matches(isDisplayed()));
+        onView(withId(R.id.link_name)).perform(scrollTo(), typeText(linkName), closeSoftKeyboard());
+        onView(withId(R.id.link_tags)).perform(scrollTo(), typeText(tagLine), closeSoftKeyboard());
+        onView(withId(R.id.add_button)).perform(click());
+    }
+
+    // Favorites
 
     private void setupFavoritesTab() {
         // Activity
@@ -116,9 +181,9 @@ public class LaanoActivityTest {
         assertNotNull(tags);
         String name = favorite.getName();
         assertNotNull(name);
-        // NOTE: last tag complete if there is a space at the end
-        String tagLine = tags.stream().map(Tag::getName).collect(Collectors.joining(" ")) + " ";
-        //String tagLine = Arrays.stream(tags).collect(Collectors.joining(" ")) + " ";
+        // NOTE: last tag complete if there is a comma at the end
+        String tagLine = tags.stream().map(Tag::getName).collect(Collectors.joining(",")) + ",";
+        //String tagLine = Arrays.stream(tags).collect(Collectors.joining(",")) + ",";
         onView(withId(R.id.fab_add)).perform(click());
         onView(withId(R.id.favorite_name)).check(matches(isDisplayed()));
         onView(withId(R.id.favorite_name)).perform(typeText(name), closeSoftKeyboard());

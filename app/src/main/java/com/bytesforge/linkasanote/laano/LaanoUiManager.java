@@ -12,6 +12,7 @@ import android.view.Menu;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFilterType;
+import com.bytesforge.linkasanote.laano.links.LinksFilterType;
 import com.bytesforge.linkasanote.manageaccounts.AccountItem;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CloudUtils;
@@ -78,6 +79,23 @@ public class LaanoUiManager {
                           R.string.laano_actionbar_manager_sync_title),
                 syncUploaded.get(position), syncDownloaded.get(position));
         syncTitles.put(position, title);
+    }
+
+    public void setLinkFilterType(LinksFilterType filterType) {
+        int position = LaanoFragmentPagerAdapter.LINKS_TAB;
+        @StringRes int filterTitleId;
+        switch (filterType) {
+            case LINKS_ALL:
+                filterTitleId = R.string.filter_links_all;
+                break;
+            case LINKS_CONFLICTED:
+                filterTitleId = R.string.filter_links_conflicted;
+                break;
+            default:
+                throw new IllegalArgumentException("Unexpected filtering type [" + filterType.name() + "]");
+        }
+        this.filterType.put(position, filterTitleId);
+        setNormalTitle(position);
     }
 
     public void setFavoriteFilterType(FavoritesFilterType filterType) {

@@ -157,7 +157,7 @@ public class LaanoActivity extends AppCompatActivity implements
         LaanoApplication application = (LaanoApplication) getApplication();
         application.getApplicationComponent()
                 .getLaanoComponent(
-                        new LinksPresenterModule(pagerAdapter.getLinksFragment()),
+                        new LinksPresenterModule(this, pagerAdapter.getLinksFragment()),
                         new FavoritesPresenterModule(this, pagerAdapter.getFavoritesFragment()),
                         new NotesPresenterModule(pagerAdapter.getNotesFragment()),
                         new LaanoUiManagerModule(this, binding.tabLayout,

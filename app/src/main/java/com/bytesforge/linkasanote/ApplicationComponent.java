@@ -17,6 +17,10 @@ import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavorit
 import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionComponent;
 import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionPresenterModule;
 import com.bytesforge.linkasanote.laano.links.LinksPresenterModule;
+import com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkComponent;
+import com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkPresenterModule;
+import com.bytesforge.linkasanote.laano.links.conflictresolution.LinksConflictResolutionComponent;
+import com.bytesforge.linkasanote.laano.links.conflictresolution.LinksConflictResolutionPresenterModule;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsComponent;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenterModule;
@@ -47,6 +51,7 @@ public interface ApplicationComponent {
     // Subcomponents
     AddEditAccountComponent getAddEditAccountComponent(NextcloudPresenterModule module);
     AddEditFavoriteComponent getAddEditFavoriteComponent(AddEditFavoritePresenterModule module);
+    AddEditLinkComponent getAddEditLinkComponent(AddEditLinkPresenterModule module);
     LaanoComponent getLaanoComponent(
             LinksPresenterModule linksPresenterModule,
             FavoritesPresenterModule favoritesPresenterModule,
@@ -55,5 +60,7 @@ public interface ApplicationComponent {
     ManageAccountsComponent getManageAccountsComponent(ManageAccountsPresenterModule module);
     FavoritesConflictResolutionComponent getFavoritesConflictResolutionComponent(
             FavoritesConflictResolutionPresenterModule favoritesConflictResolutionPresenterModule);
+    LinksConflictResolutionComponent getLinksConflictResolutionComponent(
+            LinksConflictResolutionPresenterModule favoritesConflictResolutionPresenterModule);
     AboutComponent getAboutComponent(AboutPresenterModule module);
 }

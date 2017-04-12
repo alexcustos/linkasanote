@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <dimen name="padding_zero">0dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="drawer_header_height">164dp</dimen>
     <dimen name="drawer_header_padding">16dp</dimen>
@@ -37,4 +38,16 @@
     <dimen name="dialog_padding_name">8dp</dimen>
     <dimen name="about_margin_vertical_text">16dp</dimen>
     <dimen name="about_margin_vertical_title">4dp</dimen>
+
+    <dimen name="card_spacer_padding_end">4dp</dimen>
+    <dimen name="card_left_checkbox_margin_start">12dp</dimen>
+    <dimen name="card_text_to_button_margin_left">24dp</dimen>
+    <dimen name="card_text_margin_horizontal">16dp</dimen>
+    <dimen name="card_nearby_button_margin_end">8dp</dimen>
+    <dimen name="card_button_padding">8dp</dimen>
+    <dimen name="card_button_padding_vertical">16dp</dimen>
+    <dimen name="card_button_padding_start">16dp</dimen>
+    <dimen name="card_right_button_padding_end">16dp</dimen>
+    <dimen name="card_left_button_padding_start">16dp</dimen>
+    <dimen name="card_text_padding_vertical">4dp</dimen>
 </resources>

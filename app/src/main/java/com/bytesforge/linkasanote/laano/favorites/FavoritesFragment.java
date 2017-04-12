@@ -219,7 +219,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         adapter = new FavoritesAdapter(favorites, presenter, (FavoritesViewModel) viewModel);
         rvFavorites.setAdapter(adapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-        rvFavorites.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvFavorites.setLayoutManager(layoutManager);
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
                 rvFavorites.getContext(), layoutManager.getOrientation());
         rvFavorites.addItemDecoration(dividerItemDecoration);

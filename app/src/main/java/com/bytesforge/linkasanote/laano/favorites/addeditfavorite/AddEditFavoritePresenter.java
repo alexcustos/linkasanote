@@ -115,10 +115,7 @@ public final class AddEditFavoritePresenter implements
                         EspressoIdlingResource.decrement();
                     }
                 })
-                .subscribe(favorite -> {
-                    view.setupFavoriteState(favorite);
-                    viewModel.checkAddButton();
-                }, throwable -> {
+                .subscribe(viewModel::populateFavorite, throwable -> {
                     favoriteId = null;
                     viewModel.showFavoriteNotFoundSnackbar();
                 });
@@ -135,8 +132,7 @@ public final class AddEditFavoritePresenter implements
     }
 
     private void createFavorite(String name, List<Tag> tags) {
-        Favorite favorite = new Favorite(name, tags);
-        saveFavorite(favorite);
+        saveFavorite(new Favorite(name, tags));
     }
 
     private void updateFavorite(String name, List<Tag> tags) {
@@ -144,8 +140,7 @@ public final class AddEditFavoritePresenter implements
             throw new RuntimeException("updateFavorite() was called but favoriteId is null");
         }
         // NOTE: state eTag will NOT be overwritten if null
-        Favorite favorite = new Favorite(favoriteId, name, tags); // UNSYNCED
-        saveFavorite(favorite);
+        saveFavorite(new Favorite(favoriteId, name, tags)); // UNSYNCED
     }
 
     private void saveFavorite(@NonNull final Favorite favorite) {

@@ -42,7 +42,7 @@ public class LocalFavorites {
             final String selection, final String[] selectionArgs, final String sortOrder) {
         return Observable.generate(() -> {
             return contentResolver.query(
-                    LocalContract.FavoriteEntry.buildFavoritesUri(),
+                    LocalContract.FavoriteEntry.buildUri(),
                     LocalContract.FavoriteEntry.FAVORITE_COLUMNS,
                     selection, selectionArgs, sortOrder);
         }, (cursor, favoriteEmitter) -> {
@@ -66,7 +66,7 @@ public class LocalFavorites {
     public Single<Favorite> getFavorite(final String favoriteId) {
         return Single.fromCallable(() -> {
             try (Cursor cursor = contentResolver.query(
-                    LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId),
+                    LocalContract.FavoriteEntry.buildUriWith(favoriteId),
                     LocalContract.FavoriteEntry.FAVORITE_COLUMNS, null, null, null)) {
                 if (cursor == null) {
                     return null; // NOTE: NullPointerException
@@ -85,11 +85,11 @@ public class LocalFavorites {
         return Single.fromCallable(() -> {
             ContentValues values = favorite.getContentValues();
             Uri favoriteUri = contentResolver.insert(
-                    LocalContract.FavoriteEntry.buildFavoritesUri(), values);
+                    LocalContract.FavoriteEntry.buildUri(), values);
             if (favoriteUri == null) {
                 throw new NullPointerException("Provider must return URI or throw exception");
             }
-            String rowId = LocalContract.FavoriteEntry.getFavoriteId(favoriteUri);
+            String rowId = LocalContract.FavoriteEntry.getIdFrom(favoriteUri);
             Uri uri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
             List<Tag> tags = favorite.getTags();
             if (tags != null) {
@@ -104,7 +104,7 @@ public class LocalFavorites {
     public Single<Integer> updateFavorite(final String favoriteId, final SyncState state) {
         return Single.fromCallable(() -> {
             ContentValues values = state.getContentValues();
-            Uri uri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
+            Uri uri = LocalContract.FavoriteEntry.buildUriWith(favoriteId);
             return contentResolver.update(uri, values, null, null);
         });
     }
@@ -113,43 +113,44 @@ public class LocalFavorites {
         return Single.fromCallable(() -> {
             SyncState state = new SyncState(SyncState.State.UNSYNCED);
             ContentValues values = state.getContentValues();
-            Uri uri = LocalContract.FavoriteEntry.buildFavoritesUri();
+            Uri uri = LocalContract.FavoriteEntry.buildUri();
             return contentResolver.update(uri, values, null, null);
         });
     }
 
     public Single<Integer> deleteFavorite(final String favoriteId) {
-        Uri uri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
+        Uri uri = LocalContract.FavoriteEntry.buildUriWith(favoriteId);
         return LocalDataSource.delete(contentResolver, uri);
     }
 
     public Single<Integer> deleteFavorites() {
-        Uri uri = LocalContract.FavoriteEntry.buildFavoritesUri();
+        Uri uri = LocalContract.FavoriteEntry.buildUri();
         return LocalDataSource.delete(contentResolver, uri);
     }
 
     public Single<SyncState> getFavoriteSyncState(final String favoriteId) {
-        Uri uri = LocalContract.FavoriteEntry.buildFavoritesUriWith(favoriteId);
+        Uri uri = LocalContract.FavoriteEntry.buildUriWith(favoriteId);
         return LocalDataSource.getSyncState(contentResolver, uri);
     }
 
     public Observable<SyncState> getFavoriteSyncStates() {
-        Uri uri = LocalContract.FavoriteEntry.buildFavoritesUri();
+        Uri uri = LocalContract.FavoriteEntry.buildUri();
         return LocalDataSource.getSyncStates(contentResolver, uri, null, null, null);
     }
 
     public Observable<String> getFavoriteIds() {
-        Uri uri = LocalContract.FavoriteEntry.buildFavoritesUri();
+        Uri uri = LocalContract.FavoriteEntry.buildUri();
         return LocalDataSource.getIds(contentResolver, uri);
     }
 
     public Single<Boolean> isConflictedFavorites() {
-        Uri uri = LocalContract.FavoriteEntry.buildFavoritesUri();
+        Uri uri = LocalContract.FavoriteEntry.buildUri();
         return LocalDataSource.isConflicted(contentResolver, uri);
     }
 
     public Single<Integer> getNextDuplicated(final String favoriteName) {
-        final String[] columns = new String[]{"MAX(" + LocalContract.COMMON_NAME_DUPLICATED + ") + 1"};
+        final String[] columns = new String[]{
+                "MAX(" + LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + ") + 1"};
         final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " = ?";
         final String[] selectionArgs = {favoriteName};
 

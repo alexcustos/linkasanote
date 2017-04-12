@@ -28,7 +28,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/item_favorites_favorite_to_links_button"
-            android:src="@drawable/ic_chevron_left"
             android:paddingStart="@dimen/recycler_view_left_button_padding_start"
             android:paddingEnd="@dimen/recycler_view_button_padding"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
@@ -37,59 +36,60 @@
             android:onClick="@{() -> presenter.onToLinksClick(favorite.id)}"
             style="@style/Button.RecyclerView"
             bind:enabled="@{!favorite.conflicted}"
+            app:srcCompat="@drawable/ic_chevron_left"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <android.support.v7.widget.AppCompatCheckBox
             android:id="@+id/favorite_checkbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/item_favorites_checkbox"
             android:layout_marginStart="@dimen/recycler_view_left_checkbox_margin_start"
+            android:contentDescription="@string/item_favorites_checkbox"
             android:visibility="@{viewModel.actionMode ? View.VISIBLE : View.GONE}"
             android:checked="@{viewModel.isSelected(favorite.id)}"
             android:onClick="@{() -> presenter.onCheckboxClick(favorite.id)}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/favorite_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@{favorite.name}"
-            android:ellipsize="end"
-            android:textAppearance="?android:attr/textAppearanceListItem"
             android:maxLines="1"
+            android:ellipsize="end"
+            android:textAppearance="@style/FavoritesText.Name"
             android:layout_marginStart="@dimen/recycler_view_text_to_button_margin_left"
             android:layout_marginEnd="@dimen/recycler_view_nearby_button_margin_end"
             app:layout_constraintVertical_chainStyle="packed"
             app:layout_constraintBottom_toTopOf="@+id/favorite_tags"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/favorite_to_notes"
-            app:layout_constraintLeft_toRightOf="@+id/favorite_to_links" />
+            app:layout_constraintEnd_toStartOf="@+id/favorite_to_notes"
+            app:layout_constraintStart_toEndOf="@+id/favorite_to_links" />
 
         <TextView
             android:id="@+id/favorite_tags"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@{favorite.tagsAsString}"
+            android:maxLines="1"
             android:ellipsize="end"
+            android:textAppearance="@style/FavoritesText"
             android:layout_marginStart="@dimen/recycler_view_text_to_button_margin_left"
             android:layout_marginEnd="@dimen/recycler_view_nearby_button_margin_end"
-            android:maxLines="1"
             app:layout_constraintTop_toBottomOf="@+id/favorite_name"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/favorite_to_notes"
-            app:layout_constraintLeft_toRightOf="@+id/favorite_to_links" />
+            app:layout_constraintEnd_toStartOf="@+id/favorite_to_notes"
+            app:layout_constraintStart_toEndOf="@+id/favorite_to_links" />
 
         <ImageButton
             android:id="@+id/favorite_to_notes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/item_favorites_favorite_to_notes_button"
-            android:src="@drawable/ic_chevron_right"
             android:paddingStart="@dimen/recycler_view_button_padding"
             android:paddingEnd="@dimen/recycler_view_right_button_padding_end"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
@@ -98,7 +98,8 @@
             android:onClick="@{() -> presenter.onToNotesClick(favorite.id)}"
             style="@style/Button.RecyclerView"
             bind:enabled="@{!favorite.conflicted}"
-            app:layout_constraintRight_toRightOf="parent"
+            app:srcCompat="@drawable/ic_chevron_right"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -107,7 +108,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/item_favorites_edit_button"
-            android:src="@drawable/ic_edit"
             android:paddingStart="@dimen/recycler_view_button_padding"
             android:paddingEnd="@dimen/recycler_view_right_button_padding_end"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
@@ -115,7 +115,8 @@
             android:visibility="@{viewModel.actionMode ? View.VISIBLE : View.GONE}"
             android:onClick="@{() -> presenter.onEditClick(favorite.id)}"
             style="@style/Button.RecyclerView"
-            app:layout_constraintRight_toRightOf="parent"
+            app:srcCompat="@drawable/ic_edit"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </android.support.constraint.ConstraintLayout>

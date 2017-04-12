@@ -1,10 +1,8 @@
 package com.bytesforge.linkasanote.data.source.local;
 
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
-import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -31,13 +29,17 @@ public class LocalDataSource implements DataSource {
     private static final String TAG = LocalDataSource.class.getSimpleName();
 
     private final ContentResolver contentResolver;
+    private final LocalLinks localLinks;
     private final LocalFavorites localFavorites;
     private final LocalTags localTags;
 
     public LocalDataSource(
-            @NonNull ContentResolver contentResolver, @NonNull LocalFavorites localFavorites,
+            @NonNull ContentResolver contentResolver,
+            @NonNull LocalLinks localLinks,
+            @NonNull LocalFavorites localFavorites,
             @NonNull LocalTags localTags) {
         this.contentResolver = checkNotNull(contentResolver);
+        this.localLinks = checkNotNull(localLinks);
         this.localFavorites = checkNotNull(localFavorites);
         this.localTags = checkNotNull(localTags);
     }
@@ -45,45 +47,63 @@ public class LocalDataSource implements DataSource {
     // Links
 
     @Override
-    public Single<List<Link>> getLinks() {
-        final String selection = LocalContract.LinkEntry.COLUMN_NAME_DELETED + " = ?";
-        final String[] selectionArgs = {"0"};
+    public Observable<Link> getLinks() {
+        final String selection = LocalContract.LinkEntry.COLUMN_NAME_DELETED + " = ?" +
+                " OR " + LocalContract.LinkEntry.COLUMN_NAME_CONFLICTED + " = ?";
+        final String[] selectionArgs = {"0", "1"};
+        final String sortOrder = LocalContract.LinkEntry.COLUMN_NAME_NAME + " ASC";
 
-        Observable<Link> linkObservable = Observable.generate(() -> {
-            return contentResolver.query(
-                    LocalContract.LinkEntry.buildLinksUri(),
-                    LocalContract.LinkEntry.LINK_COLUMNS,
-                    selection, selectionArgs, null);
-        }, (cursor, listEmitter) -> {
-            if (cursor == null) {
-                listEmitter.onError(new NullPointerException("An error while retrieving the cursor"));
-                return null;
-            }
-            if (cursor.moveToNext()) {
-                listEmitter.onNext(Link.from(cursor));
-            } else {
-                listEmitter.onComplete();
-            }
-            return cursor;
-        }, Cursor::close);
-        // TODO: find why cast cannot be applied without variable
-        return linkObservable.toList();
+        return localLinks.getLinks(selection, selectionArgs, sortOrder);
     }
 
     @Override
-    public Single<Link> getLink(@NonNull String linkId) {
-        return null;
+    public Single<Link> getLink(@NonNull final String linkId) {
+        checkNotNull(linkId);
+        return localLinks.getLink(linkId);
     }
 
     @Override
-    public void saveLink(@NonNull Link link) {
-        ContentValues values = checkNotNull(link).getContentValues();
-        contentResolver.insert(LocalContract.LinkEntry.buildLinksUri(), values);
+    public void saveLink(@NonNull final Link link) {
+        checkNotNull(link);
+
+        long rowId = localLinks.saveLink(link).blockingGet();
+        if (rowId <= 0) {
+            Log.e(TAG, "Link was not saved [" + link.getId() + "]");
+        }
     }
 
     @Override
     public void deleteAllLinks() {
-        contentResolver.delete(LocalContract.LinkEntry.buildLinksUri(), null, null);
+        localLinks.deleteLinks().blockingGet();
+    }
+
+    @Override
+    public void deleteLink(@NonNull String linkId) {
+        checkNotNull(linkId);
+
+        SyncState state;
+        try {
+            state = localLinks.getLinkSyncState(linkId).blockingGet();
+        } catch (NoSuchElementException e) {
+            return; // Nothing to delete
+        } // let throw NullPointerException
+        int numRows;
+        if (!state.isSynced() && state.getETag() == null) {
+            // NOTE: if one has never been synced
+            numRows = localLinks.deleteLink(linkId).blockingGet();
+        } else {
+            SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
+            numRows = localLinks.updateLink(linkId, deletedState)
+                    .blockingGet();
+        }
+        if (numRows != 1) {
+            Log.e(TAG, "Unexpected number of rows processed [" + numRows + ", id=" + linkId + "]");
+        }
+    }
+
+    @Override
+    public Single<Boolean> isConflictedLinks() {
+        return localLinks.isConflictedLinks();
     }
 
     // Notes
@@ -104,7 +124,7 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public void deleteAllNotes() {
-        contentResolver.delete(LocalContract.NoteEntry.buildNotesUri(), null, null);
+        contentResolver.delete(LocalContract.NoteEntry.buildUri(), null, null);
     }
 
     // Favorites
@@ -173,7 +193,7 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public Observable<Tag> getTags() {
-        return localTags.getTags(LocalContract.TagEntry.buildTagsUri());
+        return localTags.getTags(LocalContract.TagEntry.buildUri());
     }
 
     @Override
@@ -183,7 +203,7 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public void saveTag(@NonNull Tag tag) {
-        localTags.saveTag(checkNotNull(tag), LocalContract.TagEntry.buildTagsUri());
+        localTags.saveTag(checkNotNull(tag), LocalContract.TagEntry.buildUri());
     }
 
     @Override
@@ -238,7 +258,7 @@ public class LocalDataSource implements DataSource {
 
     public static Observable<String> getIds(
             final ContentResolver contentResolver, final Uri uri) {
-        String[] columns = new String[]{LocalContract.COMMON_NAME_ENTRY_ID};
+        String[] columns = new String[]{BaseEntry.COLUMN_NAME_ENTRY_ID};
 
         return Observable.generate(() -> {
             return contentResolver.query(uri, columns, null, null, null);
@@ -252,7 +272,7 @@ public class LocalDataSource implements DataSource {
                 return cursor;
             }
             String id = cursor.getString(cursor.getColumnIndexOrThrow(
-                    LocalContract.COMMON_NAME_ENTRY_ID));
+                    BaseEntry.COLUMN_NAME_ENTRY_ID));
             emitter.onNext(id);
             return cursor;
         }, Cursor::close);
@@ -261,8 +281,8 @@ public class LocalDataSource implements DataSource {
     // NOTE: won't work with *_ITEM queries
     public static Single<Boolean> isConflicted(
             final ContentResolver contentResolver, final Uri uri) {
-        final String[] columns = new String[]{"COUNT(" + BaseColumns._ID + ")"};
-        final String selection = LocalContract.COMMON_NAME_CONFLICTED + " = ?";
+        final String[] columns = new String[]{"COUNT(" + BaseEntry._ID + ")"};
+        final String selection = BaseEntry.COLUMN_NAME_CONFLICTED + " = ?";
         final String[] selectionArgs = {"1"};
 
         return Single.fromCallable(() -> {

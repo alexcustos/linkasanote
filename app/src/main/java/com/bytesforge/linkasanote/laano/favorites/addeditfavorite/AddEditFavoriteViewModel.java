@@ -9,12 +9,13 @@ import android.databinding.ObservableField;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
-import android.widget.LinearLayout;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.google.common.base.Strings;
 
@@ -31,7 +32,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     public static final String STATE_NAME_ERROR_TEXT = "NAME_ERROR_TEXT";
 
     public final ObservableField<String> favoriteName = new ObservableField<>();
-    public final ObservableBoolean addButton = new ObservableBoolean(false);
+    public final ObservableBoolean addButton = new ObservableBoolean();
     private int addButtonText;
 
     private FavoriteTagsCompletionView favoriteTags;
@@ -105,7 +106,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     }
 
     @BindingAdapter({"snackbarId"})
-    public static void showSnackbar(LinearLayout view, SnackbarId snackbarId) {
+    public static void showSnackbar(CoordinatorLayout view, SnackbarId snackbarId) {
         if (snackbarId == null) return;
 
         switch (snackbarId) {
@@ -212,7 +213,15 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     }
 
     @Override
-    public void setFavoriteTags(List<Tag> tags) {
+    public void populateFavorite(@NonNull Favorite favorite) {
+        checkNotNull(favorite);
+
+        favoriteName.set(favorite.getName());
+        setFavoriteTags(favorite.getTags());
+        checkAddButton();
+    }
+
+    private void setFavoriteTags(List<Tag> tags) {
         if (tags == null) {
             favoriteTags.clear();
             return;

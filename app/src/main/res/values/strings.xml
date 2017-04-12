@@ -87,7 +87,7 @@
     <string name="add_edit_favorite_tags_validation_error">Only alphanumeric and space is allowed here, comma is used as the separator</string>
     <string name="add_edit_favorite_new_button_title">Create</string>
     <string name="add_edit_favorite_edit_button_title">Update</string>
-    <string name="add_edit_favorite_warning_empty">The favorite Name and least one Tag must be specified</string>
+    <string name="add_edit_favorite_warning_empty">The favorite\'s Name and least one Tag must be specified</string>
     <string name="add_edit_favorite_warning_not_existed">Requested Favorite has not already existed</string>
     <string name="add_edit_favorite_error_name_duplicated">Favorite with the same name already exists</string>
     <string name="action_bar_title_manage_accounts">Manage accounts</string>
@@ -151,6 +151,49 @@
     <string name="about_app_copyright">Copyright © %1$s %2$s</string>
     <string name="about_fragment_error_license">Could not read license file: %s</string>
 
+    <string name="actionbar_title_new_link">New Link</string>
+    <string name="actionbar_title_edit_link">Edit Link</string>
+    <string name="item_links_link_open_button">Open Link in a browser</string>
+    <string name="item_links_link_to_notes_button">Apply Link filter to Notes</string>
+    <string name="item_links_edit_button">Edit Link</string>
+    <string name="item_links_checkbox">Check Link</string>
+    <string name="links_empty_title">List is empty</string>
+    <string name="add_edit_link_link_hint">*Link</string>
+    <string name="add_edit_link_name_hint">Name</string>
+    <string name="add_edit_link_tags_hint">Tags</string>
+    <string name="add_edit_link_tags_validation_error">Only alphanumeric and space is allowed here, comma is used as the separator</string>
+    <string name="add_edit_link_new_button_title">Create</string>
+    <string name="add_edit_link_edit_button_title">Update</string>
+    <string name="add_edit_link_warning_empty">The Link must be specified</string>
+    <string name="add_edit_link_warning_not_existed">Requested Link has not already existed</string>
+    <string name="add_edit_link_error_link_duplicated">This link already exists</string>
+    <string name="add_edit_link_disabled_hint">Disable the open button, useful for broken links</string>
+    <string name="action_mode_links_delete">Delete</string>
+    <string name="action_mode_links_select_all">Check/Uncheck all Links</string>
+    <string name="laano_links_action_mode_selected">%1$d of %2$d selected</string>
+    <string name="toolbar_links_item_action_mode">Switch to edit mode</string>
+    <string name="toolbar_links_item_filter">Link filter</string>
+    <string name="toolbar_links_search">Search</string>
+    <string name="filter_links_all">All</string>
+    <string name="filter_links_conflicted">Conflicted</string>
+    <string name="links_delete_confirmation_title">Delete confirmation</string>
+    <string name="dialog_link_conflict_title_local">Local:</string>
+    <string name="dialog_link_conflict_title_cloud">Cloud:</string>
+    <string name="dialog_link_conflict_status_loading">Loading…</string>
+    <string name="dialog_link_conflict_state_no_conflict">no conflict</string>
+    <string name="dialog_link_conflict_state_deleted">deleted</string>
+    <string name="dialog_link_conflict_state_updated">updated</string>
+    <string name="dialog_link_conflict_state_duplicated">duplicated</string>
+    <string name="dialog_link_conflict_state_not_found">not found</string>
+    <string name="dialog_link_conflict_state_error">error</string>
+    <string name="dialog_link_conflict_status_error_download">There was an error while downloading</string>
+    <string name="dialog_link_conflict_resolved_success">Conflict is successfully resolved</string>
+    <string name="dialog_link_conflict_resolved_error">There was an error while trying to resolve the conflict</string>
+    <string name="card_button_add_note">Add Note</string>
+    <string name="card_button_expand_notes_description">Expand Notes</string>
+    <string name="card_button_collapse_notes_description">Expand Notes</string>
+    <string name="card_link_tags_caption">Tags</string>
+
     <plurals name="sync_adapter_text_failed_favorites">
         <item quantity="one">There was an error with %d Favorite</item>
         <item quantity="other">There was an error with %d Favorites</item>
@@ -158,5 +201,13 @@
     <plurals name="favorites_delete_confirmation_message">
         <item quantity="one">Are you sure you want to permanently delete selected Favorite?</item>
         <item quantity="other">Are you sure you want to permanently delete %d selected Favorites?</item>
+    </plurals>
+    <plurals name="sync_adapter_text_failed_links">
+        <item quantity="one">There was an error with %d Link</item>
+        <item quantity="other">There was an error with %d Links</item>
+    </plurals>
+    <plurals name="links_delete_confirmation_message">
+        <item quantity="one">Are you sure you want to permanently delete selected Link?</item>
+        <item quantity="other">Are you sure you want to permanently delete %d selected Links?</item>
     </plurals>
 </resources>

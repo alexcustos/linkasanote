@@ -6,8 +6,10 @@ import android.content.Context;
 
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
+import com.bytesforge.linkasanote.data.source.cloud.CloudLinks;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
+import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.data.source.local.LocalTags;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
@@ -28,6 +30,20 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
+    public LocalLinks provideLocalLinks(
+            Context context, ContentResolver contentResolver, LocalTags localTags) {
+        return new LocalLinks(context, contentResolver, localTags);
+    }
+
+    @Provides
+    @Singleton
+    public CloudLinks provideCloudLinks(
+            Context context, AccountManager accountManager, Settings settings) {
+        return new CloudLinks(context, accountManager, settings);
+    }
+
+    @Provides
+    @Singleton
     public LocalFavorites provideLocalFavorites(
             Context context, ContentResolver contentResolver, LocalTags localTags) {
         return new LocalFavorites(context, contentResolver, localTags);
@@ -44,8 +60,9 @@ public class RepositoryModule {
     @Singleton
     @Local
     public DataSource provideLocalDataSource(
-            ContentResolver contentResolver, LocalFavorites localFavorites, LocalTags localTags) {
-        return new LocalDataSource(contentResolver, localFavorites, localTags);
+            ContentResolver contentResolver, LocalLinks localLinks,
+            LocalFavorites localFavorites, LocalTags localTags) {
+        return new LocalDataSource(contentResolver, localLinks, localFavorites, localTags);
     }
 
     @Provides
@@ -53,8 +70,10 @@ public class RepositoryModule {
     @Cloud
     public DataSource provideCloudDataSource(
             Context context, BaseSchedulerProvider schedulerProvider,
+            LocalLinks localLinks, CloudLinks cloudLinks,
             LocalFavorites localFavorites, CloudFavorites cloudFavorites) {
-        return new CloudDataSource(context, schedulerProvider, localFavorites, cloudFavorites);
+        return new CloudDataSource(context, schedulerProvider, localLinks, cloudLinks,
+                localFavorites, cloudFavorites);
     }
 
     @Provides

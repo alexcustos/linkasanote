@@ -52,7 +52,7 @@ public class LocalTags {
     public Single<Tag> getTag(String tagName) {
         return Single.fromCallable(() -> {
             Cursor cursor = contentResolver.query(
-                    LocalContract.TagEntry.buildTagsUriWith(tagName),
+                    LocalContract.TagEntry.buildUriWith(tagName),
                     LocalContract.TagEntry.TAG_COLUMNS, null, null, null);
             if (cursor == null) return null;
 
@@ -76,12 +76,12 @@ public class LocalTags {
     }
 
     public Single<Integer> deleteTag(final String tagName) {
-        Uri uri = LocalContract.TagEntry.buildTagsUriWith(tagName);
+        Uri uri = LocalContract.TagEntry.buildUriWith(tagName);
         return LocalDataSource.delete(contentResolver, uri);
     }
 
     public Single<Integer> deleteTags() {
-        Uri uri = LocalContract.TagEntry.buildTagsUri();
+        Uri uri = LocalContract.TagEntry.buildUri();
         return LocalDataSource.delete(contentResolver, uri);
     }
 }

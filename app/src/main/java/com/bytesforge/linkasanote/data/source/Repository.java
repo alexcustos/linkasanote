@@ -63,71 +63,146 @@ public class Repository implements DataSource {
     // Links
 
     @Override
-    public Single<List<Link>> getLinks() {
-        if (cachedLinks != null && !linkCacheIsDirty) {
-            return Observable.fromIterable(cachedLinks.values()).toList();
+    public Observable<Link> getLinks() {
+        if (!linkCacheIsDirty && cachedLinks != null) {
+            return Observable.fromIterable(cachedLinks.values());
         }
         return getAndCacheLocalLinks();
     }
 
-    private Single<List<Link>> getAndCacheLocalLinks() {
+    private Observable<Link> getAndCacheLocalLinks() {
         if (cachedLinks == null) {
             cachedLinks = new LinkedHashMap<>();
         }
+        if (cachedTags == null) {
+            cachedTags = new LinkedHashMap<>();
+        }
+        cachedLinks.clear();
         return localDataSource.getLinks()
-                .flatMap(links -> Observable.fromIterable(links)
-                        .doOnNext(link -> cachedLinks.put(link.getId(), link))
-                        .toList());
+                .doOnComplete(() -> linkCacheIsDirty = false)
+                .doOnNext(link -> {
+                    cachedLinks.put(link.getId(), link);
+                    List<Tag> tags = link.getTags();
+                    if (tags != null) {
+                        for (Tag tag : tags) cachedTags.put(tag.getName(), tag);
+                    }
+                });
     }
 
     @Override
     public Single<Link> getLink(@NonNull String linkId) {
         checkNotNull(linkId);
 
+        if (!isKeyValidUuid(linkId)) {
+            throw new InvalidParameterException("getLink() called with invalid UUID");
+        }
+        return getLink(linkId, false);
+    }
+
+    public Single<Link> getLink(@NonNull String linkId, boolean forceCacheUpdate) {
+        checkNotNull(linkId);
+
+        if (forceCacheUpdate) return getAndCacheLocalLink(linkId);
+
         final Link cachedLink = getCachedLink(linkId);
         if (cachedLink != null) {
             return Single.just(cachedLink);
         }
+        return getAndCacheLocalLink(linkId);
+    }
 
+    private Single<Link> getAndCacheLocalLink(String linkId) {
         if (cachedLinks == null) {
             cachedLinks = new LinkedHashMap<>();
         }
+        if (cachedTags == null) {
+            cachedTags = new LinkedHashMap<>();
+        }
         return localDataSource.getLink(linkId)
-                .doOnSuccess(link -> cachedLinks.put(linkId, link));
+                .doOnSuccess(link -> {
+                    cachedLinks.put(linkId, link);
+                    // NOTE: because order of Links is messed up
+                    linkCacheIsDirty = true;
+                    List<Tag> tags = link.getTags();
+                    if (tags != null) {
+                        for (Tag tag : tags) cachedTags.put(tag.getName(), tag);
+                    }
+                });
     }
 
     @Nullable
     private Link getCachedLink(@NonNull String id) {
         checkNotNull(id);
 
-        if (cachedLinks == null || cachedLinks.isEmpty()) {
-            return null;
+        if (cachedLinks != null && !cachedLinks.isEmpty()) {
+            return cachedLinks.get(id);
         }
-        return cachedLinks.get(id);
+        return null;
     }
 
     @Override
     public void saveLink(@NonNull Link link) {
         checkNotNull(link);
 
-        localDataSource.saveLink(link);
+        localDataSource.saveLink(link); // blocking operation
         cloudDataSource.saveLink(link);
 
+        // Link
         if (cachedLinks == null) {
             cachedLinks = new LinkedHashMap<>();
         }
-        cachedLinks.put(link.getId(), link);
+        // NOTE: new Link has no rowId to bind to RecyclerView and position is unknown
+        linkCacheIsDirty = true;
+        // Tags
+        if (cachedTags == null) {
+            cachedTags = new LinkedHashMap<>();
+        }
+        List<Tag> tags = link.getTags();
+        if (tags != null) {
+            for (Tag tag : tags) {
+                cachedTags.put(tag.getName(), tag);
+            }
+        }
     }
 
     @Override
     public void deleteAllLinks() {
-        localDataSource.deleteAllLinks();
-        cloudDataSource.deleteAllLinks();
+        localDataSource.deleteAllLinks(); // blocking
+        //cloudDataSource.deleteAllLinks();
 
         if (cachedLinks == null) {
             cachedLinks = new LinkedHashMap<>();
         }
         cachedLinks.clear();
+    }
+
+    @Override
+    public void deleteLink(@NonNull String linkId) {
+        checkNotNull(linkId);
+
+        localDataSource.deleteLink(linkId); // blocking
+        cloudDataSource.deleteLink(linkId);
+
+        deleteCachedLink(linkId);
+    }
+
+    @Override
+    public Single<Boolean> isConflictedLinks() {
+        return localDataSource.isConflictedLinks();
+    }
+
+    // TODO: implement cache invalidation for one specific item
+    public void refreshLinks() {
+        linkCacheIsDirty = true;
+    }
+
+    public void deleteCachedLink(@NonNull String linkId) {
+        checkNotNull(linkId);
+
+        if (cachedLinks == null) {
+            cachedLinks = new LinkedHashMap<>();
+        }
+        cachedLinks.remove(linkId);
     }
 
     // Notes

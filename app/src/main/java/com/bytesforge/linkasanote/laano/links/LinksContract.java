@@ -1,17 +1,84 @@
 package com.bytesforge.linkasanote.laano.links;
 
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.bytesforge.linkasanote.BaseView;
+import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.laano.LaanoTabPresenter;
+import com.bytesforge.linkasanote.laano.LaanoUiManager;
+
+import java.util.List;
 
 public interface LinksContract {
 
     interface View extends BaseView<Presenter> {
 
+        void setViewModel(@NonNull LinksContract.ViewModel viewModel);
         boolean isActive();
+
+        void showAddLink();
+        void showEditLink(@NonNull String linkId);
+        void showLinks(@NonNull List<Link> links);
+        void enableActionMode();
+        void disableActionMode();
+        void selectionChanged(int position);
+        String removeLink(int position);
+        int getPosition(String linkId);
+        void confirmLinksRemoval(int[] selectedIds);
+        void showConflictResolution(@NonNull String linkId);
+    }
+
+    interface ViewModel extends BaseView<Presenter> {
+
+        void setLaanoUiManager(@NonNull LaanoUiManager laanoUiManager);
+
+        void setInstanceState(@Nullable Bundle savedInstanceState);
+        void saveInstanceState(@NonNull Bundle outState);
+        void applyInstanceState(@NonNull Bundle state);
+
+        void setLinkListSize(int linkListSize);
+        boolean isActionMode();
+        void enableActionMode();
+        void disableActionMode();
+
+        boolean isSelected(String linkId);
+        void toggleSelection();
+        void toggleSelection(int position);
+        void removeSelection();
+        void removeSelection(int position);
+        int getSelectedCount();
+        int[] getSelectedIds();
+        void showDatabaseErrorSnackbar();
+        void showConflictResolutionSuccessfulSnackbar();
+        void showConflictResolutionErrorSnackbar();
+        void showProgressOverlay();
+        void hideProgressOverlay();
+
+        LinksFilterType getFilterType();
+        void setFilterType(LinksFilterType filterType);
+        String getSearchText();
+        void setSearchText(String searchText);
     }
 
     interface Presenter extends LaanoTabPresenter {
 
         void addLink();
+        void loadLinks(boolean forceUpdate);
+
+        void onLinkClick(String linkId, boolean isConflicted);
+        boolean onLinkLongClick(String linkId);
+        void onCheckboxClick(String linkId);
+
+        void onEditClick(@NonNull String linkId);
+        void onLinkOpenClick(@NonNull String linkId);
+        void onToNotesClick(@NonNull String linkId);
+        void onAddNoteClick(@NonNull String linkId);
+        void onDeleteClick();
+        void onSelectAllClick();
+        int getPosition(String linkId);
+        void setFilterType(@NonNull LinksFilterType filtering);
+        void deleteLinks(int[] selectedIds);
     }
 }

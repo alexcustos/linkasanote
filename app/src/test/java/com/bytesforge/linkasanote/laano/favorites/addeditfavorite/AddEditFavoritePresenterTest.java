@@ -126,8 +126,7 @@ public class AddEditFavoritePresenterTest {
                 repository, view, viewModel, schedulerProvider, favoriteId);
         presenter.populateFavorite();
         verify(repository).getFavorite(favoriteId);
-        verify(view).setupFavoriteState(any(Favorite.class));
-        verify(viewModel).checkAddButton();
+        verify(viewModel).populateFavorite(any(Favorite.class));
     }
 
     @Test
@@ -139,7 +138,7 @@ public class AddEditFavoritePresenterTest {
                 repository, view, viewModel, schedulerProvider, favoriteId);
         presenter.populateFavorite();
         verify(repository).getFavorite(favoriteId);
-        verify(view, never()).setupFavoriteState(any(Favorite.class));
+        verify(viewModel, never()).populateFavorite(any(Favorite.class));
         verify(viewModel).showFavoriteNotFoundSnackbar();
     }
 }

@@ -61,7 +61,7 @@ public final class Note {
                 LocalContract.NoteEntry.COLUMN_NAME_UPDATED));
 
         String excerpt = cursor.getString(cursor.getColumnIndexOrThrow(
-                LocalContract.NoteEntry.COLUMN_NAME_EXCERPT));
+                LocalContract.NoteEntry.COLUMN_NAME_NOTE));
 
         boolean deleted = cursor.getInt(cursor.getColumnIndexOrThrow(
                 LocalContract.NoteEntry.COLUMN_NAME_DELETED)) == 1;
@@ -77,7 +77,7 @@ public final class Note {
         long created = values.getAsLong(LocalContract.NoteEntry.COLUMN_NAME_CREATED);
         long updated = values.getAsLong(LocalContract.NoteEntry.COLUMN_NAME_UPDATED);
 
-        String excerpt = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_EXCERPT);
+        String excerpt = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_NOTE);
 
         boolean deleted = values.getAsInteger(LocalContract.NoteEntry.COLUMN_NAME_DELETED) == 1;
         boolean synced = values.getAsInteger(LocalContract.NoteEntry.COLUMN_NAME_SYNCED) == 1;
@@ -93,7 +93,7 @@ public final class Note {
         values.put(LocalContract.NoteEntry.COLUMN_NAME_CREATED, getCreated());
         values.put(LocalContract.NoteEntry.COLUMN_NAME_UPDATED, getUpdated());
 
-        values.put(LocalContract.NoteEntry.COLUMN_NAME_EXCERPT, getExcerpt());
+        values.put(LocalContract.NoteEntry.COLUMN_NAME_NOTE, getExcerpt());
 
         values.put(LocalContract.NoteEntry.COLUMN_NAME_DELETED, isDeleted() ? 1 : 0);
         values.put(LocalContract.NoteEntry.COLUMN_NAME_SYNCED, isSynced() ? 1 : 0);

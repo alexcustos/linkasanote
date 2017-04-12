@@ -20,7 +20,6 @@ public interface AddEditFavoriteContract {
         void finishActivity();
 
         void swapTagsCompletionViewItems(List<Tag> tags);
-        void setupFavoriteState(Favorite favorite);
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -43,7 +42,7 @@ public interface AddEditFavoriteContract {
         void afterNameChanged();
         void afterTagsChanged();
 
-        void setFavoriteTags(List<Tag> tags);
+        void populateFavorite(@NonNull Favorite favorite);
     }
 
     interface Presenter extends BasePresenter {
