@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
@@ -106,9 +107,9 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
                         }
                     }
                     switch (viewModel.getFilterType()) {
-                        case FAVORITES_CONFLICTED:
+                        case CONFLICTED:
                             return favorite.isConflicted();
-                        case FAVORITES_ALL:
+                        case ALL:
                         default:
                             return true;
                     }
@@ -138,7 +139,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         // TODO: normal mode selection must highlight current favorite filter
         if (viewModel.isActionMode()) {
             onFavoriteSelected(favoriteId);
-        } else if (isConflicted){
+        } else if (isConflicted) {
             view.showConflictResolution(favoriteId);
         }
     }
@@ -168,6 +169,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void onToLinksClick(@NonNull String favoriteId) {
+        // TODO: set filter & switch tab
     }
 
     @Override
@@ -209,14 +211,13 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     }
 
     @Override
-    public void setFilterType(@NonNull FavoritesFilterType filterType) {
+    public void setFilterType(@NonNull FilterType filterType) {
         viewModel.setFilterType(filterType);
         laanoUiManager.updateTitle(LaanoFragmentPagerAdapter.FAVORITES_TAB);
     }
 
     @Override
     public void updateTabNormalState() {
-        laanoUiManager.setTabNormalState(
-                LaanoFragmentPagerAdapter.FAVORITES_TAB, isConflicted());
+        laanoUiManager.setTabNormalState(LaanoFragmentPagerAdapter.FAVORITES_TAB, isConflicted());
     }
 }

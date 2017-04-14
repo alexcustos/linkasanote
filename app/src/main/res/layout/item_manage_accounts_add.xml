@@ -16,7 +16,7 @@
         android:gravity="center_vertical"
         android:text="@string/item_manage_accounts_add"
         android:paddingStart="@dimen/recycler_view_left_icon_margin_start"
-        android:paddingEnd="@dimen/recycler_view_text_margin_right"
+        android:paddingEnd="@dimen/recycler_view_text_margin_horizontal"
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:onClick="@{() -> presenter.onAddClick()}"
         android:background="?android:attr/selectableItemBackground" />

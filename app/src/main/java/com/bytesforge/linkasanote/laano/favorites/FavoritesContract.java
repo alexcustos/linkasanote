@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoTabPresenter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 
@@ -56,8 +57,8 @@ public interface FavoritesContract {
         void showProgressOverlay();
         void hideProgressOverlay();
 
-        FavoritesFilterType getFilterType();
-        void setFilterType(FavoritesFilterType filterType);
+        FilterType getFilterType();
+        void setFilterType(FilterType filterType);
         String getSearchText();
         void setSearchText(String searchText);
     }
@@ -77,7 +78,7 @@ public interface FavoritesContract {
         void onDeleteClick();
         void onSelectAllClick();
         int getPosition(String favoriteId);
-        void setFilterType(@NonNull FavoritesFilterType filtering);
+        void setFilterType(@NonNull FilterType filtering);
         void deleteFavorites(int[] selectedIds);
     }
 }

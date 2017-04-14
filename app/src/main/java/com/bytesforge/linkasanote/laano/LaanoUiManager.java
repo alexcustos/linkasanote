@@ -3,16 +3,14 @@ package com.bytesforge.linkasanote.laano;
 import android.accounts.Account;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
-import android.support.annotation.StringRes;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.ActionBar;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
+import android.util.SparseLongArray;
 import android.view.Menu;
 
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.laano.favorites.FavoritesFilterType;
-import com.bytesforge.linkasanote.laano.links.LinksFilterType;
 import com.bytesforge.linkasanote.manageaccounts.AccountItem;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CloudUtils;
@@ -35,7 +33,8 @@ public class LaanoUiManager {
 
     private SparseIntArray syncUploaded = new SparseIntArray();
     private SparseIntArray syncDownloaded = new SparseIntArray();
-    private SparseIntArray filterType = new SparseIntArray();
+    //private SparseIntArray filterType = new SparseIntArray();
+    private SparseLongArray favoriteFilter = new SparseLongArray();
     private boolean isAccount = false;
     private boolean isSyncState = false;
 
@@ -63,7 +62,8 @@ public class LaanoUiManager {
     }
 
     public void setTabNormalState(int position, boolean isConflicted) {
-        setTab(position, isConflicted ? LaanoFragmentPagerAdapter.STATE_PROBLEM
+        setTab(position, isConflicted
+                ? LaanoFragmentPagerAdapter.STATE_PROBLEM
                 : LaanoFragmentPagerAdapter.STATE_DEFAULT);
     }
 
@@ -81,43 +81,28 @@ public class LaanoUiManager {
         syncTitles.put(position, title);
     }
 
-    public void setLinkFilterType(LinksFilterType filterType) {
+    public void setFilterType(int position, FilterType filterType) {
+        String normalTitle;
+        switch (filterType) {
+            case ALL:
+                normalTitle = resources.getString(R.string.filter_all);
+                break;
+            case CONFLICTED:
+                normalTitle = resources.getString(R.string.filter_conflicted);
+                break;
+            default:
+                throw new IllegalArgumentException("Unexpected filtering type [" + filterType.name() + "]");
+        }
+        setNormalTitle(position, normalTitle);
+    }
+
+    public void setLinkFavoriteFilter(long favoriteFilter) {
         int position = LaanoFragmentPagerAdapter.LINKS_TAB;
-        @StringRes int filterTitleId;
-        switch (filterType) {
-            case LINKS_ALL:
-                filterTitleId = R.string.filter_links_all;
-                break;
-            case LINKS_CONFLICTED:
-                filterTitleId = R.string.filter_links_conflicted;
-                break;
-            default:
-                throw new IllegalArgumentException("Unexpected filtering type [" + filterType.name() + "]");
-        }
-        this.filterType.put(position, filterTitleId);
-        setNormalTitle(position);
+
     }
 
-    public void setFavoriteFilterType(FavoritesFilterType filterType) {
-        int position = LaanoFragmentPagerAdapter.FAVORITES_TAB;
-        @StringRes int filterTitleId;
-        switch (filterType) {
-            case FAVORITES_ALL:
-                filterTitleId = R.string.filter_favorites_all;
-                break;
-            case FAVORITES_CONFLICTED:
-                filterTitleId = R.string.filter_favorites_conflicted;
-                break;
-            default:
-                throw new IllegalArgumentException("Unexpected filtering type [" + filterType.name() + "]");
-        }
-        this.filterType.put(position, filterTitleId);
-        setNormalTitle(position);
-    }
-
-    private void setNormalTitle(int position) {
-        @StringRes int titleId = filterType.get(position);
-        normalTitles.put(position, resources.getString(titleId));
+    private void setNormalTitle(int position, String normalTitle) {
+        normalTitles.put(position, normalTitle);
     }
 
     public void updateTitle(int position) {

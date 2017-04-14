@@ -16,6 +16,7 @@ import android.widget.ArrayAdapter;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.databinding.FragmentAddEditLinkBinding;
+import com.bytesforge.linkasanote.laano.TagsCompletionView;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.tokenautocomplete.FilteredArrayAdapter;
 import com.tokenautocomplete.TokenCompleteTextView;
@@ -85,7 +86,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
             presenter.populateLink();
         }
         // LinkTags
-        final LinkTagsCompletionView completionView = binding.linkTags;
+        final TagsCompletionView completionView = binding.linkTags;
         if (completionView != null) {
             setupTagsCompletionView(completionView);
             viewModel.setTagsCompletionView(completionView);
@@ -93,7 +94,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
         return binding.getRoot();
     }
 
-    private void setupTagsCompletionView(LinkTagsCompletionView completionView) {
+    private void setupTagsCompletionView(TagsCompletionView completionView) {
         // Options
         completionView.setTokenClickStyle(TokenCompleteTextView.TokenClickStyle.Select);
         completionView.setDeletionStyle(TokenCompleteTextView.TokenDeleteStyle.SelectThenDelete);

@@ -47,9 +47,11 @@ public class LocalDataSourceTest {
     public void setupLocalDataSource() {
         FAVORITES = AndroidTestUtils.buildFavorites();
         LocalTags localTags = new LocalTags(contentResolver);
-        LocalFavorites localFavorites = new LocalFavorites(context, contentResolver, localTags);
         LocalLinks localLinks = new LocalLinks(context, contentResolver, localTags);
-        localDataSource = new LocalDataSource(contentResolver, localLinks, localFavorites, localTags);
+        LocalFavorites localFavorites = new LocalFavorites(context, contentResolver, localTags);
+        LocalNotes localNotes = new LocalNotes(context, contentResolver, localTags);
+        localDataSource = new LocalDataSource(
+                contentResolver, localLinks, localFavorites, localNotes, localTags);
         cleanupLocalDataSource();
     }
 

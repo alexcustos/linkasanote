@@ -5,6 +5,7 @@ import android.util.Log;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
@@ -73,7 +74,7 @@ public class FavoritesPresenterTest {
     @Test
     public void loadAllFavoritesFromRepository_loadsItIntoView() {
         when(repository.getFavorites()).thenReturn(Observable.fromIterable(FAVORITES));
-        when(viewModel.getFilterType()).thenReturn(FavoritesFilterType.FAVORITES_ALL);
+        when(viewModel.getFilterType()).thenReturn(FilterType.ALL);
         presenter.loadFavorites(true);
         verify(view).showFavorites(FAVORITES);
     }

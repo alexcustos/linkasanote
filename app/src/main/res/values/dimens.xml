@@ -2,6 +2,7 @@
 <resources>
     <dimen name="padding_zero">0dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="tag_line_spacing_extra">4dp</dimen>
     <dimen name="drawer_header_height">164dp</dimen>
     <dimen name="drawer_header_padding">16dp</dimen>
     <dimen name="drawer_header_subtitle_height">56dp</dimen>
@@ -14,17 +15,19 @@
     <dimen name="main_button_margin_top">16dp</dimen>
     <dimen name="main_button_padding">16dp</dimen>
     <dimen name="item_favorites_vertical_padding">8dp</dimen>
-    <dimen name="token_corners_radius">4dp</dimen>
+    <dimen name="token_corners_radius">6dp</dimen>
     <dimen name="token_vertical_padding">4dp</dimen>
     <dimen name="token_horizontal_padding">8dp</dimen>
-    <dimen name="token_text_size">16sp</dimen>
+    <dimen name="token_text_size">14sp</dimen>
     <dimen name="add_edit_account_url_form_space">16dp</dimen>
     <dimen name="item_manage_accounts_layout_height">72dp</dimen>
     <dimen name="item_favorites_layout_height">72dp</dimen>
     <dimen name="recycler_view_left_icon_margin_start">16dp</dimen>
-    <dimen name="recycler_view_text_margin_right">16dp</dimen>
+    <dimen name="recycler_view_text_margin_horizontal">16dp</dimen>
+    <dimen name="recycler_view_text_margin_vertical">4dp</dimen>
     <dimen name="recycler_view_left_checkbox_margin_start">12dp</dimen>
-    <dimen name="recycler_view_text_to_button_margin_left">24dp</dimen>
+    <dimen name="recycler_view_text_to_button_margin_start">24dp</dimen>
+    <dimen name="recycler_view_serial_to_text_margin_end">8dp</dimen>
     <dimen name="recycler_view_nearby_button_margin_end">8dp</dimen>
     <dimen name="recycler_view_button_padding_vertical">24dp</dimen>
     <dimen name="recycler_view_button_padding">8dp</dimen>
@@ -41,7 +44,9 @@
 
     <dimen name="card_spacer_padding_end">4dp</dimen>
     <dimen name="card_left_checkbox_margin_start">12dp</dimen>
-    <dimen name="card_text_to_button_margin_left">24dp</dimen>
+    <dimen name="card_text_to_button_margin_start">24dp</dimen>
+    <dimen name="card_prefix_to_text_margin_end">8dp</dimen>
+    <dimen name="card_text_margin_vertical">16dp</dimen>
     <dimen name="card_text_margin_horizontal">16dp</dimen>
     <dimen name="card_nearby_button_margin_end">8dp</dimen>
     <dimen name="card_button_padding">8dp</dimen>
@@ -50,4 +55,6 @@
     <dimen name="card_right_button_padding_end">16dp</dimen>
     <dimen name="card_left_button_padding_start">16dp</dimen>
     <dimen name="card_text_padding_vertical">4dp</dimen>
+    <dimen name="card_tags_margin_bottom">24dp</dimen>
+    <dimen name="card_note_margin_bottom">16dp</dimen>
 </resources>

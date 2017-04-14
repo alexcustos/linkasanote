@@ -16,6 +16,7 @@ import android.widget.ArrayAdapter;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.databinding.FragmentAddEditFavoriteBinding;
+import com.bytesforge.linkasanote.laano.TagsCompletionView;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.tokenautocomplete.FilteredArrayAdapter;
 import com.tokenautocomplete.TokenCompleteTextView;
@@ -85,7 +86,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
             presenter.populateFavorite();
         }
         // FavoriteTags
-        final FavoriteTagsCompletionView completionView = binding.favoriteTags;
+        final TagsCompletionView completionView = binding.favoriteTags;
         if (completionView != null) {
             setupTagsCompletionView(completionView);
             viewModel.setTagsCompletionView(completionView);
@@ -93,7 +94,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
         return binding.getRoot();
     }
 
-    private void setupTagsCompletionView(FavoriteTagsCompletionView completionView) {
+    private void setupTagsCompletionView(TagsCompletionView completionView) {
         // Options
         completionView.setTokenClickStyle(TokenCompleteTextView.TokenClickStyle.Select);
         completionView.setDeletionStyle(TokenCompleteTextView.TokenDeleteStyle.SelectThenDelete);

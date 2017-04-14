@@ -13,7 +13,6 @@ import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.sync.SyncState;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.inject.Singleton;
@@ -31,16 +30,19 @@ public class LocalDataSource implements DataSource {
     private final ContentResolver contentResolver;
     private final LocalLinks localLinks;
     private final LocalFavorites localFavorites;
+    private final LocalNotes localNotes;
     private final LocalTags localTags;
 
     public LocalDataSource(
             @NonNull ContentResolver contentResolver,
             @NonNull LocalLinks localLinks,
             @NonNull LocalFavorites localFavorites,
+            @NonNull LocalNotes localNotes,
             @NonNull LocalTags localTags) {
         this.contentResolver = checkNotNull(contentResolver);
         this.localLinks = checkNotNull(localLinks);
         this.localFavorites = checkNotNull(localFavorites);
+        this.localNotes = checkNotNull(localNotes);
         this.localTags = checkNotNull(localTags);
     }
 
@@ -106,27 +108,6 @@ public class LocalDataSource implements DataSource {
         return localLinks.isConflictedLinks();
     }
 
-    // Notes
-
-    @Override
-    public Single<List<Note>> getNotes() {
-        return null;
-    }
-
-    @Override
-    public Single<Note> getNote(@NonNull String noteId) {
-        return null;
-    }
-
-    @Override
-    public void saveNote(@NonNull Note note) {
-    }
-
-    @Override
-    public void deleteAllNotes() {
-        contentResolver.delete(LocalContract.NoteEntry.buildUri(), null, null);
-    }
-
     // Favorites
 
     @Override
@@ -187,6 +168,68 @@ public class LocalDataSource implements DataSource {
     @Override
     public Single<Boolean> isConflictedFavorites() {
         return localFavorites.isConflictedFavorites();
+    }
+
+    // Notes
+
+    @Override
+    public Observable<Note> getNotes() {
+        final String selection = LocalContract.NoteEntry.COLUMN_NAME_DELETED + " = ?" +
+                " OR " + LocalContract.NoteEntry.COLUMN_NAME_CONFLICTED + " = ?";
+        final String[] selectionArgs = {"0", "1"};
+        final String sortOrder = LocalContract.NoteEntry.COLUMN_NAME_CREATED + " DESC";
+
+        return localNotes.getNotes(selection, selectionArgs, sortOrder);
+    }
+
+    @Override
+    public Single<Note> getNote(@NonNull final String noteId) {
+        checkNotNull(noteId);
+        return localNotes.getNote(noteId);
+    }
+
+    @Override
+    public void saveNote(@NonNull final Note note) {
+        checkNotNull(note);
+
+        long rowId = localNotes.saveNote(note).blockingGet();
+        if (rowId <= 0) {
+            Log.e(TAG, "Note was not saved [" + note.getId() + "]");
+        }
+    }
+
+    @Override
+    public void deleteAllNotes() {
+        localNotes.deleteNotes().blockingGet();
+    }
+
+    @Override
+    public void deleteNote(@NonNull String noteId) {
+        checkNotNull(noteId);
+
+        SyncState state;
+        try {
+            state = localNotes.getNoteSyncState(noteId).blockingGet();
+        } catch (NoSuchElementException e) {
+            return; // Nothing to delete
+        } // let throw NullPointerException
+        int numRows;
+        if (!state.isSynced() && state.getETag() == null) {
+            // NOTE: if one has never been synced
+            numRows = localNotes.deleteNote(noteId).blockingGet();
+        } else {
+            SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
+            numRows = localNotes.updateNote(noteId, deletedState)
+                    .blockingGet();
+        }
+        if (numRows != 1) {
+            Log.e(TAG, "Unexpected number of rows processed [" + numRows + ", id=" + noteId + "]");
+        }
+    }
+
+    @Override
+    public Single<Boolean> isConflictedNotes() {
+        return localNotes.isConflictedNotes();
     }
 
     // Tags

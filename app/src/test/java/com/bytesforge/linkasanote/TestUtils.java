@@ -2,6 +2,7 @@ package com.bytesforge.linkasanote;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 
@@ -37,6 +38,14 @@ public class TestUtils {
             add(new Link(KEY_PREFIX + 'A', "http://laano.net/link", "Title for Link", false, TAGS));
             add(new Link(KEY_PREFIX + 'B', "http://laano.net/link2", "Title for Link #2", false, TAGS2));
             add(new Link(KEY_PREFIX + 'C', "http://laano.net/link3", "Title for Link #3", false, TAGS3));
+        }};
+    }
+
+    public static List<Note> buildNotes() {
+        return new ArrayList<Note>() {{
+            add(new Note(KEY_PREFIX + 'A', "Note", TAGS));
+            add(new Note(KEY_PREFIX + 'B', "Note #2", TAGS2));
+            add(new Note(KEY_PREFIX + 'C', "Note #3", TAGS3));
         }};
     }
 }

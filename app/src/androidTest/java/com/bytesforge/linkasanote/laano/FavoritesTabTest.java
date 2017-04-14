@@ -165,8 +165,10 @@ public class FavoritesTabTest {
     public void addFavoritesToFavoritesRecyclerView_CheckIfPersistOnOrientationChange() {
         when(mockRepository.getLinks()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(FAVORITES));
+        when(mockRepository.getNotes()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.isConflictedLinks()).thenReturn(Single.fromCallable(() -> false));
         when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
+        when(mockRepository.isConflictedNotes()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
         for (Favorite favorite : FAVORITES) {
@@ -184,8 +186,10 @@ public class FavoritesTabTest {
         favorites.add(FAVORITES.get(0));
         when(mockRepository.getLinks()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
+        when(mockRepository.getNotes()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.isConflictedLinks()).thenReturn(Single.fromCallable(() -> false));
         when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
+        when(mockRepository.isConflictedNotes()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
         openActionBarOverflowOrOptionsMenu(context);
@@ -205,8 +209,10 @@ public class FavoritesTabTest {
         favorites.add(FAVORITES.get(0));
         when(mockRepository.getLinks()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
+        when(mockRepository.getNotes()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.isConflictedLinks()).thenReturn(Single.fromCallable(() -> false));
         when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
+        when(mockRepository.isConflictedNotes()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.rv_favorites))
@@ -225,8 +231,10 @@ public class FavoritesTabTest {
         favorites.add(FAVORITES.get(0));
         when(mockRepository.getLinks()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
+        when(mockRepository.getNotes()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.isConflictedLinks()).thenReturn(Single.fromCallable(() -> false));
         when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
+        when(mockRepository.isConflictedNotes()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.rv_favorites))
@@ -246,8 +254,10 @@ public class FavoritesTabTest {
         favorites.add(FAVORITES.get(0));
         when(mockRepository.getLinks()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(favorites));
+        when(mockRepository.getNotes()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.isConflictedLinks()).thenReturn(Single.fromCallable(() -> false));
         when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
+        when(mockRepository.isConflictedNotes()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.rv_favorites))

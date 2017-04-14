@@ -22,6 +22,8 @@ import android.widget.ImageButton;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.laano.FilterType;
+import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.ActivityUtils;
@@ -36,14 +38,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // NOTE: global viewModel, applied to fragment and every Item
 public class LinksViewModel extends BaseObservable implements LinksContract.ViewModel {
 
-    private static final float PROGRESS_OVERLAY_ALPHA = 0.4f;
-    private static final long PROGRESS_OVERLAY_DURATION = 200; // ms
-    private static final long PROGRESS_OVERLAY_SHOW_DELAY = 200; // ms
+    private static final String FILTER_PREFIX = "L";
 
     private static final String STATE_ACTION_MODE = "ACTION_MODE";
     private static final String STATE_LIST_SIZE = "LIST_SIZE";
     private static final String STATE_SELECTED_IDS = "SELECTED_IDS";
     private static final String STATE_FILTER_TYPE = "FILTER_TYPE";
+    private static final String STATE_FAVORITE_FILTER = "FAVORITE_FILTER";
     private static final String STATE_SEARCH_TEXT = "SEARCH_TEXT";
     private static final String STATE_PROGRESS_OVERLAY = "PROGRESS_OVERLAY";
 
@@ -55,7 +56,8 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     private Resources resources;
 
     private SparseBooleanArray selectedIds;
-    private LinksFilterType filterType;
+    private FilterType filterType;
+    private long favoriteFilter;
     private String searchText;
 
     public enum SnackbarId {
@@ -109,10 +111,13 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     @BindingAdapter({"progressOverlay"})
     public static void showProgressOverlay(FrameLayout view, boolean progressOverlay) {
         if (progressOverlay) {
-            ActivityUtils.animateAlpha(view, View.VISIBLE, PROGRESS_OVERLAY_ALPHA,
-                    PROGRESS_OVERLAY_DURATION, PROGRESS_OVERLAY_SHOW_DELAY);
+            ActivityUtils.animateAlpha(view, View.VISIBLE,
+                    Settings.GLOBAL_PROGRESS_OVERLAY_ALPHA,
+                    Settings.GLOBAL_PROGRESS_OVERLAY_DURATION,
+                    Settings.GLOBAL_PROGRESS_OVERLAY_SHOW_DELAY);
         } else {
-            ActivityUtils.animateAlpha(view, View.GONE, 0, PROGRESS_OVERLAY_DURATION, 0);
+            ActivityUtils.animateAlpha(view, View.GONE, 0,
+                    Settings.GLOBAL_PROGRESS_OVERLAY_DURATION, 0);
         }
     }
 
@@ -143,6 +148,7 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         outState.putInt(STATE_LIST_SIZE, linkListSize.get());
         outState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray(selectedIds));
         outState.putInt(STATE_FILTER_TYPE, filterType.ordinal());
+        outState.putLong(STATE_FAVORITE_FILTER, favoriteFilter);
         outState.putString(STATE_SEARCH_TEXT, searchText);
         outState.putBoolean(STATE_PROGRESS_OVERLAY, progressOverlay);
     }
@@ -154,7 +160,8 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         actionMode.set(state.getBoolean(STATE_ACTION_MODE));
         linkListSize.set(state.getInt(STATE_LIST_SIZE));
         selectedIds = state.getParcelable(STATE_SELECTED_IDS);
-        setFilterType(LinksFilterType.values()[state.getInt(STATE_FILTER_TYPE)]);
+        setFilterType(FilterType.values()[state.getInt(STATE_FILTER_TYPE)]);
+        setFavoriteFilter(state.getLong(STATE_FAVORITE_FILTER));
         searchText = state.getString(STATE_SEARCH_TEXT);
         progressOverlay = state.getBoolean(STATE_PROGRESS_OVERLAY);
 
@@ -168,7 +175,8 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         // NOTE: do not show empty list warning if empty state is not confirmed
         defaultState.putInt(STATE_LIST_SIZE, Integer.MAX_VALUE);
         defaultState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray());
-        defaultState.putInt(STATE_FILTER_TYPE, LinksFilterType.LINKS_ALL.ordinal());
+        defaultState.putInt(STATE_FILTER_TYPE, FilterType.ALL.ordinal());
+        defaultState.putLong(STATE_FAVORITE_FILTER, 0);
         defaultState.putString(STATE_SEARCH_TEXT, null);
         defaultState.putBoolean(STATE_PROGRESS_OVERLAY, false);
 
@@ -187,6 +195,10 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     public void setLinkListSize(int linkListSize) {
         this.linkListSize.set(linkListSize);
         notifyPropertyChanged(BR.linkListEmpty);
+    }
+
+    public String getFilterPrefix(long rowId) {
+        return "[" + FILTER_PREFIX + rowId + "]";
     }
 
     public String getLinkCounter(int counter) {
@@ -221,14 +233,22 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     }
 
     @Override
-    public LinksFilterType getFilterType() {
+    public FilterType getFilterType() {
         return filterType;
     }
 
     @Override
-    public void setFilterType(LinksFilterType filterType) {
+    public void setFilterType(FilterType filterType) {
         this.filterType = filterType;
-        laanoUiManager.setLinkFilterType(filterType);
+        // TODO: set LINKS_TAB to presenter and request it from presenter
+        // NOTE: do not update title here just set it
+        laanoUiManager.setFilterType(LaanoFragmentPagerAdapter.LINKS_TAB, filterType);
+    }
+
+    @Override
+    public void setFavoriteFilter(long favoriteFilter) {
+        this.favoriteFilter = favoriteFilter;
+        laanoUiManager.setLinkFavoriteFilter(favoriteFilter);
     }
 
     @Override

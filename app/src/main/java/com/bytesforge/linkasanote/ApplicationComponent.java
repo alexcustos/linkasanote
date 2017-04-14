@@ -22,6 +22,10 @@ import com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkPresenterMo
 import com.bytesforge.linkasanote.laano.links.conflictresolution.LinksConflictResolutionComponent;
 import com.bytesforge.linkasanote.laano.links.conflictresolution.LinksConflictResolutionPresenterModule;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
+import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteComponent;
+import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNotePresenterModule;
+import com.bytesforge.linkasanote.laano.notes.conflictresolution.NotesConflictResolutionComponent;
+import com.bytesforge.linkasanote.laano.notes.conflictresolution.NotesConflictResolutionPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsComponent;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenterModule;
 import com.bytesforge.linkasanote.settings.SettingsFragment;
@@ -52,6 +56,7 @@ public interface ApplicationComponent {
     AddEditAccountComponent getAddEditAccountComponent(NextcloudPresenterModule module);
     AddEditFavoriteComponent getAddEditFavoriteComponent(AddEditFavoritePresenterModule module);
     AddEditLinkComponent getAddEditLinkComponent(AddEditLinkPresenterModule module);
+    AddEditNoteComponent getAddEditNoteComponent(AddEditNotePresenterModule module);
     LaanoComponent getLaanoComponent(
             LinksPresenterModule linksPresenterModule,
             FavoritesPresenterModule favoritesPresenterModule,
@@ -62,5 +67,7 @@ public interface ApplicationComponent {
             FavoritesConflictResolutionPresenterModule favoritesConflictResolutionPresenterModule);
     LinksConflictResolutionComponent getLinksConflictResolutionComponent(
             LinksConflictResolutionPresenterModule favoritesConflictResolutionPresenterModule);
+    NotesConflictResolutionComponent getNotesConflictResolutionComponent(
+            NotesConflictResolutionPresenterModule notesConflictResolutionPresenterModule);
     AboutComponent getAboutComponent(AboutPresenterModule module);
 }

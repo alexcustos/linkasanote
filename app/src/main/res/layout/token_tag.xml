@@ -4,11 +4,13 @@
     android:id="@+id/tag_name"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:text="@string/placeholder_title"
+    android:textColor="@drawable/token_text_color"
+    android:textSize="@dimen/token_text_size"
+    android:maxLines="1"
+    android:ellipsize="end"
     android:background="@drawable/token_background"
-    android:textColor="@android:color/white"
     android:paddingTop="@dimen/token_vertical_padding"
     android:paddingBottom="@dimen/token_vertical_padding"
     android:paddingStart="@dimen/token_horizontal_padding"
-    android:paddingEnd="@dimen/token_horizontal_padding"
-    android:textSize="@dimen/token_text_size"
-    android:ellipsize="end" />
+    android:paddingEnd="@dimen/token_horizontal_padding" />

@@ -17,6 +17,7 @@ import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.laano.TagsCompletionView;
 import com.google.common.base.Strings;
 
 import java.util.List;
@@ -39,7 +40,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
     public final ObservableBoolean addButton = new ObservableBoolean();
     private int addButtonText;
 
-    private LinkTagsCompletionView linkTags;
+    private TagsCompletionView linkTags;
     private Context context;
     private AddEditLinkContract.Presenter presenter;
 
@@ -111,7 +112,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
     }
 
     @Override
-    public void setTagsCompletionView(@NonNull LinkTagsCompletionView completionView) {
+    public void setTagsCompletionView(@NonNull TagsCompletionView completionView) {
         linkTags = completionView;
     }
 

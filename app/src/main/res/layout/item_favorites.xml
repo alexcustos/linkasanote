@@ -55,6 +55,19 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
+            android:id="@+id/favorite_filter_prefix"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.getFilterPrefix(favorite.rowId)}"
+            android:textAppearance="@style/FavoritesText.Serial"
+            android:layout_marginStart="@dimen/recycler_view_text_to_button_margin_start"
+            android:layout_marginEnd="@dimen/recycler_view_serial_to_text_margin_end"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintBaseline_toBaselineOf="@+id/favorite_name"
+            app:layout_constraintStart_toEndOf="@+id/favorite_to_links"
+            app:layout_constraintEnd_toStartOf="@+id/favorite_name" />
+
+        <TextView
             android:id="@+id/favorite_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -62,13 +75,12 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textAppearance="@style/FavoritesText.Name"
-            android:layout_marginStart="@dimen/recycler_view_text_to_button_margin_left"
             android:layout_marginEnd="@dimen/recycler_view_nearby_button_margin_end"
             app:layout_constraintVertical_chainStyle="packed"
-            app:layout_constraintBottom_toTopOf="@+id/favorite_tags"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/favorite_to_notes"
-            app:layout_constraintStart_toEndOf="@+id/favorite_to_links" />
+            app:layout_constraintBottom_toTopOf="@+id/favorite_tags"
+            app:layout_constraintStart_toEndOf="@+id/favorite_filter_prefix"
+            app:layout_constraintEnd_toStartOf="@+id/favorite_to_notes" />
 
         <TextView
             android:id="@+id/favorite_tags"
@@ -78,7 +90,7 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textAppearance="@style/FavoritesText"
-            android:layout_marginStart="@dimen/recycler_view_text_to_button_margin_left"
+            android:layout_marginStart="@dimen/recycler_view_text_to_button_margin_start"
             android:layout_marginEnd="@dimen/recycler_view_nearby_button_margin_end"
             app:layout_constraintTop_toBottomOf="@+id/favorite_name"
             app:layout_constraintBottom_toBottomOf="parent"

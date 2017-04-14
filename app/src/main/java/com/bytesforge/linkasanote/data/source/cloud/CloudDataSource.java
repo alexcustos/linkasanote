@@ -12,6 +12,7 @@ import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
+import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
@@ -24,7 +25,6 @@ import com.owncloud.android.lib.resources.files.RemoteFile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -48,19 +48,24 @@ public class CloudDataSource implements DataSource {
     private final CloudLinks cloudLinks;
     private final LocalFavorites localFavorites;
     private final CloudFavorites cloudFavorites;
+    private final LocalNotes localNotes;
+    private final CloudNotes cloudNotes;
 
     private final CompositeDisposable disposable;
 
     public CloudDataSource(
             Context context, BaseSchedulerProvider schedulerProvider,
             LocalLinks localLinks, CloudLinks cloudLinks,
-            LocalFavorites localFavorites, CloudFavorites cloudFavorites) {
+            LocalFavorites localFavorites, CloudFavorites cloudFavorites,
+            LocalNotes localNotes, CloudNotes cloudNotes) {
         this.context = context;
         this.schedulerProvider = schedulerProvider;
         this.localLinks = localLinks;
         this.cloudLinks = cloudLinks;
         this.localFavorites = localFavorites;
         this.cloudFavorites = cloudFavorites;
+        this.localNotes = localNotes;
+        this.cloudNotes = cloudNotes;
 
         disposable = new CompositeDisposable();
     }
@@ -207,26 +212,6 @@ public class CloudDataSource implements DataSource {
         return null;
     }
 
-    // Notes
-
-    @Override
-    public Single<List<Note>> getNotes() {
-        return null;
-    }
-
-    @Override
-    public Single<Note> getNote(@NonNull String noteId) {
-        return null;
-    }
-
-    @Override
-    public void saveNote(@NonNull Note note) {
-    }
-
-    @Override
-    public void deleteAllNotes() {
-    }
-
     // Favorites
 
     @Override
@@ -366,6 +351,148 @@ public class CloudDataSource implements DataSource {
 
     @Override
     public Single<Boolean> isConflictedFavorites() {
+        return null;
+    }
+
+    // Notes
+
+    @Override
+    public Observable<Note> getNotes() {
+        return null;
+    }
+
+    @Override
+    public Single<Note> getNote(@NonNull String noteId) {
+        checkNotNull(noteId);
+
+        return cloudNotes.downloadNote(noteId);
+    }
+
+    @Override
+    public void saveNote(@NonNull final Note note) {
+        checkNotNull(note);
+
+        // NOTE: do not cache, because it can be changed in any time
+        Disposable disposable = getSaveNote(note)
+                .subscribeOn(schedulerProvider.computation())
+                //.observeOn(schedulerProvider.ui())
+                .subscribe(result -> {
+                    int numRows = -1;
+                    if (result.isSuccess()) {
+                        JsonFile jsonFile = (JsonFile) result.getData().get(0);
+                        SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
+                        numRows = localNotes.updateNote(note.getId(), state)
+                                .blockingGet();
+                    } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
+                        SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
+                        numRows = localNotes.updateNote(note.getId(), state)
+                                .blockingGet();
+                    }
+                    if (numRows != 1) {
+                        Log.d(TAG, "Unexpected number of rows were updated [" + numRows + "]");
+                    }
+                }, throwable -> {
+                    if (throwable instanceof NullPointerException) {
+                        Log.e(TAG, "Current state is not suitable for upload [" + note.getId() + "]");
+                    } else {
+                        Log.e(TAG, "An unknown error while preparing to upload. ", throwable);
+                    }
+                });
+        this.disposable.add(disposable);
+    }
+
+    private Single<RemoteOperationResult> getSaveNote(@NonNull final Note note) {
+        return Single.fromCallable(() -> {
+            // Check local
+            String noteId = note.getId();
+            SyncState oldState = null;
+            boolean isReady = false;
+            try {
+                oldState = localNotes.getNoteSyncState(noteId).blockingGet();
+            } catch (NoSuchElementException e) {
+                isReady = true;
+            } catch (NullPointerException e) {
+                return null;
+            }
+            if (oldState != null && !oldState.isDeleted()) {
+                isReady = true;
+            }
+            if (!isReady) return null;
+            // Check cloud
+            try {
+                RemoteFile file = cloudNotes.readNoteFile(noteId).blockingGet();
+                if (oldState == null || !file.getEtag().equals(oldState.getETag())) {
+                    return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
+                }
+            } catch (NoSuchElementException e) {
+                // NOTE: It's expected state if there is no file in the cloud
+            }
+            return cloudNotes.uploadNote(note).blockingGet();
+        });
+    }
+
+    @Override
+    public void deleteAllNotes() {
+    }
+
+    @Override
+    public void deleteNote(@NonNull String noteId) {
+        checkNotNull(noteId);
+
+        Disposable disposable = getDeleteNote(noteId)
+                .subscribeOn(schedulerProvider.computation())
+                .subscribe(result -> {
+                    int numRows = -1;
+                    if (result.isSuccess()) {
+                        numRows = localNotes.deleteNote(noteId).blockingGet();
+                    } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
+                        SyncState state = new SyncState(SyncState.State.CONFLICTED_DELETE);
+                        numRows = localNotes.updateNote(noteId, state).blockingGet();
+                    }
+                    if (numRows != 1) {
+                        Log.e(TAG, "Unexpected number of rows were processed [" + numRows + "]");
+                    }
+                }, throwable -> {
+                    if (throwable instanceof NullPointerException) {
+                        Log.e(TAG, "Current state is not suitable for delete [" + noteId + "]");
+                    } else {
+                        Log.e(TAG, "An unknown error while preparing to delete. ", throwable);
+                    }
+                });
+        this.disposable.add(disposable);
+    }
+
+    private Single<RemoteOperationResult> getDeleteNote(@NonNull final String noteId) {
+        return Single.fromCallable(() -> {
+            // Check local
+            SyncState state = null;
+            boolean isReady = false;
+            try {
+                state = localNotes.getNoteSyncState(noteId).blockingGet();
+            } catch (NoSuchElementException e) {
+                isReady = true;
+            } catch (NullPointerException e) {
+                return null;
+            }
+            if (state != null && state.isDeleted()) {
+                isReady = true;
+            }
+            if (!isReady) return null;
+            // Check cloud
+            try {
+                RemoteFile file = cloudNotes.readNoteFile(noteId).blockingGet();
+                if (state != null && !file.getEtag().equals(state.getETag())) {
+                    return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
+                }
+            } catch (NoSuchElementException e) {
+                return new RemoteOperationResult(RemoteOperationResult.ResultCode.OK);
+            }
+            return cloudNotes.deleteNote(noteId).blockingGet();
+        });
+    }
+
+    @Override
+    public Single<Boolean> isConflictedNotes() {
         return null;
     }
 

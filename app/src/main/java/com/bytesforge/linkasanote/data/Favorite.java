@@ -29,6 +29,7 @@ public final class Favorite implements Comparable<Favorite> {
     private static final String TAG = Favorite.class.getSimpleName();
 
     public static final String CLOUD_DIRECTORY_NAME = "favorites";
+    public static final String SETTING_LAST_SYNCED_ETAG = "FAVORITES_LAST_SYNCED_ETAG";
 
     private static final int JSON_VERSION = 1;
     private static final String JSON_CONTAINER_VERSION = "version";

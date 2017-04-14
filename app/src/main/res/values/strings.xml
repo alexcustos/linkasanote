@@ -47,6 +47,8 @@
     <string name="actionbar_title_new_favorite">New Favorite</string>
     <string name="actionbar_title_edit_favorite">Edit Favorite</string>
     <string name="actionbar_title_about">About</string>
+    <string name="filter_all">All</string>
+    <string name="filter_conflicted">Conflicted</string>
     <string name="add_edit_account_permission_get_accounts">GET ACCOUNTS (Contacts) permission is needed to check possibility to add new account</string>
     <string name="add_edit_accounts_unsupported_multiple_accounts">Multiple accounts are not supported yet</string>
     <string name="add_edit_account_nextcloud_description">Nextcloud storage will be used to backup and synchronize the application data</string>
@@ -115,8 +117,6 @@
     <string name="laano_actionbar_manager_sync_title">Up: %1$d / dl: %2$d</string>
     <string name="toolbar_favorites_item_filter">Favorite filter</string>
     <string name="toolbar_favorites_search">Search</string>
-    <string name="filter_favorites_all">All</string>
-    <string name="filter_favorites_conflicted">Conflicted</string>
     <string name="favorites_delete_confirmation_title">Delete confirmation</string>
     <string name="dialog_favorite_conflict_title_local">Local:</string>
     <string name="dialog_favorite_conflict_title_cloud">Cloud:</string>
@@ -166,7 +166,7 @@
     <string name="add_edit_link_edit_button_title">Update</string>
     <string name="add_edit_link_warning_empty">The Link must be specified</string>
     <string name="add_edit_link_warning_not_existed">Requested Link has not already existed</string>
-    <string name="add_edit_link_error_link_duplicated">This link already exists</string>
+    <string name="add_edit_link_error_link_duplicated">This Link already exists</string>
     <string name="add_edit_link_disabled_hint">Disable the open button, useful for broken links</string>
     <string name="action_mode_links_delete">Delete</string>
     <string name="action_mode_links_select_all">Check/Uncheck all Links</string>
@@ -174,8 +174,6 @@
     <string name="toolbar_links_item_action_mode">Switch to edit mode</string>
     <string name="toolbar_links_item_filter">Link filter</string>
     <string name="toolbar_links_search">Search</string>
-    <string name="filter_links_all">All</string>
-    <string name="filter_links_conflicted">Conflicted</string>
     <string name="links_delete_confirmation_title">Delete confirmation</string>
     <string name="dialog_link_conflict_title_local">Local:</string>
     <string name="dialog_link_conflict_title_cloud">Cloud:</string>
@@ -194,6 +192,45 @@
     <string name="card_button_collapse_notes_description">Expand Notes</string>
     <string name="card_link_tags_caption">Tags</string>
 
+    <string name="actionbar_title_new_note">New Note</string>
+    <string name="actionbar_title_edit_note">Edit Note</string>
+    <string name="item_notes_note_to_links_button">Apply Note filter to Links</string>
+    <string name="item_notes_note_to_notes_button">Apply Note filter to Notes</string>
+    <string name="item_notes_edit_button">Edit Note</string>
+    <string name="item_notes_checkbox">Check Note</string>
+    <string name="notes_empty_title">List is empty</string>
+    <string name="add_edit_note_note_hint">Note</string>
+    <string name="add_edit_note_tags_hint">Tags</string>
+    <string name="add_edit_note_tags_validation_error">Only alphanumeric and space is allowed here, comma is used as the separator</string>
+    <string name="add_edit_note_new_button_title">Create</string>
+    <string name="add_edit_note_edit_button_title">Update</string>
+    <string name="add_edit_note_warning_empty">The Note must be specified</string>
+    <string name="add_edit_note_warning_not_existed">Requested Note has not already existed</string>
+    <string name="add_edit_note_error_note_duplicated">This Note is already exists</string>
+    <string name="action_mode_notes_delete">Delete</string>
+    <string name="action_mode_notes_select_all">Check/Uncheck all Notes</string>
+    <string name="laano_notes_action_mode_selected">%1$d of %2$d selected</string>
+    <string name="toolbar_notes_item_action_mode">Switch to edit mode</string>
+    <string name="toolbar_notes_item_expand_all">Show all Notes</string>
+    <string name="toolbar_notes_item_collapse_all">Hide all Notes</string>
+    <string name="toolbar_notes_item_filter">Note filter</string>
+    <string name="toolbar_notes_search">Search</string>
+    <string name="toolbar_note_item_paste">Paste</string>
+    <string name="notes_delete_confirmation_title">Delete confirmation</string>
+    <string name="dialog_note_conflict_title_local">Local:</string>
+    <string name="dialog_note_conflict_title_cloud">Cloud:</string>
+    <string name="dialog_note_conflict_status_loading">Loading…</string>
+    <string name="dialog_note_conflict_state_no_conflict">no conflict</string>
+    <string name="dialog_note_conflict_state_deleted">deleted</string>
+    <string name="dialog_note_conflict_state_updated">updated</string>
+    <string name="dialog_note_conflict_state_duplicated">duplicated</string>
+    <string name="dialog_note_conflict_state_not_found">not found</string>
+    <string name="dialog_note_conflict_state_error">error</string>
+    <string name="dialog_note_conflict_status_error_download">There was an error while downloading</string>
+    <string name="dialog_note_conflict_resolved_success">Conflict is successfully resolved</string>
+    <string name="dialog_note_conflict_resolved_error">There was an error while trying to resolve the conflict</string>
+
+
     <plurals name="sync_adapter_text_failed_favorites">
         <item quantity="one">There was an error with %d Favorite</item>
         <item quantity="other">There was an error with %d Favorites</item>
@@ -209,5 +246,13 @@
     <plurals name="links_delete_confirmation_message">
         <item quantity="one">Are you sure you want to permanently delete selected Link?</item>
         <item quantity="other">Are you sure you want to permanently delete %d selected Links?</item>
+    </plurals>
+    <plurals name="sync_adapter_text_failed_notes">
+        <item quantity="one">There was an error with %d Note</item>
+        <item quantity="other">There was an error with %d Notes</item>
+    </plurals>
+    <plurals name="notes_delete_confirmation_message">
+        <item quantity="one">Are you sure you want to permanently delete selected Note?</item>
+        <item quantity="other">Are you sure you want to permanently delete %d selected Notes?</item>
     </plurals>
 </resources>

@@ -27,6 +27,7 @@ import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoFavoritesBinding;
+import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteActivity;
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteFragment;
 import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionDialog;
@@ -228,15 +229,15 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     private void showFilteringPopupMenu() {
         PopupMenu menu = new PopupMenu(
                 getContext(), getActivity().findViewById(R.id.toolbar_favorites_filter));
-        menu.getMenuInflater().inflate(R.menu.filter_favorites, menu.getMenu());
+        menu.getMenuInflater().inflate(R.menu.filter, menu.getMenu());
         menu.setOnMenuItemClickListener(item -> {
 
             switch (item.getItemId()) {
-                case R.id.favorites_all:
-                    presenter.setFilterType(FavoritesFilterType.FAVORITES_ALL);
+                case R.id.filter_all:
+                    presenter.setFilterType(FilterType.ALL);
                     break;
-                case R.id.favorites_conflicted:
-                    presenter.setFilterType(FavoritesFilterType.FAVORITES_CONFLICTED);
+                case R.id.filter_conflicted:
+                    presenter.setFilterType(FilterType.CONFLICTED);
                     break;
             }
             presenter.loadFavorites(false);

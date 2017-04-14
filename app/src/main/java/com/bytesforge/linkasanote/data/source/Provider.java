@@ -167,6 +167,20 @@ public class Provider extends ContentProvider {
                 selection = favoriteTable + LocalContract.FavoriteEntry._ID + " = ?";
                 selectionArgs = new String[]{LocalContract.FavoriteEntry.getIdFrom(uri)};
                 break;
+            case NOTE:
+                tableName = LocalContract.NoteEntry.TABLE_NAME;
+                break;
+            case NOTE_ITEM:
+                tableName = LocalContract.NoteEntry.TABLE_NAME;
+                selection = LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID + " = ?";
+                selectionArgs = new String[]{LocalContract.NoteEntry.getIdFrom(uri)};
+                break;
+            case NOTE_TAG:
+                String noteTable = LocalContract.NoteEntry.TABLE_NAME;
+                tableName = sqlJoinManyToManyWithTags(noteTable);
+                selection = noteTable + LocalContract.NoteEntry._ID + " = ?";
+                selectionArgs = new String[]{LocalContract.NoteEntry.getIdFrom(uri)};
+                break;
             case TAG:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
                 break;
@@ -242,6 +256,28 @@ public class Provider extends ContentProvider {
                     db.endTransaction();
                 }
                 break;
+            case NOTE:
+                db.beginTransaction();
+                try {
+                    rowId = updateOrInsert(db, LocalContract.NoteEntry.TABLE_NAME,
+                            LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID, values);
+                    db.setTransactionSuccessful();
+                    returnUri = LocalContract.NoteEntry.buildUriWith(rowId);
+                } finally {
+                    db.endTransaction();
+                }
+                break;
+            case NOTE_TAG:
+                db.beginTransaction();
+                try {
+                    rowId = appendTag(db, LocalContract.NoteEntry.TABLE_NAME,
+                            LocalContract.NoteEntry.getIdFrom(uri), values);
+                    db.setTransactionSuccessful();
+                    returnUri = LocalContract.TagEntry.buildUriWith(rowId);
+                } finally {
+                    db.endTransaction();
+                }
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown insert uri [" + uri + "]");
         }
@@ -264,9 +300,6 @@ public class Provider extends ContentProvider {
                 selection = LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID + " = ?";
                 selectionArgs = new String[]{LocalContract.LinkEntry.getIdFrom(uri)};
                 break;
-            case NOTE:
-                tableName = LocalContract.NoteEntry.TABLE_NAME;
-                break;
             case FAVORITE:
                 tableName = LocalContract.FavoriteEntry.TABLE_NAME;
                 break;
@@ -274,6 +307,14 @@ public class Provider extends ContentProvider {
                 tableName = LocalContract.FavoriteEntry.TABLE_NAME;
                 selection = LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID + " = ?";
                 selectionArgs = new String[]{LocalContract.FavoriteEntry.getIdFrom(uri)};
+                break;
+            case NOTE:
+                tableName = LocalContract.NoteEntry.TABLE_NAME;
+                break;
+            case NOTE_ITEM:
+                tableName = LocalContract.NoteEntry.TABLE_NAME;
+                selection = LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID + " = ?";
+                selectionArgs = new String[]{LocalContract.NoteEntry.getIdFrom(uri)};
                 break;
             case TAG:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
@@ -322,6 +363,23 @@ public class Provider extends ContentProvider {
                     String idValue = LocalContract.FavoriteEntry.getIdFrom(uri);
                     long rowId = updateEntry(db, LocalContract.FavoriteEntry.TABLE_NAME,
                             LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID, idValue,
+                            values);
+                    numRows = rowId > 0 ? 1 : 0;
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                break;
+            case NOTE:
+                numRows = db.update(LocalContract.NoteEntry.TABLE_NAME,
+                        values, selection, selectionArgs);
+                break;
+            case NOTE_ITEM:
+                db.beginTransaction();
+                try {
+                    String idValue = LocalContract.NoteEntry.getIdFrom(uri);
+                    long rowId = updateEntry(db, LocalContract.NoteEntry.TABLE_NAME,
+                            LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID, idValue,
                             values);
                     numRows = rowId > 0 ? 1 : 0;
                     db.setTransactionSuccessful();

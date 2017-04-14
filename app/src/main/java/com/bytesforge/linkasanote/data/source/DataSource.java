@@ -7,8 +7,6 @@ import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 
-import java.util.List;
-
 import io.reactivex.Observable;
 import io.reactivex.Single;
 
@@ -21,17 +19,19 @@ public interface DataSource {
     void deleteLink(@NonNull String linkId);
     Single<Boolean> isConflictedLinks();
 
-    Single<List<Note>> getNotes();
-    Single<Note> getNote(@NonNull String noteId);
-    void saveNote(@NonNull Note note);
-    void deleteAllNotes();
-
     Observable<Favorite> getFavorites();
     Single<Favorite> getFavorite(@NonNull String favoriteId);
     void saveFavorite(@NonNull Favorite favorite);
     void deleteAllFavorites();
     void deleteFavorite(@NonNull String favoriteId);
     Single<Boolean> isConflictedFavorites();
+
+    Observable<Note> getNotes();
+    Single<Note> getNote(@NonNull String noteId);
+    void saveNote(@NonNull Note note);
+    void deleteAllNotes();
+    void deleteNote(@NonNull String noteId);
+    Single<Boolean> isConflictedNotes();
 
     Observable<Tag> getTags();
     Single<Tag> getTag(@NonNull String tagId);

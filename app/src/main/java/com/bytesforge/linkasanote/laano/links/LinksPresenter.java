@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
@@ -111,9 +112,9 @@ public final class LinksPresenter implements LinksContract.Presenter {
                         if (!found) return false;
                     }
                     switch (viewModel.getFilterType()) {
-                        case LINKS_CONFLICTED:
+                        case CONFLICTED:
                             return link.isConflicted();
-                        case LINKS_ALL:
+                        case ALL:
                         default:
                             Log.i(TAG, "Filter ALL");
                             return true;
@@ -144,7 +145,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
         // TODO: normal mode selection must highlight current link filter
         if (viewModel.isActionMode()) {
             onLinkSelected(linkId);
-        } else if (isConflicted){
+        } else if (isConflicted) {
             view.showConflictResolution(linkId);
         }
     }
@@ -219,14 +220,13 @@ public final class LinksPresenter implements LinksContract.Presenter {
     }
 
     @Override
-    public void setFilterType(@NonNull LinksFilterType filterType) {
+    public void setFilterType(@NonNull FilterType filterType) {
         viewModel.setFilterType(filterType);
         laanoUiManager.updateTitle(LaanoFragmentPagerAdapter.LINKS_TAB);
     }
 
     @Override
     public void updateTabNormalState() {
-        laanoUiManager.setTabNormalState(
-                LaanoFragmentPagerAdapter.LINKS_TAB, isConflicted());
+        laanoUiManager.setTabNormalState(LaanoFragmentPagerAdapter.LINKS_TAB, isConflicted());
     }
 }

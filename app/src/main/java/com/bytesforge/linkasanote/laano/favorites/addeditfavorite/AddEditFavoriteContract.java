@@ -8,6 +8,7 @@ import com.bytesforge.linkasanote.BasePresenter;
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.laano.TagsCompletionView;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public interface AddEditFavoriteContract {
         void applyInstanceState(@NonNull Bundle state);
         Bundle getDefaultInstanceState();
 
-        void setTagsCompletionView(@NonNull FavoriteTagsCompletionView completionView);
+        void setTagsCompletionView(@NonNull TagsCompletionView completionView);
         void showEmptyFavoriteSnackbar();
         void showFavoriteNotFoundSnackbar();
         void showDuplicateKeyError();

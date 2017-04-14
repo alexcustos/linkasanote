@@ -223,13 +223,13 @@ public class CloudFavorites {
     public boolean isCloudDataSourceChanged(@NonNull final String eTag) {
         checkNotNull(eTag);
 
-        String lastSyncedETag = settings.getFavoritesLastSyncedETag();
+        String lastSyncedETag = settings.getLastSyncedETag(Favorite.SETTING_LAST_SYNCED_ETAG);
         return lastSyncedETag == null || !lastSyncedETag.equals(eTag);
     }
 
     public synchronized void updateLastSyncedETag(@NonNull final String eTag) {
         checkNotNull(eTag);
-        settings.setFavoritesLastSyncedETag(eTag);
+        settings.setLastSyncedETag(Favorite.SETTING_LAST_SYNCED_ETAG, eTag);
     }
 
     @Nullable

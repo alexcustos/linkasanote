@@ -223,13 +223,13 @@ public class CloudLinks {
     public boolean isCloudDataSourceChanged(@NonNull final String eTag) {
         checkNotNull(eTag);
 
-        String lastSyncedETag = settings.getLinksLastSyncedETag();
+        String lastSyncedETag = settings.getLastSyncedETag(Link.SETTING_LAST_SYNCED_ETAG);
         return lastSyncedETag == null || !lastSyncedETag.equals(eTag);
     }
 
     public synchronized void updateLastSyncedETag(@NonNull final String eTag) {
         checkNotNull(eTag);
-        settings.setLinksLastSyncedETag(eTag);
+        settings.setLastSyncedETag(Link.SETTING_LAST_SYNCED_ETAG, eTag);
     }
 
     @Nullable

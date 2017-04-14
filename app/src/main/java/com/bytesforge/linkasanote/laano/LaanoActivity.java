@@ -104,6 +104,8 @@ public class LaanoActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
 
+        laanoUiManager.updateTitle(activeTab);
+
         IntentFilter syncIntentFilter = new IntentFilter();
         syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC);
         syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_LINKS);
@@ -151,6 +153,7 @@ public class LaanoActivity extends AppCompatActivity implements
         ViewPager viewPager = binding.laanoViewPager;
         setupViewPager(viewPager, pagerAdapter);
         viewPager.setCurrentItem(activeTab);
+        viewPager.setOffscreenPageLimit(2);
         // TabLayout
         setupTabLayout(binding.tabLayout, viewPager);
         // Presenters
@@ -159,7 +162,7 @@ public class LaanoActivity extends AppCompatActivity implements
                 .getLaanoComponent(
                         new LinksPresenterModule(this, pagerAdapter.getLinksFragment()),
                         new FavoritesPresenterModule(this, pagerAdapter.getFavoritesFragment()),
-                        new NotesPresenterModule(pagerAdapter.getNotesFragment()),
+                        new NotesPresenterModule(this, pagerAdapter.getNotesFragment()),
                         new LaanoUiManagerModule(this, binding.tabLayout,
                                 binding.navView.getMenu(), viewModel.headerViewModel, pagerAdapter))
                 .inject(this);
@@ -171,7 +174,6 @@ public class LaanoActivity extends AppCompatActivity implements
         linksPresenter.updateTabNormalState();
         favoritesPresenter.updateTabNormalState();
         notesPresenter.updateTabNormalState();
-        laanoUiManager.updateTitle(activeTab);
         updateDefaultAccount();
     }
 

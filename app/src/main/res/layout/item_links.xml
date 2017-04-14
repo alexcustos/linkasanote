@@ -33,10 +33,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/item_links_link_open_button"
-                android:paddingStart="@dimen/card_left_button_padding_start"
-                android:paddingEnd="@dimen/card_button_padding"
                 android:paddingTop="@dimen/card_button_padding_vertical"
                 android:paddingBottom="@dimen/card_button_padding_vertical"
+                android:paddingStart="@dimen/card_left_button_padding_start"
+                android:paddingEnd="@dimen/card_button_padding"
                 android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
                 android:onClick="@{() -> presenter.onLinkOpenClick(link.id)}"
                 style="@style/Button.RecyclerView"
@@ -59,29 +59,41 @@
                 app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
+                android:id="@+id/link_filter_prefix"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{viewModel.getFilterPrefix(link.rowId)}"
+                android:textAppearance="@style/LinksText.Serial"
+                android:layout_marginStart="@dimen/card_text_to_button_margin_start"
+                android:layout_marginEnd="@dimen/card_prefix_to_text_margin_end"
+                app:layout_constraintHorizontal_chainStyle="spread"
+                app:layout_constraintBaseline_toBaselineOf="@+id/link_name"
+                app:layout_constraintStart_toEndOf="@+id/link_open_button"
+                app:layout_constraintEnd_toStartOf="@+id/link_name" />
+
+            <TextView
                 android:id="@+id/link_name"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/card_text_to_button_margin_left"
                 android:layout_marginEnd="@dimen/card_nearby_button_margin_end"
                 android:text="@{link.name ?? link.link}"
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:textAppearance="@style/LinksText.Name"
-                app:layout_constraintEnd_toStartOf="@+id/link_to_notes"
-                app:layout_constraintStart_toEndOf="@+id/link_open_button"
+                app:layout_constraintTop_toTopOf="@+id/link_open_button"
                 app:layout_constraintBottom_toBottomOf="@+id/link_open_button"
-                app:layout_constraintTop_toTopOf="@+id/link_open_button" />
+                app:layout_constraintStart_toEndOf="@+id/link_filter_prefix"
+                app:layout_constraintEnd_toStartOf="@+id/link_to_notes" />
 
             <ImageButton
                 android:id="@+id/link_to_notes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/item_links_link_to_notes_button"
-                android:paddingStart="@dimen/card_button_padding"
-                android:paddingEnd="@dimen/card_right_button_padding_end"
                 android:paddingTop="@dimen/card_button_padding_vertical"
                 android:paddingBottom="@dimen/card_button_padding_vertical"
+                android:paddingStart="@dimen/card_button_padding"
+                android:paddingEnd="@dimen/card_right_button_padding_end"
                 android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
                 android:onClick="@{() -> presenter.onToNotesClick(link.id)}"
                 style="@style/Button.RecyclerView"
@@ -95,17 +107,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/item_links_edit_button"
-                android:paddingStart="@dimen/card_button_padding"
-                android:paddingEnd="@dimen/card_right_button_padding_end"
                 android:paddingTop="@dimen/card_button_padding_vertical"
                 android:paddingBottom="@dimen/card_button_padding_vertical"
+                android:paddingStart="@dimen/card_button_padding"
+                android:paddingEnd="@dimen/card_right_button_padding_end"
                 android:visibility="@{viewModel.actionMode ? View.VISIBLE : View.GONE}"
                 android:onClick="@{() -> presenter.onEditClick(link.id)}"
                 style="@style/Button.RecyclerView"
                 app:srcCompat="@drawable/ic_edit"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/link_to_notes"
                 app:layout_constraintBottom_toBottomOf="@+id/link_to_notes"
-                app:layout_constraintTop_toTopOf="@+id/link_to_notes" />
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <TextView
                 android:id="@+id/link_link"

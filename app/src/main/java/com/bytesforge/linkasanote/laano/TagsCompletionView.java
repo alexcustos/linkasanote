@@ -1,4 +1,4 @@
-package com.bytesforge.linkasanote.laano.links.addeditlink;
+package com.bytesforge.linkasanote.laano;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -9,9 +9,9 @@ import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.utils.TokenTextView;
 import com.tokenautocomplete.TokenCompleteTextView;
 
-public class LinkTagsCompletionView extends TokenCompleteTextView<Tag> {
+public class TagsCompletionView extends TokenCompleteTextView<Tag> {
 
-    public LinkTagsCompletionView(Context context, AttributeSet attrs) {
+    public TagsCompletionView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 

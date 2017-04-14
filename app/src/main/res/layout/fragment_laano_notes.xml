@@ -1,9 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:bind="http://schemas.android.com/tools">
 
-    <TextView
-        android:id="@+id/text_view"
+    <data>
+        <import type="android.view.View" />
+
+        <variable name="viewModel"
+            type="com.bytesforge.linkasanote.laano.notes.NotesViewModel" />
+    </data>
+
+    <FrameLayout
+        android:id="@+id/snackbar_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center" />
+        bind:snackbarId="@{viewModel.snackbarId}">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_notes"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical"
+            android:visibility="@{viewModel.noteListEmpty ? View.GONE : View.VISIBLE}" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:drawableTop="@drawable/ic_note_48dp"
+            android:text="@string/notes_empty_title"
+            android:visibility="@{viewModel.noteListEmpty ? View.VISIBLE : View.GONE}" />
+
+        <FrameLayout
+            android:id="@+id/progress_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            android:background="@android:color/black"
+            android:clickable="true"
+            android:visibility="gone"
+            bind:progressOverlay="@{viewModel.progressOverlay}">
+
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminate="true" />
+        </FrameLayout>
+    </FrameLayout>
 </layout>

@@ -17,6 +17,7 @@ import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.laano.TagsCompletionView;
 import com.google.common.base.Strings;
 
 import java.util.List;
@@ -35,7 +36,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     public final ObservableBoolean addButton = new ObservableBoolean();
     private int addButtonText;
 
-    private FavoriteTagsCompletionView favoriteTags;
+    private TagsCompletionView favoriteTags;
     private Context context;
     private AddEditFavoriteContract.Presenter presenter;
 
@@ -101,7 +102,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     }
 
     @Override
-    public void setTagsCompletionView(@NonNull FavoriteTagsCompletionView completionView) {
+    public void setTagsCompletionView(@NonNull TagsCompletionView completionView) {
         favoriteTags = completionView;
     }
 

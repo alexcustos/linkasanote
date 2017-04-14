@@ -3,17 +3,43 @@ package com.bytesforge.linkasanote.data;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
+import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
+import com.bytesforge.linkasanote.sync.SyncState;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
-public final class Note {
+public final class Note implements Comparable<Note> {
 
-    public static final String CLOUD_DIRECTORY = "notes";
+    private static final String TAG = Note.class.getSimpleName();
+
+    public static final String CLOUD_DIRECTORY_NAME = "notes";
+    public static final String SETTING_LAST_SYNCED_ETAG = "NOTES_LAST_SYNCED_ETAG";
+
+    private static final int JSON_VERSION = 1;
+    private static final String JSON_CONTAINER_VERSION = "version";
+    private static final String JSON_CONTAINER_NOTE = "note";
+
+    private static final String JSON_PROPERTY_ID = "id";
+    private static final String JSON_PROPERTY_CREATED = "created";
+    private static final String JSON_PROPERTY_UPDATED = "updated";
+    private static final String JSON_PROPERTY_NOTE = "note";
+    private static final String JSON_PROPERTY_TAGS = "tags";
 
     @NonNull
     private final String id;
@@ -21,84 +47,155 @@ public final class Note {
     private final long created;
     private final long updated;
 
+    @Nullable
+    private final String note;
+
+    @Nullable
+    private final List<Tag> tags;
+
     @NonNull
-    private final String excerpt;
+    private final SyncState state;
 
-    private final boolean deleted;
-    private final boolean synced;
+    public Note(String note, List<Tag> tags) {
+        this(generateKey(), currentTimeMillis(), currentTimeMillis(), note, tags, new SyncState());
+    }
 
-    public Note(@NonNull String excerpt) {
-        this(generateKey(), currentTimeMillis(), currentTimeMillis(), excerpt, false, false);
+    public Note(String id, String note, List<Tag> tags) {
+        // NOTE: updating syncState must not change update entry
+        this(id, 0, currentTimeMillis(), note, tags, new SyncState());
     }
 
     @VisibleForTesting
-    public Note(@NonNull String id, @NonNull String excerpt) {
-        this(id, currentTimeMillis(), currentTimeMillis(), excerpt, false, false);
+    public Note(String id, String note, List<Tag> tags, SyncState state) {
+        this(id, 0, currentTimeMillis(), note, tags, state);
     }
 
     public Note(
-            @NonNull String id, long created, long updated,
-            @NonNull String excerpt,
-            boolean deleted, boolean synced) {
-        this.id = id;
-
+            @NonNull String id, long created, long updated, @Nullable String note,
+            @Nullable List<Tag> tags, @NonNull SyncState state) {
+        this.id = checkNotNull(id);
         this.created = created;
         this.updated = updated;
-
-        this.excerpt = excerpt;
-
-        this.deleted = deleted;
-        this.synced = synced;
+        this.note = note;
+        this.tags = (tags == null || tags.isEmpty() ? null : tags);
+        this.state = checkNotNull(state);
     }
 
-    public static Note from(Cursor cursor) {
+    public Note(Note note, @NonNull SyncState state) {
+        this(note.getId(), note.getCreated(), note.getUpdated(), note.getNote(),
+                note.getTags(), state);
+    }
+
+    public static Note from(Cursor cursor, List<Tag> tags) {
+        SyncState state = SyncState.from(cursor);
+
         String id = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID));
-
         long created = cursor.getLong(cursor.getColumnIndexOrThrow(
                 LocalContract.NoteEntry.COLUMN_NAME_CREATED));
         long updated = cursor.getLong(cursor.getColumnIndexOrThrow(
                 LocalContract.NoteEntry.COLUMN_NAME_UPDATED));
-
-        String excerpt = cursor.getString(cursor.getColumnIndexOrThrow(
+        String note = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.NoteEntry.COLUMN_NAME_NOTE));
 
-        boolean deleted = cursor.getInt(cursor.getColumnIndexOrThrow(
-                LocalContract.NoteEntry.COLUMN_NAME_DELETED)) == 1;
-        boolean synced = cursor.getInt(cursor.getColumnIndexOrThrow(
-                LocalContract.NoteEntry.COLUMN_NAME_SYNCED)) == 1;
-
-        return new Note(id, created, updated, excerpt, deleted, synced);
+        return new Note(id, created, updated, note, tags, state);
     }
 
-    public static Note from(ContentValues values) {
-        String id = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID);
+    public static Note from(ContentValues values, List<Tag> tags) {
+        SyncState state = SyncState.from(values);
 
+        String id = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID);
         long created = values.getAsLong(LocalContract.NoteEntry.COLUMN_NAME_CREATED);
         long updated = values.getAsLong(LocalContract.NoteEntry.COLUMN_NAME_UPDATED);
+        String note = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_NOTE);
 
-        String excerpt = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_NOTE);
+        return new Note(id, created, updated, note, tags, state);
+    }
 
-        boolean deleted = values.getAsInteger(LocalContract.NoteEntry.COLUMN_NAME_DELETED) == 1;
-        boolean synced = values.getAsInteger(LocalContract.NoteEntry.COLUMN_NAME_SYNCED) == 1;
+    @Nullable
+    public static Note from(String jsonNoteString, SyncState state) {
+        try {
+            JSONObject jsonNote = new JSONObject(jsonNoteString);
+            return from(jsonNote, state);
+        } catch (JSONException e) {
+            Log.v(TAG, "Exception while processing Note JSON string");
+            return null;
+        }
+    }
 
-        return new Note(id, created, updated, excerpt, deleted, synced);
+    @Nullable
+    public static Note from(JSONObject jsonContainer, SyncState state) {
+        int version;
+        try {
+            version = jsonContainer.getInt(JSON_CONTAINER_VERSION);
+        } catch (JSONException e) {
+            Log.v(TAG, "Exception while checking Note JSON object version");
+            return null;
+        }
+        if (version != JSON_VERSION) {
+            Log.v(TAG, "An unsupported version of JSON object was detected [" + version + "]");
+            return null;
+        }
+        try {
+            JSONObject jsonNote = jsonContainer.getJSONObject(JSON_CONTAINER_NOTE);
+            String id = jsonNote.getString(JSON_PROPERTY_ID);
+            long created = jsonNote.getLong(JSON_PROPERTY_CREATED);
+            long updated = jsonNote.getLong(JSON_PROPERTY_UPDATED);
+            String note = jsonNote.getString(JSON_PROPERTY_NOTE);
+            JSONArray jsonTags = jsonNote.getJSONArray(JSON_PROPERTY_TAGS);
+            List<Tag> tags = new ArrayList<>();
+            for (int i = 0; i < jsonTags.length(); i++) {
+                tags.add(Tag.from(jsonTags.getJSONObject(i)));
+            }
+            return new Note(id, created, updated, note, tags, state);
+        } catch (JSONException e) {
+            Log.v(TAG, "Exception while processing Note JSON object");
+            return null;
+        }
     }
 
     public ContentValues getContentValues() {
-        ContentValues values = new ContentValues();
+        ContentValues values = state.getContentValues();
 
         values.put(LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID, getId());
-
-        values.put(LocalContract.NoteEntry.COLUMN_NAME_CREATED, getCreated());
+        long created = getCreated();
+        if (created > 0) {
+            // NOTE: CURRENT_TIMESTAMP will add another dateTime format to maintain
+            values.put(LocalContract.NoteEntry.COLUMN_NAME_CREATED, created);
+        }
         values.put(LocalContract.NoteEntry.COLUMN_NAME_UPDATED, getUpdated());
-
-        values.put(LocalContract.NoteEntry.COLUMN_NAME_NOTE, getExcerpt());
-
-        values.put(LocalContract.NoteEntry.COLUMN_NAME_DELETED, isDeleted() ? 1 : 0);
-        values.put(LocalContract.NoteEntry.COLUMN_NAME_SYNCED, isSynced() ? 1 : 0);
+        values.put(LocalContract.NoteEntry.COLUMN_NAME_NOTE, getNote());
 
         return values;
+    }
+
+    public long getRowId() {
+        return state.getRowId();
+    }
+
+    @Nullable
+    public String getETag() {
+        return state.getETag();
+    }
+
+    public int getDuplicated() {
+        return state.getDuplicated();
+    }
+
+    public boolean isDuplicated() {
+        return state.isDuplicated();
+    }
+
+    public boolean isConflicted() {
+        return state.isConflicted();
+    }
+
+    public boolean isDeleted() {
+        return state.isDeleted();
+    }
+
+    public boolean isSynced() {
+        return state.isSynced();
     }
 
     @NonNull
@@ -114,17 +211,53 @@ public final class Note {
         return updated;
     }
 
-    @NonNull
-    public String getExcerpt() {
-        return excerpt;
+    @Nullable
+    public String getNote() {
+        return note;
     }
 
-    public boolean isDeleted() {
-        return deleted;
+    @Nullable
+    public List<Tag> getTags() {
+        return tags;
     }
 
-    public boolean isSynced() {
-        return synced;
+    @Nullable
+    public String getTagsAsString() {
+        if (tags != null) {
+            Joiner joiner = Joiner.on(", ");
+            return joiner.join(tags);
+        }
+        return null;
+    }
+
+    @Nullable
+    public JSONObject getJsonObject() {
+        if (isEmpty()) return null;
+        assert tags != null;
+
+        JSONObject jsonContainer = new JSONObject();
+        try {
+            JSONObject jsonNote = new JSONObject();
+            jsonNote.put(JSON_PROPERTY_ID, id);
+            jsonNote.put(JSON_PROPERTY_CREATED, created);
+            jsonNote.put(JSON_PROPERTY_UPDATED, updated);
+            jsonNote.put(JSON_PROPERTY_NOTE, note);
+            JSONArray jsonTags = new JSONArray();
+            for (Tag tag : tags) {
+                jsonTags.put(tag.getJsonObject());
+            }
+            jsonNote.put(JSON_PROPERTY_TAGS, jsonTags);
+            // Container
+            jsonContainer.put(JSON_CONTAINER_VERSION, JSON_VERSION);
+            jsonContainer.put(JSON_CONTAINER_NOTE, jsonNote);
+        } catch (JSONException e) {
+            return null;
+        }
+        return jsonContainer;
+    }
+
+    public boolean isEmpty() {
+        return Strings.isNullOrEmpty(note);
     }
 
     @Override
@@ -134,11 +267,26 @@ public final class Note {
 
         Note note = (Note) obj;
         return Objects.equal(id, note.id)
-                && Objects.equal(excerpt, note.excerpt);
+                && Objects.equal(this.note, note.note)
+                // TODO: add linkId
+                && (tags == note.tags || (tags != null && tags.equals(note.tags)));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id, excerpt);
+        return Objects.hashCode(id, note);
+    }
+
+    @Override
+    public int compareTo(@NonNull Note obj) {
+        checkNotNull(obj);
+
+        String objNote = obj.getNote();
+        if (this == obj) return 0;
+        if (note == null && objNote == null) return 0;
+        if (note == null ^ objNote == null) {
+            return note == null ? -1 : 1;
+        }
+        return note.compareTo(objNote);
     }
 }

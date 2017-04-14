@@ -9,18 +9,24 @@
     <color name="color_accent">@color/red_A200</color>
     <color name="tabs_text">@color/indigo_200</color>
     <color name="tabs_text_selected">@android:color/white</color>
-    <color name="token">@color/indigo_300</color>
+    <color name="token">@android:color/transparent</color>
     <color name="token_stroke">@color/indigo_300</color>
-    <color name="token_selected">@color/indigo_400</color>
-    <color name="token_stroke_selected">@color/indigo_400</color>
+    <color name="token_text">@color/indigo_500</color>
+    <color name="token_selected">@color/indigo_300</color>
+    <color name="token_stroke_selected">@color/indigo_300</color>
+    <!-- android:color/background_material_light -->
+    <color name="token_text_selected">@color/grey_50</color>
     <color name="item_conflicted">@color/red_100</color>
     <color name="sync_state_neutral">@android:color/white</color>
     <color name="sync_state_success">@color/green_500</color>
     <color name="sync_state_error">@color/red_400</color>
     <color name="sync_state_conflict">@color/red_400</color>
+    <color name="note_background">@color/grey_100</color>
 
     <!-- Misc -->
     <color name="green_500">#4CAF50</color>
+    <color name="grey_50">#FAFAFA</color>
+    <color name="grey_100">#F5F5F5</color>
 
     <!-- Indigo: primary -->
     <color name="indigo_50">#E8EAF6</color>

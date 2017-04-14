@@ -36,7 +36,7 @@ public class ViewSpan extends ReplacementSpan {
 
         canvas.save();
         //Centering the token looks like a better strategy that aligning the bottom
-        canvas.translate(x, top == 0 ? 6 : top);
+        canvas.translate(x, top > 6 ? top - 6 : top);
         view.draw(canvas);
         canvas.restore();
     }

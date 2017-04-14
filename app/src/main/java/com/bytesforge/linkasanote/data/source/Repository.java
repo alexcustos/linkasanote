@@ -39,7 +39,7 @@ public class Repository implements DataSource {
 
     @VisibleForTesting
     @Nullable
-    Map<String, Link> cachedNotes;
+    Map<String, Note> cachedNotes;
 
     @VisibleForTesting
     @Nullable
@@ -205,33 +205,6 @@ public class Repository implements DataSource {
         cachedLinks.remove(linkId);
     }
 
-    // Notes
-
-    @Override
-    public Single<List<Note>> getNotes() {
-        return null;
-    }
-
-    @Override
-    public Single<Note> getNote(@NonNull String noteId) {
-        return null;
-    }
-
-    @Override
-    public void saveNote(@NonNull Note note) {
-    }
-
-    @Override
-    public void deleteAllNotes() {
-        localDataSource.deleteAllNotes();
-        cloudDataSource.deleteAllNotes();
-
-        if (cachedNotes == null) {
-            cachedNotes = new LinkedHashMap<>();
-        }
-        cachedNotes.clear();
-    }
-
     // Favorites
 
     @Override
@@ -375,6 +348,151 @@ public class Repository implements DataSource {
             cachedFavorites = new LinkedHashMap<>();
         }
         cachedFavorites.remove(favoriteId);
+    }
+
+    // Notes
+
+    @Override
+    public Observable<Note> getNotes() {
+        if (!noteCacheIsDirty && cachedNotes != null) {
+            return Observable.fromIterable(cachedNotes.values());
+        }
+        return getAndCacheLocalNotes();
+    }
+
+    private Observable<Note> getAndCacheLocalNotes() {
+        if (cachedNotes == null) {
+            cachedNotes = new LinkedHashMap<>();
+        }
+        if (cachedTags == null) {
+            cachedTags = new LinkedHashMap<>();
+        }
+        cachedNotes.clear();
+        return localDataSource.getNotes()
+                .doOnComplete(() -> noteCacheIsDirty = false)
+                .doOnNext(note -> {
+                    cachedNotes.put(note.getId(), note);
+                    List<Tag> tags = note.getTags();
+                    if (tags != null) {
+                        for (Tag tag : tags) cachedTags.put(tag.getName(), tag);
+                    }
+                });
+    }
+
+    @Override
+    public Single<Note> getNote(@NonNull String noteId) {
+        checkNotNull(noteId);
+
+        if (!isKeyValidUuid(noteId)) {
+            throw new InvalidParameterException("getNote() called with invalid UUID");
+        }
+        return getNote(noteId, false);
+    }
+
+    public Single<Note> getNote(@NonNull String noteId, boolean forceCacheUpdate) {
+        checkNotNull(noteId);
+
+        if (forceCacheUpdate) return getAndCacheLocalNote(noteId);
+
+        final Note cachedNote = getCachedNote(noteId);
+        if (cachedNote != null) {
+            return Single.just(cachedNote);
+        }
+        return getAndCacheLocalNote(noteId);
+    }
+
+    private Single<Note> getAndCacheLocalNote(String noteId) {
+        if (cachedNotes == null) {
+            cachedNotes = new LinkedHashMap<>();
+        }
+        if (cachedTags == null) {
+            cachedTags = new LinkedHashMap<>();
+        }
+        return localDataSource.getNote(noteId)
+                .doOnSuccess(note -> {
+                    cachedNotes.put(noteId, note);
+                    // NOTE: because order of Notes is messed up
+                    noteCacheIsDirty = true;
+                    List<Tag> tags = note.getTags();
+                    if (tags != null) {
+                        for (Tag tag : tags) cachedTags.put(tag.getName(), tag);
+                    }
+                });
+    }
+
+    @Nullable
+    private Note getCachedNote(@NonNull String id) {
+        checkNotNull(id);
+
+        if (cachedNotes != null && !cachedNotes.isEmpty()) {
+            return cachedNotes.get(id);
+        }
+        return null;
+    }
+
+    @Override
+    public void saveNote(@NonNull Note note) {
+        checkNotNull(note);
+
+        localDataSource.saveNote(note); // blocking operation
+        cloudDataSource.saveNote(note);
+
+        // Note
+        if (cachedNotes == null) {
+            cachedNotes = new LinkedHashMap<>();
+        }
+        // NOTE: new Note has no rowId to bind to RecyclerView and position is unknown
+        noteCacheIsDirty = true;
+        // Tags
+        if (cachedTags == null) {
+            cachedTags = new LinkedHashMap<>();
+        }
+        List<Tag> tags = note.getTags();
+        if (tags != null) {
+            for (Tag tag : tags) {
+                cachedTags.put(tag.getName(), tag);
+            }
+        }
+    }
+
+    @Override
+    public void deleteAllNotes() {
+        localDataSource.deleteAllNotes(); // blocking
+        //cloudDataSource.deleteAllNotes();
+
+        if (cachedNotes == null) {
+            cachedNotes = new LinkedHashMap<>();
+        }
+        cachedNotes.clear();
+    }
+
+    @Override
+    public void deleteNote(@NonNull String noteId) {
+        checkNotNull(noteId);
+
+        localDataSource.deleteNote(noteId); // blocking
+        cloudDataSource.deleteNote(noteId);
+
+        deleteCachedNote(noteId);
+    }
+
+    @Override
+    public Single<Boolean> isConflictedNotes() {
+        return localDataSource.isConflictedNotes();
+    }
+
+    // TODO: implement cache invalidation for one specific item
+    public void refreshNotes() {
+        noteCacheIsDirty = true;
+    }
+
+    public void deleteCachedNote(@NonNull String noteId) {
+        checkNotNull(noteId);
+
+        if (cachedNotes == null) {
+            cachedNotes = new LinkedHashMap<>();
+        }
+        cachedNotes.remove(noteId);
     }
 
     // Tags: tag is part of the object and should be bound with the object

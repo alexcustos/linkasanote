@@ -8,6 +8,7 @@ import com.bytesforge.linkasanote.BasePresenter;
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.laano.TagsCompletionView;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public interface AddEditLinkContract {
         void applyInstanceState(@NonNull Bundle state);
         Bundle getDefaultInstanceState();
 
-        void setTagsCompletionView(@NonNull LinkTagsCompletionView completionView);
+        void setTagsCompletionView(@NonNull TagsCompletionView completionView);
         void showEmptyLinkSnackbar();
         void showLinkNotFoundSnackbar();
         void showDuplicateKeyError();

@@ -26,6 +26,7 @@ import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoLinksBinding;
+import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkActivity;
 import com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkFragment;
 import com.bytesforge.linkasanote.laano.links.conflictresolution.LinksConflictResolutionDialog;
@@ -224,15 +225,15 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     private void showFilteringPopupMenu() {
         PopupMenu menu = new PopupMenu(
                 getContext(), getActivity().findViewById(R.id.toolbar_links_filter));
-        menu.getMenuInflater().inflate(R.menu.filter_links, menu.getMenu());
+        menu.getMenuInflater().inflate(R.menu.filter, menu.getMenu());
         menu.setOnMenuItemClickListener(item -> {
 
             switch (item.getItemId()) {
-                case R.id.links_all:
-                    presenter.setFilterType(LinksFilterType.LINKS_ALL);
+                case R.id.filter_all:
+                    presenter.setFilterType(FilterType.ALL);
                     break;
-                case R.id.links_conflicted:
-                    presenter.setFilterType(LinksFilterType.LINKS_CONFLICTED);
+                case R.id.filter_conflicted:
+                    presenter.setFilterType(FilterType.CONFLICTED);
                     break;
             }
             presenter.loadLinks(false);

@@ -1,0 +1,158 @@
+package com.bytesforge.linkasanote.laano.notes.addeditnote;
+
+import android.database.sqlite.SQLiteConstraintException;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.bytesforge.linkasanote.data.Note;
+import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.notes.NoteId;
+import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public final class AddEditNotePresenter implements AddEditNoteContract.Presenter {
+
+    private static final String TAG = AddEditNotePresenter.class.getSimpleName();
+
+    private final Repository repository;
+    private final AddEditNoteContract.View view;
+    private final AddEditNoteContract.ViewModel viewModel;
+    private final BaseSchedulerProvider schedulerProvider;
+
+    private String noteId; // NOTE: can be reset to null if NoSuchElementException
+
+    @NonNull
+    private final CompositeDisposable tagsDisposable;
+
+    @NonNull
+    private final CompositeDisposable noteDisposable;
+
+    @Inject
+    AddEditNotePresenter(
+            Repository repository, AddEditNoteContract.View view,
+            AddEditNoteContract.ViewModel viewModel,
+            BaseSchedulerProvider schedulerProvider,
+            @Nullable @NoteId String noteId) {
+        this.repository = repository;
+        this.view = view;
+        this.viewModel = viewModel;
+        this.schedulerProvider = schedulerProvider;
+        this.noteId = noteId;
+        tagsDisposable = new CompositeDisposable();
+        noteDisposable = new CompositeDisposable();
+    }
+
+    @Inject
+    void setupView() {
+        view.setPresenter(this);
+        view.setViewModel(viewModel);
+        viewModel.setPresenter(this);
+    }
+
+    @Override
+    public void subscribe() {
+        loadTags();
+    }
+
+    @Override
+    public void unsubscribe() {
+        tagsDisposable.clear();
+        noteDisposable.clear();
+    }
+
+    @Override
+    public void loadTags() {
+        EspressoIdlingResource.increment();
+        tagsDisposable.clear(); // stop previous requests
+
+        Disposable disposable = repository.getTags()
+                .toList()
+                .subscribeOn(schedulerProvider.computation())
+                .observeOn(schedulerProvider.ui())
+                .doOnError(throwable -> view.swapTagsCompletionViewItems(new ArrayList<>()))
+                .doFinally(() -> {
+                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
+                        EspressoIdlingResource.decrement();
+                    }
+                })
+                .subscribe((tags, throwable) -> {
+                    if (tags != null) view.swapTagsCompletionViewItems(tags);
+                });
+        tagsDisposable.add(disposable);
+    }
+
+    @Override
+    public boolean isNewNote() {
+        return noteId == null;
+    }
+
+    @Override
+    public void populateNote() {
+        if (noteId == null) {
+            throw new RuntimeException("populateNote() was called but noteId is null");
+        }
+        EspressoIdlingResource.increment();
+        noteDisposable.clear();
+
+        Disposable disposable = repository.getNote(noteId)
+                .subscribeOn(schedulerProvider.computation())
+                .observeOn(schedulerProvider.ui())
+                .doFinally(() -> {
+                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
+                        EspressoIdlingResource.decrement();
+                    }
+                })
+                .subscribe(viewModel::populateNote, throwable -> {
+                    noteId = null;
+                    viewModel.showNoteNotFoundSnackbar();
+                });
+        noteDisposable.add(disposable);
+    }
+
+    @Override
+    public void saveNote(String noteNote, List<Tag> noteTags) {
+        if (isNewNote()) {
+            createNote(noteNote, noteTags);
+        } else {
+            updateNote(noteNote, noteTags);
+        }
+    }
+
+    private void createNote(String noteNote, List<Tag> noteTags) {
+        saveNote(new Note(noteNote, noteTags));
+    }
+
+    private void updateNote(String noteNote, List<Tag> noteTags) {
+        if (noteId == null) {
+            throw new RuntimeException("updateNote() was called but noteId is null");
+        }
+        // NOTE: state eTag will NOT be overwritten if null
+        saveNote(new Note(noteId, noteNote, noteTags)); // UNSYNCED
+    }
+
+    private void saveNote(@NonNull final Note note) {
+        checkNotNull(note);
+
+        if (note.isEmpty()) {
+            viewModel.showEmptyNoteSnackbar();
+            return;
+        }
+        try {
+            repository.saveNote(note);
+            view.finishActivity();
+        } catch (SQLiteConstraintException e) {
+            viewModel.showDuplicateKeyError();
+        }
+    }
+}

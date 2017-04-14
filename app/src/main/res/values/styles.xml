@@ -82,17 +82,35 @@
         <item name="android:textColor">?android:textColorSecondary</item>
     </style>
 
-    <!-- Favorites -->
-    <style name="FavoritesText" parent="TextAppearance.AppCompat.Small" />
-    <style name="FavoritesText.Name" parent="TextAppearance.AppCompat.Subhead">
-        <item name="android:textSize">18sp</item>
-    </style>
-
     <!-- Links -->
     <style name="LinksText" parent="TextAppearance.AppCompat.Body1" />
+    <style name="LinksText.Serial" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textColor">?android:textColorSecondary</item>
+        <item name="android:textSize">12sp</item>
+    </style>
     <style name="LinksText.Name" parent="TextAppearance.AppCompat.Subhead">
         <item name="android:textSize">18sp</item>
     </style>
     <style name="LinksText.Count" parent="TextAppearance.AppCompat.Subhead" />
     <style name="LinksText.Caption" parent="TextAppearance.AppCompat.Button" />
+
+    <!-- Favorites -->
+    <style name="FavoritesText" parent="TextAppearance.AppCompat.Small" />
+    <style name="FavoritesText.Serial" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textColor">?android:textColorSecondary</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="FavoritesText.Name" parent="TextAppearance.AppCompat.Subhead">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <!-- Notes -->
+    <style name="NotesText" parent="TextAppearance.AppCompat.Small" />
+    <style name="NotesText.Serial" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textColor">?android:textColorSecondary</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="NotesText.Note" parent="TextAppearance.AppCompat.Subhead">
+        <item name="android:textSize">18sp</item>
+    </style>
 </resources>

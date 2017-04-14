@@ -43,6 +43,7 @@
         <activity android:name=".manageaccounts.ManageAccountsActivity" />
         <activity android:name=".laano.favorites.addeditfavorite.AddEditFavoriteActivity" />
         <activity android:name=".laano.links.addeditlink.AddEditLinkActivity" />
+        <activity android:name=".laano.notes.addeditnote.AddEditNoteActivity" />
         <activity android:name=".about.AboutActivity" />
 
         <provider

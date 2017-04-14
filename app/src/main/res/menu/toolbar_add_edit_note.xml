@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/toolbar_note_paste"
+        android:icon="@drawable/ic_content_paste_white"
+        android:title="@string/toolbar_note_item_paste"
+        app:showAsAction="ifRoom" />
+</menu>

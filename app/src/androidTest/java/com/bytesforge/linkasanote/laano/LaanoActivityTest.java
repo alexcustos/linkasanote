@@ -13,10 +13,12 @@ import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
 import com.bytesforge.linkasanote.laano.links.LinksFragment;
+import com.bytesforge.linkasanote.laano.notes.NotesFragment;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -51,6 +53,7 @@ public class LaanoActivityTest {
 
     private final List<Favorite> FAVORITES;
     private final List<Link> LINKS;
+    private final List<Note> NOTES;
 
     @Rule
     public ActivityTestRule<LaanoActivity> laanoActivityTestRule =
@@ -68,12 +71,14 @@ public class LaanoActivityTest {
     public LaanoActivityTest() {
         FAVORITES = AndroidTestUtils.buildFavorites();
         LINKS = AndroidTestUtils.buildLinks();
+        NOTES = AndroidTestUtils.buildNotes();
     }
 
     private void cleanupRepository(Repository repository) {
         // TODO: fix data loss on non-test DB
         repository.deleteAllLinks();
         repository.deleteAllFavorites();
+        repository.deleteAllNotes();
         repository.deleteAllTags();
     }
 
@@ -93,6 +98,7 @@ public class LaanoActivityTest {
     public void fabButton_addsEntriesToSelectedRecyclerView() {
         fabButton_addsLinksToLinksRecyclerView();
         fabButton_addsFavoritesToFavoritesRecyclerView();
+        fabButton_addsNotesToNotesRecyclerView();
     }
 
     private void fabButton_addsLinksToLinksRecyclerView() {
@@ -110,6 +116,15 @@ public class LaanoActivityTest {
         FAVORITES.forEach(this::createFavorite);
         for (Favorite favorite : FAVORITES) {
             onView(withItemTextRV(favorite.getName())).check(matches(isDisplayed()));
+        }
+    }
+
+    private void fabButton_addsNotesToNotesRecyclerView() {
+        repository.noteCacheIsDirty = true;
+        setupNotesTab();
+        NOTES.forEach(this::createNote);
+        for (Note note : NOTES) {
+            onView(withItemTextRV(note.getNote())).check(matches(isDisplayed()));
         }
     }
 
@@ -188,6 +203,41 @@ public class LaanoActivityTest {
         onView(withId(R.id.favorite_name)).check(matches(isDisplayed()));
         onView(withId(R.id.favorite_name)).perform(typeText(name), closeSoftKeyboard());
         onView(withId(R.id.favorite_tags)).perform(typeText(tagLine), closeSoftKeyboard());
+        onView(withId(R.id.add_button)).perform(click());
+    }
+
+    // Notes
+
+    private void setupNotesTab() {
+        // Activity
+        LaanoActivity laanoActivity = laanoActivityTestRule.getActivity();
+        assertNotNull(laanoActivity);
+
+        Resources resources = laanoActivity.getResources();
+        assertNotNull(resources);
+        String NOTES_TITLE = resources.getString(R.string.laano_tab_notes_title);
+
+        // Tab
+        onView(withItemTextId(NOTES_TITLE, R.id.tab_layout))
+                .perform(click())
+                .check(matches(isDisplayed()));
+        assertThat((laanoActivity.getCurrentFragment()).getTitle(), Matchers.equalTo(NOTES_TITLE));
+        assertThat(laanoActivity.getCurrentFragment(), instanceOf(NotesFragment.class));
+    }
+
+    private void createNote(Note note) {
+        assertNotNull(note);
+        List<Tag> tags = note.getTags();
+        assertNotNull(tags);
+        String noteNote = note.getNote();
+        assertNotNull(noteNote);
+        // NOTE: last tag complete if there is a comma at the end
+        String tagLine = tags.stream().map(Tag::getName).collect(Collectors.joining(",")) + ",";
+        //String tagLine = Arrays.stream(tags).collect(Collectors.joining(",")) + ",";
+        onView(withId(R.id.fab_add)).perform(click());
+        onView(withId(R.id.note_note)).check(matches(isDisplayed()));
+        onView(withId(R.id.note_note)).perform(typeText(noteNote), closeSoftKeyboard());
+        onView(withId(R.id.note_tags)).perform(typeText(tagLine), closeSoftKeyboard());
         onView(withId(R.id.add_button)).perform(click());
     }
 }

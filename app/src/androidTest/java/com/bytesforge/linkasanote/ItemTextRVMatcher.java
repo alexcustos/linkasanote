@@ -8,6 +8,7 @@ import org.hamcrest.TypeSafeMatcher;
 
 import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 
@@ -24,7 +25,7 @@ public class ItemTextRVMatcher extends TypeSafeMatcher<View> {
     protected boolean matchesSafely(View item) {
         return allOf(
                 isDescendantOfA(isAssignableFrom(RecyclerView.class)),
-                withText(itemText)).matches(item);
+                withText(itemText), isDisplayed()).matches(item);
     }
 
     @Override

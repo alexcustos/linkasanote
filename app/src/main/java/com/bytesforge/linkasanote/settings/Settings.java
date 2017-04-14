@@ -23,6 +23,9 @@ import static java.lang.System.currentTimeMillis;
 public class Settings {
 
     public static final float GLOBAL_IMAGE_BUTTON_ALPHA_DISABLED = 0.3f;
+    public static final float GLOBAL_PROGRESS_OVERLAY_ALPHA = 0.4f;
+    public static final long GLOBAL_PROGRESS_OVERLAY_DURATION = 200; // ms
+    public static final long GLOBAL_PROGRESS_OVERLAY_SHOW_DELAY = 200; // ms
 
     private static final String DEFAULT_SYNC_DIRECTORY = "/.laano_sync";
     private static final boolean DEFAULT_EXPAND_LINKS = false;
@@ -31,13 +34,10 @@ public class Settings {
 
     private static final String SETTING_LAST_SYNC_TIME = "LAST_SYNC_TIME";
     private static final String SETTING_LAST_SYNC_STATUS = "LAST_SYNC_STATUS";
-    private static final String SETTING_LINKS_LAST_SYNCED_ETAG = "LINKS_LAST_SYNCED_ETAG";
-    private static final String SETTING_FAVORITES_LAST_SYNCED_ETAG = "FAVORITES_LAST_SYNCED_ETAG";
 
     private static final long DEFAULT_LAST_SYNC_TIME = 0;
     private static final int DEFAULT_LAST_SYNC_STATUS = SyncAdapter.LAST_SYNC_STATUS_UNKNOWN;
-    private static final String DEFAULT_LINKS_LAST_SYNCED_ETAG  = null;
-    private static final String DEFAULT_FAVORITES_LAST_SYNCED_ETAG  = null;
+    private static final String DEFAULT_LAST_SYNCED_ETAG  = null;
 
     private final Resources resources;
     private final SharedPreferences sharedPreferences;
@@ -130,25 +130,13 @@ public class Settings {
         editor.apply();
     }
 
-    public String getLinksLastSyncedETag() {
-        return sharedPreferences.getString(
-                SETTING_LINKS_LAST_SYNCED_ETAG, DEFAULT_LINKS_LAST_SYNCED_ETAG);
+    public String getLastSyncedETag(String key) {
+        return sharedPreferences.getString(key, DEFAULT_LAST_SYNCED_ETAG);
     }
 
-    public void setLinksLastSyncedETag(String linksLastSyncedETag) {
+    public void setLastSyncedETag(String key, String lastSyncedETag) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(SETTING_LINKS_LAST_SYNCED_ETAG, linksLastSyncedETag);
-        editor.apply();
-    }
-
-    public String getFavoritesLastSyncedETag() {
-        return sharedPreferences.getString(
-                SETTING_FAVORITES_LAST_SYNCED_ETAG, DEFAULT_FAVORITES_LAST_SYNCED_ETAG);
-    }
-
-    public void setFavoritesLastSyncedETag(String favoritesLastSyncedETag) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(SETTING_FAVORITES_LAST_SYNCED_ETAG, favoritesLastSyncedETag);
+        editor.putString(key, lastSyncedETag);
         editor.apply();
     }
 }

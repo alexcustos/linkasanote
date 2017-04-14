@@ -121,24 +121,27 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
     }
 
     @Override
-    public void saveLink(String link, String name, boolean disabled, List<Tag> tags) {
+    public void saveLink(
+            String linkLink, String linkName, boolean linkDisabled, List<Tag> linkTags) {
         if (isNewLink()) {
-            createLink(link, name, disabled, tags);
+            createLink(linkLink, linkName, linkDisabled, linkTags);
         } else {
-            updateLink(link, name, disabled, tags);
+            updateLink(linkLink, linkName, linkDisabled, linkTags);
         }
     }
 
-    private void createLink(String link, String name, boolean disabled, List<Tag> tags) {
-        saveLink(new Link(link, name, disabled, tags));
+    private void createLink(
+            String linkLink, String linkName, boolean linkDisabled, List<Tag> linkTags) {
+        saveLink(new Link(linkLink, linkName, linkDisabled, linkTags));
     }
 
-    private void updateLink(String link, String name, boolean disabled, List<Tag> tags) {
+    private void updateLink(
+            String linkLink, String linkName, boolean linkDisabled, List<Tag> linkTags) {
         if (linkId == null) {
             throw new RuntimeException("updateLink() was called but linkId is null");
         }
         // NOTE: state eTag will NOT be overwritten if null
-        saveLink(new Link(linkId, link, name, disabled, tags)); // UNSYNCED
+        saveLink(new Link(linkId, linkLink, linkName, linkDisabled, linkTags)); // UNSYNCED
     }
 
     private void saveLink(@NonNull final Link link) {

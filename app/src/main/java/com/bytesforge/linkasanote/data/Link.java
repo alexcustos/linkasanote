@@ -29,6 +29,7 @@ public final class Link implements Comparable<Link> {
     private static final String TAG = Link.class.getSimpleName();
 
     public static final String CLOUD_DIRECTORY_NAME = "links";
+    public static final String SETTING_LAST_SYNCED_ETAG = "LINKS_LAST_SYNCED_ETAG";
 
     private static final int JSON_VERSION = 1;
     private static final String JSON_CONTAINER_VERSION = "version";

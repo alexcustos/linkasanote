@@ -5,6 +5,7 @@ import android.util.Log;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
@@ -73,7 +74,7 @@ public class LinksPresenterTest {
     @Test
     public void loadAllLinksFromRepository_loadsItIntoView() {
         when(repository.getLinks()).thenReturn(Observable.fromIterable(LINKS));
-        when(viewModel.getFilterType()).thenReturn(LinksFilterType.LINKS_ALL);
+        when(viewModel.getFilterType()).thenReturn(FilterType.ALL);
         presenter.loadLinks(true);
         verify(view).showLinks(LINKS);
     }
