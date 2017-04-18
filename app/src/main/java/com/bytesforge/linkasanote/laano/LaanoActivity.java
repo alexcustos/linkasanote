@@ -104,6 +104,7 @@ public class LaanoActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
 
+        notifyTabSelected(activeTab);
         laanoUiManager.updateTitle(activeTab);
 
         IntentFilter syncIntentFilter = new IntentFilter();
@@ -132,6 +133,7 @@ public class LaanoActivity extends AppCompatActivity implements
         } else {
             applyInstanceState(savedInstanceState);
         }
+        TagsBindingAdapter.invalidateTagsViewWidths();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_laano);
         viewModel = new LaanoViewModel(this);
         viewModel.setInstanceState(savedInstanceState);
@@ -152,7 +154,7 @@ public class LaanoActivity extends AppCompatActivity implements
                 getSupportFragmentManager(), getApplicationContext());
         ViewPager viewPager = binding.laanoViewPager;
         setupViewPager(viewPager, pagerAdapter);
-        viewPager.setCurrentItem(activeTab);
+        setCurrentTab(activeTab);
         viewPager.setOffscreenPageLimit(2);
         // TabLayout
         setupTabLayout(binding.tabLayout, viewPager);
@@ -237,6 +239,13 @@ public class LaanoActivity extends AppCompatActivity implements
         Account account = CloudUtils.getDefaultAccount(this, accountManager);
         laanoUiManager.updateDefaultAccount(account);
         laanoUiManager.updateLastSyncStatus();
+    }
+
+    // Public
+
+    public void setCurrentTab(int tab) {
+        ViewPager viewPager = binding.laanoViewPager;
+        viewPager.setCurrentItem(tab);
     }
 
     // Get Accounts Permission
@@ -515,7 +524,7 @@ public class LaanoActivity extends AppCompatActivity implements
 
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
+                setCurrentTab(tab.getPosition());
             }
 
             @Override

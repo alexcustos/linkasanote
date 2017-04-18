@@ -1,7 +1,11 @@
 package com.tokenautocomplete;
 
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.style.ReplacementSpan;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +15,9 @@ import android.view.ViewGroup;
  *
  * Created on 2/3/15.
  * @author mgod
+ *
+ * Updated on 15/04/2017
+ * Aleksandr Borisenko
  */
 public class ViewSpan extends ReplacementSpan {
     protected View view;
@@ -20,7 +27,8 @@ public class ViewSpan extends ReplacementSpan {
         super();
         this.maxWidth = maxWidth;
         view = v;
-        view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        view.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
     private void prepView() {
@@ -31,33 +39,45 @@ public class ViewSpan extends ReplacementSpan {
         view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
     }
 
-    public void draw(Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, Paint paint) {
+    @Override
+    public void draw(
+            @NonNull Canvas canvas, CharSequence text,
+            @IntRange(from = 0) int start, @IntRange(from = 0) int end,
+            float x, int top, int y, int bottom, @NonNull Paint paint) {
         prepView();
 
         canvas.save();
-        //Centering the token looks like a better strategy that aligning the bottom
-        canvas.translate(x, top > 6 ? top - 6 : top);
+        canvas.translate(x, top);
         view.draw(canvas);
         canvas.restore();
     }
 
-    public int getSize(Paint paint, CharSequence charSequence, int i, int i2, Paint.FontMetricsInt fm) {
+    @Override
+    public int getSize(
+            @NonNull Paint paint, CharSequence text,
+            @IntRange(from = 0) int start, @IntRange(from = 0) int end,
+            @Nullable Paint.FontMetricsInt fm) {
         prepView();
-
         if (fm != null) {
-            //We need to make sure the layout allots enough space for the view
             int height = view.getMeasuredHeight();
-            int need = height - (fm.descent - fm.ascent);
-            if (need > 0) {
-                int ascent = need / 2;
-                //This makes sure the text drawing area will be tall enough for the view
-                fm.descent += need - ascent;
-                fm.ascent -= ascent;
-                fm.bottom += need - ascent;
-                fm.top -= need / 2;
+            int top_need = height - (fm.bottom - fm.top);
+            if (top_need > 0) {
+                int top_patch = top_need / 2;
+                fm.top -= top_patch;
+                fm.bottom += top_need - top_patch;
+                // NOTE: only the first line has 1dp margin which have to be compensated with this gap
+                int ascent_need = height - (fm.descent - fm.ascent) + dpToPx(2);
+                if (ascent_need > 0) {
+                    int ascent_patch = ascent_need / 2;
+                    fm.ascent -= ascent_patch;
+                    fm.descent += ascent_need - ascent_patch;
+                }
             }
         }
-
         return view.getRight();
+    }
+
+    private static int dpToPx(int dp) {
+        return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
     }
 }

@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
+import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 
@@ -18,6 +19,7 @@ import java.util.List;
 
 import io.reactivex.Single;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
 public class Settings {
@@ -34,10 +36,17 @@ public class Settings {
 
     private static final String SETTING_LAST_SYNC_TIME = "LAST_SYNC_TIME";
     private static final String SETTING_LAST_SYNC_STATUS = "LAST_SYNC_STATUS";
+    private static final String SETTING_LINK_FILTER = "LINK_FILTER";
+    private static final String SETTING_FAVORITE_FILTER = "FAVORITE_FILTER";
+    private static final String SETTING_NOTE_FILTER = "NOTE_FILTER";
 
     private static final long DEFAULT_LAST_SYNC_TIME = 0;
     private static final int DEFAULT_LAST_SYNC_STATUS = SyncAdapter.LAST_SYNC_STATUS_UNKNOWN;
+    public static final FilterType DEFAULT_FILTER_TYPE = FilterType.ALL;
     private static final String DEFAULT_LAST_SYNCED_ETAG  = null;
+    private static final String DEFAULT_LINK_FILTER = null;
+    private static final String DEFAULT_FAVORITE_FILTER = null;
+    private static final String DEFAULT_NOTE_FILTER = null;
 
     private final Resources resources;
     private final SharedPreferences sharedPreferences;
@@ -115,9 +124,7 @@ public class Settings {
     }
 
     public synchronized void setLastSyncStatus(int lastSyncStatus) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(SETTING_LAST_SYNC_STATUS, lastSyncStatus);
-        editor.apply();
+        putIntSetting(SETTING_LAST_SYNC_STATUS, lastSyncStatus);
     }
 
     public long getLastSyncTime() {
@@ -130,13 +137,89 @@ public class Settings {
         editor.apply();
     }
 
-    public String getLastSyncedETag(String key) {
-        return sharedPreferences.getString(key, DEFAULT_LAST_SYNCED_ETAG);
+    public String getLastSyncedETag(@NonNull String key) {
+        return sharedPreferences.getString(checkNotNull(key), DEFAULT_LAST_SYNCED_ETAG);
     }
 
-    public void setLastSyncedETag(String key, String lastSyncedETag) {
+    public void setLastSyncedETag(@NonNull String key, String lastSyncedETag) {
+        putStringSetting(checkNotNull(key), lastSyncedETag);
+    }
+
+    public FilterType getFilterType(@NonNull String key) {
+        checkNotNull(key);
+
+        int ordinal = sharedPreferences.getInt(key, DEFAULT_FILTER_TYPE.ordinal());
+        try {
+            return FilterType.values()[ordinal];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return DEFAULT_FILTER_TYPE;
+        }
+    }
+
+    public synchronized void setFilterType(@NonNull String key, FilterType filterType) {
+        checkNotNull(key);
+        if (filterType == null) return;
+
+        FilterType filter = getFilterType(key);
+        if (filterType != filter) {
+            putIntSetting(key, filterType.ordinal());
+        }
+    }
+
+    public String getLinkFilter() {
+        return sharedPreferences.getString(SETTING_LINK_FILTER, DEFAULT_LINK_FILTER);
+    }
+
+    public synchronized void setLinkFilter(String linkId) {
+        String filter = getLinkFilter();
+        if (filter == null && linkId == null) return;
+
+        if (filter == null ^ linkId == null) {
+            putStringSetting(SETTING_LINK_FILTER, linkId);
+        } else if (!linkId.equals(filter)) {
+            putStringSetting(SETTING_LINK_FILTER, linkId);
+        }
+    }
+
+    public String getFavoriteFilter() {
+        return sharedPreferences.getString(SETTING_FAVORITE_FILTER, DEFAULT_FAVORITE_FILTER);
+    }
+
+    public synchronized void setFavoriteFilter(String favoriteId) {
+        String filter = getFavoriteFilter();
+        if (filter == null && favoriteId == null) return;
+
+        if (filter == null ^ favoriteId == null) {
+            putStringSetting(SETTING_FAVORITE_FILTER, favoriteId);
+        } else if (!favoriteId.equals(filter)) {
+            putStringSetting(SETTING_FAVORITE_FILTER, favoriteId);
+        }
+    }
+
+    public String getNoteFilter() {
+        return sharedPreferences.getString(SETTING_NOTE_FILTER, DEFAULT_NOTE_FILTER);
+    }
+
+    public synchronized void setNoteFilter(String noteId) {
+        String filter = getNoteFilter();
+        if (filter == null && noteId == null) return;
+
+        if (filter == null ^ noteId == null) {
+            putStringSetting(SETTING_NOTE_FILTER, noteId);
+        } else if (!noteId.equals(filter)) {
+            putStringSetting(SETTING_NOTE_FILTER, noteId);
+        }
+    }
+
+    private void putStringSetting(String key, String value) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(key, lastSyncedETag);
+        editor.putString(key, value);
+        editor.apply();
+    }
+
+    private void putIntSetting(String key, int value) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(key, value);
         editor.apply();
     }
 }

@@ -99,12 +99,12 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     }
 
     public int getPosition(@Nullable String favoriteId) {
-        if (favoriteId == null) return 0;
+        if (favoriteId == null) return -1;
 
         Integer position = positionMap.get(favoriteId);
         if (position == null) {
             Log.e(TAG, "No position is found for Favorite [" + favoriteId + "]");
-            return 0;
+            return -1;
         }
         return position;
     }

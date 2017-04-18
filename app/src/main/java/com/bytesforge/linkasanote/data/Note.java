@@ -39,6 +39,7 @@ public final class Note implements Comparable<Note> {
     private static final String JSON_PROPERTY_CREATED = "created";
     private static final String JSON_PROPERTY_UPDATED = "updated";
     private static final String JSON_PROPERTY_NOTE = "note";
+    private static final String JSON_PROPERTY_LINK_ID = "note";
     private static final String JSON_PROPERTY_TAGS = "tags";
 
     @NonNull
@@ -51,39 +52,44 @@ public final class Note implements Comparable<Note> {
     private final String note;
 
     @Nullable
+    private final String linkId; // NOTE: may be null if it is unbound Note
+
+    @Nullable
     private final List<Tag> tags;
 
     @NonNull
     private final SyncState state;
 
-    public Note(String note, List<Tag> tags) {
-        this(generateKey(), currentTimeMillis(), currentTimeMillis(), note, tags, new SyncState());
+    public Note(String note, String linkId, List<Tag> tags) {
+        this(generateKey(), currentTimeMillis(), currentTimeMillis(),
+                note, linkId, tags, new SyncState());
     }
 
-    public Note(String id, String note, List<Tag> tags) {
+    public Note(String id, String note, String linkId, List<Tag> tags) {
         // NOTE: updating syncState must not change update entry
-        this(id, 0, currentTimeMillis(), note, tags, new SyncState());
+        this(id, 0, currentTimeMillis(), note, linkId, tags, new SyncState());
     }
 
     @VisibleForTesting
-    public Note(String id, String note, List<Tag> tags, SyncState state) {
-        this(id, 0, currentTimeMillis(), note, tags, state);
+    public Note(String id, String note, String linkId, List<Tag> tags, SyncState state) {
+        this(id, 0, currentTimeMillis(), note, linkId, tags, state);
     }
 
     public Note(
             @NonNull String id, long created, long updated, @Nullable String note,
-            @Nullable List<Tag> tags, @NonNull SyncState state) {
+            @Nullable String linkId, @Nullable List<Tag> tags, @NonNull SyncState state) {
         this.id = checkNotNull(id);
         this.created = created;
         this.updated = updated;
         this.note = note;
+        this.linkId = linkId;
         this.tags = (tags == null || tags.isEmpty() ? null : tags);
         this.state = checkNotNull(state);
     }
 
     public Note(Note note, @NonNull SyncState state) {
         this(note.getId(), note.getCreated(), note.getUpdated(), note.getNote(),
-                note.getTags(), state);
+                note.getLinkId(), note.getTags(), state);
     }
 
     public static Note from(Cursor cursor, List<Tag> tags) {
@@ -97,8 +103,10 @@ public final class Note implements Comparable<Note> {
                 LocalContract.NoteEntry.COLUMN_NAME_UPDATED));
         String note = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.NoteEntry.COLUMN_NAME_NOTE));
+        String linkId = cursor.getString(cursor.getColumnIndexOrThrow(
+                LocalContract.NoteEntry.COLUMN_NAME_LINK_ID));
 
-        return new Note(id, created, updated, note, tags, state);
+        return new Note(id, created, updated, note, linkId, tags, state);
     }
 
     public static Note from(ContentValues values, List<Tag> tags) {
@@ -108,8 +116,9 @@ public final class Note implements Comparable<Note> {
         long created = values.getAsLong(LocalContract.NoteEntry.COLUMN_NAME_CREATED);
         long updated = values.getAsLong(LocalContract.NoteEntry.COLUMN_NAME_UPDATED);
         String note = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_NOTE);
+        String linkId = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_LINK_ID);
 
-        return new Note(id, created, updated, note, tags, state);
+        return new Note(id, created, updated, note, linkId, tags, state);
     }
 
     @Nullable
@@ -142,12 +151,13 @@ public final class Note implements Comparable<Note> {
             long created = jsonNote.getLong(JSON_PROPERTY_CREATED);
             long updated = jsonNote.getLong(JSON_PROPERTY_UPDATED);
             String note = jsonNote.getString(JSON_PROPERTY_NOTE);
+            String linkId = jsonNote.getString(JSON_PROPERTY_LINK_ID);
             JSONArray jsonTags = jsonNote.getJSONArray(JSON_PROPERTY_TAGS);
             List<Tag> tags = new ArrayList<>();
             for (int i = 0; i < jsonTags.length(); i++) {
                 tags.add(Tag.from(jsonTags.getJSONObject(i)));
             }
-            return new Note(id, created, updated, note, tags, state);
+            return new Note(id, created, updated, note, linkId, tags, state);
         } catch (JSONException e) {
             Log.v(TAG, "Exception while processing Note JSON object");
             return null;
@@ -165,6 +175,7 @@ public final class Note implements Comparable<Note> {
         }
         values.put(LocalContract.NoteEntry.COLUMN_NAME_UPDATED, getUpdated());
         values.put(LocalContract.NoteEntry.COLUMN_NAME_NOTE, getNote());
+        values.put(LocalContract.NoteEntry.COLUMN_NAME_LINK_ID, getLinkId());
 
         return values;
     }
@@ -217,6 +228,11 @@ public final class Note implements Comparable<Note> {
     }
 
     @Nullable
+    public String getLinkId() {
+        return linkId;
+    }
+
+    @Nullable
     public List<Tag> getTags() {
         return tags;
     }
@@ -242,6 +258,7 @@ public final class Note implements Comparable<Note> {
             jsonNote.put(JSON_PROPERTY_CREATED, created);
             jsonNote.put(JSON_PROPERTY_UPDATED, updated);
             jsonNote.put(JSON_PROPERTY_NOTE, note);
+            jsonNote.put(JSON_PROPERTY_LINK_ID, linkId);
             JSONArray jsonTags = new JSONArray();
             for (Tag tag : tags) {
                 jsonTags.put(tag.getJsonObject());
@@ -266,9 +283,9 @@ public final class Note implements Comparable<Note> {
         if (obj == null || getClass() != obj.getClass()) return false;
 
         Note note = (Note) obj;
+        // NOTE: user is not able to change linkId, so this field must to be part of the comparable object
         return Objects.equal(id, note.id)
                 && Objects.equal(this.note, note.note)
-                // TODO: add linkId
                 && (tags == note.tags || (tags != null && tags.equals(note.tags)));
     }
 

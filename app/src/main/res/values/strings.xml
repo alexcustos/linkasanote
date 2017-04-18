@@ -3,6 +3,7 @@
     <string name="placeholder_title">placeholder</string>
     <string name="placeholder_text">This is a placeholder</string>
     <string name="error_database">Cannot access to database, please reinstall the application</string>
+    <string name="status_loading">Loading…</string>
     <string name="snackbar_no_permission">Unable to continue, required permission was not granted</string>
     <string name="snackbar_something_wrong">Something went wrong, please try again</string>
     <string name="drawer_header_title">LaaNo</string>
@@ -48,6 +49,10 @@
     <string name="actionbar_title_edit_favorite">Edit Favorite</string>
     <string name="actionbar_title_about">About</string>
     <string name="filter_all">All</string>
+    <string name="filter_link">Selected link (%s)</string>
+    <string name="filter_favorite">Selected favorite (%s)</string>
+    <string name="filter_note">Selected note (%s)</string>
+    <string name="filter_no_tags">With no tags</string>
     <string name="filter_conflicted">Conflicted</string>
     <string name="add_edit_account_permission_get_accounts">GET ACCOUNTS (Contacts) permission is needed to check possibility to add new account</string>
     <string name="add_edit_accounts_unsupported_multiple_accounts">Multiple accounts are not supported yet</string>
@@ -120,7 +125,6 @@
     <string name="favorites_delete_confirmation_title">Delete confirmation</string>
     <string name="dialog_favorite_conflict_title_local">Local:</string>
     <string name="dialog_favorite_conflict_title_cloud">Cloud:</string>
-    <string name="dialog_favorite_conflict_status_loading">Loading…</string>
     <string name="dialog_favorite_conflict_state_no_conflict">no conflict</string>
     <string name="dialog_favorite_conflict_state_deleted">deleted</string>
     <string name="dialog_favorite_conflict_state_updated">updated</string>
@@ -177,7 +181,6 @@
     <string name="links_delete_confirmation_title">Delete confirmation</string>
     <string name="dialog_link_conflict_title_local">Local:</string>
     <string name="dialog_link_conflict_title_cloud">Cloud:</string>
-    <string name="dialog_link_conflict_status_loading">Loading…</string>
     <string name="dialog_link_conflict_state_no_conflict">no conflict</string>
     <string name="dialog_link_conflict_state_deleted">deleted</string>
     <string name="dialog_link_conflict_state_updated">updated</string>
@@ -187,10 +190,10 @@
     <string name="dialog_link_conflict_status_error_download">There was an error while downloading</string>
     <string name="dialog_link_conflict_resolved_success">Conflict is successfully resolved</string>
     <string name="dialog_link_conflict_resolved_error">There was an error while trying to resolve the conflict</string>
+    <string name="dialog_link_open_error">Unable to open Link</string>
     <string name="card_button_add_note">Add Note</string>
     <string name="card_button_expand_notes_description">Expand Notes</string>
     <string name="card_button_collapse_notes_description">Expand Notes</string>
-    <string name="card_link_tags_caption">Tags</string>
 
     <string name="actionbar_title_new_note">New Note</string>
     <string name="actionbar_title_edit_note">Edit Note</string>
@@ -207,6 +210,11 @@
     <string name="add_edit_note_warning_empty">The Note must be specified</string>
     <string name="add_edit_note_warning_not_existed">Requested Note has not already existed</string>
     <string name="add_edit_note_error_note_duplicated">This Note is already exists</string>
+    <string name="add_edit_note_message_link_bound_new">This Note will be bound with the Link:</string>
+    <string name="add_edit_note_message_link_bound_edit">This Note is bound with the Link:</string>
+    <string name="add_edit_note_message_link_unbound_new">This note will not be bound with any Link</string>
+    <string name="add_edit_note_message_link_unbound_edit">This Note is not related to any Link</string>
+    <string name="add_edit_note_message_link_will_unbound">Unable to load related Link, this Note will be saved as unbound</string>
     <string name="action_mode_notes_delete">Delete</string>
     <string name="action_mode_notes_select_all">Check/Uncheck all Notes</string>
     <string name="laano_notes_action_mode_selected">%1$d of %2$d selected</string>
@@ -219,7 +227,6 @@
     <string name="notes_delete_confirmation_title">Delete confirmation</string>
     <string name="dialog_note_conflict_title_local">Local:</string>
     <string name="dialog_note_conflict_title_cloud">Cloud:</string>
-    <string name="dialog_note_conflict_status_loading">Loading…</string>
     <string name="dialog_note_conflict_state_no_conflict">no conflict</string>
     <string name="dialog_note_conflict_state_deleted">deleted</string>
     <string name="dialog_note_conflict_state_updated">updated</string>
@@ -229,7 +236,6 @@
     <string name="dialog_note_conflict_status_error_download">There was an error while downloading</string>
     <string name="dialog_note_conflict_resolved_success">Conflict is successfully resolved</string>
     <string name="dialog_note_conflict_resolved_error">There was an error while trying to resolve the conflict</string>
-
 
     <plurals name="sync_adapter_text_failed_favorites">
         <item quantity="one">There was an error with %d Favorite</item>

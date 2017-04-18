@@ -27,6 +27,7 @@ public interface FavoritesContract {
         void selectionChanged(int position);
         String removeFavorite(int position);
         int getPosition(String favoriteId);
+        void scrollToPosition(int position);
         void confirmFavoritesRemoval(int[] selectedIds);
         void showConflictResolution(@NonNull String favoriteId);
     }
@@ -44,9 +45,11 @@ public interface FavoritesContract {
         void enableActionMode();
         void disableActionMode();
 
-        boolean isSelected(String favoriteId);
+        boolean isSelected(String favoriteId, boolean changed);
         void toggleSelection();
         void toggleSelection(int position);
+        void toggleSingleSelection(int position);
+        void setSingleSelection(int position, boolean selected);
         void removeSelection();
         void removeSelection(int position);
         int getSelectedCount();

@@ -16,9 +16,9 @@
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/item_favorites_layout_height"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@{favorite.conflicted ? @color/item_conflicted : @android:color/transparent}"
+        android:background="@{viewModel.getFavoriteBackground(favorite.id, favorite.conflicted, viewModel.selectionChanged)}"
         android:onClick="@{() -> presenter.onFavoriteClick(favorite.id, favorite.conflicted)}"
         android:onLongClick="@{() -> presenter.onFavoriteLongClick(favorite.id)}">
         <!--android:background="?android:attr/selectableItemBackground"-->
@@ -28,16 +28,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/item_favorites_favorite_to_links_button"
-            android:paddingStart="@dimen/recycler_view_left_button_padding_start"
-            android:paddingEnd="@dimen/recycler_view_button_padding"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
             android:paddingBottom="@dimen/recycler_view_button_padding_vertical"
+            android:paddingStart="@dimen/recycler_view_left_button_padding_start"
+            android:paddingEnd="@dimen/recycler_view_button_padding"
             android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
             android:onClick="@{() -> presenter.onToLinksClick(favorite.id)}"
             style="@style/Button.RecyclerView"
-            bind:enabled="@{!favorite.conflicted}"
+            bind:imageButtonEnabled="@{!favorite.conflicted}"
             app:srcCompat="@drawable/ic_chevron_left"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -48,20 +47,20 @@
             android:layout_marginStart="@dimen/recycler_view_left_checkbox_margin_start"
             android:contentDescription="@string/item_favorites_checkbox"
             android:visibility="@{viewModel.actionMode ? View.VISIBLE : View.GONE}"
-            android:checked="@{viewModel.isSelected(favorite.id)}"
+            android:checked="@{viewModel.isSelected(favorite.id, viewModel.selectionChanged)}"
             android:onClick="@{() -> presenter.onCheckboxClick(favorite.id)}"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/favorite_to_links"
+            app:layout_constraintBottom_toBottomOf="@+id/favorite_to_links"
             app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/favorite_filter_prefix"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{viewModel.getFilterPrefix(favorite.rowId)}"
-            android:textAppearance="@style/FavoritesText.Serial"
+            android:text="@{viewModel.getFilterPrefix()}"
+            android:textAppearance="@style/FavoritesText.Prefix"
             android:layout_marginStart="@dimen/recycler_view_text_to_button_margin_start"
-            android:layout_marginEnd="@dimen/recycler_view_serial_to_text_margin_end"
+            android:layout_marginEnd="@dimen/recycler_view_prefix_to_text_margin_end"
             app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constraintBaseline_toBaselineOf="@+id/favorite_name"
             app:layout_constraintStart_toEndOf="@+id/favorite_to_links"
@@ -77,43 +76,27 @@
             android:textAppearance="@style/FavoritesText.Name"
             android:layout_marginEnd="@dimen/recycler_view_nearby_button_margin_end"
             app:layout_constraintVertical_chainStyle="packed"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/favorite_tags"
+            app:layout_constraintTop_toTopOf="@+id/favorite_to_links"
+            app:layout_constraintBottom_toBottomOf="@+id/favorite_to_links"
             app:layout_constraintStart_toEndOf="@+id/favorite_filter_prefix"
             app:layout_constraintEnd_toStartOf="@+id/favorite_to_notes" />
-
-        <TextView
-            android:id="@+id/favorite_tags"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@{favorite.tagsAsString}"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textAppearance="@style/FavoritesText"
-            android:layout_marginStart="@dimen/recycler_view_text_to_button_margin_start"
-            android:layout_marginEnd="@dimen/recycler_view_nearby_button_margin_end"
-            app:layout_constraintTop_toBottomOf="@+id/favorite_name"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/favorite_to_notes"
-            app:layout_constraintStart_toEndOf="@+id/favorite_to_links" />
 
         <ImageButton
             android:id="@+id/favorite_to_notes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/item_favorites_favorite_to_notes_button"
-            android:paddingStart="@dimen/recycler_view_button_padding"
-            android:paddingEnd="@dimen/recycler_view_right_button_padding_end"
             android:paddingTop="@dimen/recycler_view_button_padding_vertical"
             android:paddingBottom="@dimen/recycler_view_button_padding_vertical"
+            android:paddingStart="@dimen/recycler_view_button_padding"
+            android:paddingEnd="@dimen/recycler_view_right_button_padding_end"
             android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
             android:onClick="@{() -> presenter.onToNotesClick(favorite.id)}"
             style="@style/Button.RecyclerView"
-            bind:enabled="@{!favorite.conflicted}"
+            bind:imageButtonEnabled="@{!favorite.conflicted}"
             app:srcCompat="@drawable/ic_chevron_right"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <ImageButton
             android:id="@+id/favorite_edit"
@@ -128,8 +111,21 @@
             android:onClick="@{() -> presenter.onEditClick(favorite.id)}"
             style="@style/Button.RecyclerView"
             app:srcCompat="@drawable/ic_edit"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/favorite_to_notes"
+            app:layout_constraintBottom_toBottomOf="@+id/favorite_to_notes"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            android:id="@+id/favorite_tags"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/recycler_view_tags_margin_bottom"
+            android:layout_marginStart="@dimen/recycler_view_text_margin_horizontal"
+            android:layout_marginEnd="@dimen/recycler_view_text_margin_horizontal"
+            android:text="@{favorite.tags}"
+            app:layout_constraintTop_toBottomOf="@+id/favorite_to_links"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
     </android.support.constraint.ConstraintLayout>
 </layout>

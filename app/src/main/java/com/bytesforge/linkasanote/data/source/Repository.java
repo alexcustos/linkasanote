@@ -434,6 +434,7 @@ public class Repository implements DataSource {
     public void saveNote(@NonNull Note note) {
         checkNotNull(note);
 
+        // TODO: chain with cloud saveNote and make both async
         localDataSource.saveNote(note); // blocking operation
         cloudDataSource.saveNote(note);
 
@@ -441,7 +442,7 @@ public class Repository implements DataSource {
         if (cachedNotes == null) {
             cachedNotes = new LinkedHashMap<>();
         }
-        // NOTE: new Note has no rowId to bind to RecyclerView and position is unknown
+        // NOTE: new Note has no rowId to bind to RecyclerView and it position is unknown
         noteCacheIsDirty = true;
         // Tags
         if (cachedTags == null) {

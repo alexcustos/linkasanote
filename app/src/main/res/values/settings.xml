@@ -8,7 +8,7 @@
     <string name="scroll_aware_fab_behavior">com.bytesforge.linkasanote.utils.ScrollAwareFABBehavior</string>
     <integer name="tags_autocomplete_threshold">1</integer>
     <bool name="multiaccount_support">false</bool>
-    <integer name="note_lines">5</integer>
+    <integer name="add_edit_note_lines">5</integer>
 
     <string name="pref_sync_interval_manual_mode">0</string>
     <string name="pref_key_expand_links">expand_links</string>

@@ -4,6 +4,8 @@ public enum FilterType {
 
     ALL,
     CONFLICTED,
-    FAVORITE_RELATED,
-    LINK_RELATED
+    LINK,
+    FAVORITE,
+    NOTE,
+    NO_TAGS
 }

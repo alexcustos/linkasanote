@@ -99,12 +99,12 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.ViewHolder> 
     }
 
     public int getPosition(@Nullable String noteId) {
-        if (noteId == null) return 0;
+        if (noteId == null) return -1;
 
         Integer position = positionMap.get(noteId);
         if (position == null) {
             Log.e(TAG, "No position is found for Note [" + noteId + "]");
-            return 0;
+            return -1;
         }
         return position;
     }

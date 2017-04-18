@@ -19,7 +19,7 @@ public interface NotesContract {
         void setViewModel(@NonNull NotesContract.ViewModel viewModel);
         boolean isActive();
 
-        void showAddNote();
+        void showAddNote(String noteId);
         void showEditNote(@NonNull String noteId);
         void showNotes(@NonNull List<Note> notes);
         void enableActionMode();
@@ -28,6 +28,7 @@ public interface NotesContract {
         void noteVisibilityChanged(int position);
         String removeNote(int position);
         int getPosition(String noteId);
+        void scrollToPosition(int position);
         void confirmNotesRemoval(int[] selectedIds);
         void showConflictResolution(@NonNull String noteId);
     }
@@ -45,9 +46,10 @@ public interface NotesContract {
         void enableActionMode();
         void disableActionMode();
 
-        boolean isSelected(String noteId);
         void toggleSelection();
         void toggleSelection(int position);
+        void toggleSingleSelection(int position);
+        void setSingleSelection(int position, boolean selected);
         void removeSelection();
         void removeSelection(int position);
         int getSelectedCount();
@@ -58,11 +60,8 @@ public interface NotesContract {
         void showProgressOverlay();
         void hideProgressOverlay();
 
-        FilterType getFilterType();
-        void setFilterType(FilterType filterType);
         String getSearchText();
         void setSearchText(String searchText);
-        boolean isNoteVisible(String noteId);
         void toggleNoteVisibility(int position);
         void expandAllNotes();
         void collapseAllNotes();
@@ -85,6 +84,8 @@ public interface NotesContract {
         int getPosition(String noteId);
         void setFilterType(@NonNull FilterType filtering);
         void deleteNotes(int[] selectedIds);
+        boolean isFavoriteFilter();
+        boolean isLinkFilter();
         boolean isExpandNotes();
     }
 }

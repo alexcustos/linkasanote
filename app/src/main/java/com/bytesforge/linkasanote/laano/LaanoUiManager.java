@@ -7,10 +7,12 @@ import android.support.design.widget.TabLayout;
 import android.support.v7.app.ActionBar;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
-import android.util.SparseLongArray;
 import android.view.Menu;
 
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
+import com.bytesforge.linkasanote.laano.links.LinksViewModel;
+import com.bytesforge.linkasanote.laano.notes.NotesViewModel;
 import com.bytesforge.linkasanote.manageaccounts.AccountItem;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CloudUtils;
@@ -33,8 +35,6 @@ public class LaanoUiManager {
 
     private SparseIntArray syncUploaded = new SparseIntArray();
     private SparseIntArray syncDownloaded = new SparseIntArray();
-    //private SparseIntArray filterType = new SparseIntArray();
-    private SparseLongArray favoriteFilter = new SparseLongArray();
     private boolean isAccount = false;
     private boolean isSyncState = false;
 
@@ -82,6 +82,21 @@ public class LaanoUiManager {
     }
 
     public void setFilterType(int position, FilterType filterType) {
+        switch (filterType) {
+            case ALL:
+            case CONFLICTED:
+                setFilterType(position, filterType, null);
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "This filter type must be set with the title [" + filterType.name() + "]");
+        }
+    }
+
+    public void setFilterType(
+            int position, @NonNull FilterType filterType, String filterTitle) {
+        checkNotNull(filterType);
+
         String normalTitle;
         switch (filterType) {
             case ALL:
@@ -90,15 +105,31 @@ public class LaanoUiManager {
             case CONFLICTED:
                 normalTitle = resources.getString(R.string.filter_conflicted);
                 break;
+            case LINK:
+                if (filterTitle == null) {
+                    throw new IllegalStateException("Link filter title must not be null or empty");
+                }
+                normalTitle = LinksViewModel.FILTER_PREFIX + " " + filterTitle;
+                break;
+            case FAVORITE:
+                if (filterTitle == null) {
+                    throw new IllegalStateException("Favorite filter title must not be null or empty");
+                }
+                normalTitle = FavoritesViewModel.FILTER_PREFIX + " " + filterTitle;
+                break;
+            case NOTE:
+                if (filterTitle == null) {
+                    throw new IllegalStateException("Note filter title must not be null or empty");
+                }
+                normalTitle = NotesViewModel.FILTER_PREFIX + " " + filterTitle;
+                break;
+            case NO_TAGS:
+                normalTitle = resources.getString(R.string.filter_no_tags);
+                break;
             default:
                 throw new IllegalArgumentException("Unexpected filtering type [" + filterType.name() + "]");
         }
         setNormalTitle(position, normalTitle);
-    }
-
-    public void setLinkFavoriteFilter(long favoriteFilter) {
-        int position = LaanoFragmentPagerAdapter.LINKS_TAB;
-
     }
 
     private void setNormalTitle(int position, String normalTitle) {
@@ -175,5 +206,9 @@ public class LaanoUiManager {
         } else {
             drawerMenu.findItem(R.id.sync_menu_item).setEnabled(false);
         }
+    }
+
+    public void setCurrentTab(int tab) {
+        laanoActivity.setCurrentTab(tab);
     }
 }

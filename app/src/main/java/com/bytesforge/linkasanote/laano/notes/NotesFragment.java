@@ -3,6 +3,7 @@ package com.bytesforge.linkasanote.laano.notes;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,6 +28,8 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoNotesBinding;
 import com.bytesforge.linkasanote.laano.FilterType;
+import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
+import com.bytesforge.linkasanote.laano.links.LinksViewModel;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteActivity;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteFragment;
 import com.bytesforge.linkasanote.laano.notes.conflictresolution.NotesConflictResolutionDialog;
@@ -46,6 +49,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     private NotesContract.ViewModel viewModel;
     private NotesAdapter adapter;
     private ActionMode actionMode;
+    private LinearLayoutManager rvLayoutManager;
 
     public static NotesFragment newInstance() {
         return new NotesFragment();
@@ -152,11 +156,9 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
                 break;
             case R.id.toolbar_notes_expand_all:
                 viewModel.expandAllNotes();
-                adapter.notifyDataSetChanged();
                 break;
             case R.id.toolbar_notes_collapse_all:
                 viewModel.collapseAllNotes();
-                adapter.notifyDataSetChanged();
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -171,8 +173,11 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     }
 
     @Override
-    public void showAddNote() {
+    public void showAddNote(String linkId) {
         Intent intent = new Intent(getContext(), AddEditNoteActivity.class);
+        if (linkId != null) {
+            intent.putExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID, linkId);
+        }
         startActivityForResult(intent, REQUEST_ADD_NOTE);
     }
 
@@ -226,28 +231,51 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
         List<Note> notes = new ArrayList<>(0);
         adapter = new NotesAdapter(notes, presenter, (NotesViewModel) viewModel);
         rvNotes.setAdapter(adapter);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-        rvNotes.setLayoutManager(layoutManager);
+        rvLayoutManager = new LinearLayoutManager(getContext());
+        rvNotes.setLayoutManager(rvLayoutManager);
     }
 
     private void showFilteringPopupMenu() {
-        PopupMenu menu = new PopupMenu(
+        PopupMenu popupMenu = new PopupMenu(
                 getContext(), getActivity().findViewById(R.id.toolbar_notes_filter));
-        menu.getMenuInflater().inflate(R.menu.filter, menu.getMenu());
-        menu.setOnMenuItemClickListener(item -> {
-
+        Menu menu = popupMenu.getMenu();
+        popupMenu.getMenuInflater().inflate(R.menu.filter, menu);
+        popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.filter_all:
                     presenter.setFilterType(FilterType.ALL);
+                    break;
+                case R.id.filter_link:
+                    presenter.setFilterType(FilterType.LINK);
+                    break;
+                case R.id.filter_favorite:
+                    presenter.setFilterType(FilterType.FAVORITE);
+                    break;
+                case R.id.filter_no_tags:
+                    presenter.setFilterType(FilterType.NO_TAGS);
                     break;
                 case R.id.filter_conflicted:
                     presenter.setFilterType(FilterType.CONFLICTED);
                     break;
             }
-            presenter.loadNotes(false);
             return true;
         });
-        menu.show();
+        Resources resources = getContext().getResources();
+        MenuItem filterNoteMenuItem = menu.findItem(R.id.filter_note);
+        filterNoteMenuItem.setVisible(false);
+
+        MenuItem filterFavoriteMenuItem = menu.findItem(R.id.filter_favorite);
+        boolean isFavoriteFilter = presenter.isFavoriteFilter();
+        filterFavoriteMenuItem.setTitle(resources.getString(
+                R.string.filter_favorite, FavoritesViewModel.FILTER_PREFIX));
+        filterFavoriteMenuItem.setEnabled(isFavoriteFilter);
+
+        MenuItem filterLinkMenuItem = menu.findItem(R.id.filter_link);
+        boolean isLinkFilter = presenter.isLinkFilter();
+        filterLinkMenuItem.setTitle(resources.getString(
+                R.string.filter_link, LinksViewModel.FILTER_PREFIX));
+        filterLinkMenuItem.setEnabled(isLinkFilter);
+        popupMenu.show();
     }
 
     @Override
@@ -271,11 +299,6 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
 
     private void destroyActionMode() {
         if (viewModel.isActionMode()) {
-            int[] selectedIds = viewModel.getSelectedIds().clone();
-            viewModel.removeSelection();
-            for (int selectedId : selectedIds) {
-                adapter.notifyItemChanged(selectedId);
-            }
             viewModel.disableActionMode();
         }
         if (actionMode != null) actionMode = null;
@@ -283,18 +306,25 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
 
     @Override
     public void selectionChanged(int position) {
-        adapter.notifyItemChanged(position);
+        //adapter.notifyItemChanged(position);
         updateActionModeTitle();
     }
 
     @Override
     public void noteVisibilityChanged(int position) {
-        adapter.notifyItemChanged(position);
+        //adapter.notifyItemChanged(position);
     }
 
     @Override
     public int getPosition(String noteId) {
         return adapter.getPosition(noteId);
+    }
+
+    @Override
+    public void scrollToPosition(int position) {
+        if (rvLayoutManager != null) {
+            rvLayoutManager.scrollToPositionWithOffset(position, 0);
+        }
     }
 
     private void updateActionModeTitle() {
@@ -361,7 +391,6 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
                     break;
                 case R.id.notes_select_all:
                     presenter.onSelectAllClick();
-                    adapter.notifyDataSetChanged();
                     updateActionModeTitle();
                     break;
                 default:

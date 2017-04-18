@@ -32,6 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AddEditNoteFragment extends Fragment implements AddEditNoteContract.View {
 
     public static final String ARGUMENT_EDIT_NOTE_ID = "EDIT_NOTE_ID";
+    public static final String ARGUMENT_RELATED_LINK_ID = "RELATED_LINK_ID";
 
     private AddEditNoteContract.Presenter presenter;
     private AddEditNoteContract.ViewModel viewModel;

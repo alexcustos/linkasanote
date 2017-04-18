@@ -17,16 +17,16 @@
     <!-- android:color/background_material_light -->
     <color name="token_text_selected">@color/grey_50</color>
     <color name="item_conflicted">@color/red_100</color>
+    <color name="item_selected">@color/grey_100</color>
     <color name="sync_state_neutral">@android:color/white</color>
     <color name="sync_state_success">@color/green_500</color>
     <color name="sync_state_error">@color/red_400</color>
     <color name="sync_state_conflict">@color/red_400</color>
     <color name="note_background">@color/grey_100</color>
+    <color name="link_background">@color/note_background</color>
 
     <!-- Misc -->
     <color name="green_500">#4CAF50</color>
-    <color name="grey_50">#FAFAFA</color>
-    <color name="grey_100">#F5F5F5</color>
 
     <!-- Indigo: primary -->
     <color name="indigo_50">#E8EAF6</color>
@@ -59,4 +59,16 @@
     <color name="red_A200">#FF5252</color>
     <color name="red_A400">#FF1744</color>
     <color name="red_A700">#D50000</color>
+
+    <!-- Grey -->
+    <color name="grey_50">#FAFAFA</color>
+    <color name="grey_100">#F5F5F5</color>
+    <color name="grey_200">#EEEEEE</color>
+    <color name="grey_300">#E0E0E0</color>
+    <color name="grey_400">#BDBDBD</color>
+    <color name="grey_500">#9E9E9E</color>
+    <color name="grey_600">#757575</color>
+    <color name="grey_700">#616161</color>
+    <color name="grey_800">#424242</color>
+    <color name="grey_900">#212121</color>
 </resources>

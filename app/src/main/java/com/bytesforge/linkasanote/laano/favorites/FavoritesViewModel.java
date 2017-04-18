@@ -5,26 +5,20 @@ import android.content.res.Resources;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.databinding.BindingAdapter;
-import android.databinding.BindingConversion;
 import android.databinding.ObservableBoolean;
 import android.databinding.ObservableInt;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.util.SparseBooleanArray;
-import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
-import com.bytesforge.linkasanote.settings.Settings;
-import com.bytesforge.linkasanote.utils.ActivityUtils;
 import com.bytesforge.linkasanote.utils.SparseBooleanParcelableArray;
 
 import java.util.LinkedList;
@@ -35,7 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // NOTE: global viewModel, applied to fragment and every Item
 public class FavoritesViewModel extends BaseObservable implements FavoritesContract.ViewModel {
 
-    private static final String FILTER_PREFIX = "F";
+    public static final String FILTER_PREFIX = "@";
 
     private static final String STATE_ACTION_MODE = "ACTION_MODE";
     private static final String STATE_LIST_SIZE = "LIST_SIZE";
@@ -49,6 +43,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
 
     private FavoritesContract.Presenter presenter;
     private LaanoUiManager laanoUiManager;
+    private Context context;
     private Resources resources;
 
     private SparseBooleanArray selectedIds;
@@ -64,13 +59,12 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     @Bindable
     public boolean progressOverlay;
 
-    public FavoritesViewModel(@NonNull Context context) {
-        resources = checkNotNull(context).getResources();
-    }
+    @Bindable
+    public boolean selectionChanged; // NOTE: notification helper
 
-    @BindingConversion
-    public static ColorDrawable convertColorToDrawable(int color) {
-        return new ColorDrawable(color);
+    public FavoritesViewModel(@NonNull Context context) {
+        this.context = checkNotNull(context);
+        resources = context.getResources();
     }
 
     @Bindable
@@ -101,29 +95,6 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
             default:
                 throw new IllegalArgumentException("Unexpected snackbar has been requested");
         }
-    }
-
-    @BindingAdapter({"progressOverlay"})
-    public static void showProgressOverlay(FrameLayout view, boolean progressOverlay) {
-        if (progressOverlay) {
-            ActivityUtils.animateAlpha(view, View.VISIBLE,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_ALPHA,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_DURATION,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_SHOW_DELAY);
-        } else {
-            ActivityUtils.animateAlpha(view, View.GONE, 0,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_DURATION, 0);
-        }
-    }
-
-    @BindingAdapter({"enabled"})
-    public static void setImageButtonEnabled(ImageButton view, boolean enabled) {
-        view.setClickable(enabled);
-        view.setFocusable(enabled);
-        view.setEnabled(enabled);
-
-        if (enabled) view.setAlpha(1.0f);
-        else view.setAlpha(Settings.GLOBAL_IMAGE_BUTTON_ALPHA_DISABLED);
     }
 
     @Override
@@ -189,8 +160,19 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         notifyPropertyChanged(BR.favoriteListEmpty);
     }
 
-    public String getFilterPrefix(long rowId) {
-        return "[" + FILTER_PREFIX + rowId + "]";
+    public String getFilterPrefix() {
+        return FILTER_PREFIX;
+    }
+
+    public int getFavoriteBackground(String favoriteId, boolean conflicted, boolean changed) {
+        if (conflicted) {
+            return resources.getColor(R.color.item_conflicted, context.getTheme());
+        }
+        int position = presenter.getPosition(favoriteId);
+        if (isSelected(position)) {
+            return resources.getColor(R.color.item_selected, context.getTheme());
+        }
+        return resources.getColor(android.R.color.transparent, context.getTheme());
     }
 
     @Override
@@ -200,13 +182,15 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
 
     @Override
     public void enableActionMode() {
+        selectedIds.clear();
         actionMode.set(true);
         snackbarId = null; // TODO: get rid of this workaround
-        notifyChange(); // NOTE: otherwise, the only current Item will be notified
+        notifyChange();
     }
 
     @Override
     public void disableActionMode() {
+        removeSelection();
         actionMode.set(false);
         snackbarId = null;
         notifyChange();
@@ -236,7 +220,9 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     // Selection
 
     @Override
-    public boolean isSelected(String favoriteId) {
+    public boolean isSelected(String favoriteId, boolean changed) {
+        if (!isActionMode()) return false;
+
         int position = presenter.getPosition(favoriteId);
         return isSelected(position);
     }
@@ -256,6 +242,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
                 selectedIds.put(i, true);
             }
         }
+        notifyChange();
     }
 
     @Override
@@ -265,16 +252,50 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         } else {
             selectedIds.put(position, true);
         }
+        notifyPropertyChanged(BR.selectionChanged);
+    }
+
+    @Override
+    public void toggleSingleSelection(int position) {
+        int size = selectedIds.size();
+        if (size == 1 && selectedIds.get(position)) {
+            selectedIds.delete(position);
+            notifyPropertyChanged(BR.selectionChanged);
+        } else if (size <= 0) {
+            selectedIds.put(position, true);
+            notifyPropertyChanged(BR.selectionChanged);
+        } else {
+            selectedIds.clear();
+            selectedIds.put(position, true);
+            notifyChange();
+        }
+    }
+
+    @Override
+    public void setSingleSelection(int position, boolean selected) {
+        int size = selectedIds.size();
+        if (selectedIds.get(position) != selected) {
+            toggleSingleSelection(position);
+        } else if (selected && size > 1) {
+            selectedIds.clear();
+            selectedIds.put(position, true);
+            notifyChange();
+        } else if (!selected && size > 0) {
+            selectedIds.clear();
+            notifyChange();
+        }
     }
 
     @Override
     public void removeSelection() {
         selectedIds.clear();
+        notifyChange();
     }
 
     @Override
     public void removeSelection(int position) {
         selectedIds.delete(position);
+        notifyPropertyChanged(BR.selectionChanged);
     }
 
     @Override
@@ -310,6 +331,8 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         snackbarId = SnackbarId.CONFLICT_RESOLUTION_ERROR;
         notifyPropertyChanged(BR.snackbarId);
     }
+
+    // Progress
 
     @Override
     public void showProgressOverlay() {

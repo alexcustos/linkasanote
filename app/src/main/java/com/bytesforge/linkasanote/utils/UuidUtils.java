@@ -14,6 +14,9 @@ public class UuidUtils {
     private static final String TAG = UuidUtils.class.getSimpleName();
     private static final int KEY_LENGTH = 22;
 
+    private UuidUtils() {
+    }
+
     @VisibleForTesting
     public static int FLAGS = Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE;
 

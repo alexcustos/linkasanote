@@ -24,12 +24,46 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/screen_edge_padding">
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/screen_edge_padding"
+                    android:layout_marginBottom="@dimen/screen_edge_padding"
+                    android:orientation="vertical"
+                    android:background="@color/link_background"
+                    android:padding="@dimen/screen_edge_padding">
+
+                    <TextView
+                        android:id="@+id/link_caption"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.linkCaption}"
+                        android:textAppearance="@style/NotesText.LinkCaption" />
+                    <TextView
+                        android:id="@+id/link_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.linkName}"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        android:visibility="@{viewModel.linkName == null ? View.GONE : View.VISIBLE}" />
+                    <TextView
+                        android:id="@+id/link_link"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.linkLink}"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:visibility="@{viewModel.linkLink == null ? View.GONE : View.VISIBLE}" />
+                </LinearLayout>
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:paddingStart="@dimen/screen_edge_padding"
+                    android:paddingEnd="@dimen/screen_edge_padding"
                     bind:noteError="@{viewModel.noteErrorText}">
 
                     <EditText
@@ -39,9 +73,9 @@
                         android:hint="@string/add_edit_note_note_hint"
                         android:inputType="text|textMultiLine"
                         android:gravity="top"
-                        android:lines="@integer/note_lines"
-                        android:minLines="@integer/note_lines"
-                        android:maxLines="@integer/note_lines"
+                        android:lines="@integer/add_edit_note_lines"
+                        android:minLines="@integer/add_edit_note_lines"
+                        android:maxLines="@integer/add_edit_note_lines"
                         android:text="@={viewModel.noteNote}"
                         android:afterTextChanged="@{() -> viewModel.afterNoteChanged()}" />
                 </android.support.design.widget.TextInputLayout>
@@ -49,14 +83,14 @@
                 <android.support.design.widget.TextInputLayout
                     android:id="@+id/note_tags_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:paddingStart="@dimen/screen_edge_padding"
+                    android:paddingEnd="@dimen/screen_edge_padding">
 
                     <com.bytesforge.linkasanote.laano.TagsCompletionView
                         android:id="@+id/note_tags"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:lineSpacingExtra="@dimen/tag_line_spacing_extra"
-                        android:gravity="top"
                         android:hint="@string/add_edit_note_tags_hint"
                         android:inputType="text|textNoSuggestions|textMultiLine" />
                 </android.support.design.widget.TextInputLayout>

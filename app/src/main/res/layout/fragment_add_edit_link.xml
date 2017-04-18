@@ -87,8 +87,6 @@
                         android:id="@+id/link_tags"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:lineSpacingExtra="@dimen/tag_line_spacing_extra"
-                        android:gravity="top"
                         android:hint="@string/add_edit_link_tags_hint"
                         android:inputType="text|textNoSuggestions|textMultiLine" />
                 </android.support.design.widget.TextInputLayout>

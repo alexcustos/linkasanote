@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.laano.notes.addeditnote;
 
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -27,8 +28,12 @@ public class AddEditNoteActivity extends AppCompatActivity {
         ActivityAddEditNoteBinding binding =
                 DataBindingUtil.setContentView(this, R.layout.activity_add_edit_note);
 
-        String noteId = getIntent().getStringExtra(
-                AddEditNoteFragment.ARGUMENT_EDIT_NOTE_ID);
+        Intent startIntent = getIntent();
+        String noteId = startIntent.getStringExtra(AddEditNoteFragment.ARGUMENT_EDIT_NOTE_ID);
+        String linkId = startIntent.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
+        if (noteId != null && linkId != null) {
+            throw new UnsupportedOperationException("Link connection can only be set for the new Note");
+        }
         // Toolbar
         setSupportActionBar(binding.toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -54,7 +59,7 @@ public class AddEditNoteActivity extends AppCompatActivity {
         LaanoApplication application = (LaanoApplication) getApplication();
         application.getApplicationComponent()
                 .getAddEditNoteComponent(
-                        new AddEditNotePresenterModule(this, fragment, noteId))
+                        new AddEditNotePresenterModule(this, fragment, noteId, linkId))
                 .inject(this);
     }
 

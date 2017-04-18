@@ -99,12 +99,12 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
     }
 
     public int getPosition(@Nullable String linkId) {
-        if (linkId == null) return 0;
+        if (linkId == null) return -1;
 
         Integer position = positionMap.get(linkId);
         if (position == null) {
             Log.e(TAG, "No position is found for Link [" + linkId + "]");
-            return 0;
+            return -1;
         }
         return position;
     }

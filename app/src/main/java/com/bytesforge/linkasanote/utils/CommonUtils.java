@@ -2,7 +2,10 @@ package com.bytesforge.linkasanote.utils;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.IDN;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -49,5 +52,14 @@ public class CommonUtils {
 
     public static String getTempDir(@NonNull Context context) {
         return checkNotNull(context).getCacheDir().getAbsolutePath();
+    }
+
+    public static void logStackTrace(@NonNull String tag, @NonNull Throwable throwable) {
+        checkNotNull(tag);
+        checkNotNull(throwable);
+
+        StringWriter sw = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(sw));
+        Log.e(tag, throwable.toString());
     }
 }

@@ -5,30 +5,19 @@ import android.content.res.Resources;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.databinding.BindingAdapter;
-import android.databinding.BindingConversion;
 import android.databinding.ObservableBoolean;
 import android.databinding.ObservableInt;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.text.Html;
-import android.text.Spanned;
 import android.util.SparseBooleanArray;
-import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.laano.FilterType;
-import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
-import com.bytesforge.linkasanote.settings.Settings;
-import com.bytesforge.linkasanote.utils.ActivityUtils;
 import com.bytesforge.linkasanote.utils.SparseBooleanParcelableArray;
-import com.google.common.base.Strings;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -38,13 +27,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // NOTE: global viewModel, applied to fragment and every Item
 public class LinksViewModel extends BaseObservable implements LinksContract.ViewModel {
 
-    private static final String FILTER_PREFIX = "L";
+    public static final String FILTER_PREFIX = "#";
 
     private static final String STATE_ACTION_MODE = "ACTION_MODE";
     private static final String STATE_LIST_SIZE = "LIST_SIZE";
     private static final String STATE_SELECTED_IDS = "SELECTED_IDS";
-    private static final String STATE_FILTER_TYPE = "FILTER_TYPE";
-    private static final String STATE_FAVORITE_FILTER = "FAVORITE_FILTER";
     private static final String STATE_SEARCH_TEXT = "SEARCH_TEXT";
     private static final String STATE_PROGRESS_OVERLAY = "PROGRESS_OVERLAY";
 
@@ -53,15 +40,14 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
 
     private LinksContract.Presenter presenter;
     private LaanoUiManager laanoUiManager;
+    private Context context;
     private Resources resources;
 
     private SparseBooleanArray selectedIds;
-    private FilterType filterType;
-    private long favoriteFilter;
     private String searchText;
 
     public enum SnackbarId {
-        DATABASE_ERROR, CONFLICT_RESOLUTION_SUCCESSFUL, CONFLICT_RESOLUTION_ERROR};
+        DATABASE_ERROR, CONFLICT_RESOLUTION_SUCCESSFUL, CONFLICT_RESOLUTION_ERROR, OPEN_LINK_ERROR};
 
     @Bindable
     public SnackbarId snackbarId;
@@ -69,13 +55,12 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     @Bindable
     public boolean progressOverlay;
 
-    public LinksViewModel(@NonNull Context context) {
-        resources = checkNotNull(context).getResources();
-    }
+    @Bindable
+    public boolean selectionChanged; // NOTE: notification helper
 
-    @BindingConversion
-    public static ColorDrawable convertColorToDrawable(int color) {
-        return new ColorDrawable(color);
+    public LinksViewModel(@NonNull Context context) {
+        this.context = checkNotNull(context);
+        resources = context.getResources();
     }
 
     @Bindable
@@ -103,32 +88,13 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
                         R.string.dialog_link_conflict_resolved_error,
                         Snackbar.LENGTH_LONG).show();
                 break;
+            case OPEN_LINK_ERROR:
+                Snackbar.make(view,
+                        R.string.dialog_link_open_error,
+                        Snackbar.LENGTH_LONG).show();
             default:
                 throw new IllegalArgumentException("Unexpected snackbar has been requested");
         }
-    }
-
-    @BindingAdapter({"progressOverlay"})
-    public static void showProgressOverlay(FrameLayout view, boolean progressOverlay) {
-        if (progressOverlay) {
-            ActivityUtils.animateAlpha(view, View.VISIBLE,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_ALPHA,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_DURATION,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_SHOW_DELAY);
-        } else {
-            ActivityUtils.animateAlpha(view, View.GONE, 0,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_DURATION, 0);
-        }
-    }
-
-    @BindingAdapter({"enabled"})
-    public static void setImageButtonEnabled(ImageButton view, boolean enabled) {
-        view.setClickable(enabled);
-        view.setFocusable(enabled);
-        view.setEnabled(enabled);
-
-        if (enabled) view.setAlpha(1.0f);
-        else view.setAlpha(Settings.GLOBAL_IMAGE_BUTTON_ALPHA_DISABLED);
     }
 
     @Override
@@ -147,8 +113,6 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         outState.putBoolean(STATE_ACTION_MODE, actionMode.get());
         outState.putInt(STATE_LIST_SIZE, linkListSize.get());
         outState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray(selectedIds));
-        outState.putInt(STATE_FILTER_TYPE, filterType.ordinal());
-        outState.putLong(STATE_FAVORITE_FILTER, favoriteFilter);
         outState.putString(STATE_SEARCH_TEXT, searchText);
         outState.putBoolean(STATE_PROGRESS_OVERLAY, progressOverlay);
     }
@@ -160,8 +124,6 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         actionMode.set(state.getBoolean(STATE_ACTION_MODE));
         linkListSize.set(state.getInt(STATE_LIST_SIZE));
         selectedIds = state.getParcelable(STATE_SELECTED_IDS);
-        setFilterType(FilterType.values()[state.getInt(STATE_FILTER_TYPE)]);
-        setFavoriteFilter(state.getLong(STATE_FAVORITE_FILTER));
         searchText = state.getString(STATE_SEARCH_TEXT);
         progressOverlay = state.getBoolean(STATE_PROGRESS_OVERLAY);
 
@@ -175,8 +137,6 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         // NOTE: do not show empty list warning if empty state is not confirmed
         defaultState.putInt(STATE_LIST_SIZE, Integer.MAX_VALUE);
         defaultState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray());
-        defaultState.putInt(STATE_FILTER_TYPE, FilterType.ALL.ordinal());
-        defaultState.putLong(STATE_FAVORITE_FILTER, 0);
         defaultState.putString(STATE_SEARCH_TEXT, null);
         defaultState.putBoolean(STATE_PROGRESS_OVERLAY, false);
 
@@ -193,24 +153,33 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     }
 
     public void setLinkListSize(int linkListSize) {
+        boolean firstLoad = (this.linkListSize.get() == Integer.MAX_VALUE);
         this.linkListSize.set(linkListSize);
+        // TODO: finish
+        /*if (firstLoad) {
+            if (presenter.isExpandLinks()) expandAllLinks();
+            else collapseAllLinks();
+        }*/
         notifyPropertyChanged(BR.linkListEmpty);
     }
 
-    public String getFilterPrefix(long rowId) {
-        return "[" + FILTER_PREFIX + rowId + "]";
+    public String getFilterPrefix() {
+        return FILTER_PREFIX;
+    }
+
+    public int getLinkBackground(String linkId, boolean conflicted, boolean changed) {
+        if (conflicted) {
+            return resources.getColor(R.color.item_conflicted, context.getTheme());
+        }
+        int position = presenter.getPosition(linkId);
+        if (isSelected(position)) {
+            return resources.getColor(R.color.item_selected, context.getTheme());
+        }
+        return resources.getColor(android.R.color.transparent, context.getTheme());
     }
 
     public String getLinkCounter(int counter) {
         return "(" + counter + ")";
-    }
-
-    public Spanned getTags(String tags) {
-        if (Strings.isNullOrEmpty(tags)) return null;
-
-        String tagsCaption = resources.getString(R.string.card_link_tags_caption).toUpperCase();
-        return Html.fromHtml("<strong>" + tagsCaption + ":</strong> " + tags,
-                Html.FROM_HTML_MODE_LEGACY);
     }
 
     @Override
@@ -221,8 +190,8 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     @Override
     public void enableActionMode() {
         actionMode.set(true);
-        snackbarId = null; // TODO: get rid of this workaround
-        notifyChange(); // NOTE: otherwise, the only current Item will be notified
+        snackbarId = null;
+        notifyChange();
     }
 
     @Override
@@ -230,25 +199,6 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         actionMode.set(false);
         snackbarId = null;
         notifyChange();
-    }
-
-    @Override
-    public FilterType getFilterType() {
-        return filterType;
-    }
-
-    @Override
-    public void setFilterType(FilterType filterType) {
-        this.filterType = filterType;
-        // TODO: set LINKS_TAB to presenter and request it from presenter
-        // NOTE: do not update title here just set it
-        laanoUiManager.setFilterType(LaanoFragmentPagerAdapter.LINKS_TAB, filterType);
-    }
-
-    @Override
-    public void setFavoriteFilter(long favoriteFilter) {
-        this.favoriteFilter = favoriteFilter;
-        laanoUiManager.setLinkFavoriteFilter(favoriteFilter);
     }
 
     @Override
@@ -264,7 +214,7 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     // Selection
 
     @Override
-    public boolean isSelected(String linkId) {
+    public boolean isSelected(String linkId, boolean changed) {
         int position = presenter.getPosition(linkId);
         return isSelected(position);
     }
@@ -284,6 +234,7 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
                 selectedIds.put(i, true);
             }
         }
+        notifyChange();
     }
 
     @Override
@@ -293,16 +244,50 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         } else {
             selectedIds.put(position, true);
         }
+        notifyPropertyChanged(BR.selectionChanged);
+    }
+
+    @Override
+    public void toggleSingleSelection(int position) {
+        int size = selectedIds.size();
+        if (size == 1 && selectedIds.get(position)) {
+            selectedIds.delete(position);
+            notifyPropertyChanged(BR.selectionChanged);
+        } else if (size <= 0) {
+            selectedIds.put(position, true);
+            notifyPropertyChanged(BR.selectionChanged);
+        } else {
+            selectedIds.clear();
+            selectedIds.put(position, true);
+            notifyChange();
+        }
+    }
+
+    @Override
+    public void setSingleSelection(int position, boolean selected) {
+        int size = selectedIds.size();
+        if (selectedIds.get(position) != selected) {
+            toggleSingleSelection(position);
+        } else if (selected && size > 1) {
+            selectedIds.clear();
+            selectedIds.put(position, true);
+            notifyChange();
+        } else if (!selected && size > 0) {
+            selectedIds.clear();
+            notifyChange();
+        }
     }
 
     @Override
     public void removeSelection() {
         selectedIds.clear();
+        notifyChange();
     }
 
     @Override
     public void removeSelection(int position) {
         selectedIds.delete(position);
+        notifyPropertyChanged(BR.selectionChanged);
     }
 
     @Override
@@ -321,6 +306,10 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         return ids.stream().mapToInt(i -> i).toArray();
     }
 
+    // Notes Visibility
+
+    // Snackbar
+
     @Override
     public void showDatabaseErrorSnackbar() {
         snackbarId = SnackbarId.DATABASE_ERROR;
@@ -338,6 +327,14 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         snackbarId = SnackbarId.CONFLICT_RESOLUTION_ERROR;
         notifyPropertyChanged(BR.snackbarId);
     }
+
+    @Override
+    public void showOpenLinkErrorSnackbar() {
+        snackbarId = SnackbarId.OPEN_LINK_ERROR;
+        notifyPropertyChanged(BR.snackbarId);
+    }
+
+    // Progress
 
     @Override
     public void showProgressOverlay() {

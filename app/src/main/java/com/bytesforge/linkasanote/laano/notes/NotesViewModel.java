@@ -7,32 +7,17 @@ import android.databinding.Bindable;
 import android.databinding.BindingAdapter;
 import android.databinding.ObservableBoolean;
 import android.databinding.ObservableInt;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.util.SparseBooleanArray;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.TextView;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
-import com.bytesforge.linkasanote.data.Tag;
-import com.bytesforge.linkasanote.laano.FilterType;
-import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
-import com.bytesforge.linkasanote.settings.Settings;
-import com.bytesforge.linkasanote.utils.ActivityUtils;
 import com.bytesforge.linkasanote.utils.SparseBooleanParcelableArray;
-import com.tokenautocomplete.ViewSpan;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -42,12 +27,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // NOTE: global viewModel, applied to fragment and every Item
 public class NotesViewModel extends BaseObservable implements NotesContract.ViewModel {
 
+    public static final String FILTER_PREFIX = "*";
+
     private static final String TAG = NotesViewModel.class.getSimpleName();
 
     private static final String STATE_ACTION_MODE = "ACTION_MODE";
     private static final String STATE_LIST_SIZE = "LIST_SIZE";
     private static final String STATE_SELECTED_IDS = "SELECTED_IDS";
-    private static final String STATE_FILTER_TYPE = "FILTER_TYPE";
     private static final String STATE_VISIBLE_NOTE_IDS = "VISIBLE_NOTE_IDS";
     private static final String STATE_SEARCH_TEXT = "SEARCH_TEXT";
     private static final String STATE_PROGRESS_OVERLAY = "PROGRESS_OVERLAY";
@@ -57,11 +43,11 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
 
     private NotesContract.Presenter presenter;
     private LaanoUiManager laanoUiManager;
+    private Context context;
     private Resources resources;
 
     private SparseBooleanArray selectedIds;
     private SparseBooleanArray visibleNoteIds;
-    private FilterType filterType;
     private String searchText;
 
     public enum SnackbarId {
@@ -73,14 +59,16 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
     @Bindable
     public boolean progressOverlay;
 
-    public NotesViewModel(@NonNull Context context) {
-        resources = checkNotNull(context).getResources();
-    }
+    @Bindable
+    public boolean selectionChanged; // NOTE: notification helper
 
-    /*@BindingConversion
-    public static ColorDrawable convertColorToDrawable(int color) {
-        return new ColorDrawable(color);
-    }*/
+    @Bindable
+    public boolean noteVisibilityChanged; // NOTE: notification helper
+
+    public NotesViewModel(@NonNull Context context) {
+        this.context = checkNotNull(context);
+        resources = context.getResources();
+    }
 
     @Bindable
     public boolean isNoteListEmpty() {
@@ -112,53 +100,6 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         }
     }
 
-    @BindingAdapter({"progressOverlay"})
-    public static void showProgressOverlay(FrameLayout view, boolean progressOverlay) {
-        if (progressOverlay) {
-            ActivityUtils.animateAlpha(view, View.VISIBLE,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_ALPHA,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_DURATION,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_SHOW_DELAY);
-        } else {
-            ActivityUtils.animateAlpha(view, View.GONE, 0,
-                    Settings.GLOBAL_PROGRESS_OVERLAY_DURATION, 0);
-        }
-    }
-
-    @BindingAdapter({"enabled"})
-    public static void setImageButtonEnabled(ImageButton view, boolean enabled) {
-        view.setClickable(enabled);
-        view.setFocusable(enabled);
-        view.setEnabled(enabled);
-
-        if (enabled) view.setAlpha(1.0f);
-        else view.setAlpha(Settings.GLOBAL_IMAGE_BUTTON_ALPHA_DISABLED);
-    }
-
-    @BindingAdapter({"noteTags"})
-    public static void showNoteTags(TextView view, List<Tag> tags) {
-        ViewTreeObserver observer = view.getViewTreeObserver();
-        observer.addOnGlobalLayoutListener(() -> {
-            SpannableStringBuilder noteTags = new SpannableStringBuilder();
-            LayoutInflater inflater = LayoutInflater.from(view.getContext());
-            int maxWidth = view.getMeasuredWidth();
-            for (Tag tag : tags) {
-                TextView tokenView = (TextView) inflater.inflate(R.layout.token_tag, (ViewGroup) null, false);
-                tokenView.setText(tag.getName());
-                ViewSpan viewSpan = new ViewSpan(tokenView, maxWidth);
-                SpannableStringBuilder tagBuilder = new SpannableStringBuilder(",, ");
-                tagBuilder.setSpan(viewSpan, 0, tagBuilder.length() - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                noteTags.append(tagBuilder);
-            }
-            view.setText(noteTags);
-        });
-    }
-
-    @BindingAdapter({"app:srcCompat"})
-    public static void setSrcCompat(ImageButton view, Drawable drawable) {
-        view.setImageDrawable(drawable);
-    }
-
     @Override
     public void setInstanceState(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState == null) {
@@ -176,7 +117,6 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         outState.putInt(STATE_LIST_SIZE, noteListSize.get());
         outState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray(selectedIds));
         outState.putParcelable(STATE_VISIBLE_NOTE_IDS, new SparseBooleanParcelableArray(visibleNoteIds));
-        outState.putInt(STATE_FILTER_TYPE, filterType.ordinal());
         outState.putString(STATE_SEARCH_TEXT, searchText);
         outState.putBoolean(STATE_PROGRESS_OVERLAY, progressOverlay);
     }
@@ -189,11 +129,10 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         noteListSize.set(state.getInt(STATE_LIST_SIZE));
         selectedIds = state.getParcelable(STATE_SELECTED_IDS);
         visibleNoteIds = state.getParcelable(STATE_VISIBLE_NOTE_IDS);
-        setFilterType(FilterType.values()[state.getInt(STATE_FILTER_TYPE)]);
         searchText = state.getString(STATE_SEARCH_TEXT);
         progressOverlay = state.getBoolean(STATE_PROGRESS_OVERLAY);
 
-        //notifyChange();
+        notifyChange();
     }
 
     private Bundle getDefaultInstanceState() {
@@ -204,7 +143,6 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         defaultState.putInt(STATE_LIST_SIZE, Integer.MAX_VALUE);
         defaultState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray());
         defaultState.putParcelable(STATE_VISIBLE_NOTE_IDS, new SparseBooleanParcelableArray());
-        defaultState.putInt(STATE_FILTER_TYPE, FilterType.ALL.ordinal());
         defaultState.putString(STATE_SEARCH_TEXT, null);
         defaultState.putBoolean(STATE_PROGRESS_OVERLAY, false);
 
@@ -230,6 +168,21 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         notifyPropertyChanged(BR.noteListEmpty);
     }
 
+    public String getFilterPrefix() {
+        return FILTER_PREFIX;
+    }
+
+    public int getNoteBackground(String noteId, boolean conflicted, boolean changed) {
+        if (conflicted) {
+            return resources.getColor(R.color.item_conflicted, context.getTheme());
+        }
+        int position = presenter.getPosition(noteId);
+        if (isSelected(position)) {
+            return resources.getColor(R.color.item_selected, context.getTheme());
+        }
+        return resources.getColor(android.R.color.transparent, context.getTheme());
+    }
+
     @Override
     public boolean isActionMode() {
         return actionMode.get();
@@ -238,26 +191,16 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
     @Override
     public void enableActionMode() {
         actionMode.set(true);
-        snackbarId = null; // TODO: get rid of this workaround
-        notifyChange(); // NOTE: otherwise, the only current Item will be notified
-    }
-
-    @Override
-    public void disableActionMode() {
-        actionMode.set(false);
         snackbarId = null;
         notifyChange();
     }
 
     @Override
-    public FilterType getFilterType() {
-        return filterType;
-    }
-
-    @Override
-    public void setFilterType(FilterType filterType) {
-        this.filterType = filterType;
-        laanoUiManager.setFilterType(LaanoFragmentPagerAdapter.NOTES_TAB, filterType);
+    public void disableActionMode() {
+        removeSelection();
+        actionMode.set(false);
+        snackbarId = null;
+        notifyChange();
     }
 
     @Override
@@ -270,24 +213,9 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         this.searchText = searchText;
     }
 
-    public String getNoteCaption(String noteNote) {
-        if (noteNote == null) return null;
-
-        String[] noteLines = noteNote.split(System.lineSeparator(), 2);
-        return noteLines[0];
-        /* EXAMPLE: scanner
-        Scanner scanner = new Scanner(noteNote);
-        if (scanner.hasNextLine()) {
-            return scanner.nextLine();
-        }
-        return null;*/
-    }
-
-
     // Selection
 
-    @Override
-    public boolean isSelected(String noteId) {
+    public boolean isSelected(String noteId, boolean changed) {
         int position = presenter.getPosition(noteId);
         return isSelected(position);
     }
@@ -307,6 +235,7 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
                 selectedIds.put(i, true);
             }
         }
+        notifyChange();
     }
 
     @Override
@@ -316,16 +245,50 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         } else {
             selectedIds.put(position, true);
         }
+        notifyPropertyChanged(BR.selectionChanged);
+    }
+
+    @Override
+    public void toggleSingleSelection(int position) {
+        int size = selectedIds.size();
+        if (size == 1 && selectedIds.get(position)) {
+            selectedIds.delete(position);
+            notifyPropertyChanged(BR.selectionChanged);
+        } else if (size <= 0) {
+            selectedIds.put(position, true);
+            notifyPropertyChanged(BR.selectionChanged);
+        } else {
+            selectedIds.clear();
+            selectedIds.put(position, true);
+            notifyChange();
+        }
+    }
+
+    @Override
+    public void setSingleSelection(int position, boolean selected) {
+        int size = selectedIds.size();
+        if (selectedIds.get(position) != selected) {
+            toggleSingleSelection(position);
+        } else if (selected && size > 1) {
+            selectedIds.clear();
+            selectedIds.put(position, true);
+            notifyChange();
+        } else if (!selected && size > 0) {
+            selectedIds.clear();
+            notifyChange();
+        }
     }
 
     @Override
     public void removeSelection() {
         selectedIds.clear();
+        notifyChange();
     }
 
     @Override
     public void removeSelection(int position) {
         selectedIds.delete(position);
+        notifyPropertyChanged(BR.selectionChanged);
     }
 
     @Override
@@ -346,8 +309,7 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
 
     // Note Visibility
 
-    @Override
-    public boolean isNoteVisible(String noteId) {
+    public boolean isNoteVisible(String noteId, boolean changed) {
         int position = presenter.getPosition(noteId);
         return isNoteVisible(position);
     }
@@ -363,6 +325,7 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         } else {
             visibleNoteIds.put(position, true);
         }
+        notifyPropertyChanged(BR.noteVisibilityChanged);
     }
 
     @Override
@@ -373,11 +336,13 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         for (int i = 0; i < listSize; i++) {
             visibleNoteIds.put(i, true);
         }
+        notifyChange();
     }
 
     @Override
     public void collapseAllNotes() {
         visibleNoteIds.clear();
+        notifyChange();
     }
 
     // Snackbar

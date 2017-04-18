@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.laano.links;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,6 +21,7 @@ public interface LinksContract {
         boolean isActive();
 
         void showAddLink();
+        void showAddNote(@NonNull String linkId);
         void showEditLink(@NonNull String linkId);
         void showLinks(@NonNull List<Link> links);
         void enableActionMode();
@@ -27,6 +29,8 @@ public interface LinksContract {
         void selectionChanged(int position);
         String removeLink(int position);
         int getPosition(String linkId);
+        void scrollToPosition(int position);
+        void openLink(@NonNull Uri uri);
         void confirmLinksRemoval(int[] selectedIds);
         void showConflictResolution(@NonNull String linkId);
     }
@@ -44,9 +48,11 @@ public interface LinksContract {
         void enableActionMode();
         void disableActionMode();
 
-        boolean isSelected(String linkId);
+        boolean isSelected(String linkId, boolean changed);
         void toggleSelection();
         void toggleSelection(int position);
+        void toggleSingleSelection(int position);
+        void setSingleSelection(int position, boolean selected);
         void removeSelection();
         void removeSelection(int position);
         int getSelectedCount();
@@ -54,12 +60,10 @@ public interface LinksContract {
         void showDatabaseErrorSnackbar();
         void showConflictResolutionSuccessfulSnackbar();
         void showConflictResolutionErrorSnackbar();
+        void showOpenLinkErrorSnackbar();
         void showProgressOverlay();
         void hideProgressOverlay();
 
-        FilterType getFilterType();
-        void setFilterType(FilterType filterType);
-        void setFavoriteFilter(long favoriteFilter);
         String getSearchText();
         void setSearchText(String searchText);
     }
@@ -81,6 +85,8 @@ public interface LinksContract {
         void onSelectAllClick();
         int getPosition(String linkId);
         void setFilterType(@NonNull FilterType filtering);
+        boolean isFavoriteFilter();
+        boolean isNoteFilter();
         void deleteLinks(int[] selectedIds);
     }
 }

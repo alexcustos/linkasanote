@@ -1,28 +1,38 @@
 package com.bytesforge.linkasanote.laano.notes;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
+import android.support.annotation.Nullable;
 
+import com.bytesforge.linkasanote.data.Note;
+import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
+import com.bytesforge.linkasanote.laano.links.LinksPresenter;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Strings;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.util.Collections;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class NotesPresenter implements NotesContract.Presenter {
 
     private static final String TAG = NotesPresenter.class.getSimpleName();
+
+    public static final String SETTING_NOTES_FILTER_TYPE = "NOTES_FILTER_TYPE";
 
     private final Repository repository;
     private final NotesContract.View view;
@@ -34,6 +44,10 @@ public final class NotesPresenter implements NotesContract.Presenter {
     @NonNull
     private final CompositeDisposable disposable;
 
+    private String favoriteFilter;
+    private String linkFilter;
+    private List<Tag> favoriteFilterTags;
+    private FilterType filterType;
     private boolean firstLoad = true;
 
     @Inject
@@ -60,7 +74,6 @@ public final class NotesPresenter implements NotesContract.Presenter {
 
     @Override
     public void subscribe() {
-        loadNotes(false);
     }
 
     @Override
@@ -70,6 +83,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
 
     @Override
     public void onTabSelected() {
+        loadNotes(false);
     }
 
     @Override
@@ -79,7 +93,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
 
     @Override
     public void addNote() {
-        view.showAddNote();
+        view.showAddNote(linkFilter);
     }
 
     @Override
@@ -97,21 +111,73 @@ public final class NotesPresenter implements NotesContract.Presenter {
         if (showLoading) {
             viewModel.showProgressOverlay();
         }
-        Disposable disposable = repository.getNotes()
+        FilterType extendedFilter = updateFilter();
+        Observable<Note> loadNotes = null;
+        if (extendedFilter == FilterType.FAVORITE) {
+            loadNotes = repository.getFavorite(favoriteFilter)
+                    .toObservable()
+                    .flatMap(favorite -> {
+                        // NOTE: just to be sure we are still in sync
+                        filterType = FilterType.FAVORITE;
+                        favoriteFilter = favorite.getId();
+                        favoriteFilterTags = favorite.getTags();
+                        laanoUiManager.setFilterType(
+                                LaanoFragmentPagerAdapter.NOTES_TAB, filterType, favorite.getName());
+                        return repository.getNotes();
+                    });
+        } else if (extendedFilter == FilterType.LINK) {
+            loadNotes = repository.getLink(linkFilter)
+                    .toObservable()
+                    .flatMap(link -> {
+                        filterType = FilterType.LINK;
+                        linkFilter = link.getId();
+                        String linkName = link.getName() == null ? link.getLink() : link.getName();
+                        laanoUiManager.setFilterType(
+                                LaanoFragmentPagerAdapter.NOTES_TAB, filterType, linkName);
+                        return repository.getNotes();
+                    });
+        }
+        if (loadNotes != null) {
+            loadNotes = loadNotes.doOnError(throwable -> {
+                CommonUtils.logStackTrace(TAG, throwable);
+                if (throwable instanceof NoSuchElementException) {
+                    filterType = Settings.DEFAULT_FILTER_TYPE;
+                    laanoUiManager.setFilterType(
+                            LaanoFragmentPagerAdapter.NOTES_TAB, filterType, null);
+                } else {
+                    viewModel.showDatabaseErrorSnackbar();
+                }
+            }).onErrorResumeNext(repository.getNotes());
+        } else {
+            loadNotes = repository.getNotes();
+        }
+        Disposable disposable = loadNotes
                 .subscribeOn(schedulerProvider.computation())
                 .filter(note -> {
                     String searchText = viewModel.getSearchText();
                     if (!Strings.isNullOrEmpty(searchText)) {
                         searchText = searchText.toLowerCase();
                         String noteNote = note.getNote();
-                        if (noteNote != null
-                                && !noteNote.toLowerCase().contains(searchText)) {
+                        if (noteNote != null && !noteNote.toLowerCase().contains(searchText)) {
                             return false;
                         }
                     }
-                    switch (viewModel.getFilterType()) {
+                    switch (filterType) {
                         case CONFLICTED:
                             return note.isConflicted();
+                        case LINK:
+                            String linkId = note.getLinkId();
+                            return linkId != null && linkId.equals(linkFilter);
+                        case FAVORITE:
+                            List<Tag> noteTags = note.getTags();
+                            if (favoriteFilter == null) {
+                                return true; // No filter
+                            } else if (noteTags == null) {
+                                return false; // No tags
+                            }
+                            return !Collections.disjoint(favoriteFilterTags, noteTags);
+                        case NO_TAGS:
+                            return note.getTags() == null;
                         case ALL:
                         default:
                             return true;
@@ -126,12 +192,14 @@ public final class NotesPresenter implements NotesContract.Presenter {
                     if (showLoading) {
                         viewModel.hideProgressOverlay();
                     }
+                    laanoUiManager.updateTitle(LaanoFragmentPagerAdapter.NOTES_TAB);
                 })
-                .subscribe(view::showNotes, throwable -> {
+                .subscribe(notes -> {
+                    view.showNotes(notes);
+                    selectNoteFilter();
+                }, throwable -> {
                     // NullPointerException
-                    StringWriter sw = new StringWriter();
-                    throwable.printStackTrace(new PrintWriter(sw));
-                    Log.e(TAG, throwable.toString());
+                    CommonUtils.logStackTrace(TAG, throwable);
                     viewModel.showDatabaseErrorSnackbar();
                 });
         this.disposable.add(disposable);
@@ -139,7 +207,6 @@ public final class NotesPresenter implements NotesContract.Presenter {
 
     @Override
     public void onNoteClick(String noteId, boolean isConflicted) {
-        // TODO: normal mode selection must highlight current note filter
         if (viewModel.isActionMode()) {
             onNoteSelected(noteId);
         } else if (isConflicted) {
@@ -165,6 +232,19 @@ public final class NotesPresenter implements NotesContract.Presenter {
         view.selectionChanged(position);
     }
 
+    private void selectNoteFilter() {
+        if (viewModel.isActionMode()) return;
+
+        String noteFilter = settings.getNoteFilter();
+        if (noteFilter != null) {
+            int position = getPosition(noteFilter);
+            if (position >= 0) {
+                viewModel.setSingleSelection(position, true);
+                view.scrollToPosition(position);
+            }
+        }
+    }
+
     @Override
     public void onEditClick(@NonNull String noteId) {
         view.showEditNote(noteId);
@@ -172,6 +252,13 @@ public final class NotesPresenter implements NotesContract.Presenter {
 
     @Override
     public void onToLinksClick(@NonNull String noteId) {
+        checkNotNull(noteId);
+
+        int position = getPosition(noteId);
+        viewModel.setSingleSelection(position, true);
+        settings.setFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE, FilterType.NOTE);
+        settings.setNoteFilter(noteId);
+        laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.LINKS_TAB);
     }
 
     @Override
@@ -217,17 +304,83 @@ public final class NotesPresenter implements NotesContract.Presenter {
 
     @Override
     public void setFilterType(@NonNull FilterType filterType) {
-        viewModel.setFilterType(filterType);
-        laanoUiManager.updateTitle(LaanoFragmentPagerAdapter.NOTES_TAB);
+        settings.setFilterType(SETTING_NOTES_FILTER_TYPE, filterType);
+        if (this.filterType != filterType) {
+            loadNotes(false);
+        }
+    }
+
+    /**
+     * @return Return null if there is no additional data is required
+     */
+    @Nullable
+    private FilterType updateFilter() {
+        FilterType filterType = settings.getFilterType(SETTING_NOTES_FILTER_TYPE);
+        String prevLinkFilter = this.linkFilter;
+        this.linkFilter = settings.getLinkFilter();
+        String prevFavoriteFilter = this.favoriteFilter;
+        this.favoriteFilter = settings.getFavoriteFilter();
+        switch (filterType) {
+            case ALL:
+            case CONFLICTED:
+            case NO_TAGS:
+                if (this.filterType == filterType) return null;
+                this.filterType = filterType;
+                laanoUiManager.setFilterType(LaanoFragmentPagerAdapter.NOTES_TAB, filterType, null);
+                break;
+            case LINK:
+                if (this.filterType == filterType
+                        && this.linkFilter != null
+                        && this.linkFilter.equals(prevLinkFilter)) {
+                    return null;
+                }
+                if (prevLinkFilter == null) {
+                    this.filterType = Settings.DEFAULT_FILTER_TYPE;
+                    laanoUiManager.setFilterType(
+                            LaanoFragmentPagerAdapter.NOTES_TAB, this.filterType, null);
+                    return null;
+                }
+                this.filterType = filterType;
+                return filterType;
+            case FAVORITE:
+                if (this.filterType == filterType
+                        && this.favoriteFilter != null
+                        && this.favoriteFilter.equals(prevFavoriteFilter)) {
+                    return null;
+                }
+                if (prevFavoriteFilter == null) {
+                    this.filterType = Settings.DEFAULT_FILTER_TYPE;
+                    laanoUiManager.setFilterType(
+                            LaanoFragmentPagerAdapter.NOTES_TAB, this.filterType, null);
+                    return null;
+                }
+                this.filterType = filterType;
+                return filterType;
+            default:
+                this.filterType = Settings.DEFAULT_FILTER_TYPE;
+                laanoUiManager.setFilterType(
+                        LaanoFragmentPagerAdapter.NOTES_TAB, this.filterType, null);
+        }
+        return null;
     }
 
     @Override
-    public void updateTabNormalState() {
-        laanoUiManager.setTabNormalState(LaanoFragmentPagerAdapter.NOTES_TAB, isConflicted());
+    public boolean isFavoriteFilter() {
+        return favoriteFilter != null;
+    }
+
+    @Override
+    public boolean isLinkFilter() {
+        return linkFilter != null;
     }
 
     @Override
     public boolean isExpandNotes() {
         return settings.isExpandNotes();
+    }
+
+    @Override
+    public void updateTabNormalState() {
+        laanoUiManager.setTabNormalState(LaanoFragmentPagerAdapter.NOTES_TAB, isConflicted());
     }
 }

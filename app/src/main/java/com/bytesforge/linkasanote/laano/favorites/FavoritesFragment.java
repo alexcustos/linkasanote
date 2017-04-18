@@ -47,6 +47,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     private FavoritesContract.ViewModel viewModel;
     private FavoritesAdapter adapter;
     private ActionMode actionMode;
+    private LinearLayoutManager rvLayoutManager;
 
     public static FavoritesFragment newInstance() {
         return new FavoritesFragment();
@@ -219,19 +220,19 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         List<Favorite> favorites = new ArrayList<>(0);
         adapter = new FavoritesAdapter(favorites, presenter, (FavoritesViewModel) viewModel);
         rvFavorites.setAdapter(adapter);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-        rvFavorites.setLayoutManager(layoutManager);
+        rvLayoutManager = new LinearLayoutManager(getContext());
+        rvFavorites.setLayoutManager(rvLayoutManager);
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
-                rvFavorites.getContext(), layoutManager.getOrientation());
+                rvFavorites.getContext(), rvLayoutManager.getOrientation());
         rvFavorites.addItemDecoration(dividerItemDecoration);
     }
 
     private void showFilteringPopupMenu() {
-        PopupMenu menu = new PopupMenu(
+        PopupMenu popupMenu = new PopupMenu(
                 getContext(), getActivity().findViewById(R.id.toolbar_favorites_filter));
-        menu.getMenuInflater().inflate(R.menu.filter, menu.getMenu());
-        menu.setOnMenuItemClickListener(item -> {
-
+        Menu menu = popupMenu.getMenu();
+        popupMenu.getMenuInflater().inflate(R.menu.filter, menu);
+        popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.filter_all:
                     presenter.setFilterType(FilterType.ALL);
@@ -243,7 +244,18 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
             presenter.loadFavorites(false);
             return true;
         });
-        menu.show();
+        MenuItem filterLinkMenuItem = menu.findItem(R.id.filter_link);
+        filterLinkMenuItem.setVisible(false);
+
+        MenuItem filterFavoriteMenuItem = menu.findItem(R.id.filter_favorite);
+        filterFavoriteMenuItem.setVisible(false);
+
+        MenuItem filterNoteMenuItem = menu.findItem(R.id.filter_note);
+        filterNoteMenuItem.setVisible(false);
+
+        MenuItem filterNoTagsMenuItem = menu.findItem(R.id.filter_no_tags);
+        filterNoTagsMenuItem.setVisible(false);
+        popupMenu.show();
     }
 
     @Override
@@ -267,11 +279,6 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
 
     private void destroyActionMode() {
         if (viewModel.isActionMode()) {
-            int[] selectedIds = viewModel.getSelectedIds().clone();
-            viewModel.removeSelection();
-            for (int selectedId : selectedIds) {
-                adapter.notifyItemChanged(selectedId);
-            }
             viewModel.disableActionMode();
         }
         if (actionMode != null) actionMode = null;
@@ -279,13 +286,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
 
     @Override
     public void selectionChanged(int position) {
-        adapter.notifyItemChanged(position);
         updateActionModeTitle();
-    }
-
-    @Override
-    public int getPosition(String favoriteId) {
-        return adapter.getPosition(favoriteId);
     }
 
     private void updateActionModeTitle() {
@@ -297,6 +298,18 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
                 disableActionMode();
             }
         } // if
+    }
+
+    @Override
+    public int getPosition(String favoriteId) {
+        return adapter.getPosition(favoriteId);
+    }
+
+    @Override
+    public void scrollToPosition(int position) {
+        if (rvLayoutManager != null) {
+            rvLayoutManager.scrollToPositionWithOffset(position, 0);
+        }
     }
 
     @Override
@@ -352,7 +365,6 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
                     break;
                 case R.id.favorites_select_all:
                     presenter.onSelectAllClick();
-                    adapter.notifyDataSetChanged();
                     updateActionModeTitle();
                     break;
                 default:

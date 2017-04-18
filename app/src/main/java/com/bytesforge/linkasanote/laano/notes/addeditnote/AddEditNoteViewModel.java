@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.laano.notes.addeditnote;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.databinding.BindingAdapter;
@@ -15,6 +16,7 @@ import android.support.design.widget.TextInputLayout;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
@@ -36,8 +38,13 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public final ObservableBoolean addButton = new ObservableBoolean();
     private int addButtonText;
 
+    // NOTE: there is nothing to save here, these fields will be populated on every load
+    public final ObservableField<String> linkCaption = new ObservableField<>();
+    public final ObservableField<String> linkName = new ObservableField<>();
+    public final ObservableField<String> linkLink = new ObservableField<>();
+
     private TagsCompletionView noteTags;
-    private Context context;
+    private Resources resources;
     private AddEditNoteContract.Presenter presenter;
 
     public enum SnackbarId {NOTE_EMPTY, NOTE_NOT_FOUND};
@@ -49,7 +56,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public String noteErrorText;
 
     public AddEditNoteViewModel(@NonNull Context context) {
-        this.context = checkNotNull(context);
+        resources = checkNotNull(context).getResources();
     }
 
     @Override
@@ -79,6 +86,10 @@ public class AddEditNoteViewModel extends BaseObservable implements
         addButton.set(state.getBoolean(STATE_ADD_BUTTON));
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
         noteErrorText = state.getString(STATE_NOTE_ERROR_TEXT);
+
+        linkCaption.set(resources.getString(R.string.status_loading));
+        linkName.set(null);
+        linkLink.set(null);
     }
 
     @Override
@@ -139,7 +150,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
 
     @Bindable
     public String getAddButtonText() {
-        return context.getResources().getString(addButtonText);
+        return resources.getString(addButtonText);
     }
 
     public void onAddButtonClick() {
@@ -181,9 +192,22 @@ public class AddEditNoteViewModel extends BaseObservable implements
 
     @Override
     public void showDuplicateKeyError() {
-        noteErrorText = context.getResources().getString(
-                R.string.add_edit_note_error_note_duplicated);
+        noteErrorText = resources.getString(R.string.add_edit_note_error_note_duplicated);
         notifyPropertyChanged(BR.noteErrorText);
+    }
+
+    @Override
+    public void showNoteIsUnboundMessage() {
+        if (presenter.isNewNote()) {
+            linkCaption.set(resources.getString(R.string.add_edit_note_message_link_unbound_new));
+        } else {
+            linkCaption.set(resources.getString(R.string.add_edit_note_message_link_unbound_edit));
+        }
+    }
+
+    @Override
+    public void showNoteWillBeUnboundMessage() {
+        linkCaption.set(resources.getString(R.string.add_edit_note_message_link_will_unbound));
     }
 
     @Override
@@ -211,6 +235,19 @@ public class AddEditNoteViewModel extends BaseObservable implements
         noteNote.set(note.getNote());
         setNoteTags(note.getTags());
         checkAddButton();
+    }
+
+    @Override
+    public void populateLink(@NonNull Link link) {
+        checkNotNull(link);
+
+        if (presenter.isNewNote()) {
+            linkCaption.set(resources.getString(R.string.add_edit_note_message_link_bound_new));
+        } else {
+            linkCaption.set(resources.getString(R.string.add_edit_note_message_link_bound_edit));
+        }
+        linkName.set(link.getName());
+        linkLink.set(link.getLink());
     }
 
     private void setNoteTags(List<Tag> tags) {

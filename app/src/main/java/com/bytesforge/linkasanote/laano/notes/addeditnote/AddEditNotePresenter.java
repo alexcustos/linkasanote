@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.links.LinkId;
 import com.bytesforge.linkasanote.laano.notes.NoteId;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
@@ -31,6 +32,7 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
     private final BaseSchedulerProvider schedulerProvider;
 
     private String noteId; // NOTE: can be reset to null if NoSuchElementException
+    private String linkId;
 
     @NonNull
     private final CompositeDisposable tagsDisposable;
@@ -38,19 +40,23 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
     @NonNull
     private final CompositeDisposable noteDisposable;
 
+    @NonNull
+    private final CompositeDisposable linkDisposable;
+
     @Inject
     AddEditNotePresenter(
             Repository repository, AddEditNoteContract.View view,
-            AddEditNoteContract.ViewModel viewModel,
-            BaseSchedulerProvider schedulerProvider,
-            @Nullable @NoteId String noteId) {
+            AddEditNoteContract.ViewModel viewModel, BaseSchedulerProvider schedulerProvider,
+            @Nullable @NoteId String noteId, @Nullable @LinkId String linkId) {
         this.repository = repository;
         this.view = view;
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
         this.noteId = noteId;
+        this.linkId = linkId;
         tagsDisposable = new CompositeDisposable();
         noteDisposable = new CompositeDisposable();
+        linkDisposable = new CompositeDisposable();
     }
 
     @Inject
@@ -62,6 +68,7 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
 
     @Override
     public void subscribe() {
+        populateLink();
         loadTags();
     }
 
@@ -69,10 +76,12 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
     public void unsubscribe() {
         tagsDisposable.clear();
         noteDisposable.clear();
+        linkDisposable.clear();
     }
 
     @Override
     public void loadTags() {
+        // TODO: get rid of EspressoIdlingResource in favor of schedulerProvider mock
         EspressoIdlingResource.increment();
         tagsDisposable.clear(); // stop previous requests
 
@@ -113,11 +122,38 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
                         EspressoIdlingResource.decrement();
                     }
                 })
-                .subscribe(viewModel::populateNote, throwable -> {
+                .subscribe(note -> {
+                    viewModel.populateNote(note);
+                    linkId = note.getLinkId();
+                    populateLink();
+                }, throwable -> {
                     noteId = null;
                     viewModel.showNoteNotFoundSnackbar();
                 });
         noteDisposable.add(disposable);
+    }
+
+    private void populateLink() {
+        if (linkId == null) {
+            viewModel.showNoteIsUnboundMessage();
+            return;
+        }
+        EspressoIdlingResource.increment();
+        linkDisposable.clear();
+
+        Disposable disposable = repository.getLink(linkId)
+                .subscribeOn(schedulerProvider.computation())
+                .observeOn(schedulerProvider.ui())
+                .doFinally(() -> {
+                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
+                        EspressoIdlingResource.decrement();
+                    }
+                })
+                .subscribe(viewModel::populateLink, throwable -> {
+                    linkId = null;
+                    viewModel.showNoteWillBeUnboundMessage();
+                });
+        linkDisposable.add(disposable);
     }
 
     @Override
@@ -130,7 +166,7 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
     }
 
     private void createNote(String noteNote, List<Tag> noteTags) {
-        saveNote(new Note(noteNote, noteTags));
+        saveNote(new Note(noteNote, linkId, noteTags));
     }
 
     private void updateNote(String noteNote, List<Tag> noteTags) {
@@ -138,7 +174,7 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
             throw new RuntimeException("updateNote() was called but noteId is null");
         }
         // NOTE: state eTag will NOT be overwritten if null
-        saveNote(new Note(noteId, noteNote, noteTags)); // UNSYNCED
+        saveNote(new Note(noteId, noteNote, linkId, noteTags)); // UNSYNCED
     }
 
     private void saveNote(@NonNull final Note note) {

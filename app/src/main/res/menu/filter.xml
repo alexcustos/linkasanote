@@ -5,14 +5,18 @@
         android:id="@+id/filter_all"
         android:title="@string/filter_all" />
     <item
+        android:id="@+id/filter_link"
+        android:title="@string/filter_link" />
+    <item
+        android:id="@+id/filter_favorite"
+        android:title="@string/filter_favorite" />
+    <item
+        android:id="@+id/filter_note"
+        android:title="@string/filter_note" />
+    <item
+        android:id="@+id/filter_no_tags"
+        android:title="@string/filter_no_tags" />
+    <item
         android:id="@+id/filter_conflicted"
         android:title="@string/filter_conflicted" />
-    <item
-        android:id="@+id/filter_favorite_related"
-        android:title="@string/placeholder_text"
-        android:visible="false" />
-    <item
-        android:id="@+id/filter_link_related"
-        android:title="@string/placeholder_text"
-        android:visible="false" />
 </menu>

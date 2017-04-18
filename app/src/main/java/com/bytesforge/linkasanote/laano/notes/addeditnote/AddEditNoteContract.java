@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BasePresenter;
 import com.bytesforge.linkasanote.BaseView;
+import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
@@ -34,6 +35,8 @@ public interface AddEditNoteContract {
         void showEmptyNoteSnackbar();
         void showNoteNotFoundSnackbar();
         void showDuplicateKeyError();
+        void showNoteIsUnboundMessage();
+        void showNoteWillBeUnboundMessage();
 
         boolean isValid();
         void checkAddButton();
@@ -43,6 +46,7 @@ public interface AddEditNoteContract {
         void afterNoteChanged();
 
         void populateNote(@NonNull Note note);
+        void populateLink(@NonNull Link link);
     }
 
     interface Presenter extends BasePresenter {

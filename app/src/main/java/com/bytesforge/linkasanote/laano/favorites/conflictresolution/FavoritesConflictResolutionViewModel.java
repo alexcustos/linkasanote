@@ -117,16 +117,14 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         Bundle defaultState = new Bundle();
 
         defaultState.putString(STATE_LOCAL_STATE, null);
-        defaultState.putString(STATE_LOCAL_STATUS,
-                resources.getString(R.string.dialog_favorite_conflict_status_loading));
+        defaultState.putString(STATE_LOCAL_STATUS, resources.getString(R.string.status_loading));
         defaultState.putString(STATE_LOCAL_NAME, null);
         defaultState.putString(STATE_LOCAL_TAGS, null);
         defaultState.putBoolean(STATE_LOCAL_DELETE_BUTTON, false);
         defaultState.putBoolean(STATE_LOCAL_UPLOAD_BUTTON, false);
 
         defaultState.putString(STATE_CLOUD_STATE, null);
-        defaultState.putString(STATE_CLOUD_STATUS,
-                resources.getString(R.string.dialog_favorite_conflict_status_loading));
+        defaultState.putString(STATE_CLOUD_STATUS, resources.getString(R.string.status_loading));
         defaultState.putString(STATE_CLOUD_NAME, null);
         defaultState.putString(STATE_CLOUD_TAGS, null);
         defaultState.putBoolean(STATE_CLOUD_DELETE_BUTTON, false);
@@ -227,7 +225,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         cloudDownloadButton.set(false);
         deactivateButtons();
         cloudState.set(null);
-        cloudStatus.set(resources.getString(R.string.dialog_favorite_conflict_status_loading));
+        cloudStatus.set(resources.getString(R.string.status_loading));
     }
 
     @Override

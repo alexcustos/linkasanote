@@ -3,6 +3,8 @@ package com.bytesforge.linkasanote.laano.links;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,9 +29,13 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoLinksBinding;
 import com.bytesforge.linkasanote.laano.FilterType;
+import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
 import com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkActivity;
 import com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkFragment;
 import com.bytesforge.linkasanote.laano.links.conflictresolution.LinksConflictResolutionDialog;
+import com.bytesforge.linkasanote.laano.notes.NotesViewModel;
+import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteActivity;
+import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,11 +47,13 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     public static final int REQUEST_ADD_LINK = 1;
     public static final int REQUEST_EDIT_LINK = 2;
     public static final int REQUEST_LINK_CONFLICT_RESOLUTION = 3;
+    public static final int REQUEST_ADD_NOTE = 4;
 
     private LinksContract.Presenter presenter;
     private LinksContract.ViewModel viewModel;
     private LinksAdapter adapter;
     private ActionMode actionMode;
+    private LinearLayoutManager rvLayoutManager;
 
     public static LinksFragment newInstance() {
         return new LinksFragment();
@@ -169,6 +177,13 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     }
 
     @Override
+    public void showAddNote(@NonNull String linkId) {
+        Intent intent = new Intent(getContext(), AddEditNoteActivity.class);
+        intent.putExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID, linkId);
+        startActivityForResult(intent, REQUEST_ADD_NOTE);
+    }
+
+    @Override
     public void showEditLink(@NonNull String linkId) {
         Intent intent = new Intent(getContext(), AddEditLinkActivity.class);
         intent.putExtra(AddEditLinkFragment.ARGUMENT_EDIT_LINK_ID, linkId);
@@ -209,6 +224,9 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
                     viewModel.showConflictResolutionErrorSnackbar();
                 }
                 break;
+            case REQUEST_ADD_NOTE:
+                // TODO: notify and update current item
+                break;
             default:
                 throw new IllegalStateException("The result received from the unexpected activity");
         }
@@ -218,28 +236,51 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
         List<Link> links = new ArrayList<>(0);
         adapter = new LinksAdapter(links, presenter, (LinksViewModel) viewModel);
         rvLinks.setAdapter(adapter);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-        rvLinks.setLayoutManager(layoutManager);
+        rvLayoutManager = new LinearLayoutManager(getContext());
+        rvLinks.setLayoutManager(rvLayoutManager);
     }
 
     private void showFilteringPopupMenu() {
-        PopupMenu menu = new PopupMenu(
+        PopupMenu popupMenu = new PopupMenu(
                 getContext(), getActivity().findViewById(R.id.toolbar_links_filter));
-        menu.getMenuInflater().inflate(R.menu.filter, menu.getMenu());
-        menu.setOnMenuItemClickListener(item -> {
-
+        Menu menu = popupMenu.getMenu();
+        popupMenu.getMenuInflater().inflate(R.menu.filter, menu);
+        popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.filter_all:
                     presenter.setFilterType(FilterType.ALL);
+                    break;
+                case R.id.filter_favorite:
+                    presenter.setFilterType(FilterType.FAVORITE);
+                    break;
+                case R.id.filter_note:
+                    presenter.setFilterType(FilterType.NOTE);
+                    break;
+                case R.id.filter_no_tags:
+                    presenter.setFilterType(FilterType.NO_TAGS);
                     break;
                 case R.id.filter_conflicted:
                     presenter.setFilterType(FilterType.CONFLICTED);
                     break;
             }
-            presenter.loadLinks(false);
             return true;
         });
-        menu.show();
+        Resources resources = getContext().getResources();
+        MenuItem filterLinkMenuItem = menu.findItem(R.id.filter_link);
+        filterLinkMenuItem.setVisible(false);
+
+        MenuItem filterFavoriteMenuItem = menu.findItem(R.id.filter_favorite);
+        boolean isFavoriteFilter = presenter.isFavoriteFilter();
+        filterFavoriteMenuItem.setTitle(resources.getString(
+                R.string.filter_favorite, FavoritesViewModel.FILTER_PREFIX));
+        filterFavoriteMenuItem.setEnabled(isFavoriteFilter);
+
+        MenuItem filterNoteMenuItem = menu.findItem(R.id.filter_note);
+        boolean isNoteFilter = presenter.isNoteFilter();
+        filterNoteMenuItem.setTitle(resources.getString(
+                R.string.filter_note, NotesViewModel.FILTER_PREFIX));
+        filterNoteMenuItem.setEnabled(isNoteFilter);
+        popupMenu.show();
     }
 
     @Override
@@ -263,11 +304,6 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
 
     private void destroyActionMode() {
         if (viewModel.isActionMode()) {
-            int[] selectedIds = viewModel.getSelectedIds().clone();
-            viewModel.removeSelection();
-            for (int selectedId : selectedIds) {
-                adapter.notifyItemChanged(selectedId);
-            }
             viewModel.disableActionMode();
         }
         if (actionMode != null) actionMode = null;
@@ -275,13 +311,20 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
 
     @Override
     public void selectionChanged(int position) {
-        adapter.notifyItemChanged(position);
+        //adapter.notifyItemChanged(position);
         updateActionModeTitle();
     }
 
     @Override
     public int getPosition(String linkId) {
         return adapter.getPosition(linkId);
+    }
+
+    @Override
+    public void scrollToPosition(int position) {
+        if (rvLayoutManager != null) {
+            rvLayoutManager.scrollToPositionWithOffset(position, 0);
+        }
     }
 
     private void updateActionModeTitle() {
@@ -301,6 +344,12 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
         selectionChanged(position);
         viewModel.setLinkListSize(adapter.getItemCount());
         return link.getId();
+    }
+
+    @Override
+    public void openLink(@NonNull Uri uri) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, checkNotNull(uri));
+        startActivity(intent);
     }
 
     @Override
@@ -348,7 +397,6 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
                     break;
                 case R.id.links_select_all:
                     presenter.onSelectAllClick();
-                    adapter.notifyDataSetChanged();
                     updateActionModeTitle();
                     break;
                 default:

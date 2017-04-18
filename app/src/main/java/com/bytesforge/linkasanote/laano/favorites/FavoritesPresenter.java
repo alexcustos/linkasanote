@@ -1,18 +1,18 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
+import com.bytesforge.linkasanote.laano.links.LinksPresenter;
+import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
+import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Strings;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 import javax.inject.Inject;
 
@@ -28,6 +28,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     private final FavoritesContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
     private final LaanoUiManager laanoUiManager;
+    private final Settings settings;
 
     @NonNull
     private final CompositeDisposable disposable;
@@ -38,12 +39,13 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     FavoritesPresenter(
             Repository repository, FavoritesContract.View view,
             FavoritesContract.ViewModel viewModel, BaseSchedulerProvider schedulerProvider,
-            LaanoUiManager laanoUiManager) {
+            LaanoUiManager laanoUiManager, Settings settings) {
         this.repository = repository;
         this.view = view;
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
         this.laanoUiManager = laanoUiManager;
+        this.settings = settings;
         disposable = new CompositeDisposable();
     }
 
@@ -57,7 +59,6 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void subscribe() {
-        loadFavorites(false);
     }
 
     @Override
@@ -67,6 +68,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void onTabSelected() {
+        loadFavorites(false);
     }
 
     @Override
@@ -124,11 +126,12 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
                         viewModel.hideProgressOverlay();
                     }
                 })
-                .subscribe(view::showFavorites, throwable -> {
+                .subscribe(favorites -> {
+                    view.showFavorites(favorites);
+                    selectFavoriteFilter();
+                }, throwable -> {
                     // NullPointerException
-                    StringWriter sw = new StringWriter();
-                    throwable.printStackTrace(new PrintWriter(sw));
-                    Log.e(TAG, throwable.toString());
+                    CommonUtils.logStackTrace(TAG, throwable);
                     viewModel.showDatabaseErrorSnackbar();
                 });
         this.disposable.add(disposable);
@@ -136,7 +139,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void onFavoriteClick(String favoriteId, boolean isConflicted) {
-        // TODO: normal mode selection must highlight current favorite filter
+        // NOTE: only click on chevrons will select the Favorite
         if (viewModel.isActionMode()) {
             onFavoriteSelected(favoriteId);
         } else if (isConflicted) {
@@ -158,8 +161,25 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     private void onFavoriteSelected(String favoriteId) {
         int position = view.getPosition(favoriteId);
-        viewModel.toggleSelection(position);
-        view.selectionChanged(position);
+        if (viewModel.isActionMode()) {
+            viewModel.toggleSelection(position);
+            view.selectionChanged(position);
+        } else {
+            viewModel.toggleSingleSelection(position);
+        }
+    }
+
+    private void selectFavoriteFilter() {
+        if (viewModel.isActionMode()) return;
+
+        String favoriteFilter = settings.getFavoriteFilter();
+        if (favoriteFilter != null) {
+            int position = getPosition(favoriteFilter);
+            if (position >= 0) {
+                viewModel.setSingleSelection(position, true);
+                view.scrollToPosition(position);
+            }
+        }
     }
 
     @Override
@@ -169,11 +189,20 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void onToLinksClick(@NonNull String favoriteId) {
-        // TODO: set filter & switch tab
+        int position = getPosition(favoriteId);
+        viewModel.setSingleSelection(position, true);
+        settings.setFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE, FilterType.FAVORITE);
+        settings.setFavoriteFilter(favoriteId);
+        laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.LINKS_TAB);
     }
 
     @Override
     public void onToNotesClick(@NonNull String favoriteId) {
+        int position = getPosition(favoriteId);
+        viewModel.setSingleSelection(position, true);
+        settings.setFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE, FilterType.FAVORITE);
+        settings.setFavoriteFilter(favoriteId);
+        laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.NOTES_TAB);
     }
 
     @Override
