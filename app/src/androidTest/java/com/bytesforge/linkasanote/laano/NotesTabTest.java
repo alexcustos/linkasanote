@@ -53,7 +53,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
-import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRV;
+import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
 import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.mockito.Mockito.when;
@@ -170,11 +170,11 @@ public class NotesTabTest {
         AndroidTestUtils.sleep(250); // TODO: remove
 
         for (Note note : NOTES) {
-            onView(withItemTextRV(note.getNote())).check(matches(isDisplayed()));
+            onView(withItemTextRv(note.getNote())).check(matches(isDisplayed()));
         }
         AndroidTestUtils.rotateOrientation(laanoActivityTestRule);
         for (Note note : NOTES) {
-            onView(withItemTextRV(note.getNote())).check(matches(isDisplayed()));
+            onView(withItemTextRv(note.getNote())).check(matches(isDisplayed()));
         }
     }
 

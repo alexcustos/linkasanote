@@ -177,7 +177,7 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
             return resources.getColor(R.color.item_conflicted, context.getTheme());
         }
         int position = presenter.getPosition(noteId);
-        if (isSelected(position)) {
+        if (isSelected(position) && !isActionMode()) {
             return resources.getColor(R.color.item_selected, context.getTheme());
         }
         return resources.getColor(android.R.color.transparent, context.getTheme());
@@ -190,6 +190,7 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
 
     @Override
     public void enableActionMode() {
+        selectedIds.clear();
         actionMode.set(true);
         snackbarId = null;
         notifyChange();
@@ -197,9 +198,10 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
 
     @Override
     public void disableActionMode() {
-        removeSelection();
+        selectedIds.clear();
         actionMode.set(false);
         snackbarId = null;
+        presenter.selectNoteFilter();
         notifyChange();
     }
 

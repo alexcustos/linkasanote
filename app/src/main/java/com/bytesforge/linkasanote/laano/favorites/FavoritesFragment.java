@@ -271,7 +271,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     }
 
     @Override
-    public void disableActionMode() {
+    public void finishActionMode() {
         if (actionMode != null) {
             actionMode.finish(); // NOTE: will call destroyActionMode
         }
@@ -281,7 +281,9 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         if (viewModel.isActionMode()) {
             viewModel.disableActionMode();
         }
-        if (actionMode != null) actionMode = null;
+        if (actionMode != null) {
+            actionMode = null;
+        }
     }
 
     @Override
@@ -295,7 +297,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
                     R.string.laano_favorites_action_mode_selected,
                     viewModel.getSelectedCount(), adapter.getItemCount()));
             if (adapter.getItemCount() <= 0) {
-                disableActionMode();
+                finishActionMode();
             }
         } // if
     }

@@ -89,7 +89,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
 
     @Override
     public void onTabDeselected() {
-        view.disableActionMode();
+        view.finishActionMode();
     }
 
     @Override
@@ -125,34 +125,37 @@ public final class LinksPresenter implements LinksContract.Presenter {
                         laanoUiManager.setFilterType(
                                 LaanoFragmentPagerAdapter.LINKS_TAB, filterType, favorite.getName());
                         return repository.getLinks();
-                    });
+                    }).doOnError(throwable -> {
+                        CommonUtils.logStackTrace(TAG, throwable);
+                        if (throwable instanceof NoSuchElementException) {
+                            setDefaultLinksFilterType();
+                            favoriteFilter = null;
+                            settings.setFavoriteFilter(null);
+                        } else {
+                            viewModel.showDatabaseErrorSnackbar();
+                        }
+                    }).onErrorResumeNext(repository.getLinks());
         } else if (extendedFilter == FilterType.NOTE) {
             loadLinks = repository.getNote(noteFilter)
                     .toObservable()
                     .flatMap(note -> {
                         filterType = FilterType.NOTE;
                         noteFilter = note.getId();
-                        String noteNote = note.getNote();
-                        if (noteNote != null) {
-                            noteNote = noteNote.split(System.lineSeparator(), 2)[0];
-                        }
                         laanoUiManager.setFilterType(
-                                LaanoFragmentPagerAdapter.LINKS_TAB, filterType, noteNote);
+                                LaanoFragmentPagerAdapter.LINKS_TAB, filterType, note.getNote());
                         return repository.getLinks();
-                    });
+                    }).doOnError(throwable -> {
+                        CommonUtils.logStackTrace(TAG, throwable);
+                        if (throwable instanceof NoSuchElementException) {
+                            setDefaultLinksFilterType();
+                            noteFilter = null;
+                            settings.setNoteFilter(null);
+                        } else {
+                            viewModel.showDatabaseErrorSnackbar();
+                        }
+                    }).onErrorResumeNext(repository.getLinks());
         }
-        if (loadLinks != null) {
-            loadLinks = loadLinks.doOnError(throwable -> {
-                CommonUtils.logStackTrace(TAG, throwable);
-                if (throwable instanceof NoSuchElementException) {
-                    filterType = Settings.DEFAULT_FILTER_TYPE;
-                    laanoUiManager.setFilterType(
-                            LaanoFragmentPagerAdapter.LINKS_TAB, filterType, null);
-                } else {
-                    viewModel.showDatabaseErrorSnackbar();
-                }
-            }).onErrorResumeNext(repository.getLinks());
-        } else {
+        if (loadLinks == null) {
             loadLinks = repository.getLinks();
         }
         Disposable disposable = loadLinks
@@ -241,7 +244,8 @@ public final class LinksPresenter implements LinksContract.Presenter {
         view.selectionChanged(position);
     }
 
-    private void selectLinkFilter() {
+    @Override
+    public void selectLinkFilter() {
         if (viewModel.isActionMode()) return;
 
         String linkFilter = settings.getLinkFilter();
@@ -249,7 +253,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
             int position = getPosition(linkFilter);
             if (position >= 0) {
                 viewModel.setSingleSelection(position, true);
-                view.scrollToPosition(position);
+                //view.scrollToPosition(position);
             }
         }
     }
@@ -338,8 +342,25 @@ public final class LinksPresenter implements LinksContract.Presenter {
         FilterType filterType = settings.getFilterType(SETTING_LINKS_FILTER_TYPE);
         String prevFavoriteFilter = this.favoriteFilter;
         this.favoriteFilter = settings.getFavoriteFilter();
+        // NOTE: there may be some concurrency who actually will reset the filter, but it OK
+        if (this.favoriteFilter != null) {
+            repository.getFavorite(this.favoriteFilter)
+                    .subscribeOn(schedulerProvider.computation())
+                    .subscribe(favorite -> { /* OK */ }, throwable -> {
+                        this.favoriteFilter = null;
+                        settings.setFavoriteFilter(null);
+                    });
+        }
         String prevNoteFilter = this.noteFilter;
         this.noteFilter = settings.getNoteFilter();
+        if (this.noteFilter != null) {
+            repository.getNote(this.noteFilter)
+                    .subscribeOn(schedulerProvider.computation())
+                    .subscribe(favorite -> { /* OK */ }, throwable -> {
+                        this.noteFilter = null;
+                        settings.setNoteFilter(null);
+                    });
+        }
         switch (filterType) {
             case ALL:
             case CONFLICTED:
@@ -354,10 +375,8 @@ public final class LinksPresenter implements LinksContract.Presenter {
                         && this.favoriteFilter.equals(prevFavoriteFilter)) {
                     return null;
                 }
-                if (prevFavoriteFilter == null) {
-                    this.filterType = Settings.DEFAULT_FILTER_TYPE;
-                    laanoUiManager.setFilterType(
-                            LaanoFragmentPagerAdapter.LINKS_TAB, this.filterType, null);
+                if (this.favoriteFilter == null) {
+                    setDefaultLinksFilterType();
                     return null;
                 }
                 this.filterType = filterType;
@@ -368,20 +387,23 @@ public final class LinksPresenter implements LinksContract.Presenter {
                         && this.noteFilter.equals(prevNoteFilter)) {
                     return null;
                 }
-                if (prevNoteFilter == null) {
-                    this.filterType = Settings.DEFAULT_FILTER_TYPE;
-                    laanoUiManager.setFilterType(
-                            LaanoFragmentPagerAdapter.LINKS_TAB, this.filterType, null);
+                if (this.noteFilter == null) {
+                    setDefaultLinksFilterType();
                     return null;
                 }
                 this.filterType = filterType;
                 return filterType;
             default:
-                this.filterType = Settings.DEFAULT_FILTER_TYPE;
-                laanoUiManager.setFilterType(
-                        LaanoFragmentPagerAdapter.LINKS_TAB, this.filterType, null);
+                setDefaultLinksFilterType();
         }
         return null;
+    }
+
+    private void setDefaultLinksFilterType() {
+        filterType = Settings.DEFAULT_FILTER_TYPE;
+        laanoUiManager.setFilterType(
+                LaanoFragmentPagerAdapter.LINKS_TAB, filterType, null);
+        settings.setFilterType(SETTING_LINKS_FILTER_TYPE, filterType);
     }
 
     @Override

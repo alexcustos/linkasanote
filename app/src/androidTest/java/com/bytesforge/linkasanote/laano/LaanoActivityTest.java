@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
+import android.support.test.espresso.contrib.RecyclerViewActions;
+import android.support.test.espresso.core.deps.guava.collect.Lists;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -36,11 +38,13 @@ import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard
 import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.contrib.RecyclerViewActions.scrollToPosition;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static com.bytesforge.linkasanote.EspressoMatchers.clickChildViewWithId;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
-import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRV;
+import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
 import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.CoreMatchers.instanceOf;
 
@@ -75,7 +79,7 @@ public class LaanoActivityTest {
     }
 
     private void cleanupRepository(Repository repository) {
-        // TODO: fix data loss on non-test DB
+        // TODO: provide fake repository in the mock flavor to prevent data loss in main DB
         repository.deleteAllLinks();
         repository.deleteAllFavorites();
         repository.deleteAllNotes();
@@ -96,35 +100,58 @@ public class LaanoActivityTest {
 
     @Test
     public void fabButton_addsEntriesToSelectedRecyclerView() {
-        fabButton_addsLinksToLinksRecyclerView();
         fabButton_addsFavoritesToFavoritesRecyclerView();
+        fabButton_addsLinksToLinksRecyclerView();
         fabButton_addsNotesToNotesRecyclerView();
     }
 
     private void fabButton_addsLinksToLinksRecyclerView() {
         repository.linkCacheIsDirty = true;
         setupLinksTab();
-        LINKS.forEach(this::createLink);
-        for (Link link : LINKS) {
-            onView(withItemTextRV(link.getName())).check(matches(isDisplayed()));
+        for (Link link : Lists.reverse(LINKS)) {
+            createLink(link);
+            onView(withItemTextRv(link.getLink())).check(matches(isDisplayed()));
         }
     }
 
     private void fabButton_addsFavoritesToFavoritesRecyclerView() {
         repository.favoriteCacheIsDirty = true;
         setupFavoritesTab();
-        FAVORITES.forEach(this::createFavorite);
         for (Favorite favorite : FAVORITES) {
-            onView(withItemTextRV(favorite.getName())).check(matches(isDisplayed()));
+            createFavorite(favorite);
+            onView(withItemTextRv(favorite.getName())).check(matches(isDisplayed()));
         }
     }
 
     private void fabButton_addsNotesToNotesRecyclerView() {
         repository.noteCacheIsDirty = true;
-        setupNotesTab();
-        NOTES.forEach(this::createNote);
-        for (Note note : NOTES) {
-            onView(withItemTextRV(note.getNote())).check(matches(isDisplayed()));
+        int position;
+        for (Note note : Lists.reverse(NOTES)) {
+            String linkId = note.getLinkId();
+            if (linkId == null) {
+                setupNotesTab();
+                onView(withId(R.id.fab_add)).perform(click());
+                createNote(note);
+            } else if (note.getId().equals(AndroidTestUtils.KEY_PREFIX + 'L')) {
+                position = 1;
+                setupLinksTab();
+                onView(withId(R.id.rv_links)).perform(
+                        scrollToPosition(position),
+                        RecyclerViewActions.actionOnItemAtPosition(
+                                position, clickChildViewWithId(R.id.add_note_button)));
+                createNote(note);
+                setupNotesTab();
+            } else {
+                position = 0;
+                setupLinksTab();
+                onView(withId(R.id.rv_links)).perform(
+                        scrollToPosition(position),
+                        RecyclerViewActions.actionOnItemAtPosition(
+                                position, clickChildViewWithId(R.id.add_note_button)));
+                createNote(note);
+                setupNotesTab();
+            }
+            onView(withItemTextRv(note.getNote())).check(matches(isDisplayed()));
         }
     }
 
@@ -150,14 +177,16 @@ public class LaanoActivityTest {
     private void createLink(Link link) {
         assertNotNull(link);
         List<Tag> tags = link.getTags();
-        assertNotNull(tags);
         String linkLink = link.getLink();
         assertNotNull(linkLink);
         String linkName = link.getName();
-        assertNotNull(linkName);
+        if (linkName == null) linkName = "";
         boolean linkDisabled = link.isDisabled();
         // NOTE: last tag complete if there is a comma at the end
-        String tagLine = tags.stream().map(Tag::getName).collect(Collectors.joining(",")) + ",";
+        String tagLine = "";
+        if (tags != null) {
+            tagLine = tags.stream().map(Tag::getName).collect(Collectors.joining(",")) + ",";
+        }
         onView(withId(R.id.fab_add)).perform(click());
         onView(withId(R.id.link_link)).check(matches(isDisplayed()));
         onView(withId(R.id.link_link)).perform(scrollTo(), typeText(linkLink), closeSoftKeyboard());
@@ -234,7 +263,6 @@ public class LaanoActivityTest {
         // NOTE: last tag complete if there is a comma at the end
         String tagLine = tags.stream().map(Tag::getName).collect(Collectors.joining(",")) + ",";
         //String tagLine = Arrays.stream(tags).collect(Collectors.joining(",")) + ",";
-        onView(withId(R.id.fab_add)).perform(click());
         onView(withId(R.id.note_note)).check(matches(isDisplayed()));
         onView(withId(R.id.note_note)).perform(typeText(noteNote), closeSoftKeyboard());
         onView(withId(R.id.note_tags)).perform(typeText(tagLine), closeSoftKeyboard());

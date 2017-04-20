@@ -53,7 +53,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
-import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRV;
+import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
 import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.mockito.Mockito.when;
@@ -172,11 +172,11 @@ public class FavoritesTabTest {
         laanoActivityTestRule.launchActivity(null);
 
         for (Favorite favorite : FAVORITES) {
-            onView(withItemTextRV(favorite.getName())).check(matches(isDisplayed()));
+            onView(withItemTextRv(favorite.getName())).check(matches(isDisplayed()));
         }
         AndroidTestUtils.rotateOrientation(laanoActivityTestRule);
         for (Favorite favorite : FAVORITES) {
-            onView(withItemTextRV(favorite.getName())).check(matches(isDisplayed()));
+            onView(withItemTextRv(favorite.getName())).check(matches(isDisplayed()));
         }
     }
 

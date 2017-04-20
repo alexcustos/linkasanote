@@ -57,11 +57,11 @@ public final class Link implements Comparable<Link> {
 
     private final boolean disabled;
 
-    @Nullable
-    private final List<Tag> tags;
-
     /*@Nullable
     private final List<Note> notes;*/
+
+    @Nullable
+    private final List<Tag> tags;
 
     @NonNull
     private final SyncState state;

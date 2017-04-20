@@ -14,6 +14,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATETIME_TYPE = " DATETIME";
     private static final String BOOLEAN_TYPE = " INTEGER";
 
+    // TODO: add index on created columns
     private static final String SQL_CREATE_LINK_ENTRIES =
             "CREATE TABLE " + LocalContract.LinkEntry.TABLE_NAME + " (" +
                     LocalContract.LinkEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
@@ -32,8 +33,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + "," +
                     LocalContract.LinkEntry.COLUMN_NAME_SYNCED + ") ON CONFLICT ABORT" +
             ");";
-    private static final String SQL_CREATE_LINK_ENTRY_ID_INDEX = sqlCreateIndex(
-            LocalContract.LinkEntry.TABLE_NAME, LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID);
+    private static final String SQL_CREATE_LINK_ENTRY_ID_INDEX =
+            sqlCreateEntryIdIndex(LocalContract.LinkEntry.TABLE_NAME);
 
     // NOTE: note entry must not be unique, but duplicate filter is needed
     private static final String SQL_CREATE_NOTE_ENTRIES =
@@ -52,8 +53,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.NoteEntry.COLUMN_NAME_DELETED + BOOLEAN_TYPE + "," +
                     LocalContract.NoteEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE +
             ");";
-    private static final String SQL_CREATE_NOTE_ENTRY_ID_INDEX = sqlCreateIndex(
-            LocalContract.NoteEntry.TABLE_NAME, LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID);
+    private static final String SQL_CREATE_NOTE_ENTRY_ID_INDEX =
+            sqlCreateEntryIdIndex(LocalContract.NoteEntry.TABLE_NAME);
     private static final String SQL_CREATE_NOTE_LINK_ID_INDEX = sqlCreateIndex(
             LocalContract.NoteEntry.TABLE_NAME, LocalContract.NoteEntry.COLUMN_NAME_LINK_ID);
 
@@ -73,8 +74,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED + ") ON CONFLICT ABORT" +
             ");";
-    private static final String SQL_CREATE_FAVORITE_ENTRY_ID_INDEX = sqlCreateIndex(
-            LocalContract.FavoriteEntry.TABLE_NAME, LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID);
+    private static final String SQL_CREATE_FAVORITE_ENTRY_ID_INDEX =
+            sqlCreateEntryIdIndex(LocalContract.FavoriteEntry.TABLE_NAME);
+    private static final String SQL_CREATE_FAVORITE_NAME_INDEX = sqlCreateIndex(
+            LocalContract.FavoriteEntry.TABLE_NAME, LocalContract.FavoriteEntry.COLUMN_NAME_NAME);
 
     private static final String SQL_CREATE_TAG_ENTRIES =
             "CREATE TABLE " + LocalContract.TagEntry.TABLE_NAME + " (" +
@@ -85,18 +88,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String SQL_CREATE_LINK_TAG_ENTRIES =
             sqlCreateTableManyToManyWithTags(LocalContract.LinkEntry.TABLE_NAME);
-    private static final String SQL_CREATE_LINK_TAG_TRIGGER =
-            sqlCreateTriggerManyToManyWithTags(LocalContract.LinkEntry.TABLE_NAME);
+    private static final String SQL_CREATE_LINK_TAG_LEFT_INDEX =
+            sqlCreateLeftIndexWithTag(LocalContract.LinkEntry.TABLE_NAME);
+    private static final String SQL_CREATE_LINK_TAG_RIGHT_INDEX =
+            sqlCreateRightIndexWithTag(LocalContract.LinkEntry.TABLE_NAME);
 
     private static final String SQL_CREATE_NOTE_TAG_ENTRIES =
             sqlCreateTableManyToManyWithTags(LocalContract.NoteEntry.TABLE_NAME);
-    private static final String SQL_CREATE_NOTE_TAG_TRIGGER =
-            sqlCreateTriggerManyToManyWithTags(LocalContract.NoteEntry.TABLE_NAME);
+    private static final String SQL_CREATE_NOTE_TAG_LEFT_INDEX =
+            sqlCreateLeftIndexWithTag(LocalContract.NoteEntry.TABLE_NAME);
+    private static final String SQL_CREATE_NOTE_TAG_RIGHT_INDEX =
+            sqlCreateRightIndexWithTag(LocalContract.NoteEntry.TABLE_NAME);
 
     private static final String SQL_CREATE_FAVORITE_TAG_ENTRIES =
             sqlCreateTableManyToManyWithTags(LocalContract.FavoriteEntry.TABLE_NAME);
-    private static final String SQL_CREATE_FAVORITE_TAG_TRIGGER =
-            sqlCreateTriggerManyToManyWithTags(LocalContract.FavoriteEntry.TABLE_NAME);
+    private static final String SQL_CREATE_FAVORITE_TAG_LEFT_INDEX =
+            sqlCreateLeftIndexWithTag(LocalContract.FavoriteEntry.TABLE_NAME);
+    private static final String SQL_CREATE_FAVORITE_TAG_RIGHT_INDEX =
+            sqlCreateRightIndexWithTag(LocalContract.FavoriteEntry.TABLE_NAME);
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -109,39 +118,52 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private static String sqlCreateTableManyToManyWithTags(final String leftTable) {
-        return sqlCreateTableManyToMany(leftTable, LocalContract.TagEntry.TABLE_NAME);
-    }
-
-    private static String sqlCreateTableManyToMany(
-            final String leftTable, final String rightTable) {
+        final String rightTable = LocalContract.TagEntry.TABLE_NAME;
         final String LID = leftTable + BaseEntry._ID;
         final String RID = rightTable + BaseEntry._ID;
 
         return "CREATE TABLE " + leftTable + "_" + rightTable + " (" +
                 BaseEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
                 BaseEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
-                // TODO: replace trigger with ON DELETE CASCADE
-                LID + INTEGER_TYPE + " REFERENCES " + leftTable + "(" + BaseEntry._ID + ")," +
-                RID + INTEGER_TYPE + " REFERENCES " + rightTable + "(" + BaseEntry._ID + ")," +
+                LID + INTEGER_TYPE + " REFERENCES " + leftTable + "(" + BaseEntry._ID + ") ON DELETE CASCADE," +
+                RID + INTEGER_TYPE + " REFERENCES " + rightTable + "(" + BaseEntry._ID + ") ON DELETE CASCADE," +
                 "UNIQUE (" + LID + "," + RID + ") ON CONFLICT ABORT);";
     }
 
-    private static String sqlCreateTriggerManyToManyWithTags(final String leftTable) {
-        return sqlCreateTriggerManyToMany(leftTable, LocalContract.TagEntry.TABLE_NAME);
+    private static String sqlCreateLeftIndexWithTag(final String leftTable) {
+        final String rightTable = LocalContract.TagEntry.TABLE_NAME;
+        final String LID = leftTable + BaseEntry._ID;
+        return sqlCreateIndex(leftTable + "_" + rightTable, LID);
     }
 
-    private static String sqlCreateTriggerManyToMany(
-            final String leftTable, final String rightTable) {
-        final String LID = leftTable + BaseEntry._ID;
-        final String refTable = leftTable + "_" + rightTable;
+    private static String sqlCreateRightIndexWithTag(final String leftTable) {
+        final String rightTable = LocalContract.TagEntry.TABLE_NAME;
+        final String RID = rightTable + BaseEntry._ID;
+        return sqlCreateIndex(leftTable + "_" + rightTable, RID);
+    }
 
-        return "CREATE TRIGGER " + refTable + "_delete AFTER DELETE ON " + leftTable +
-                " BEGIN DELETE FROM " + refTable +
-                " WHERE " + refTable + "." + LID + "=OLD." + BaseEntry._ID + "; END;";
+    private static String sqlCreateEntryIdIndex(final String table) {
+        return sqlCreateIndex(table, BaseEntry.COLUMN_NAME_ENTRY_ID);
     }
 
     private static String sqlCreateIndex(final String table, final String column) {
         return "CREATE INDEX " + table + "_" + column + "_index ON " + table + "(" + column + ")";
+    }
+
+    private static String sqlDropLeftIndexWithTag(final String leftTable) {
+        final String rightTable = LocalContract.TagEntry.TABLE_NAME;
+        final String LID = leftTable + BaseEntry._ID;
+        return sqlDropIndex(leftTable + "_" + rightTable, LID);
+    }
+
+    private static String sqlDropRightIndexWithTag(final String leftTable) {
+        final String rightTable = LocalContract.TagEntry.TABLE_NAME;
+        final String RID = rightTable + BaseEntry._ID;
+        return sqlDropIndex(leftTable + "_" + rightTable, RID);
+    }
+
+    private static String sqlDropEntryIdIndex(final String table) {
+        return sqlDropIndex(table, BaseEntry.COLUMN_NAME_ENTRY_ID);
     }
 
     private static String sqlDropIndex(final String table, final String column) {
@@ -157,14 +179,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_NOTE_LINK_ID_INDEX);
         db.execSQL(SQL_CREATE_FAVORITE_ENTRIES);
         db.execSQL(SQL_CREATE_FAVORITE_ENTRY_ID_INDEX);
+        db.execSQL(SQL_CREATE_FAVORITE_NAME_INDEX);
         db.execSQL(SQL_CREATE_TAG_ENTRIES);
 
         db.execSQL(SQL_CREATE_LINK_TAG_ENTRIES);
-        db.execSQL(SQL_CREATE_LINK_TAG_TRIGGER);
+        db.execSQL(SQL_CREATE_LINK_TAG_LEFT_INDEX);
+        db.execSQL(SQL_CREATE_LINK_TAG_RIGHT_INDEX);
+
         db.execSQL(SQL_CREATE_NOTE_TAG_ENTRIES);
-        db.execSQL(SQL_CREATE_NOTE_TAG_TRIGGER);
-        db.execSQL(SQL_CREATE_FAVORITE_TAG_TRIGGER);
+        db.execSQL(SQL_CREATE_NOTE_TAG_LEFT_INDEX);
+        db.execSQL(SQL_CREATE_NOTE_TAG_RIGHT_INDEX);
+
         db.execSQL(SQL_CREATE_FAVORITE_TAG_ENTRIES);
+        db.execSQL(SQL_CREATE_FAVORITE_TAG_LEFT_INDEX);
+        db.execSQL(SQL_CREATE_FAVORITE_TAG_RIGHT_INDEX);
     }
 
     @Override
@@ -180,16 +208,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         final String favoriteRefTable = LocalContract.FavoriteEntry.TABLE_NAME + "_" + tagTable;
 
         db.execSQL("DROP TABLE IF EXISTS " + linkRefTable);
-        db.execSQL("DROP TRIGGER IF EXISTS " + linkRefTable + "_delete");
         db.execSQL("DROP TABLE IF EXISTS " + noteRefTable);
-        db.execSQL("DROP TRIGGER IF EXISTS " + noteRefTable + "_delete");
         db.execSQL("DROP TABLE IF EXISTS " + favoriteRefTable);
-        db.execSQL("DROP TRIGGER IF EXISTS " + favoriteRefTable + "_delete");
 
-        sqlDropIndex(LocalContract.LinkEntry.TABLE_NAME, LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID);
-        sqlDropIndex(LocalContract.NoteEntry.TABLE_NAME, LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID);
-        sqlDropIndex(LocalContract.NoteEntry.TABLE_NAME, LocalContract.NoteEntry.COLUMN_NAME_LINK_ID);
-        sqlDropIndex(LocalContract.FavoriteEntry.TABLE_NAME, LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID);
+        db.execSQL(sqlDropEntryIdIndex(LocalContract.LinkEntry.TABLE_NAME));
+        db.execSQL(sqlDropEntryIdIndex(LocalContract.NoteEntry.TABLE_NAME));
+        db.execSQL(sqlDropIndex(LocalContract.NoteEntry.TABLE_NAME, LocalContract.NoteEntry.COLUMN_NAME_LINK_ID));
+        db.execSQL(sqlDropEntryIdIndex(LocalContract.FavoriteEntry.TABLE_NAME));
+
+        db.execSQL(sqlDropIndex(LocalContract.FavoriteEntry.TABLE_NAME, LocalContract.FavoriteEntry.COLUMN_NAME_NAME));
+        db.execSQL(sqlDropLeftIndexWithTag(LocalContract.LinkEntry.TABLE_NAME));
+        db.execSQL(sqlDropRightIndexWithTag(LocalContract.LinkEntry.TABLE_NAME));
+        db.execSQL(sqlDropLeftIndexWithTag(LocalContract.NoteEntry.TABLE_NAME));
+        db.execSQL(sqlDropRightIndexWithTag(LocalContract.NoteEntry.TABLE_NAME));
+        db.execSQL(sqlDropLeftIndexWithTag(LocalContract.FavoriteEntry.TABLE_NAME));
+        db.execSQL(sqlDropRightIndexWithTag(LocalContract.FavoriteEntry.TABLE_NAME));
 
         onCreate(db);
     }

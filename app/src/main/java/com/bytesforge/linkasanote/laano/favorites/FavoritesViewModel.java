@@ -169,7 +169,7 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
             return resources.getColor(R.color.item_conflicted, context.getTheme());
         }
         int position = presenter.getPosition(favoriteId);
-        if (isSelected(position)) {
+        if (isSelected(position) && !isActionMode()) {
             return resources.getColor(R.color.item_selected, context.getTheme());
         }
         return resources.getColor(android.R.color.transparent, context.getTheme());
@@ -190,9 +190,10 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
 
     @Override
     public void disableActionMode() {
-        removeSelection();
+        selectedIds.clear();
         actionMode.set(false);
         snackbarId = null;
+        presenter.selectFavoriteFilter();
         notifyChange();
     }
 

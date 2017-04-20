@@ -53,7 +53,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
-import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRV;
+import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
 import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.mockito.Mockito.when;
@@ -170,11 +170,11 @@ public class LinksTabTest {
         laanoActivityTestRule.launchActivity(null);
 
         for (Link link : links) {
-            onView(withItemTextRV(link.getName())).check(matches(isDisplayed()));
+            onView(withItemTextRv(link.getName())).check(matches(isDisplayed()));
         }
         AndroidTestUtils.rotateOrientation(laanoActivityTestRule);
         for (Link link : links) {
-            onView(withItemTextRV(link.getName())).check(matches(isDisplayed()));
+            onView(withItemTextRv(link.getName())).check(matches(isDisplayed()));
         }
     }
 

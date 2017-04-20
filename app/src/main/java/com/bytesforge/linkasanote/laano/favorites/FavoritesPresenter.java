@@ -73,7 +73,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void onTabDeselected() {
-        view.disableActionMode();
+        view.finishActionMode();
     }
 
     @Override
@@ -169,7 +169,8 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         }
     }
 
-    private void selectFavoriteFilter() {
+    @Override
+    public void selectFavoriteFilter() {
         if (viewModel.isActionMode()) return;
 
         String favoriteFilter = settings.getFavoriteFilter();
@@ -177,7 +178,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
             int position = getPosition(favoriteFilter);
             if (position >= 0) {
                 viewModel.setSingleSelection(position, true);
-                view.scrollToPosition(position);
+                //view.scrollToPosition(position);
             }
         }
     }

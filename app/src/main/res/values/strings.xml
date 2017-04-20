@@ -49,9 +49,9 @@
     <string name="actionbar_title_edit_favorite">Edit Favorite</string>
     <string name="actionbar_title_about">About</string>
     <string name="filter_all">All</string>
-    <string name="filter_link">Selected link (%s)</string>
-    <string name="filter_favorite">Selected favorite (%s)</string>
-    <string name="filter_note">Selected note (%s)</string>
+    <string name="filter_link">Selected link</string>
+    <string name="filter_favorite">Selected favorite</string>
+    <string name="filter_note">Selected note</string>
     <string name="filter_no_tags">With no tags</string>
     <string name="filter_conflicted">Conflicted</string>
     <string name="add_edit_account_permission_get_accounts">GET ACCOUNTS (Contacts) permission is needed to check possibility to add new account</string>
@@ -213,7 +213,7 @@
     <string name="add_edit_note_message_link_bound_new">This Note will be bound with the Link:</string>
     <string name="add_edit_note_message_link_bound_edit">This Note is bound with the Link:</string>
     <string name="add_edit_note_message_link_unbound_new">This note will not be bound with any Link</string>
-    <string name="add_edit_note_message_link_unbound_edit">This Note is not related to any Link</string>
+    <string name="add_edit_note_message_link_unbound_edit">This Note is not attached to any Link</string>
     <string name="add_edit_note_message_link_will_unbound">Unable to load related Link, this Note will be saved as unbound</string>
     <string name="action_mode_notes_delete">Delete</string>
     <string name="action_mode_notes_select_all">Check/Uncheck all Notes</string>

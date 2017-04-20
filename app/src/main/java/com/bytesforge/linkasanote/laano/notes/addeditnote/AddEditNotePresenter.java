@@ -151,7 +151,8 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
                 })
                 .subscribe(viewModel::populateLink, throwable -> {
                     linkId = null;
-                    viewModel.showNoteWillBeUnboundMessage();
+                    if (isNewNote()) viewModel.showNoteIsUnboundMessage();
+                    else viewModel.showNoteWillBeUnboundMessage();
                 });
         linkDisposable.add(disposable);
     }

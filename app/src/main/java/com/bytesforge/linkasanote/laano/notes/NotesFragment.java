@@ -266,14 +266,16 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
 
         MenuItem filterFavoriteMenuItem = menu.findItem(R.id.filter_favorite);
         boolean isFavoriteFilter = presenter.isFavoriteFilter();
-        filterFavoriteMenuItem.setTitle(resources.getString(
-                R.string.filter_favorite, FavoritesViewModel.FILTER_PREFIX));
+        filterFavoriteMenuItem.setTitle(
+                resources.getString(R.string.filter_favorite) + " " + resources.getString(
+                        R.string.filter_menu_item_postfix, FavoritesViewModel.FILTER_PREFIX));
         filterFavoriteMenuItem.setEnabled(isFavoriteFilter);
 
         MenuItem filterLinkMenuItem = menu.findItem(R.id.filter_link);
         boolean isLinkFilter = presenter.isLinkFilter();
-        filterLinkMenuItem.setTitle(resources.getString(
-                R.string.filter_link, LinksViewModel.FILTER_PREFIX));
+        filterLinkMenuItem.setTitle(
+                resources.getString(R.string.filter_link) + " " + resources.getString(
+                        R.string.filter_menu_item_postfix, LinksViewModel.FILTER_PREFIX));
         filterLinkMenuItem.setEnabled(isLinkFilter);
         popupMenu.show();
     }
@@ -291,7 +293,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     }
 
     @Override
-    public void disableActionMode() {
+    public void finishActionMode() {
         if (actionMode != null) {
             actionMode.finish(); // NOTE: will call destroyActionMode
         }
@@ -301,7 +303,9 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
         if (viewModel.isActionMode()) {
             viewModel.disableActionMode();
         }
-        if (actionMode != null) actionMode = null;
+        if (actionMode != null) {
+            actionMode = null;
+        }
     }
 
     @Override
@@ -333,7 +337,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
                     R.string.laano_notes_action_mode_selected,
                     viewModel.getSelectedCount(), adapter.getItemCount()));
             if (adapter.getItemCount() <= 0) {
-                disableActionMode();
+                finishActionMode();
             }
         } // if
     }

@@ -25,7 +25,7 @@ public interface LinksContract {
         void showEditLink(@NonNull String linkId);
         void showLinks(@NonNull List<Link> links);
         void enableActionMode();
-        void disableActionMode();
+        void finishActionMode();
         void selectionChanged(int position);
         String removeLink(int position);
         int getPosition(String linkId);
@@ -76,6 +76,7 @@ public interface LinksContract {
         void onLinkClick(String linkId, boolean isConflicted);
         boolean onLinkLongClick(String linkId);
         void onCheckboxClick(String linkId);
+        void selectLinkFilter();
 
         void onEditClick(@NonNull String linkId);
         void onLinkOpenClick(@NonNull String linkId);

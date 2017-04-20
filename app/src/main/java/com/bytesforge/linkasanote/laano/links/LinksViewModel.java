@@ -172,7 +172,7 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
             return resources.getColor(R.color.item_conflicted, context.getTheme());
         }
         int position = presenter.getPosition(linkId);
-        if (isSelected(position)) {
+        if (isSelected(position) && !isActionMode()) {
             return resources.getColor(R.color.item_selected, context.getTheme());
         }
         return resources.getColor(android.R.color.transparent, context.getTheme());
@@ -189,6 +189,7 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
 
     @Override
     public void enableActionMode() {
+        selectedIds.clear();
         actionMode.set(true);
         snackbarId = null;
         notifyChange();
@@ -196,8 +197,10 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
 
     @Override
     public void disableActionMode() {
+        selectedIds.clear();
         actionMode.set(false);
         snackbarId = null;
+        presenter.selectLinkFilter();
         notifyChange();
     }
 

@@ -53,7 +53,7 @@ public class LocalDataSource implements DataSource {
         final String selection = LocalContract.LinkEntry.COLUMN_NAME_DELETED + " = ?" +
                 " OR " + LocalContract.LinkEntry.COLUMN_NAME_CONFLICTED + " = ?";
         final String[] selectionArgs = {"0", "1"};
-        final String sortOrder = LocalContract.LinkEntry.COLUMN_NAME_NAME + " ASC";
+        final String sortOrder = LocalContract.LinkEntry.COLUMN_NAME_CREATED + " DESC";
 
         return localLinks.getLinks(selection, selectionArgs, sortOrder);
     }

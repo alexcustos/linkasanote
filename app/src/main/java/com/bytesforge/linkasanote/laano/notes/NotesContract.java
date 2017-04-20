@@ -23,7 +23,7 @@ public interface NotesContract {
         void showEditNote(@NonNull String noteId);
         void showNotes(@NonNull List<Note> notes);
         void enableActionMode();
-        void disableActionMode();
+        void finishActionMode();
         void selectionChanged(int position);
         void noteVisibilityChanged(int position);
         String removeNote(int position);
@@ -75,6 +75,7 @@ public interface NotesContract {
         void onNoteClick(String noteId, boolean isConflicted);
         boolean onNoteLongClick(String noteId);
         void onCheckboxClick(String noteId);
+        void selectNoteFilter();
 
         void onEditClick(@NonNull String noteId);
         void onToLinksClick(@NonNull String noteId);

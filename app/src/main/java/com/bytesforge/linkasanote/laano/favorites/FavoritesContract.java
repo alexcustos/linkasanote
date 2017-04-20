@@ -23,7 +23,7 @@ public interface FavoritesContract {
         void showEditFavorite(@NonNull String favoriteId);
         void showFavorites(@NonNull List<Favorite> favorites);
         void enableActionMode();
-        void disableActionMode();
+        void finishActionMode();
         void selectionChanged(int position);
         String removeFavorite(int position);
         int getPosition(String favoriteId);
@@ -74,6 +74,7 @@ public interface FavoritesContract {
         void onFavoriteClick(String favoriteId, boolean isConflicted);
         boolean onFavoriteLongClick(String favoriteId);
         void onCheckboxClick(String favoriteId);
+        void selectFavoriteFilter();
 
         void onEditClick(@NonNull String favoriteId);
         void onToLinksClick(@NonNull String favoriteId);
