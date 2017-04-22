@@ -171,7 +171,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
         assertThat(cursor.getCount(), equalTo(1));
         try {
             cursor.moveToLast();
-            return Favorite.from(cursor, tags);
+            return new Favorite(Favorite.from(cursor), tags);
         } finally {
             cursor.close();
         }
@@ -188,7 +188,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
         try {
             cursor.moveToLast();
             String rowId = LocalContract.rowIdFrom(cursor);
-            return Favorite.from(cursor, queryFavoriteTags(rowId));
+            return new Favorite(Favorite.from(cursor), queryFavoriteTags(rowId));
         } finally {
             cursor.close();
         }

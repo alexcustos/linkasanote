@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.FilterType;
@@ -32,6 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class LinksPresenter implements LinksContract.Presenter {
 
     private static final String TAG = LinksPresenter.class.getSimpleName();
+    private static final int TAB = LaanoFragmentPagerAdapter.LINKS_TAB;
 
     public static final String SETTING_LINKS_FILTER_TYPE = "LINKS_FILTER_TYPE";
 
@@ -122,8 +124,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
                         filterType = FilterType.FAVORITE;
                         favoriteFilter = favorite.getId();
                         favoriteFilterTags = favorite.getTags();
-                        laanoUiManager.setFilterType(
-                                LaanoFragmentPagerAdapter.LINKS_TAB, filterType, favorite.getName());
+                        laanoUiManager.setFilterType(TAB, filterType, favorite.getName());
                         return repository.getLinks();
                     }).doOnError(throwable -> {
                         CommonUtils.logStackTrace(TAG, throwable);
@@ -141,8 +142,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
                     .flatMap(note -> {
                         filterType = FilterType.NOTE;
                         noteFilter = note.getId();
-                        laanoUiManager.setFilterType(
-                                LaanoFragmentPagerAdapter.LINKS_TAB, filterType, note.getNote());
+                        laanoUiManager.setFilterType(TAB, filterType, note.getNote());
                         return repository.getLinks();
                     }).doOnError(throwable -> {
                         CommonUtils.logStackTrace(TAG, throwable);
@@ -175,6 +175,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
                         }
                         if (!found) return false;
                     }
+                    // OPTIMIZATION: query the filtered data set will be more efficient
                     switch (filterType) {
                         case CONFLICTED:
                             return link.isConflicted();
@@ -187,7 +188,12 @@ public final class LinksPresenter implements LinksContract.Presenter {
                             }
                             return !Collections.disjoint(favoriteFilterTags, linkTags);
                         case NOTE:
-                            return true; // TODO: search in link.getNotes
+                            List<Note> notes = link.getNotes();
+                            if (notes == null) return false;
+                            for (Note note : notes) {
+                                if (note.getId().equals(noteFilter)) return true;
+                            }
+                            return false;
                         case NO_TAGS:
                             return link.getTags() == null;
                         case ALL:
@@ -204,7 +210,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
                     if (showLoading) {
                         viewModel.hideProgressOverlay();
                     }
-                    laanoUiManager.updateTitle(LaanoFragmentPagerAdapter.LINKS_TAB);
+                    laanoUiManager.updateTitle(TAB);
                 })
                 .subscribe(links -> {
                     view.showLinks(links);
@@ -223,6 +229,15 @@ public final class LinksPresenter implements LinksContract.Presenter {
             onLinkSelected(linkId);
         } else if (isConflicted) {
             view.showConflictResolution(linkId);
+        } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
+            int position = getPosition(linkId);
+            boolean selected = viewModel.toggleSingleSelection(position);
+            // NOTE: filterType will be updated accordingly on the tab
+            if (selected) {
+                settings.setLinkFilter(linkId);
+            } else {
+                settings.setLinkFilter(null);
+            }
         }
     }
 
@@ -291,6 +306,15 @@ public final class LinksPresenter implements LinksContract.Presenter {
     }
 
     @Override
+    public void onToggleClick(@NonNull String linkId) {
+        checkNotNull(linkId);
+
+        int position = getPosition(linkId);
+        viewModel.toggleLinkVisibility(position);
+        view.linkVisibilityChanged(position);
+    }
+
+    @Override
     public void onDeleteClick() {
         int[] selectedIds = viewModel.getSelectedIds();
         view.confirmLinksRemoval(selectedIds);
@@ -302,14 +326,36 @@ public final class LinksPresenter implements LinksContract.Presenter {
     }
 
     @Override
-    public void deleteLinks(int[] selectedIds) {
+    public void deleteLinks(int[] selectedIds, boolean deleteNotes) {
         for (int selectedId : selectedIds) {
             viewModel.removeSelection(selectedId);
             String linkId = view.removeLink(selectedId);
-            try {
-                repository.deleteLink(linkId);
-            } catch (NullPointerException e) {
-                viewModel.showDatabaseErrorSnackbar();
+            if (deleteNotes) {
+                repository.getLink(linkId)
+                        .subscribeOn(schedulerProvider.computation())
+                        .map(link -> {
+                            List<Note> notes = link.getNotes();
+                            if (notes != null) {
+                                for (Note note : notes) {
+                                    repository.deleteNote(note.getId());
+                                }
+                            }
+                            return link;
+                        })
+                        .observeOn(schedulerProvider.ui())
+                        .subscribe(
+                                link -> {
+                                    String id = link.getId();
+                                    repository.deleteLink(id);
+                                    settings.resetLinkFilter(id);
+                                }, throwable -> viewModel.showDatabaseErrorSnackbar());
+            } else {
+                try {
+                    repository.deleteLink(linkId);
+                    settings.resetLinkFilter(linkId);
+                } catch (NullPointerException e) {
+                    viewModel.showDatabaseErrorSnackbar();
+                }
             }
         }
     }
@@ -367,7 +413,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
             case NO_TAGS:
                 if (this.filterType == filterType) return null;
                 this.filterType = filterType;
-                laanoUiManager.setFilterType(LaanoFragmentPagerAdapter.LINKS_TAB, filterType, null);
+                laanoUiManager.setFilterType(TAB, filterType, null);
                 break;
             case FAVORITE:
                 if (this.filterType == filterType
@@ -401,8 +447,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
 
     private void setDefaultLinksFilterType() {
         filterType = Settings.DEFAULT_FILTER_TYPE;
-        laanoUiManager.setFilterType(
-                LaanoFragmentPagerAdapter.LINKS_TAB, filterType, null);
+        laanoUiManager.setFilterType(TAB, filterType, null);
         settings.setFilterType(SETTING_LINKS_FILTER_TYPE, filterType);
     }
 
@@ -417,7 +462,12 @@ public final class LinksPresenter implements LinksContract.Presenter {
     }
 
     @Override
+    public boolean isExpandLinks() {
+        return settings.isExpandLinks();
+    }
+
+    @Override
     public void updateTabNormalState() {
-        laanoUiManager.setTabNormalState(LaanoFragmentPagerAdapter.LINKS_TAB, isConflicted());
+        laanoUiManager.setTabNormalState(TAB, isConflicted());
     }
 }

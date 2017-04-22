@@ -42,7 +42,7 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
     public final ObservableInt noteListSize = new ObservableInt();
 
     private NotesContract.Presenter presenter;
-    private LaanoUiManager laanoUiManager;
+    private LaanoUiManager laanoUiManager; // TODO: remove
     private Context context;
     private Resources resources;
 
@@ -178,7 +178,7 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         }
         int position = presenter.getPosition(noteId);
         if (isSelected(position) && !isActionMode()) {
-            return resources.getColor(R.color.item_selected, context.getTheme());
+            return resources.getColor(R.color.item_note_selected, context.getTheme());
         }
         return resources.getColor(android.R.color.transparent, context.getTheme());
     }
@@ -250,20 +250,28 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         notifyPropertyChanged(BR.selectionChanged);
     }
 
+    /**
+     * @return Return true if the item has been selected
+     */
     @Override
-    public void toggleSingleSelection(int position) {
+    public boolean toggleSingleSelection(int position) {
+        boolean selected;
         int size = selectedIds.size();
         if (size == 1 && selectedIds.get(position)) {
             selectedIds.delete(position);
             notifyPropertyChanged(BR.selectionChanged);
+            selected = false;
         } else if (size <= 0) {
             selectedIds.put(position, true);
             notifyPropertyChanged(BR.selectionChanged);
+            selected = true;
         } else {
             selectedIds.clear();
             selectedIds.put(position, true);
             notifyChange();
+            selected = true;
         }
+        return selected;
     }
 
     @Override

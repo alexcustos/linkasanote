@@ -1,11 +1,13 @@
 package com.bytesforge.linkasanote.laano.notes.addeditnote;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.text.InputFilter;
 import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
@@ -72,9 +74,17 @@ public class AddEditNoteFragment extends Fragment implements AddEditNoteContract
     }
 
     @Override
-    public void finishActivity() {
-        getActivity().setResult(Activity.RESULT_OK);
-        getActivity().finish();
+    public void finishActivity(String noteId, String linkId) {
+        Intent data = new Intent();
+        if (noteId != null) {
+            data.putExtra(ARGUMENT_EDIT_NOTE_ID, noteId);
+        }
+        if (linkId != null) {
+            data.putExtra(ARGUMENT_RELATED_LINK_ID, linkId);
+        }
+        FragmentActivity activity = getActivity();
+        activity.setResult(Activity.RESULT_OK, data);
+        activity.finish();
     }
 
     @Override

@@ -70,6 +70,16 @@ public final class Favorite implements Comparable<Favorite> {
         this(id, 0, currentTimeMillis(), name, tags, state);
     }
 
+    public Favorite(Favorite favorite, List<Tag> tags) {
+        this(favorite.getId(), favorite.getCreated(), favorite.getUpdated(),
+                favorite.getName(), tags, favorite.getState());
+    }
+
+    public Favorite(Favorite favorite, @NonNull SyncState state) {
+        this(favorite.getId(), favorite.getCreated(), favorite.getUpdated(), favorite.getName(),
+                favorite.getTags(), state);
+    }
+
     public Favorite(
             @NonNull String id, long created, long updated, @Nullable String name,
             @Nullable List<Tag> tags, @NonNull SyncState state) {
@@ -81,12 +91,7 @@ public final class Favorite implements Comparable<Favorite> {
         this.state = checkNotNull(state);
     }
 
-    public Favorite(Favorite favorite, @NonNull SyncState state) {
-        this(favorite.getId(), favorite.getCreated(), favorite.getUpdated(), favorite.getName(),
-                favorite.getTags(), state);
-    }
-
-    public static Favorite from(Cursor cursor, List<Tag> tags) {
+    public static Favorite from(Cursor cursor) {
         SyncState state = SyncState.from(cursor);
 
         String id = cursor.getString(cursor.getColumnIndexOrThrow(
@@ -98,10 +103,10 @@ public final class Favorite implements Comparable<Favorite> {
         String name = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.FavoriteEntry.COLUMN_NAME_NAME));
 
-        return new Favorite(id, created, updated, name, tags, state);
+        return new Favorite(id, created, updated, name, null, state);
     }
 
-    public static Favorite from(ContentValues values, List<Tag> tags) {
+    public static Favorite from(ContentValues values) {
         SyncState state = SyncState.from(values);
 
         String id = values.getAsString(LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID);
@@ -109,7 +114,7 @@ public final class Favorite implements Comparable<Favorite> {
         long updated = values.getAsLong(LocalContract.FavoriteEntry.COLUMN_NAME_UPDATED);
         String name = values.getAsString(LocalContract.FavoriteEntry.COLUMN_NAME_NAME);
 
-        return new Favorite(id, created, updated, name, tags, state);
+        return new Favorite(id, created, updated, name, null, state);
     }
 
     @Nullable
@@ -167,6 +172,11 @@ public final class Favorite implements Comparable<Favorite> {
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_NAME, getName());
 
         return values;
+    }
+
+    @NonNull
+    public SyncState getState() {
+        return state;
     }
 
     public long getRowId() {
@@ -258,7 +268,7 @@ public final class Favorite implements Comparable<Favorite> {
 
     public boolean isEmpty() {
         // NOTE: favorite must contain at least one tag
-        return Strings.isNullOrEmpty(name) || tags == null || tags.isEmpty();
+        return Strings.isNullOrEmpty(name) || tags == null;
     }
 
     @Override
@@ -274,7 +284,7 @@ public final class Favorite implements Comparable<Favorite> {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id, name);
+        return Objects.hashCode(id, name, tags);
     }
 
     @Override

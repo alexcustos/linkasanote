@@ -26,6 +26,7 @@ public class Provider extends ContentProvider {
     private static final int LINK = 100;
     private static final int LINK_ITEM = 101;
     private static final int LINK_TAG = 102;
+    private static final int LINK_NOTE = 103;
 
     private static final int NOTE = 200;
     private static final int NOTE_ITEM = 201;
@@ -55,6 +56,9 @@ public class Provider extends ContentProvider {
         matcher.addURI(authority,
                 LocalContract.LinkEntry.TABLE_NAME + "/*/" +
                 LocalContract.TagEntry.TABLE_NAME, LINK_TAG);
+        matcher.addURI(authority,
+                LocalContract.LinkEntry.TABLE_NAME + "/*/" +
+                LocalContract.NoteEntry.TABLE_NAME, LINK_NOTE);
 
         matcher.addURI(authority, LocalContract.NoteEntry.TABLE_NAME, NOTE);
         matcher.addURI(authority, LocalContract.NoteEntry.TABLE_NAME + "/*", NOTE_ITEM);
@@ -102,6 +106,8 @@ public class Provider extends ContentProvider {
             case LINK_ITEM:
                 return LocalContract.LinkEntry.CONTENT_ITEM_TYPE;
             case LINK_TAG:
+                return LocalContract.LinkEntry.CONTENT_TYPE;
+            case LINK_NOTE:
                 return LocalContract.LinkEntry.CONTENT_TYPE;
             case NOTE:
                 return LocalContract.NoteEntry.CONTENT_TYPE;
@@ -151,6 +157,11 @@ public class Provider extends ContentProvider {
                 String linkTable = LocalContract.LinkEntry.TABLE_NAME;
                 tableName = sqlJoinManyToManyWithTags(linkTable);
                 selection = linkTable + LocalContract.LinkEntry._ID + " = ?";
+                selectionArgs = new String[]{LocalContract.LinkEntry.getIdFrom(uri)};
+                break;
+            case LINK_NOTE:
+                tableName = LocalContract.NoteEntry.TABLE_NAME;
+                selection = LocalContract.NoteEntry.COLUMN_NAME_LINK_ID + " = ?";
                 selectionArgs = new String[]{LocalContract.LinkEntry.getIdFrom(uri)};
                 break;
             case FAVORITE:

@@ -70,7 +70,7 @@ public class AndroidTestUtils {
                 "Forth line which is go to the last one.\n" +
                 "The end", LINKS.get(0).getId(), TAGS2));
         add(new Note(KEY_PREFIX + 'K', "Another Note which is bound to first Link", LINKS.get(0).getId(), TAGS3));
-        add(new Note(KEY_PREFIX + 'L', "This note is bound to the disabled Link" +
+        add(new Note(KEY_PREFIX + 'L', "This note is bound to the disabled Link\n" +
                 "and has second line", LINKS.get(1).getId(), TAGS2));
     }};
 

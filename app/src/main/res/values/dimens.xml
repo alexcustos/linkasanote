@@ -42,7 +42,7 @@
     <dimen name="about_margin_vertical_title">4dp</dimen>
 
     <dimen name="card_spacer_padding_end">4dp</dimen>
-    <dimen name="card_left_checkbox_margin_start">12dp</dimen>
+    <dimen name="card_left_checkbox_margin_start">8dp</dimen>
     <dimen name="card_text_to_button_margin_start">24dp</dimen>
     <dimen name="card_prefix_to_text_margin_end">4dp</dimen>
     <dimen name="card_text_margin_vertical">16dp</dimen>
@@ -57,4 +57,5 @@
     <dimen name="card_note_bottom_spacer_height">24dp</dimen>
     <dimen name="card_note_spacer_height">16dp</dimen>
     <dimen name="card_link_spacer_height">8dp</dimen>
+    <dimen name="card_link_notes_bottom_spacer_height">8dp</dimen>
 </resources>

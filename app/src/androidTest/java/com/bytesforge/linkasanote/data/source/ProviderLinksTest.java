@@ -173,7 +173,7 @@ public class ProviderLinksTest extends ProviderTestCase2<Provider> {
         assertThat(cursor.getCount(), equalTo(1));
         try {
             cursor.moveToLast();
-            return Link.from(cursor, tags);
+            return new Link(Link.from(cursor), tags, null);
         } finally {
             cursor.close();
         }
@@ -190,7 +190,7 @@ public class ProviderLinksTest extends ProviderTestCase2<Provider> {
         try {
             cursor.moveToLast();
             String rowId = LocalContract.rowIdFrom(cursor);
-            return Link.from(cursor, queryLinkTags(rowId));
+            return new Link(Link.from(cursor), queryLinkTags(rowId), null);
         } finally {
             cursor.close();
         }

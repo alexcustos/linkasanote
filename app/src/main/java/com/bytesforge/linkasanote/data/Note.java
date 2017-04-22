@@ -75,6 +75,16 @@ public final class Note implements Comparable<Note> {
         this(id, 0, currentTimeMillis(), note, linkId, tags, state);
     }
 
+    public Note(Note note, List<Tag> tags) {
+        this(note.getId(), note.getCreated(), note.getUpdated(),
+                note.getNote(), note.getLinkId(), tags, note.getState());
+    }
+
+    public Note(Note note, @NonNull SyncState state) {
+        this(note.getId(), note.getCreated(), note.getUpdated(), note.getNote(),
+                note.getLinkId(), note.getTags(), state);
+    }
+
     public Note(
             @NonNull String id, long created, long updated, @Nullable String note,
             @Nullable String linkId, @Nullable List<Tag> tags, @NonNull SyncState state) {
@@ -87,12 +97,7 @@ public final class Note implements Comparable<Note> {
         this.state = checkNotNull(state);
     }
 
-    public Note(Note note, @NonNull SyncState state) {
-        this(note.getId(), note.getCreated(), note.getUpdated(), note.getNote(),
-                note.getLinkId(), note.getTags(), state);
-    }
-
-    public static Note from(Cursor cursor, List<Tag> tags) {
+    public static Note from(Cursor cursor) {
         SyncState state = SyncState.from(cursor);
 
         String id = cursor.getString(cursor.getColumnIndexOrThrow(
@@ -106,10 +111,10 @@ public final class Note implements Comparable<Note> {
         String linkId = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.NoteEntry.COLUMN_NAME_LINK_ID));
 
-        return new Note(id, created, updated, note, linkId, tags, state);
+        return new Note(id, created, updated, note, linkId, null, state);
     }
 
-    public static Note from(ContentValues values, List<Tag> tags) {
+    public static Note from(ContentValues values) {
         SyncState state = SyncState.from(values);
 
         String id = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID);
@@ -118,7 +123,7 @@ public final class Note implements Comparable<Note> {
         String note = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_NOTE);
         String linkId = values.getAsString(LocalContract.NoteEntry.COLUMN_NAME_LINK_ID);
 
-        return new Note(id, created, updated, note, linkId, tags, state);
+        return new Note(id, created, updated, note, linkId, null, state);
     }
 
     @Nullable
@@ -178,6 +183,11 @@ public final class Note implements Comparable<Note> {
         values.put(LocalContract.NoteEntry.COLUMN_NAME_LINK_ID, getLinkId());
 
         return values;
+    }
+
+    @NonNull
+    public SyncState getState() {
+        return state;
     }
 
     public long getRowId() {
@@ -283,10 +293,9 @@ public final class Note implements Comparable<Note> {
         if (obj == null || getClass() != obj.getClass()) return false;
 
         Note note = (Note) obj;
-        // NOTE: user is not able to change linkId, so this field must to be part of the comparable object
         return Objects.equal(id, note.id)
-                && Objects.equal(this.note, note.note)
-                && (tags == note.tags || (tags != null && tags.equals(note.tags)));
+                && Objects.equal(this.note, note.note);
+                //&& (tags == note.tags || (tags != null && tags.equals(note.tags)));
     }
 
     @Override

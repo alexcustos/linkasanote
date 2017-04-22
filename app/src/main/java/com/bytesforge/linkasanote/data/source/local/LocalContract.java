@@ -84,6 +84,11 @@ public final class LocalContract {
                     .appendPath(id).appendEncodedPath(TagEntry.TABLE_NAME).build();
         }
 
+        public static Uri buildNotesDirUriWith(String id) {
+            return CONTENT_URI.buildUpon()
+                    .appendPath(id).appendEncodedPath(NoteEntry.TABLE_NAME).build();
+        }
+
         public static String getIdFrom(@NonNull Uri uri) {
             return checkNotNull(uri).getPathSegments().get(1);
         }

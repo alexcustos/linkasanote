@@ -153,7 +153,7 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
         }
         try {
             repository.saveLink(link);
-            view.finishActivity();
+            view.finishActivity(linkId);
         } catch (SQLiteConstraintException e) {
             viewModel.showDuplicateKeyError();
         }

@@ -158,6 +158,12 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
             case R.id.toolbar_links_action_mode:
                 enableActionMode();
                 break;
+            case R.id.toolbar_links_expand_all:
+                viewModel.expandAllLinks();
+                break;
+            case R.id.toolbar_links_collapse_all:
+                viewModel.collapseAllLinks();
+                break;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -211,12 +217,15 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
                 break;
             case REQUEST_EDIT_LINK:
                 if (resultCode == Activity.RESULT_OK) {
+                    // NOTE: the item position will not be changed, but one can be filtered in or out
+                    // OPTIMIZATION: replace the only invalidated items in the cache
                     adapter.notifyDataSetChanged();
                 }
                 break;
             case REQUEST_LINK_CONFLICT_RESOLUTION:
                 adapter.notifyDataSetChanged();
                 presenter.updateTabNormalState();
+                // NOTE: force reload because of conflict resolution is a dialog
                 presenter.loadLinks(false);
                 if (resultCode == LinksConflictResolutionDialog.RESULT_OK) {
                     viewModel.showConflictResolutionSuccessfulSnackbar();
@@ -225,7 +234,11 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
                 }
                 break;
             case REQUEST_ADD_NOTE:
-                // TODO: notify and update current item
+                if (resultCode == Activity.RESULT_OK) {
+                    String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
+                    adapter.notifyItemChanged(linkId);
+                    presenter.loadLinks(true);
+                }
                 break;
             default:
                 throw new IllegalStateException("The result received from the unexpected activity");
@@ -320,6 +333,11 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     }
 
     @Override
+    public void linkVisibilityChanged(int position) {
+        //adapter.notifyItemChanged(position);
+    }
+
+    @Override
     public int getPosition(String linkId) {
         return adapter.getPosition(linkId);
     }
@@ -364,8 +382,8 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
         dialog.show(getFragmentManager(), LinkRemovalConfirmationDialog.DIALOG_TAG);
     }
 
-    public void removeLinks(int[] selectedIds) {
-        presenter.deleteLinks(selectedIds);
+    public void deleteLinks(int[] selectedIds, boolean deleteNotes) {
+        presenter.deleteLinks(selectedIds, deleteNotes);
     }
 
     @Override
@@ -448,8 +466,10 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
                     .setMessage(getResources().getQuantityString(
                             R.plurals.links_delete_confirmation_message, length, length))
                     .setIcon(R.drawable.ic_warning)
-                    .setPositiveButton(R.string.dialog_button_ok, (dialog, which) ->
-                            ((LinksFragment) getTargetFragment()).removeLinks(selectedIds))
+                    .setPositiveButton(R.string.dialog_button_delete, (dialog, which) ->
+                            ((LinksFragment) getTargetFragment()).deleteLinks(selectedIds, true))
+                    .setNeutralButton(R.string.dialog_button_keep_notes, (dialog, which) ->
+                            ((LinksFragment) getTargetFragment()).deleteLinks(selectedIds, false))
                     .setNegativeButton(R.string.dialog_button_cancel, null)
                     .create();
         }

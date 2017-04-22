@@ -48,7 +48,7 @@ public interface NotesContract {
 
         void toggleSelection();
         void toggleSelection(int position);
-        void toggleSingleSelection(int position);
+        boolean toggleSingleSelection(int position);
         void setSingleSelection(int position, boolean selected);
         void removeSelection();
         void removeSelection(int position);

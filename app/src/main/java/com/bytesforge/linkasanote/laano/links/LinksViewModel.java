@@ -32,6 +32,7 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     private static final String STATE_ACTION_MODE = "ACTION_MODE";
     private static final String STATE_LIST_SIZE = "LIST_SIZE";
     private static final String STATE_SELECTED_IDS = "SELECTED_IDS";
+    private static final String STATE_VISIBLE_LINK_IDS = "VISIBLE_LINK_IDS";
     private static final String STATE_SEARCH_TEXT = "SEARCH_TEXT";
     private static final String STATE_PROGRESS_OVERLAY = "PROGRESS_OVERLAY";
 
@@ -39,11 +40,12 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     public final ObservableInt linkListSize = new ObservableInt();
 
     private LinksContract.Presenter presenter;
-    private LaanoUiManager laanoUiManager;
+    private LaanoUiManager laanoUiManager; // TODO: remove
     private Context context;
     private Resources resources;
 
     private SparseBooleanArray selectedIds;
+    private SparseBooleanArray visibleLinkIds;
     private String searchText;
 
     public enum SnackbarId {
@@ -57,6 +59,9 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
 
     @Bindable
     public boolean selectionChanged; // NOTE: notification helper
+
+    @Bindable
+    public boolean linkVisibilityChanged; // NOTE: notification helper
 
     public LinksViewModel(@NonNull Context context) {
         this.context = checkNotNull(context);
@@ -113,6 +118,7 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         outState.putBoolean(STATE_ACTION_MODE, actionMode.get());
         outState.putInt(STATE_LIST_SIZE, linkListSize.get());
         outState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray(selectedIds));
+        outState.putParcelable(STATE_VISIBLE_LINK_IDS, new SparseBooleanParcelableArray(visibleLinkIds));
         outState.putString(STATE_SEARCH_TEXT, searchText);
         outState.putBoolean(STATE_PROGRESS_OVERLAY, progressOverlay);
     }
@@ -124,6 +130,7 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         actionMode.set(state.getBoolean(STATE_ACTION_MODE));
         linkListSize.set(state.getInt(STATE_LIST_SIZE));
         selectedIds = state.getParcelable(STATE_SELECTED_IDS);
+        visibleLinkIds = state.getParcelable(STATE_VISIBLE_LINK_IDS);
         searchText = state.getString(STATE_SEARCH_TEXT);
         progressOverlay = state.getBoolean(STATE_PROGRESS_OVERLAY);
 
@@ -137,6 +144,7 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         // NOTE: do not show empty list warning if empty state is not confirmed
         defaultState.putInt(STATE_LIST_SIZE, Integer.MAX_VALUE);
         defaultState.putParcelable(STATE_SELECTED_IDS, new SparseBooleanParcelableArray());
+        defaultState.putParcelable(STATE_VISIBLE_LINK_IDS, new SparseBooleanParcelableArray());
         defaultState.putString(STATE_SEARCH_TEXT, null);
         defaultState.putBoolean(STATE_PROGRESS_OVERLAY, false);
 
@@ -155,11 +163,10 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     public void setLinkListSize(int linkListSize) {
         boolean firstLoad = (this.linkListSize.get() == Integer.MAX_VALUE);
         this.linkListSize.set(linkListSize);
-        // TODO: finish
-        /*if (firstLoad) {
+        if (firstLoad) {
             if (presenter.isExpandLinks()) expandAllLinks();
             else collapseAllLinks();
-        }*/
+        }
         notifyPropertyChanged(BR.linkListEmpty);
     }
 
@@ -173,7 +180,7 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         }
         int position = presenter.getPosition(linkId);
         if (isSelected(position) && !isActionMode()) {
-            return resources.getColor(R.color.item_selected, context.getTheme());
+            return resources.getColor(R.color.item_link_selected, context.getTheme());
         }
         return resources.getColor(android.R.color.transparent, context.getTheme());
     }
@@ -250,20 +257,28 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         notifyPropertyChanged(BR.selectionChanged);
     }
 
+    /**
+     * @return Return true if the item has been selected
+     */
     @Override
-    public void toggleSingleSelection(int position) {
+    public boolean toggleSingleSelection(int position) {
+        boolean selected;
         int size = selectedIds.size();
         if (size == 1 && selectedIds.get(position)) {
             selectedIds.delete(position);
             notifyPropertyChanged(BR.selectionChanged);
+            selected = false;
         } else if (size <= 0) {
             selectedIds.put(position, true);
             notifyPropertyChanged(BR.selectionChanged);
+            selected = true;
         } else {
             selectedIds.clear();
             selectedIds.put(position, true);
             notifyChange();
+            selected = true;
         }
+        return selected;
     }
 
     @Override
@@ -309,7 +324,43 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
         return ids.stream().mapToInt(i -> i).toArray();
     }
 
-    // Notes Visibility
+    // Link Visibility
+
+    public boolean isLinkVisible(String linkId, boolean changed) {
+        int position = presenter.getPosition(linkId);
+        return isLinkVisible(position);
+    }
+
+    private boolean isLinkVisible(int position) {
+        return visibleLinkIds.get(position);
+    }
+
+    @Override
+    public void toggleLinkVisibility(int position) {
+        if (isLinkVisible(position)) {
+            visibleLinkIds.delete(position);
+        } else {
+            visibleLinkIds.put(position, true);
+        }
+        notifyPropertyChanged(BR.linkVisibilityChanged);
+    }
+
+    @Override
+    public void expandAllLinks() {
+        int listSize = linkListSize.get();
+        if (listSize == Integer.MAX_VALUE || listSize <= 0) return;
+
+        for (int i = 0; i < listSize; i++) {
+            visibleLinkIds.put(i, true);
+        }
+        notifyChange();
+    }
+
+    @Override
+    public void collapseAllLinks() {
+        visibleLinkIds.clear();
+        notifyChange();
+    }
 
     // Snackbar
 

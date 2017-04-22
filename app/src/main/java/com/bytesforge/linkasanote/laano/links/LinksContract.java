@@ -27,6 +27,7 @@ public interface LinksContract {
         void enableActionMode();
         void finishActionMode();
         void selectionChanged(int position);
+        void linkVisibilityChanged(int position);
         String removeLink(int position);
         int getPosition(String linkId);
         void scrollToPosition(int position);
@@ -51,7 +52,7 @@ public interface LinksContract {
         boolean isSelected(String linkId, boolean changed);
         void toggleSelection();
         void toggleSelection(int position);
-        void toggleSingleSelection(int position);
+        boolean toggleSingleSelection(int position);
         void setSingleSelection(int position, boolean selected);
         void removeSelection();
         void removeSelection(int position);
@@ -66,6 +67,9 @@ public interface LinksContract {
 
         String getSearchText();
         void setSearchText(String searchText);
+        void toggleLinkVisibility(int position);
+        void expandAllLinks();
+        void collapseAllLinks();
     }
 
     interface Presenter extends LaanoTabPresenter {
@@ -82,12 +86,14 @@ public interface LinksContract {
         void onLinkOpenClick(@NonNull String linkId);
         void onToNotesClick(@NonNull String linkId);
         void onAddNoteClick(@NonNull String linkId);
+        void onToggleClick(@NonNull String linkId);
         void onDeleteClick();
         void onSelectAllClick();
         int getPosition(String linkId);
         void setFilterType(@NonNull FilterType filtering);
         boolean isFavoriteFilter();
         boolean isNoteFilter();
-        void deleteLinks(int[] selectedIds);
+        void deleteLinks(int[] selectedIds, boolean deleteNotes);
+        boolean isExpandLinks();
     }
 }

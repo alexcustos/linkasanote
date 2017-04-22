@@ -17,14 +17,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocalTags {
 
+    private static final Uri TAG_URI = LocalContract.TagEntry.buildUri();
+
     private final ContentResolver contentResolver;
 
     public LocalTags(@NonNull ContentResolver contentResolver) {
         this.contentResolver = checkNotNull(contentResolver);
     }
 
+    // Operations
+
+    public Observable<Tag> getTags() {
+        return getTags(TAG_URI, null, null, null);
+    }
+
+    public Observable<Tag> getTags(
+            final String selection, final String[] selectionArgs, final String sortOrder) {
+        return getTags(TAG_URI, selection, selectionArgs, sortOrder);
+    }
 
     public Observable<Tag> getTags(final Uri uri) {
+        // TODO: it would be better to sort by [table]_tag.created
         final String sortOrder = LocalContract.TagEntry.COLUMN_NAME_NAME + " ASC";
         return getTags(uri, null, null, sortOrder);
     }
@@ -34,7 +47,8 @@ public class LocalTags {
             final String selection, final String[] selectionArgs, final String sortOrder) {
         return Observable.generate(() -> {
             return contentResolver.query(
-                    uri, LocalContract.TagEntry.TAG_COLUMNS, selection, selectionArgs, sortOrder);
+                    uri, LocalContract.TagEntry.TAG_COLUMNS,
+                    selection, selectionArgs, sortOrder);
         }, (cursor, tagEmitter) -> {
             if (cursor == null) {
                 tagEmitter.onError(new NullPointerException("An error while retrieving the cursor"));
@@ -51,19 +65,15 @@ public class LocalTags {
 
     public Single<Tag> getTag(String tagName) {
         return Single.fromCallable(() -> {
-            Cursor cursor = contentResolver.query(
+            try (Cursor cursor = contentResolver.query(
                     LocalContract.TagEntry.buildUriWith(tagName),
-                    LocalContract.TagEntry.TAG_COLUMNS, null, null, null);
-            if (cursor == null) return null;
+                    LocalContract.TagEntry.TAG_COLUMNS, null, null, null)) {
+                if (cursor == null) return null;
 
-            if (!cursor.moveToLast()) {
-                cursor.close();
-                throw new NoSuchElementException("The requested tag was not found");
-            }
-            try {
+                if (!cursor.moveToLast()) {
+                    throw new NoSuchElementException("The requested tag was not found");
+                }
                 return Tag.from(cursor);
-            } finally {
-                cursor.close();
             }
         });
     }
@@ -81,7 +91,6 @@ public class LocalTags {
     }
 
     public Single<Integer> deleteTags() {
-        Uri uri = LocalContract.TagEntry.buildUri();
-        return LocalDataSource.delete(contentResolver, uri);
+        return LocalDataSource.delete(contentResolver, TAG_URI);
     }
 }

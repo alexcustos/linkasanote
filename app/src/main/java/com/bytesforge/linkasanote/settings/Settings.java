@@ -28,6 +28,7 @@ public class Settings {
     public static final float GLOBAL_PROGRESS_OVERLAY_ALPHA = 0.4f;
     public static final long GLOBAL_PROGRESS_OVERLAY_DURATION = 200; // ms
     public static final long GLOBAL_PROGRESS_OVERLAY_SHOW_DELAY = 200; // ms
+    public static final boolean GLOBAL_ITEM_CLICK_SELECT_FILTER = true;
 
     private static final String DEFAULT_SYNC_DIRECTORY = "/.laano_sync";
     private static final boolean DEFAULT_EXPAND_LINKS = false;
@@ -181,6 +182,15 @@ public class Settings {
         }
     }
 
+    public void resetLinkFilter(String linkId) {
+        String filter = getLinkFilter();
+        if (filter == null || linkId == null) return;
+
+        if (filter.equals(linkId)) {
+            setLinkFilter(null);
+        }
+    }
+
     public String getFavoriteFilter() {
         return sharedPreferences.getString(SETTING_FAVORITE_FILTER, DEFAULT_FAVORITE_FILTER);
     }
@@ -196,6 +206,15 @@ public class Settings {
         }
     }
 
+    public void resetFavoriteFilter(String favoriteId) {
+        String filter = getFavoriteFilter();
+        if (filter == null || favoriteId == null) return;
+
+        if (filter.equals(favoriteId)) {
+            setFavoriteFilter(null);
+        }
+    }
+
     public String getNoteFilter() {
         return sharedPreferences.getString(SETTING_NOTE_FILTER, DEFAULT_NOTE_FILTER);
     }
@@ -208,6 +227,15 @@ public class Settings {
             putStringSetting(SETTING_NOTE_FILTER, noteId);
         } else if (!noteId.equals(filter)) {
             putStringSetting(SETTING_NOTE_FILTER, noteId);
+        }
+    }
+
+    public void resetNoteFilter(String noteId) {
+        String filter = getNoteFilter();
+        if (filter == null || noteId == null) return;
+
+        if (filter.equals(noteId)) {
+            setNoteFilter(null);
         }
     }
 

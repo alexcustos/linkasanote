@@ -187,7 +187,7 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
         }
         try {
             repository.saveNote(note);
-            view.finishActivity();
+            view.finishActivity(noteId, linkId);
         } catch (SQLiteConstraintException e) {
             viewModel.showDuplicateKeyError();
         }

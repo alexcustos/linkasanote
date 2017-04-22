@@ -1,11 +1,13 @@
 package com.bytesforge.linkasanote.laano.favorites.addeditfavorite;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.text.InputFilter;
 import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
@@ -68,9 +70,14 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
     }
 
     @Override
-    public void finishActivity() {
-        getActivity().setResult(Activity.RESULT_OK);
-        getActivity().finish();
+    public void finishActivity(String favoriteId) {
+        Intent data = new Intent();
+        if (favoriteId != null) {
+            data.putExtra(ARGUMENT_EDIT_FAVORITE_ID, favoriteId);
+        }
+        FragmentActivity activity = getActivity();
+        activity.setResult(Activity.RESULT_OK, data);
+        activity.finish();
     }
 
     @Nullable

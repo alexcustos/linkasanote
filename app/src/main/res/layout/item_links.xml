@@ -178,7 +178,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:gravity="end"
-                android:text="@{viewModel.getLinkCounter(0)}"
+                android:text="@{viewModel.getLinkCounter(link.notes.size)}"
                 android:textAppearance="@style/LinksText.Count"
                 app:layout_constraintTop_toTopOf="@+id/notes_toggle"
                 app:layout_constraintBottom_toBottomOf="@+id/notes_toggle"
@@ -193,10 +193,35 @@
                 android:paddingEnd="@dimen/card_right_button_padding_end"
                 android:paddingTop="@dimen/card_button_padding_vertical"
                 android:paddingBottom="@dimen/card_button_padding_vertical"
+                android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
+                android:onClick="@{() -> presenter.onToggleClick(link.id)}"
                 style="@style/Button.RecyclerView"
-                app:srcCompat="@drawable/ic_expand_more"
+                bind:imageButtonEnabled="@{link.notes.size > 0}"
+                app:srcCompat="@{viewModel.isLinkVisible(link.id, viewModel.linkVisibilityChanged) ? @drawable/ic_expand_less : @drawable/ic_expand_more}"
                 app:layout_constraintTop_toBottomOf="@+id/link_tags"
+                app:layout_constraintBottom_toTopOf="@+id/rv_link_notes"
                 app:layout_constraintStart_toEndOf="@+id/notes_count"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_link_notes"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:visibility="@{viewModel.isLinkVisible(link.id, viewModel.linkVisibilityChanged) ? View.VISIBLE : View.GONE}"
+                app:layout_constraintTop_toBottomOf="@+id/notes_toggle"
+                app:layout_constraintBottom_toTopOf="@+id/note_bottom_spacer"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <Space
+                android:id="@+id/note_bottom_spacer"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/card_link_notes_bottom_spacer_height"
+                android:visibility="@{viewModel.isLinkVisible(link.id, viewModel.linkVisibilityChanged) ? View.VISIBLE : View.GONE}"
+                app:layout_constraintTop_toBottomOf="@+id/rv_link_notes"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
         </android.support.constraint.ConstraintLayout>
     </android.support.v7.widget.CardView>

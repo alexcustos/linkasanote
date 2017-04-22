@@ -171,7 +171,7 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
         assertThat(cursor.getCount(), equalTo(1));
         try {
             cursor.moveToLast();
-            return Note.from(cursor, tags);
+            return new Note(Note.from(cursor), tags);
         } finally {
             cursor.close();
         }
@@ -188,7 +188,7 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
         try {
             cursor.moveToLast();
             String rowId = LocalContract.rowIdFrom(cursor);
-            return Note.from(cursor, queryNoteTags(rowId));
+            return new Note(Note.from(cursor), queryNoteTags(rowId));
         } finally {
             cursor.close();
         }

@@ -307,7 +307,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             // NOTE: will try to resolve it further
         }
         // Duplicated record
-        int duplicated = localFavorites.getNextDuplicated(favorite.getName()).blockingGet();
+        int duplicated = localFavorites.getNextDuplicatedFavorite(favorite.getName()).blockingGet();
         SyncState state = new SyncState(favorite.getETag(), duplicated);
         Favorite duplicatedFavorite = new Favorite(favorite, state);
         try {

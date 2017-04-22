@@ -184,6 +184,8 @@ public class Repository implements DataSource {
         cloudDataSource.deleteLink(linkId);
 
         deleteCachedLink(linkId);
+        // OPTIMIZATION: invalidate notes individually when the parent link is deleted
+        noteCacheIsDirty = true;
     }
 
     @Override
@@ -475,6 +477,8 @@ public class Repository implements DataSource {
         cloudDataSource.deleteNote(noteId);
 
         deleteCachedNote(noteId);
+        // OPTIMIZATION: look for the Link the Note was bound and invalidate it
+        linkCacheIsDirty = true;
     }
 
     @Override

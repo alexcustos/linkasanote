@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Provider;
 import com.bytesforge.linkasanote.sync.SyncState;
@@ -22,45 +23,69 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocalLinks {
 
+    private static final Uri LINK_URI = LocalContract.LinkEntry.buildUri();
+
     private final Context context;
     private final ContentResolver contentResolver;
     private final LocalTags localTags;
+    private final LocalNotes localNotes;
 
     public LocalLinks(
             @NonNull Context context, @NonNull ContentResolver contentResolver,
-            @NonNull LocalTags localTags) {
+            @NonNull LocalTags localTags, @NonNull LocalNotes localNotes) {
         this.context = checkNotNull(context);
         this.contentResolver = checkNotNull(contentResolver);
         this.localTags = checkNotNull(localTags);
+        this.localNotes = checkNotNull(localNotes);
     }
 
+    private Single<Link> buildLink(final Link link) {
+        Single<Link> singleLink = Single.just(link);
+        Uri linkTagUri = LocalContract.LinkEntry.buildTagsDirUriWith(link.getRowId());
+        Single<List<Tag>> singleTags = localTags.getTags(linkTagUri).toList();
+
+        // OPTIMIZATION: the requested Note can be replaced with the cached one in repository or vice versa
+        Uri linkNoteUri = LocalContract.LinkEntry.buildNotesDirUriWith(link.getId());
+        Single<List<Note>> singleNotes = localNotes.getNotes(linkNoteUri).toList();
+        return Single.zip(singleLink, singleTags, singleNotes, Link::new);
+    }
+
+    // Operations
+
     public Observable<Link> getLinks() {
-        return getLinks(null, null, null);
+        return getLinks(LINK_URI, null, null, null);
     }
 
     public Observable<Link> getLinks(
             final String selection, final String[] selectionArgs, final String sortOrder) {
-        return Observable.generate(() -> {
+        return getLinks(LINK_URI, selection, selectionArgs, sortOrder);
+    }
+
+    public Observable<Link> getLinks(final Uri uri) {
+        final String sortOrder = LocalContract.TagEntry.COLUMN_NAME_CREATED + " DESC";
+        return getLinks(uri, null, null, sortOrder);
+    }
+
+    public Observable<Link> getLinks(
+            final Uri uri,
+            final String selection, final String[] selectionArgs, final String sortOrder) {
+        Observable<Link> linksGenerator = Observable.generate(() -> {
             return contentResolver.query(
-                    LocalContract.LinkEntry.buildUri(),
-                    LocalContract.LinkEntry.LINK_COLUMNS,
+                    uri, LocalContract.LinkEntry.LINK_COLUMNS,
                     selection, selectionArgs, sortOrder);
         }, (cursor, linkEmitter) -> {
             if (cursor == null) {
                 linkEmitter.onError(new NullPointerException("An error while retrieving the cursor"));
                 return null;
             }
-            if (!cursor.moveToNext()) {
+            if (cursor.moveToNext()) {
+                linkEmitter.onNext(Link.from(cursor));
+            } else {
                 linkEmitter.onComplete();
-                return cursor;
             }
-            String rowId = LocalContract.rowIdFrom(cursor);
-            Uri linkTagsUri = LocalContract.LinkEntry.buildTagsDirUriWith(rowId);
-            List<Tag> tags = localTags.getTags(linkTagsUri).toList().blockingGet();
-            linkEmitter.onNext(Link.from(cursor, tags));
-
             return cursor;
         }, Cursor::close);
+        return linksGenerator.flatMap(link -> buildLink(link).toObservable());
     }
 
     public Single<Link> getLink(final String linkId) {
@@ -68,34 +93,31 @@ public class LocalLinks {
             try (Cursor cursor = contentResolver.query(
                     LocalContract.LinkEntry.buildUriWith(linkId),
                     LocalContract.LinkEntry.LINK_COLUMNS, null, null, null)) {
-                if (cursor == null) {
-                    return null; // NOTE: NullPointerException
-                } else if (!cursor.moveToLast()) {
+                if (cursor == null) return null;
+
+                if (!cursor.moveToLast()) {
                     throw new NoSuchElementException("The requested link was not found");
                 }
-                String rowId = LocalContract.rowIdFrom(cursor);
-                Uri linkTagsUri = LocalContract.LinkEntry.buildTagsDirUriWith(rowId);
-                List<Tag> tags = localTags.getTags(linkTagsUri).toList().blockingGet();
-                return Link.from(cursor, tags);
+                return Link.from(cursor);
             }
-        });
+        }).flatMap(this::buildLink);
     }
 
     public Single<Long> saveLink(final Link link) {
         return Single.fromCallable(() -> {
             ContentValues values = link.getContentValues();
-            Uri linkUri = contentResolver.insert(
-                    LocalContract.LinkEntry.buildUri(), values);
+            Uri linkUri = contentResolver.insert(LINK_URI, values);
             if (linkUri == null) {
                 throw new NullPointerException("Provider must return URI or throw exception");
             }
             String rowId = LocalContract.LinkEntry.getIdFrom(linkUri);
-            Uri uri = LocalContract.LinkEntry.buildTagsDirUriWith(rowId);
+            Uri linkTagUri = LocalContract.LinkEntry.buildTagsDirUriWith(rowId);
             List<Tag> tags = link.getTags();
             if (tags != null) {
-                for (Tag tag : tags) {
-                    localTags.saveTag(tag, uri).blockingGet();
-                }
+                Observable.zip(
+                        Observable.fromIterable(tags), Observable.just(linkTagUri).repeat(),
+                        (tag, uri) -> localTags.saveTag(tag, uri).blockingGet())
+                        .toList().blockingGet();
             }
             return Long.parseLong(rowId);
         });
@@ -113,8 +135,7 @@ public class LocalLinks {
         return Single.fromCallable(() -> {
             SyncState state = new SyncState(SyncState.State.UNSYNCED);
             ContentValues values = state.getContentValues();
-            Uri uri = LocalContract.LinkEntry.buildUri();
-            return contentResolver.update(uri, values, null, null);
+            return contentResolver.update(LINK_URI, values, null, null);
         });
     }
 
@@ -124,8 +145,7 @@ public class LocalLinks {
     }
 
     public Single<Integer> deleteLinks() {
-        Uri uri = LocalContract.LinkEntry.buildUri();
-        return LocalDataSource.delete(contentResolver, uri);
+        return LocalDataSource.delete(contentResolver, LINK_URI);
     }
 
     public Single<SyncState> getLinkSyncState(final String linkId) {
@@ -134,24 +154,21 @@ public class LocalLinks {
     }
 
     public Observable<SyncState> getLinkSyncStates() {
-        Uri uri = LocalContract.LinkEntry.buildUri();
-        return LocalDataSource.getSyncStates(contentResolver, uri, null, null, null);
+        return LocalDataSource.getSyncStates(contentResolver, LINK_URI, null, null, null);
     }
 
     public Observable<String> getLinkIds() {
-        Uri uri = LocalContract.LinkEntry.buildUri();
-        return LocalDataSource.getIds(contentResolver, uri);
+        return LocalDataSource.getIds(contentResolver, LINK_URI);
     }
 
     public Single<Boolean> isConflictedLinks() {
-        Uri uri = LocalContract.LinkEntry.buildUri();
-        return LocalDataSource.isConflicted(contentResolver, uri);
+        return LocalDataSource.isConflicted(contentResolver, LINK_URI);
     }
 
-    public Single<Integer> getNextDuplicated(final String linkName) {
+    public Single<Integer> getNextDuplicatedLink(final String linkName) {
         final String[] columns = new String[]{
                 "MAX(" + LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + ") + 1"};
-        final String selection = LocalContract.LinkEntry.COLUMN_NAME_NAME + " = ?";
+        final String selection = LocalContract.LinkEntry.COLUMN_NAME_LINK + " = ?";
         final String[] selectionArgs = {linkName};
 
         return Single.fromCallable(() -> {
@@ -167,7 +184,7 @@ public class LocalLinks {
     }
 
     public Single<Link> getMainLink(final String linkName) {
-        final String selection = LocalContract.LinkEntry.COLUMN_NAME_NAME + " = ?" +
+        final String selection = LocalContract.LinkEntry.COLUMN_NAME_LINK + " = ?" +
                 " AND " + LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + " = ?";
         final String[] selectionArgs = {linkName, "0"};
 
@@ -181,11 +198,8 @@ public class LocalLinks {
                 } else if (!cursor.moveToLast()) {
                     throw new NoSuchElementException("The requested link was not found");
                 }
-                String rowId = LocalContract.rowIdFrom(cursor);
-                Uri linkTagsUri = LocalContract.LinkEntry.buildTagsDirUriWith(rowId);
-                List<Tag> tags = localTags.getTags(linkTagsUri).toList().blockingGet();
-                return Link.from(cursor, tags);
+                return Link.from(cursor);
             }
-        });
+        }).flatMap(this::buildLink);
     }
 }

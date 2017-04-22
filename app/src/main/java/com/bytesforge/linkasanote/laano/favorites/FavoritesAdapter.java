@@ -33,6 +33,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         this.favorites = checkNotNull(favorites);
         this.presenter = checkNotNull(presenter);
         this.viewModel = checkNotNull(viewModel);
+        updatePositionMap();
         setHasStableIds(true);
     }
 

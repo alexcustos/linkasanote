@@ -18,7 +18,7 @@ public interface AddEditFavoriteContract {
 
         void setViewModel(@NonNull AddEditFavoriteContract.ViewModel viewModel);
         boolean isActive();
-        void finishActivity();
+        void finishActivity(String favoriteId);
 
         void swapTagsCompletionViewItems(List<Tag> tags);
     }

@@ -57,8 +57,8 @@ public final class Link implements Comparable<Link> {
 
     private final boolean disabled;
 
-    /*@Nullable
-    private final List<Note> notes;*/
+    @Nullable
+    private final List<Note> notes;
 
     @Nullable
     private final List<Tag> tags;
@@ -66,27 +66,40 @@ public final class Link implements Comparable<Link> {
     @NonNull
     private final SyncState state;
 
+    // Create item
     public Link(String link, String name, boolean disabled, List<Tag> tags) {
         this(generateKey(), currentTimeMillis(), currentTimeMillis(),
-                link, name, disabled, tags, new SyncState());
+                link, name, disabled, tags, null, new SyncState());
     }
 
+    // Update item
     public Link(String id, String link, String name, boolean disabled, List<Tag> tags) {
-        // NOTE: updating syncState must not change update entry
-        this(id, 0, currentTimeMillis(), link, name, disabled, tags, new SyncState());
+        // NOTE: updating syncState must not change updated field
+        this(id, 0, currentTimeMillis(), link, name, disabled, tags, null, new SyncState());
     }
 
     @VisibleForTesting
     public Link(
             String id, String link, String name, boolean disabled,
             List<Tag> tags, SyncState state) {
-        this(id, 0, currentTimeMillis(), link, name, disabled, tags, state);
+        this(id, 0, currentTimeMillis(), link, name, disabled, tags, null, state);
     }
 
+    public Link(Link link, List<Tag> tags, List<Note> notes) {
+        this(link.getId(), link.getCreated(), link.getUpdated(), link.getLink(),
+                link.getName(), link.isDisabled(), tags, notes, link.getState());
+    }
+
+    public Link(Link link, @NonNull SyncState state) {
+        this(link.getId(), link.getCreated(), link.getUpdated(), link.getLink(),
+                link.getName(), link.isDisabled(), link.getTags(), link.getNotes(), state);
+    }
+
+    // Common
     public Link(
             @NonNull String id, long created, long updated, @Nullable String link,
             @Nullable String name, boolean disabled, @Nullable List<Tag> tags,
-            @NonNull SyncState state) {
+            @Nullable List<Note> notes, @NonNull SyncState state) {
         this.id = checkNotNull(id);
         this.created = created;
         this.updated = updated;
@@ -94,15 +107,11 @@ public final class Link implements Comparable<Link> {
         this.name = name;
         this.disabled = disabled;
         this.tags = (tags == null || tags.isEmpty() ? null : tags);
+        this.notes = (notes == null || notes.isEmpty() ? null : notes);
         this.state = checkNotNull(state);
     }
 
-    public Link(Link link, @NonNull SyncState state) {
-        this(link.getId(), link.getCreated(), link.getUpdated(), link.getLink(),
-                link.getName(), link.isDisabled(), link.getTags(), state);
-    }
-
-    public static Link from(Cursor cursor, List<Tag> tags) {
+    public static Link from(Cursor cursor) {
         SyncState state = SyncState.from(cursor);
 
         String id = cursor.getString(cursor.getColumnIndexOrThrow(
@@ -119,10 +128,10 @@ public final class Link implements Comparable<Link> {
                 LocalContract.LinkEntry.COLUMN_NAME_DISABLED)) == 1;
 
         return new Link(id, created, updated, link,
-                Strings.isNullOrEmpty(name) ? null : name, disabled, tags, state);
+                Strings.isNullOrEmpty(name) ? null : name, disabled, null, null, state);
     }
 
-    public static Link from(ContentValues values, List<Tag> tags) {
+    public static Link from(ContentValues values) {
         SyncState state = SyncState.from(values);
 
         String id = values.getAsString(LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID);
@@ -132,7 +141,7 @@ public final class Link implements Comparable<Link> {
         String name = values.getAsString(LocalContract.LinkEntry.COLUMN_NAME_NAME);
         boolean disabled = values.getAsBoolean(LocalContract.LinkEntry.COLUMN_NAME_DISABLED);
 
-        return new Link(id, created, updated, link, name, disabled, tags, state);
+        return new Link(id, created, updated, link, name, disabled, null, null, state);
     }
 
     @Nullable
@@ -172,7 +181,7 @@ public final class Link implements Comparable<Link> {
             for (int i = 0; i < jsonTags.length(); i++) {
                 tags.add(Tag.from(jsonTags.getJSONObject(i)));
             }
-            return new Link(id, created, updated, link, name, disabled, tags, state);
+            return new Link(id, created, updated, link, name, disabled, tags, null, state);
         } catch (JSONException e) {
             Log.v(TAG, "Exception while processing Link JSON object");
             return null;
@@ -193,6 +202,11 @@ public final class Link implements Comparable<Link> {
         values.put(LocalContract.LinkEntry.COLUMN_NAME_DISABLED, isDisabled());
 
         return values;
+    }
+
+    @NonNull
+    public SyncState getState() {
+        return state;
     }
 
     public long getRowId() {
@@ -252,6 +266,11 @@ public final class Link implements Comparable<Link> {
     }
 
     @Nullable
+    public List<Note> getNotes() {
+        return notes;
+    }
+
+    @Nullable
     public List<Tag> getTags() {
         return tags;
     }
@@ -261,6 +280,15 @@ public final class Link implements Comparable<Link> {
         if (tags != null) {
             Joiner joiner = Joiner.on(", ");
             return joiner.join(tags);
+        }
+        return null;
+    }
+
+    @Nullable
+    public String getNotesAsString() {
+        if (notes != null) {
+            Joiner joiner = Joiner.on("; ");
+            return joiner.join(notes);
         }
         return null;
     }
@@ -294,7 +322,6 @@ public final class Link implements Comparable<Link> {
     }
 
     public boolean isEmpty() {
-        // NOTE: link must contain at least one tag
         return Strings.isNullOrEmpty(link);
     }
 
@@ -306,8 +333,8 @@ public final class Link implements Comparable<Link> {
         Link link = (Link) obj;
         return Objects.equal(id, link.id)
                 && Objects.equal(this.link, link.link)
-                && Objects.equal(this.name, link.name)
-                && (tags == link.tags || (tags != null && tags.equals(link.tags)));
+                && Objects.equal(this.name, link.name);
+                //&& (tags == link.tags || (tags != null && tags.equals(link.tags)));
     }
 
     @Override

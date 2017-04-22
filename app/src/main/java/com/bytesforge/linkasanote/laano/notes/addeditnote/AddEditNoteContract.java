@@ -19,7 +19,7 @@ public interface AddEditNoteContract {
 
         void setViewModel(@NonNull AddEditNoteContract.ViewModel viewModel);
         boolean isActive();
-        void finishActivity();
+        void finishActivity(String noteId, String linkId);
 
         void swapTagsCompletionViewItems(List<Tag> tags);
     }

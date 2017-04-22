@@ -22,6 +22,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocalNotes {
 
+    private static final Uri NOTE_URI = LocalContract.NoteEntry.buildUri();
+
     private final Context context;
     private final ContentResolver contentResolver;
     private final LocalTags localTags;
@@ -34,33 +36,49 @@ public class LocalNotes {
         this.localTags = checkNotNull(localTags);
     }
 
+    private Single<Note> buildNote(final Note note) {
+        Single<Note> singleNote = Single.just(note);
+        Uri noteTagUri = LocalContract.NoteEntry.buildTagsDirUriWith(note.getRowId());
+        Single<List<Tag>> singleTags = localTags.getTags(noteTagUri).toList();
+        return Single.zip(singleNote, singleTags, Note::new);
+    }
+
+    // Operations
+
     public Observable<Note> getNotes() {
-        return getNotes(null, null, null);
+        return getNotes(NOTE_URI, null, null, null);
     }
 
     public Observable<Note> getNotes(
             final String selection, final String[] selectionArgs, final String sortOrder) {
-        return Observable.generate(() -> {
+        return getNotes(NOTE_URI, selection, selectionArgs, sortOrder);
+    }
+
+    public Observable<Note> getNotes(final Uri uri) {
+        final String sortOrder = LocalContract.TagEntry.COLUMN_NAME_CREATED + " DESC";
+        return getNotes(uri, null, null, sortOrder);
+    }
+
+    public Observable<Note> getNotes(
+            final Uri uri,
+            final String selection, final String[] selectionArgs, final String sortOrder) {
+        Observable<Note> notesGenerator = Observable.generate(() -> {
             return contentResolver.query(
-                    LocalContract.NoteEntry.buildUri(),
-                    LocalContract.NoteEntry.NOTE_COLUMNS,
+                    uri, LocalContract.NoteEntry.NOTE_COLUMNS,
                     selection, selectionArgs, sortOrder);
         }, (cursor, noteEmitter) -> {
             if (cursor == null) {
                 noteEmitter.onError(new NullPointerException("An error while retrieving the cursor"));
                 return null;
             }
-            if (!cursor.moveToNext()) {
+            if (cursor.moveToNext()) {
+                noteEmitter.onNext(Note.from(cursor));
+            } else {
                 noteEmitter.onComplete();
-                return cursor;
             }
-            String rowId = LocalContract.rowIdFrom(cursor);
-            Uri noteTagsUri = LocalContract.NoteEntry.buildTagsDirUriWith(rowId);
-            List<Tag> tags = localTags.getTags(noteTagsUri).toList().blockingGet();
-            noteEmitter.onNext(Note.from(cursor, tags));
-
             return cursor;
         }, Cursor::close);
+        return notesGenerator.flatMap(note -> buildNote(note).toObservable());
     }
 
     public Single<Note> getNote(final String noteId) {
@@ -68,17 +86,14 @@ public class LocalNotes {
             try (Cursor cursor = contentResolver.query(
                     LocalContract.NoteEntry.buildUriWith(noteId),
                     LocalContract.NoteEntry.NOTE_COLUMNS, null, null, null)) {
-                if (cursor == null) {
-                    return null; // NOTE: NullPointerException
-                } else if (!cursor.moveToLast()) {
+                if (cursor == null) return null;
+
+                if (!cursor.moveToLast()) {
                     throw new NoSuchElementException("The requested note was not found");
                 }
-                String rowId = LocalContract.rowIdFrom(cursor);
-                Uri noteTagsUri = LocalContract.NoteEntry.buildTagsDirUriWith(rowId);
-                List<Tag> tags = localTags.getTags(noteTagsUri).toList().blockingGet();
-                return Note.from(cursor, tags);
+                return Note.from(cursor);
             }
-        });
+        }).flatMap(this::buildNote);
     }
 
     public Single<Long> saveNote(final Note note) {
@@ -90,12 +105,13 @@ public class LocalNotes {
                 throw new NullPointerException("Provider must return URI or throw exception");
             }
             String rowId = LocalContract.NoteEntry.getIdFrom(noteUri);
-            Uri uri = LocalContract.NoteEntry.buildTagsDirUriWith(rowId);
+            Uri noteTagUri = LocalContract.NoteEntry.buildTagsDirUriWith(rowId);
             List<Tag> tags = note.getTags();
             if (tags != null) {
-                for (Tag tag : tags) {
-                    localTags.saveTag(tag, uri).blockingGet();
-                }
+                Observable.zip(
+                        Observable.fromIterable(tags), Observable.just(noteTagUri).repeat(),
+                        (tag, uri) -> localTags.saveTag(tag, uri).blockingGet())
+                        .toList().blockingGet();
             }
             return Long.parseLong(rowId);
         });
@@ -113,8 +129,7 @@ public class LocalNotes {
         return Single.fromCallable(() -> {
             SyncState state = new SyncState(SyncState.State.UNSYNCED);
             ContentValues values = state.getContentValues();
-            Uri uri = LocalContract.NoteEntry.buildUri();
-            return contentResolver.update(uri, values, null, null);
+            return contentResolver.update(NOTE_URI, values, null, null);
         });
     }
 
@@ -124,8 +139,7 @@ public class LocalNotes {
     }
 
     public Single<Integer> deleteNotes() {
-        Uri uri = LocalContract.NoteEntry.buildUri();
-        return LocalDataSource.delete(contentResolver, uri);
+        return LocalDataSource.delete(contentResolver, NOTE_URI);
     }
 
     public Single<SyncState> getNoteSyncState(final String noteId) {
@@ -134,21 +148,18 @@ public class LocalNotes {
     }
 
     public Observable<SyncState> getNoteSyncStates() {
-        Uri uri = LocalContract.NoteEntry.buildUri();
-        return LocalDataSource.getSyncStates(contentResolver, uri, null, null, null);
+        return LocalDataSource.getSyncStates(contentResolver, NOTE_URI, null, null, null);
     }
 
     public Observable<String> getNoteIds() {
-        Uri uri = LocalContract.NoteEntry.buildUri();
-        return LocalDataSource.getIds(contentResolver, uri);
+        return LocalDataSource.getIds(contentResolver, NOTE_URI);
     }
 
     public Single<Boolean> isConflictedNotes() {
-        Uri uri = LocalContract.NoteEntry.buildUri();
-        return LocalDataSource.isConflicted(contentResolver, uri);
+        return LocalDataSource.isConflicted(contentResolver, NOTE_URI);
     }
 
-    public Single<Integer> getNextDuplicated(final String noteName) {
+    public Single<Integer> getNextDuplicatedNote(final String noteName) {
         final String[] columns = new String[]{
                 "MAX(" + LocalContract.NoteEntry.COLUMN_NAME_DUPLICATED + ") + 1"};
         final String selection = LocalContract.NoteEntry.COLUMN_NAME_NOTE + " = ?";
@@ -181,11 +192,8 @@ public class LocalNotes {
                 } else if (!cursor.moveToLast()) {
                     throw new NoSuchElementException("The requested note was not found");
                 }
-                String rowId = LocalContract.rowIdFrom(cursor);
-                Uri noteTagsUri = LocalContract.NoteEntry.buildTagsDirUriWith(rowId);
-                List<Tag> tags = localTags.getTags(noteTagsUri).toList().blockingGet();
-                return Note.from(cursor, tags);
+                return Note.from(cursor);
             }
-        });
+        }).flatMap(this::buildNote);
     }
 }

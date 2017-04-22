@@ -144,6 +144,15 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
             onFavoriteSelected(favoriteId);
         } else if (isConflicted) {
             view.showConflictResolution(favoriteId);
+        } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
+            int position = getPosition(favoriteId);
+            boolean selected = viewModel.toggleSingleSelection(position);
+            // NOTE: filterType will be updated accordingly on the tab
+            if (selected) {
+                settings.setFavoriteFilter(favoriteId);
+            } else {
+                settings.setFavoriteFilter(null);
+            }
         }
     }
 
@@ -224,6 +233,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
             String favoriteId = view.removeFavorite(selectedId);
             try {
                 repository.deleteFavorite(favoriteId);
+                settings.resetFavoriteFilter(favoriteId);
             } catch (NullPointerException e) {
                 viewModel.showDatabaseErrorSnackbar();
             }

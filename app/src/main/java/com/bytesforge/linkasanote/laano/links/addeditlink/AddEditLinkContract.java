@@ -18,7 +18,7 @@ public interface AddEditLinkContract {
 
         void setViewModel(@NonNull AddEditLinkContract.ViewModel viewModel);
         boolean isActive();
-        void finishActivity();
+        void finishActivity(String linkId);
 
         void swapTagsCompletionViewItems(List<Tag> tags);
     }

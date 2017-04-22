@@ -18,4 +18,12 @@
         android:icon="@drawable/ic_edit_white"
         android:title="@string/toolbar_links_item_action_mode"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/toolbar_links_expand_all"
+        android:title="@string/toolbar_links_item_expand_all"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/toolbar_links_collapse_all"
+        android:title="@string/toolbar_links_item_collapse_all"
+        app:showAsAction="never" />
 </menu>

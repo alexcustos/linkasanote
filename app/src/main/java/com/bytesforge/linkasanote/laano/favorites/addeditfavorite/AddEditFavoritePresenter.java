@@ -152,7 +152,7 @@ public final class AddEditFavoritePresenter implements
         }
         try {
             repository.saveFavorite(favorite);
-            view.finishActivity();
+            view.finishActivity(favoriteId);
         } catch (SQLiteConstraintException e) {
             viewModel.showDuplicateKeyError();
         }

@@ -42,7 +42,6 @@ public final class Tag implements Serializable, Comparable<Tag> {
     public static Tag from(Cursor cursor) {
         long created = cursor.getLong(cursor.getColumnIndexOrThrow(
                 LocalContract.TagEntry.COLUMN_NAME_CREATED));
-
         String name = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.TagEntry.COLUMN_NAME_NAME));
 
@@ -51,7 +50,6 @@ public final class Tag implements Serializable, Comparable<Tag> {
 
     public static Tag from(ContentValues values) {
         long created = values.getAsLong(LocalContract.TagEntry.COLUMN_NAME_CREATED);
-
         String name = values.getAsString(LocalContract.TagEntry.COLUMN_NAME_NAME);
 
         return new Tag(created, name);
@@ -59,7 +57,7 @@ public final class Tag implements Serializable, Comparable<Tag> {
 
     public static Tag from(JSONObject jsonTag) {
         try {
-            // NOTE: created
+            // NOTE: created must not be here
             String name = jsonTag.getString(JSON_PROPERTY_NAME);
             return new Tag(name);
         } catch (JSONException e) {
@@ -72,7 +70,6 @@ public final class Tag implements Serializable, Comparable<Tag> {
         ContentValues values = new ContentValues();
 
         values.put(LocalContract.TagEntry.COLUMN_NAME_CREATED, getCreated());
-
         values.put(LocalContract.TagEntry.COLUMN_NAME_NAME, getName());
 
         return values;

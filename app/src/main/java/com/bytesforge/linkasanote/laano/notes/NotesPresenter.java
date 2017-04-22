@@ -218,6 +218,15 @@ public final class NotesPresenter implements NotesContract.Presenter {
             onNoteSelected(noteId);
         } else if (isConflicted) {
             view.showConflictResolution(noteId);
+        } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
+            int position = getPosition(noteId);
+            boolean selected = viewModel.toggleSingleSelection(position);
+            // NOTE: filterType will be updated accordingly on the tab
+            if (selected) {
+                settings.setNoteFilter(noteId);
+            } else {
+                settings.setNoteFilter(null);
+            }
         }
     }
 
@@ -271,6 +280,8 @@ public final class NotesPresenter implements NotesContract.Presenter {
 
     @Override
     public void onToggleClick(@NonNull String noteId) {
+        checkNotNull(noteId);
+
         int position = getPosition(noteId);
         viewModel.toggleNoteVisibility(position);
         view.noteVisibilityChanged(position);
@@ -294,6 +305,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
             String noteId = view.removeNote(selectedId);
             try {
                 repository.deleteNote(noteId);
+                settings.resetNoteFilter(noteId);
             } catch (NullPointerException e) {
                 viewModel.showDatabaseErrorSnackbar();
             }
@@ -327,6 +339,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
         String prevLinkFilter = this.linkFilter;
         this.linkFilter = settings.getLinkFilter();
         // NOTE: there may be some concurrency who actually will reset the filter, but it OK
+        // TODO: ensure if the filter is reset in proper places and remove this check
         if (this.linkFilter != null) {
             repository.getLink(this.linkFilter)
                     .subscribeOn(schedulerProvider.computation())

@@ -1,4 +1,4 @@
-package com.bytesforge.linkasanote.laano.notes;
+package com.bytesforge.linkasanote.laano.links;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -8,51 +8,48 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.bytesforge.linkasanote.data.Note;
-import com.bytesforge.linkasanote.databinding.ItemNotesBinding;
+import com.bytesforge.linkasanote.databinding.ItemLinksNotesBinding;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.ViewHolder> {
+public class LinksNotesAdapter extends RecyclerView.Adapter<LinksNotesAdapter.ViewHolder> {
 
-    private static final String TAG = NotesAdapter.class.getSimpleName();
+    private static final String TAG = LinksNotesAdapter.class.getSimpleName();
 
-    private final NotesContract.Presenter presenter;
-    private final NotesViewModel viewModel;
+    private final LinksContract.Presenter presenter;
 
     private List<Note> notes;
     private Map<String, Integer> positionMap;
 
-    public NotesAdapter(
-            @NonNull List<Note> notes,
-            @NonNull NotesContract.Presenter presenter,
-            @NonNull NotesViewModel viewModel) {
-        this.notes = checkNotNull(notes);
-        this.presenter = checkNotNull(presenter);
-        this.viewModel = checkNotNull(viewModel);
+    public LinksNotesAdapter(List<Note> notes, @NonNull LinksContract.Presenter presenter) {
+        if (notes == null) {
+           this.notes = new ArrayList<>(0);
+        } else {
+            this.notes = notes;
+        }
         updatePositionMap();
+        this.presenter = checkNotNull(presenter);
         setHasStableIds(true);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
-        private final ItemNotesBinding binding;
+        private final ItemLinksNotesBinding binding;
 
-        public ViewHolder(ItemNotesBinding binding) {
+        public ViewHolder(ItemLinksNotesBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
 
-        public void bind(
-                Note note, NotesContract.Presenter presenter,
-                NotesViewModel viewModel) {
+        public void bind(Note note, LinksContract.Presenter presenter, LinksNotesAdapter adapter) {
             binding.setNote(note);
             binding.setPresenter(presenter);
-            binding.setViewModel(viewModel); // NOTE: global viewModel for fragment and all items
-
+            binding.setAdapter(adapter);
             binding.executePendingBindings();
         }
     }
@@ -60,15 +57,14 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.ViewHolder> 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        ItemNotesBinding binding = ItemNotesBinding.inflate(inflater, parent, false);
-
+        ItemLinksNotesBinding binding = ItemLinksNotesBinding.inflate(inflater, parent, false);
         return new ViewHolder(binding);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Note note = notes.get(position);
-        holder.bind(note, presenter, viewModel);
+        holder.bind(note, presenter, this);
     }
 
     @Override
@@ -86,7 +82,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.ViewHolder> 
     @NonNull
     public Note removeItem(int position) {
         Note note = notes.remove(position);
-        updatePositionMap();
+        positionMap.remove(note.getId());
         notifyItemRemoved(position);
         return note;
     }
@@ -104,7 +100,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.ViewHolder> 
 
         Integer position = positionMap.get(noteId);
         if (position == null) {
-            Log.e(TAG, "No position is found for Note [" + noteId + "]");
+            Log.e(TAG, "No position is found for Note on Link [" + noteId + "]");
             return -1;
         }
         return position;
@@ -123,5 +119,5 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.ViewHolder> 
             Note note = notes.get(i);
             positionMap.put(note.getId(), i);
         }
-    } // updatePositionMap
+    }
 }

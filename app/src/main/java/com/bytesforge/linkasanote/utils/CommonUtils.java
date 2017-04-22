@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.utils;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -61,5 +62,9 @@ public class CommonUtils {
         StringWriter sw = new StringWriter();
         throwable.printStackTrace(new PrintWriter(sw));
         Log.e(tag, throwable.toString());
+    }
+
+    public static int dpToPx(int dp) {
+        return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
     }
 }

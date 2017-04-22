@@ -19,6 +19,7 @@
     <string name="dialog_button_ok">OK</string>
     <string name="dialog_button_cancel">Cancel</string>
     <string name="dialog_button_delete">Delete</string>
+    <string name="dialog_button_keep_notes">Keep Notes</string>
     <string name="dialog_button_upload">Upload</string>
     <string name="dialog_button_download">Download</string>
     <string name="dialog_button_retry">Retry</string>
@@ -176,6 +177,8 @@
     <string name="action_mode_links_select_all">Check/Uncheck all Links</string>
     <string name="laano_links_action_mode_selected">%1$d of %2$d selected</string>
     <string name="toolbar_links_item_action_mode">Switch to edit mode</string>
+    <string name="toolbar_links_item_expand_all">Show all Notes</string>
+    <string name="toolbar_links_item_collapse_all">Hide all Notes</string>
     <string name="toolbar_links_item_filter">Link filter</string>
     <string name="toolbar_links_search">Search</string>
     <string name="links_delete_confirmation_title">Delete confirmation</string>
@@ -250,8 +253,8 @@
         <item quantity="other">There was an error with %d Links</item>
     </plurals>
     <plurals name="links_delete_confirmation_message">
-        <item quantity="one">Are you sure you want to permanently delete selected Link?</item>
-        <item quantity="other">Are you sure you want to permanently delete %d selected Links?</item>
+        <item quantity="one">You are about to permanently delete selected Link. Do you want remove all of the related Notes as well?</item>
+        <item quantity="other">You are about to permanently delete %s selected Links. Do you want remove all of the related Notes as well?</item>
     </plurals>
     <plurals name="sync_adapter_text_failed_notes">
         <item quantity="one">There was an error with %d Note</item>

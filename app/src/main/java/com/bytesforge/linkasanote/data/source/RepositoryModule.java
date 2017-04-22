@@ -33,8 +33,9 @@ public class RepositoryModule {
     @Provides
     @Singleton
     public LocalLinks provideLocalLinks(
-            Context context, ContentResolver contentResolver, LocalTags localTags) {
-        return new LocalLinks(context, contentResolver, localTags);
+            Context context, ContentResolver contentResolver,
+            LocalTags localTags, LocalNotes localNotes) {
+        return new LocalLinks(context, contentResolver, localTags, localNotes);
     }
 
     @Provides

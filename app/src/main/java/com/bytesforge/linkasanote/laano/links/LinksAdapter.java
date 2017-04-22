@@ -1,7 +1,9 @@
 package com.bytesforge.linkasanote.laano.links;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,12 +29,12 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
     private Map<String, Integer> positionMap;
 
     public LinksAdapter(
-            @NonNull List<Link> links,
-            @NonNull LinksContract.Presenter presenter,
+            @NonNull List<Link> links, @NonNull LinksContract.Presenter presenter,
             @NonNull LinksViewModel viewModel) {
         this.links = checkNotNull(links);
         this.presenter = checkNotNull(presenter);
         this.viewModel = checkNotNull(viewModel);
+        updatePositionMap();
         setHasStableIds(true);
     }
 
@@ -45,16 +47,24 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
             this.binding = binding;
         }
 
-        public void bind(
-                Link link, LinksContract.Presenter presenter,
-                LinksViewModel viewModel) {
+        public void bind(Link link, LinksContract.Presenter presenter, LinksViewModel viewModel) {
             binding.setLink(link);
             binding.setPresenter(presenter);
             binding.setViewModel(viewModel); // NOTE: global viewModel for fragment and all items
 
+            RecyclerView rvLinkNotes = binding.rvLinkNotes;
+            Context context = rvLinkNotes.getContext();
+            // NOTE: custom divider is required because addItemDecoration extends a view dynamically
+            rvLinkNotes.setHasFixedSize(true);
+            rvLinkNotes.setNestedScrollingEnabled(false);
+            LinearLayoutManager rvLayoutManager = new LinearLayoutManager(context);
+            rvLinkNotes.setLayoutManager(rvLayoutManager);
+            rvLinkNotes.setAdapter(new LinksNotesAdapter(link.getNotes(), presenter));
+            rvLinkNotes.setLayoutFrozen(true); // NOTE: after setAdapter
             binding.executePendingBindings();
         }
     }
+
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -85,7 +95,7 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
     @NonNull
     public Link removeItem(int position) {
         Link link = links.remove(position);
-        updatePositionMap();
+        positionMap.remove(link.getId());
         notifyItemRemoved(position);
         return link;
     }
@@ -109,6 +119,13 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
         return position;
     }
 
+    public void notifyItemChanged(String linkId) {
+        int position = getPosition(linkId);
+        if (position < 0) return;
+
+        notifyItemChanged(position);
+    }
+
     private void updatePositionMap() {
         if (links == null) return;
 
@@ -122,5 +139,5 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
             Link link = links.get(i);
             positionMap.put(link.getId(), i);
         }
-    } // updatePositionMap
+    }
 }
