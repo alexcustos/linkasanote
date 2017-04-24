@@ -24,7 +24,7 @@ import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
-public final class Favorite implements Comparable<Favorite> {
+public final class Favorite implements Comparable<Favorite>, Item {
 
     private static final String TAG = Favorite.class.getSimpleName();
 
@@ -159,6 +159,7 @@ public final class Favorite implements Comparable<Favorite> {
         }
     }
 
+    @Override
     public ContentValues getContentValues() {
         ContentValues values = state.getContentValues();
 
@@ -179,10 +180,12 @@ public final class Favorite implements Comparable<Favorite> {
         return state;
     }
 
+    @Override
     public long getRowId() {
         return state.getRowId();
     }
 
+    @Override
     @Nullable
     public String getETag() {
         return state.getETag();
@@ -192,6 +195,7 @@ public final class Favorite implements Comparable<Favorite> {
         return state.getDuplicated();
     }
 
+    @Override
     public boolean isDuplicated() {
         return state.isDuplicated();
     }
@@ -200,14 +204,17 @@ public final class Favorite implements Comparable<Favorite> {
         return state.isConflicted();
     }
 
+    @Override
     public boolean isDeleted() {
         return state.isDeleted();
     }
 
+    @Override
     public boolean isSynced() {
         return state.isSynced();
     }
 
+    @Override
     @NonNull
     public String getId() {
         return id;
@@ -226,6 +233,12 @@ public final class Favorite implements Comparable<Favorite> {
         return name;
     }
 
+    @Override
+    public String getDuplicatedKey() {
+        return getName();
+    }
+
+    @Override
     @Nullable
     public List<Tag> getTags() {
         return tags;
@@ -240,6 +253,7 @@ public final class Favorite implements Comparable<Favorite> {
         return null;
     }
 
+    @Override
     @Nullable
     public JSONObject getJsonObject() {
         if (isEmpty()) return null;
@@ -266,6 +280,7 @@ public final class Favorite implements Comparable<Favorite> {
         return jsonContainer;
     }
 
+    @Override
     public boolean isEmpty() {
         // NOTE: favorite must contain at least one tag
         return Strings.isNullOrEmpty(name) || tags == null;
@@ -298,5 +313,35 @@ public final class Favorite implements Comparable<Favorite> {
             return name == null ? -1 : 1;
         }
         return name.compareTo(objName);
+    }
+
+    public static ItemFactory<Favorite> getFactory() {
+        return new ItemFactory<Favorite>() {
+
+            @Override
+            public Favorite build(Favorite item, List<Tag> tags, List<Note> notes) {
+                throw new RuntimeException("Favorite factory has no implementation of this method");
+            }
+
+            @Override
+            public Favorite build(Favorite item, List<Tag> tags) {
+                return new Favorite(item, tags);
+            }
+
+            @Override
+            public Favorite build(Favorite item, @NonNull SyncState state) {
+                return new Favorite(item, state);
+            }
+
+            @Override
+            public Favorite from(Cursor cursor) {
+                return Favorite.from(cursor);
+            }
+
+            @Override
+            public Favorite from(String jsonFavoriteString, SyncState state) {
+                return Favorite.from(jsonFavoriteString, state);
+            }
+        };
     }
 }

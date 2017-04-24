@@ -27,6 +27,7 @@ import io.reactivex.Single;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -88,7 +89,7 @@ public class AddEditFavoritePresenterTest {
     public void saveNewFavoriteToRepository_finishesActivity() {
         presenter.saveFavorite(defaultFavorite.getName(), defaultFavorite.getTags());
         verify(repository).saveFavorite(any(Favorite.class));
-        verify(view).finishActivity();
+        verify(view).finishActivity(eq(defaultFavorite.getId()));
     }
 
     @Test
@@ -106,14 +107,14 @@ public class AddEditFavoritePresenterTest {
                 repository, view, viewModel, schedulerProvider, defaultFavorite.getId());
         presenter.saveFavorite(defaultFavorite.getName(), defaultFavorite.getTags());
         verify(repository).saveFavorite(any(Favorite.class));
-        verify(view).finishActivity();
+        verify(view).finishActivity(eq(defaultFavorite.getId()));
     }
 
     @Test
     public void saveFavoriteWithExistedName_showsDuplicateError() {
         doThrow(new SQLiteConstraintException()).when(repository).saveFavorite(any(Favorite.class));
         presenter.saveFavorite(defaultFavorite.getName(), defaultFavorite.getTags());
-        verify(view, never()).finishActivity();
+        verify(view, never()).finishActivity(eq(defaultFavorite.getId()));
         verify(viewModel).showDuplicateKeyError();
     }
 

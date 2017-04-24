@@ -118,7 +118,8 @@
     <string name="sync_adapter_title_failed_cloud">check cloud</string>
     <string name="sync_adapter_text_failed_cloud">Cannot access to cloud storage, please check if it works</string>
     <string name="sync_adapter_title_empty_storage">try again</string>
-    <string name="sync_adapter_text_empty_storage">Cloud storage is empty, all items will be uploaded on the next attempt</string>
+    <string name="sync_adapter_text_empty_storage">Cloud storage for %s is empty, all items will be uploaded on the next attempt</string>
+    <string name="sync_adapter_text_failed">Problem on the cloud storage with:</string>
     <string name="tab_laano_icon_description_sync">Synchronization is in progress</string>
     <string name="laano_actionbar_manager_sync_title">Up: %1$d / dl: %2$d</string>
     <string name="toolbar_favorites_item_filter">Favorite filter</string>
@@ -241,24 +242,25 @@
     <string name="dialog_note_conflict_resolved_error">There was an error while trying to resolve the conflict</string>
 
     <plurals name="sync_adapter_text_failed_favorites">
-        <item quantity="one">There was an error with %d Favorite</item>
-        <item quantity="other">There was an error with %d Favorites</item>
+        <item quantity="one">%d Favorite</item>
+        <item quantity="other">%d Favorites</item>
     </plurals>
+    <plurals name="sync_adapter_text_failed_links">
+        <item quantity="one">%d Link</item>
+        <item quantity="other">%d Links</item>
+    </plurals>
+    <plurals name="sync_adapter_text_failed_notes">
+        <item quantity="one">%d Note</item>
+        <item quantity="other">%d Notes</item>
+    </plurals>
+
     <plurals name="favorites_delete_confirmation_message">
         <item quantity="one">Are you sure you want to permanently delete selected Favorite?</item>
         <item quantity="other">Are you sure you want to permanently delete %d selected Favorites?</item>
     </plurals>
-    <plurals name="sync_adapter_text_failed_links">
-        <item quantity="one">There was an error with %d Link</item>
-        <item quantity="other">There was an error with %d Links</item>
-    </plurals>
     <plurals name="links_delete_confirmation_message">
         <item quantity="one">You are about to permanently delete selected Link. Do you want remove all of the related Notes as well?</item>
         <item quantity="other">You are about to permanently delete %s selected Links. Do you want remove all of the related Notes as well?</item>
-    </plurals>
-    <plurals name="sync_adapter_text_failed_notes">
-        <item quantity="one">There was an error with %d Note</item>
-        <item quantity="other">There was an error with %d Notes</item>
     </plurals>
     <plurals name="notes_delete_confirmation_message">
         <item quantity="one">Are you sure you want to permanently delete selected Note?</item>

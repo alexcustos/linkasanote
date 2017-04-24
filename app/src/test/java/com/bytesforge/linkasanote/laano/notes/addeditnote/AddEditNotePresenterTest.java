@@ -27,6 +27,7 @@ import io.reactivex.Single;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -64,7 +65,7 @@ public class AddEditNotePresenterTest {
         schedulerProvider = new ImmediateSchedulerProvider();
         when(view.isActive()).thenReturn(true);
         presenter = new AddEditNotePresenter(
-                repository, view, viewModel, schedulerProvider, null);
+                repository, view, viewModel, schedulerProvider, null, null);
     }
 
     @Test
@@ -88,7 +89,7 @@ public class AddEditNotePresenterTest {
     public void saveNewNoteToRepository_finishesActivity() {
         presenter.saveNote(defaultNote.getNote(), defaultNote.getTags());
         verify(repository).saveNote(any(Note.class));
-        verify(view).finishActivity();
+        verify(view).finishActivity(eq(defaultNote.getId()), eq(defaultNote.getLinkId()));
     }
 
     @Test
@@ -101,18 +102,18 @@ public class AddEditNotePresenterTest {
     @Test
     public void saveExistingNote_finishesActivity() {
         // Edit Note Presenter
-        AddEditNotePresenter presenter = new AddEditNotePresenter(
-                repository, view, viewModel, schedulerProvider, defaultNote.getId());
+        AddEditNotePresenter presenter = new AddEditNotePresenter(repository, view,
+                viewModel, schedulerProvider, defaultNote.getId(), defaultNote.getLinkId());
         presenter.saveNote(defaultNote.getNote(), defaultNote.getTags());
         verify(repository).saveNote(any(Note.class));
-        verify(view).finishActivity();
+        verify(view).finishActivity(eq(defaultNote.getId()), eq(defaultNote.getLinkId()));
     }
 
     @Test
     public void saveNoteWithExistedName_showsDuplicateError() {
         doThrow(new SQLiteConstraintException()).when(repository).saveNote(any(Note.class));
         presenter.saveNote(defaultNote.getNote(), defaultNote.getTags());
-        verify(view, never()).finishActivity();
+        verify(view, never()).finishActivity(eq(defaultNote.getId()), eq(defaultNote.getLinkId()));
         verify(viewModel).showDuplicateKeyError();
     }
 
@@ -122,7 +123,7 @@ public class AddEditNotePresenterTest {
         when(repository.getNote(noteId)).thenReturn(Single.just(defaultNote));
         // Edit Note Presenter
         AddEditNotePresenter presenter = new AddEditNotePresenter(
-                repository, view, viewModel, schedulerProvider, noteId);
+                repository, view, viewModel, schedulerProvider, noteId, defaultNote.getLinkId());
         presenter.populateNote();
         verify(repository).getNote(noteId);
         verify(viewModel).populateNote(any(Note.class));
@@ -134,7 +135,7 @@ public class AddEditNotePresenterTest {
         when(repository.getNote(noteId)).thenReturn(Single.error(new NoSuchElementException()));
         // Edit Note Presenter
         AddEditNotePresenter presenter = new AddEditNotePresenter(
-                repository, view, viewModel, schedulerProvider, noteId);
+                repository, view, viewModel, schedulerProvider, noteId, defaultNote.getLinkId());
         presenter.populateNote();
         verify(repository).getNote(noteId);
         verify(viewModel, never()).populateNote(any(Note.class));

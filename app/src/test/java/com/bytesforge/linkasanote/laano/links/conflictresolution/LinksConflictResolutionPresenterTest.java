@@ -3,7 +3,7 @@ package com.bytesforge.linkasanote.laano.links.conflictresolution;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.source.Repository;
-import com.bytesforge.linkasanote.data.source.cloud.CloudLinks;
+import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
@@ -29,10 +29,10 @@ public class LinksConflictResolutionPresenterTest {
     Repository repository;
 
     @Mock
-    LocalLinks localLinks;
+    LocalLinks<Link> localLinks;
 
     @Mock
-    CloudLinks cloudLinks;
+    CloudItem<Link> cloudLinks;
 
     @Mock
     LinksConflictResolutionContract.View view;
@@ -63,7 +63,7 @@ public class LinksConflictResolutionPresenterTest {
     public void notConflictedLink_finishesActivityWithSuccess() {
         SyncState state = new SyncState(SyncState.State.SYNCED);
         Link link = new Link(defaultLink, state);
-        when(localLinks.getLink(eq(linkId)))
+        when(localLinks.get(eq(linkId)))
                 .thenReturn(Single.fromCallable(() -> link));
         presenter.subscribe();
         verify(repository).refreshLinks();
@@ -72,7 +72,7 @@ public class LinksConflictResolutionPresenterTest {
 
     @Test
     public void wrongId_finishesActivityWithSuccess() {
-        when(localLinks.getLink(eq(linkId)))
+        when(localLinks.get(eq(linkId)))
                 .thenReturn(Single.error(new NoSuchElementException()));
         presenter.subscribe();
         verify(repository).refreshLinks();
@@ -81,9 +81,9 @@ public class LinksConflictResolutionPresenterTest {
 
     @Test
     public void databaseError_showsErrorThenTriesToLoadCloudLink() {
-        when(localLinks.getLink(eq(linkId)))
+        when(localLinks.get(eq(linkId)))
                 .thenReturn(Single.error(new NullPointerException()));
-        when(cloudLinks.downloadLink(eq(linkId)))
+        when(cloudLinks.download(eq(linkId)))
                 .thenReturn(Single.fromCallable(() -> defaultLink));
         presenter.subscribe();
         verify(viewModel).showDatabaseError();
@@ -96,9 +96,9 @@ public class LinksConflictResolutionPresenterTest {
         Link link = new Link(defaultLink, state);
         Link mainLink = new Link(
                 TestUtils.KEY_PREFIX + 'B', "http://laano.net/link", "Link", false, TestUtils.TAGS);
-        when(localLinks.getLink(eq(linkId)))
+        when(localLinks.get(eq(linkId)))
                 .thenReturn(Single.fromCallable(() -> link));
-        when(localLinks.getMainLink(eq(link.getName())))
+        when(localLinks.getMain(eq(link.getName())))
                 .thenReturn(Single.fromCallable(() -> mainLink));
         when(viewModel.isCloudPopulated()).thenReturn(true);
         presenter.subscribe();
@@ -110,12 +110,12 @@ public class LinksConflictResolutionPresenterTest {
     public void duplicatedLinkWithNoMainRecord_resolvesConflictAutomatically() {
         SyncState state = new SyncState(E_TAGL, 1); // duplicated
         Link link = new Link(defaultLink, state);
-        when(localLinks.getLink(eq(linkId)))
+        when(localLinks.get(eq(linkId)))
                 .thenReturn(Single.fromCallable(() -> link));
-        when(localLinks.getMainLink(eq(link.getName())))
+        when(localLinks.getMain(eq(link.getName())))
                 .thenReturn(Single.error(new NoSuchElementException()));
         when(viewModel.isCloudPopulated()).thenReturn(true);
-        when(localLinks.updateLink(eq(linkId), any(SyncState.class)))
+        when(localLinks.update(eq(linkId), any(SyncState.class)))
                 .thenReturn(Single.fromCallable(() -> 1));
         presenter.subscribe();
         verify(viewModel).populateCloudLink(eq(link));

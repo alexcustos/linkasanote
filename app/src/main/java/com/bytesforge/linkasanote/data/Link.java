@@ -24,7 +24,7 @@ import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
-public final class Link implements Comparable<Link> {
+public final class Link implements Comparable<Link>, Item {
 
     private static final String TAG = Link.class.getSimpleName();
 
@@ -104,7 +104,7 @@ public final class Link implements Comparable<Link> {
         this.created = created;
         this.updated = updated;
         this.link = link;
-        this.name = name;
+        this.name = Strings.isNullOrEmpty(name) ? null : name;
         this.disabled = disabled;
         this.tags = (tags == null || tags.isEmpty() ? null : tags);
         this.notes = (notes == null || notes.isEmpty() ? null : notes);
@@ -127,8 +127,7 @@ public final class Link implements Comparable<Link> {
         boolean disabled = cursor.getInt(cursor.getColumnIndexOrThrow(
                 LocalContract.LinkEntry.COLUMN_NAME_DISABLED)) == 1;
 
-        return new Link(id, created, updated, link,
-                Strings.isNullOrEmpty(name) ? null : name, disabled, null, null, state);
+        return new Link(id, created, updated, link, name, disabled, null, null, state);
     }
 
     public static Link from(ContentValues values) {
@@ -238,6 +237,7 @@ public final class Link implements Comparable<Link> {
         return state.isSynced();
     }
 
+    @Override
     @NonNull
     public String getId() {
         return id;
@@ -254,6 +254,11 @@ public final class Link implements Comparable<Link> {
     @Nullable
     public String getLink() {
         return link;
+    }
+
+    @Override
+    public String getDuplicatedKey() {
+        return getLink();
     }
 
     @Nullable
@@ -293,10 +298,10 @@ public final class Link implements Comparable<Link> {
         return null;
     }
 
+    @Override
     @Nullable
     public JSONObject getJsonObject() {
         if (isEmpty()) return null;
-        assert tags != null;
 
         JSONObject jsonContainer = new JSONObject();
         try {
@@ -305,11 +310,13 @@ public final class Link implements Comparable<Link> {
             jsonLink.put(JSON_PROPERTY_CREATED, created);
             jsonLink.put(JSON_PROPERTY_UPDATED, updated);
             jsonLink.put(JSON_PROPERTY_LINK, link);
-            jsonLink.put(JSON_PROPERTY_NAME, name);
+            jsonLink.put(JSON_PROPERTY_NAME, name == null ? "" : name);
             jsonLink.put(JSON_PROPERTY_DISABLED, disabled);
             JSONArray jsonTags = new JSONArray();
-            for (Tag tag : tags) {
-                jsonTags.put(tag.getJsonObject());
+            if (tags != null) {
+                for (Tag tag : tags) {
+                    jsonTags.put(tag.getJsonObject());
+                }
             }
             jsonLink.put(JSON_PROPERTY_TAGS, jsonTags);
             // Container
@@ -321,6 +328,7 @@ public final class Link implements Comparable<Link> {
         return jsonContainer;
     }
 
+    @Override
     public boolean isEmpty() {
         return Strings.isNullOrEmpty(link);
     }
@@ -353,5 +361,35 @@ public final class Link implements Comparable<Link> {
             return link == null ? -1 : 1;
         }
         return link.compareTo(objLink);
+    }
+
+    public static ItemFactory<Link> getFactory() {
+        return new ItemFactory<Link>() {
+
+            @Override
+            public Link build(Link item, List<Tag> tags, List<Note> notes) {
+                return new Link(item, tags, notes);
+            }
+
+            @Override
+            public Link build(Link item, List<Tag> tags) {
+                throw new RuntimeException("Link factory has no implementation of this method");
+            }
+
+            @Override
+            public Link build(Link item, @NonNull SyncState state) {
+                return new Link(item, state);
+            }
+
+            @Override
+            public Link from(Cursor cursor) {
+                return Link.from(cursor);
+            }
+
+            @Override
+            public Link from(String jsonFavoriteString, SyncState state) {
+                return Link.from(jsonFavoriteString, state);
+            }
+        };
     }
 }

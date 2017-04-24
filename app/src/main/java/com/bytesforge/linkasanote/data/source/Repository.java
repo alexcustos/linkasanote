@@ -436,7 +436,7 @@ public class Repository implements DataSource {
     public void saveNote(@NonNull Note note) {
         checkNotNull(note);
 
-        // TODO: chain with cloud saveNote and make both async
+        // TODO: chain with cloud save and make both async
         localDataSource.saveNote(note); // blocking operation
         cloudDataSource.saveNote(note);
 

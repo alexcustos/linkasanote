@@ -1,13 +1,13 @@
 package com.bytesforge.linkasanote.data.source.cloud;
 
-import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.Item;
+import com.bytesforge.linkasanote.data.ItemFactory;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
@@ -36,32 +36,36 @@ import io.reactivex.Single;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class CloudFavorites {
+public class CloudItem<T extends Item> {
 
-    private static final String TAG = CloudFavorites.class.getSimpleName();
-
-    private static final String CLOUD_DIRECTORY =
-            JsonFile.PATH_SEPARATOR + Favorite.CLOUD_DIRECTORY_NAME;
+    private static final String TAG = CloudItem.class.getSimpleName();
 
     private final Context context;
     private final AccountManager accountManager;
     private final Settings settings;
+    private final String cloudDirectory;
+    private final String settingLastSyncedETag;
+    private final ItemFactory<T> factory;
 
-    public CloudFavorites(
+    public CloudItem(
             @NonNull Context context, @NonNull AccountManager accountManager,
-            @NonNull Settings settings) {
+            @NonNull Settings settings, @NonNull String cloudDirectory,
+            @NonNull String settingLastSyncedETag, @NonNull ItemFactory<T> factory) {
         this.context = checkNotNull(context);
         this.accountManager = checkNotNull(accountManager);
-        this.settings = settings;
+        this.settings = checkNotNull(settings);
+        this.cloudDirectory = checkNotNull(cloudDirectory);
+        this.settingLastSyncedETag = checkNotNull(settingLastSyncedETag);
+        this.factory = factory;
     }
 
-    public Single<RemoteOperationResult> uploadFavorite(@NonNull final Favorite favorite) {
-        return uploadFavorite(favorite, null);
+    public Single<RemoteOperationResult> upload(@NonNull final T item) {
+        return upload(item, null);
     }
 
-    public Single<RemoteOperationResult> uploadFavorite(
-            @NonNull final Favorite favorite, final OwnCloudClient ocClient) {
-        checkNotNull(favorite);
+    public Single<RemoteOperationResult> upload(
+            @NonNull final T item, final OwnCloudClient ocClient) {
+        checkNotNull(item);
 
         return Single.fromCallable(() -> {
             if (!CloudUtils.isApplicationConnected(context)) return null;
@@ -72,21 +76,21 @@ public class CloudFavorites {
             }
             if (currentOcClient == null) return null;
 
-            final JSONObject favoriteJson = favorite.getJsonObject();
-            if (favoriteJson == null) {
-                Log.e(TAG, "Favorite cannot be saved, it's probably empty");
+            final JSONObject itemJson = item.getJsonObject();
+            if (itemJson == null) {
+                Log.e(TAG, "Item cannot be saved, it's probably empty");
                 return null;
             }
             final String localPath = CommonUtils.getTempDir(context) + File.separator +
-                    JsonFile.getTempFileName(favorite.getId());
+                    JsonFile.getTempFileName(item.getId());
             final File localFile = new File(localPath);
             try {
-                Files.write(favoriteJson.toString(), localFile, Charsets.UTF_8);
+                Files.write(itemJson.toString(), localFile, Charsets.UTF_8);
             } catch (IOException e) {
                 Log.e(TAG, "Cannot create temporary file [" + localPath + "]");
                 return null;
             }
-            final String remotePath = getRemotePath(favorite.getId());
+            final String remotePath = getRemotePath(item.getId());
             final JsonFile jsonFile = new JsonFile(localPath, remotePath);
             UploadFileOperation operation = new UploadFileOperation(jsonFile);
             RemoteOperationResult result = operation.execute(currentOcClient);
@@ -97,14 +101,13 @@ public class CloudFavorites {
         });
     }
 
-    public Single<Favorite> downloadFavorite(@NonNull final String favoriteId) {
-        return downloadFavorite(favoriteId, null);
+    public Single<T> download(@NonNull final String itemId) {
+        return download(itemId, null);
     }
 
-    public Single<Favorite> downloadFavorite(
-            @NonNull final String favoriteId, final OwnCloudClient ocClient) {
-        checkNotNull(favoriteId);
-
+    public Single<T> download(
+            @NonNull final String itemId, final OwnCloudClient ocClient) {
+        checkNotNull(itemId);
         return Single.fromCallable(() -> {
             if (!CloudUtils.isApplicationConnected(context)) return null;
 
@@ -114,7 +117,7 @@ public class CloudFavorites {
             }
             if (currentOcClient == null) return null;
 
-            final String remotePath = getRemotePath(favoriteId);
+            final String remotePath = getRemotePath(itemId);
             final String localDirectory = CommonUtils.getTempDir(context);
             final String localPath = localDirectory + remotePath;
 
@@ -130,34 +133,33 @@ public class CloudFavorites {
                     Log.e(TAG, "Cannot read the file downloaded [" + localPath + "]");
                 }
                 if (!localFile.delete()) {
-                    Log.e(TAG, "Favorite file was not deleted [" + localFile.getName() + "]");
+                    Log.e(TAG, "Item file was not deleted [" + localFile.getName() + "]");
                 }
                 if (jsonStringList == null) return null;
 
                 String jsonString = jsonStringList.stream().map(Object::toString)
                         .collect(Collectors.joining());
                 SyncState state = new SyncState(operation.getEtag(), SyncState.State.SYNCED);
-                Favorite favorite = Favorite.from(jsonString, state);
-                if (favorite == null || favorite.isEmpty() || !favoriteId.equals(favorite.getId())) {
-                    Log.e(TAG, "The favorite downloaded cannot be validated [" + favoriteId + "]");
+                T item = factory.from(jsonString, state);
+                if (item == null || item.isEmpty() || !itemId.equals(item.getId())) {
+                    Log.e(TAG, "The Item downloaded cannot be validated [" + itemId + "]");
                     return null;
                 }
-                return favorite;
+                return item;
             } else if (result.getCode() == RemoteOperationResult.ResultCode.FILE_NOT_FOUND) {
-                throw new NoSuchElementException("The requested Favorite was not found [" + favoriteId + "]");
+                throw new NoSuchElementException("The requested Item was not found [" + itemId + "]");
             }
             return null;
         });
     }
 
-    public Single<RemoteOperationResult> deleteFavorite(@NonNull final String favoriteId) {
-        return deleteFavorite(favoriteId, null);
+    public Single<RemoteOperationResult> delete(@NonNull final String itemId) {
+        return delete(itemId, null);
     }
 
-    public Single<RemoteOperationResult> deleteFavorite(
-            @NonNull final String favoriteId, final OwnCloudClient ocClient) {
-        checkNotNull(favoriteId);
-
+    public Single<RemoteOperationResult> delete(
+            @NonNull final String itemId, final OwnCloudClient ocClient) {
+        checkNotNull(itemId);
         return Single.fromCallable(() -> {
             if (!CloudUtils.isApplicationConnected(context)) return null;
 
@@ -167,7 +169,7 @@ public class CloudFavorites {
             }
             if (currentOcClient == null) return null;
 
-            final String remotePath = getRemotePath(favoriteId);
+            final String remotePath = getRemotePath(itemId);
             RemoveRemoteFileOperation operation = new RemoveRemoteFileOperation(remotePath);
             RemoteOperationResult result = operation.execute(currentOcClient);
             if (result.isSuccess()
@@ -178,14 +180,14 @@ public class CloudFavorites {
         });
     }
 
-    public Single<RemoteFile> readFavoriteFile(@NonNull final String favoriteId) {
-        return readFavoriteFile(favoriteId, null);
+    public Single<RemoteFile> readFile(@NonNull final String itemId) {
+        checkNotNull(itemId);
+        return readFile(itemId, null);
     }
 
-    public Single<RemoteFile> readFavoriteFile(
-            @NonNull final String favoriteId, final OwnCloudClient ocClient) {
-        checkNotNull(favoriteId);
-
+    private Single<RemoteFile> readFile(
+            @NonNull final String itemId, final OwnCloudClient ocClient) {
+        checkNotNull(itemId);
         return Single.fromCallable(() -> {
             if (!CloudUtils.isApplicationConnected(context)) return null;
 
@@ -195,41 +197,27 @@ public class CloudFavorites {
             }
             if (currentOcClient == null) return null;
 
-            final String remotePath = getRemotePath(favoriteId);
+            final String remotePath = getRemotePath(itemId);
             final ReadRemoteFileOperation operation = new ReadRemoteFileOperation(remotePath);
             final RemoteOperationResult result = operation.execute(currentOcClient);
             if (result.isSuccess()) {
                 return (RemoteFile) result.getData().get(0);
             } else if (result.getCode() == RemoteOperationResult.ResultCode.FILE_NOT_FOUND) {
-                throw new NoSuchElementException("The requested Favorite file was not found [" + favoriteId + "]");
+                throw new NoSuchElementException("The requested Item file was not found [" + itemId + "]");
             }
             return null;
         });
     }
 
-    public String getRemoteFileName(@NonNull final String favoriteId) {
-        return JsonFile.getFileName(checkNotNull(favoriteId));
-    }
-
-    public String getDataSourceDirectory() {
-        return settings.getSyncDirectory() + CLOUD_DIRECTORY;
-    }
-
-    public String getRemotePath(@NonNull final String favoriteId) {
-        checkNotNull(favoriteId);
-        return getDataSourceDirectory() + JsonFile.PATH_SEPARATOR + getRemoteFileName(favoriteId);
-    }
-
     public boolean isCloudDataSourceChanged(@NonNull final String eTag) {
         checkNotNull(eTag);
-
-        String lastSyncedETag = settings.getLastSyncedETag(Favorite.SETTING_LAST_SYNCED_ETAG);
+        String lastSyncedETag = settings.getLastSyncedETag(settingLastSyncedETag);
         return lastSyncedETag == null || !lastSyncedETag.equals(eTag);
     }
 
-    public synchronized void updateLastSyncedETag(@NonNull final String eTag) {
+    public void updateLastSyncedETag(@NonNull final String eTag) {
         checkNotNull(eTag);
-        settings.setLastSyncedETag(Favorite.SETTING_LAST_SYNCED_ETAG, eTag);
+        settings.setLastSyncedETag(settingLastSyncedETag, eTag);
     }
 
     @Nullable
@@ -244,12 +232,24 @@ public class CloudFavorites {
         return CloudDataSource.getDataSourceMap(ocClient, getDataSourceDirectory());
     }
 
-    private OwnCloudClient getDefaultOwnCloudClient() {
-        final Account account = CloudUtils.getDefaultAccount(context, accountManager);
-        if (account == null) return null;
-        final OwnCloudClient ocClient = CloudUtils.getOwnCloudClient(account, context);
-        if (ocClient == null) return null;
+    private String getRemotePath(@NonNull final String itemId) {
+        checkNotNull(itemId);
+        return getDataSourceDirectory() + JsonFile.PATH_SEPARATOR + getRemoteFileName(itemId);
+    }
 
-        return ocClient;
+    private String getDataSourceDirectory() {
+        String syncDirectory = settings.getSyncDirectory();
+        return cloudDirectory.startsWith(JsonFile.PATH_SEPARATOR)
+                ? syncDirectory + cloudDirectory
+                : syncDirectory + JsonFile.PATH_SEPARATOR + cloudDirectory;
+    }
+
+    private String getRemoteFileName(@NonNull final String itemId) {
+        checkNotNull(itemId);
+        return JsonFile.getFileName(checkNotNull(itemId));
+    }
+
+    private OwnCloudClient getDefaultOwnCloudClient() {
+        return CloudUtils.getDefaultOwnCloudClient(context, accountManager);
     }
 }

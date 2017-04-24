@@ -3,7 +3,7 @@ package com.bytesforge.linkasanote.laano.notes.conflictresolution;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.Repository;
-import com.bytesforge.linkasanote.data.source.cloud.CloudNotes;
+import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
@@ -29,10 +29,10 @@ public class NotesConflictResolutionPresenterTest {
     Repository repository;
 
     @Mock
-    LocalNotes localNotes;
+    LocalNotes<Note> localNotes;
 
     @Mock
-    CloudNotes cloudNotes;
+    CloudItem<Note> cloudNotes;
 
     @Mock
     NotesConflictResolutionContract.View view;
@@ -63,7 +63,7 @@ public class NotesConflictResolutionPresenterTest {
     public void notConflictedNote_finishesActivityWithSuccess() {
         SyncState state = new SyncState(SyncState.State.SYNCED);
         Note note = new Note(defaultNote, state);
-        when(localNotes.getNote(eq(noteId)))
+        when(localNotes.get(eq(noteId)))
                 .thenReturn(Single.fromCallable(() -> note));
         presenter.subscribe();
         verify(repository).refreshNotes();
@@ -72,7 +72,7 @@ public class NotesConflictResolutionPresenterTest {
 
     @Test
     public void wrongId_finishesActivityWithSuccess() {
-        when(localNotes.getNote(eq(noteId)))
+        when(localNotes.get(eq(noteId)))
                 .thenReturn(Single.error(new NoSuchElementException()));
         presenter.subscribe();
         verify(repository).refreshNotes();
@@ -81,9 +81,9 @@ public class NotesConflictResolutionPresenterTest {
 
     @Test
     public void databaseError_showsErrorThenTriesToLoadCloudNote() {
-        when(localNotes.getNote(eq(noteId)))
+        when(localNotes.get(eq(noteId)))
                 .thenReturn(Single.error(new NullPointerException()));
-        when(cloudNotes.downloadNote(eq(noteId)))
+        when(cloudNotes.download(eq(noteId)))
                 .thenReturn(Single.fromCallable(() -> defaultNote));
         presenter.subscribe();
         verify(viewModel).showDatabaseError();
@@ -96,9 +96,9 @@ public class NotesConflictResolutionPresenterTest {
         Note note = new Note(defaultNote, state);
         Note mainNote = new Note(
                 TestUtils.KEY_PREFIX + 'B', "Note", TestUtils.TAGS);
-        when(localNotes.getNote(eq(noteId)))
+        when(localNotes.get(eq(noteId)))
                 .thenReturn(Single.fromCallable(() -> note));
-        when(localNotes.getMainNote(eq(note.getNote())))
+        when(localNotes.getMain(eq(note.getNote())))
                 .thenReturn(Single.fromCallable(() -> mainNote));
         when(viewModel.isCloudPopulated()).thenReturn(true);
         presenter.subscribe();
@@ -110,12 +110,12 @@ public class NotesConflictResolutionPresenterTest {
     public void duplicatedNoteWithNoMainRecord_resolvesConflictAutomatically() {
         SyncState state = new SyncState(E_TAGL, 1); // duplicated
         Note note = new Note(defaultNote, state);
-        when(localNotes.getNote(eq(noteId)))
+        when(localNotes.get(eq(noteId)))
                 .thenReturn(Single.fromCallable(() -> note));
-        when(localNotes.getMainNote(eq(note.getNote())))
+        when(localNotes.getMain(eq(note.getNote())))
                 .thenReturn(Single.error(new NoSuchElementException()));
         when(viewModel.isCloudPopulated()).thenReturn(true);
-        when(localNotes.updateNote(eq(noteId), any(SyncState.class)))
+        when(localNotes.update(eq(noteId), any(SyncState.class)))
                 .thenReturn(Single.fromCallable(() -> 1));
         presenter.subscribe();
         verify(viewModel).populateCloudNote(eq(note));

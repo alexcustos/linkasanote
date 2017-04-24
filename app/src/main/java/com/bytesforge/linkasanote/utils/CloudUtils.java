@@ -86,6 +86,19 @@ public final class CloudUtils {
         return accounts != null && accounts.length > 0 ? accounts[0] : null;
     }
 
+    public static OwnCloudClient getDefaultOwnCloudClient(
+            @NonNull Context context, @NonNull AccountManager accountManager) {
+        checkNotNull(context);
+        checkNotNull(accountManager);
+
+        final Account account = CloudUtils.getDefaultAccount(context, accountManager);
+        if (account == null) return null;
+        final OwnCloudClient ocClient = CloudUtils.getOwnCloudClient(account, context);
+        if (ocClient == null) return null;
+
+        return ocClient;
+    }
+
     public static String getAccountUsername(@Nullable String name) {
         return name == null ? null : name.substring(0, name.lastIndexOf('@'));
     }

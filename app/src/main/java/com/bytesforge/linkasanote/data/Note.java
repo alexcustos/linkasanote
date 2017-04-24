@@ -24,7 +24,7 @@ import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
-public final class Note implements Comparable<Note> {
+public final class Note implements Comparable<Note>, Item {
 
     private static final String TAG = Note.class.getSimpleName();
 
@@ -39,7 +39,7 @@ public final class Note implements Comparable<Note> {
     private static final String JSON_PROPERTY_CREATED = "created";
     private static final String JSON_PROPERTY_UPDATED = "updated";
     private static final String JSON_PROPERTY_NOTE = "note";
-    private static final String JSON_PROPERTY_LINK_ID = "note";
+    private static final String JSON_PROPERTY_LINK_ID = "link_id";
     private static final String JSON_PROPERTY_TAGS = "tags";
 
     @NonNull
@@ -92,7 +92,7 @@ public final class Note implements Comparable<Note> {
         this.created = created;
         this.updated = updated;
         this.note = note;
-        this.linkId = linkId;
+        this.linkId = Strings.isNullOrEmpty(linkId) ? null : linkId;
         this.tags = (tags == null || tags.isEmpty() ? null : tags);
         this.state = checkNotNull(state);
     }
@@ -219,6 +219,7 @@ public final class Note implements Comparable<Note> {
         return state.isSynced();
     }
 
+    @Override
     @NonNull
     public String getId() {
         return id;
@@ -247,6 +248,11 @@ public final class Note implements Comparable<Note> {
         return tags;
     }
 
+    @Override
+    public String getDuplicatedKey() {
+        throw new RuntimeException("Note does not have unique constraint for this option");
+    }
+
     @Nullable
     public String getTagsAsString() {
         if (tags != null) {
@@ -256,10 +262,10 @@ public final class Note implements Comparable<Note> {
         return null;
     }
 
+    @Override
     @Nullable
     public JSONObject getJsonObject() {
         if (isEmpty()) return null;
-        assert tags != null;
 
         JSONObject jsonContainer = new JSONObject();
         try {
@@ -268,10 +274,12 @@ public final class Note implements Comparable<Note> {
             jsonNote.put(JSON_PROPERTY_CREATED, created);
             jsonNote.put(JSON_PROPERTY_UPDATED, updated);
             jsonNote.put(JSON_PROPERTY_NOTE, note);
-            jsonNote.put(JSON_PROPERTY_LINK_ID, linkId);
+            jsonNote.put(JSON_PROPERTY_LINK_ID, linkId == null ? "" : linkId);
             JSONArray jsonTags = new JSONArray();
-            for (Tag tag : tags) {
-                jsonTags.put(tag.getJsonObject());
+            if (tags != null) {
+                for (Tag tag : tags) {
+                    jsonTags.put(tag.getJsonObject());
+                }
             }
             jsonNote.put(JSON_PROPERTY_TAGS, jsonTags);
             // Container
@@ -283,6 +291,7 @@ public final class Note implements Comparable<Note> {
         return jsonContainer;
     }
 
+    @Override
     public boolean isEmpty() {
         return Strings.isNullOrEmpty(note);
     }
@@ -314,5 +323,35 @@ public final class Note implements Comparable<Note> {
             return note == null ? -1 : 1;
         }
         return note.compareTo(objNote);
+    }
+
+    public static ItemFactory<Note> getFactory() {
+        return new ItemFactory<Note>() {
+
+            @Override
+            public Note build(Note item, List<Tag> tags, List<Note> notes) {
+                throw new RuntimeException("Note factory has no implementation of this method");
+            }
+
+            @Override
+            public Note build(Note item, List<Tag> tags) {
+                return new Note(item, tags);
+            }
+
+            @Override
+            public Note build(Note item, @NonNull SyncState state) {
+                return new Note(item, state);
+            }
+
+            @Override
+            public Note from(Cursor cursor) {
+                return Note.from(cursor);
+            }
+
+            @Override
+            public Note from(String jsonFavoriteString, SyncState state) {
+                return Note.from(jsonFavoriteString, state);
+            }
+        };
     }
 }

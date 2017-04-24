@@ -28,16 +28,16 @@ public class LocalDataSource implements DataSource {
     private static final String TAG = LocalDataSource.class.getSimpleName();
 
     private final ContentResolver contentResolver;
-    private final LocalLinks localLinks;
-    private final LocalFavorites localFavorites;
-    private final LocalNotes localNotes;
+    private final LocalLinks<Link> localLinks;
+    private final LocalFavorites<Favorite> localFavorites;
+    private final LocalNotes<Note> localNotes;
     private final LocalTags localTags;
 
     public LocalDataSource(
             @NonNull ContentResolver contentResolver,
-            @NonNull LocalLinks localLinks,
-            @NonNull LocalFavorites localFavorites,
-            @NonNull LocalNotes localNotes,
+            @NonNull LocalLinks<Link> localLinks,
+            @NonNull LocalFavorites<Favorite> localFavorites,
+            @NonNull LocalNotes<Note> localNotes,
             @NonNull LocalTags localTags) {
         this.contentResolver = checkNotNull(contentResolver);
         this.localLinks = checkNotNull(localLinks);
@@ -50,25 +50,20 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public Observable<Link> getLinks() {
-        final String selection = LocalContract.LinkEntry.COLUMN_NAME_DELETED + " = ?" +
-                " OR " + LocalContract.LinkEntry.COLUMN_NAME_CONFLICTED + " = ?";
-        final String[] selectionArgs = {"0", "1"};
-        final String sortOrder = LocalContract.LinkEntry.COLUMN_NAME_CREATED + " DESC";
-
-        return localLinks.getLinks(selection, selectionArgs, sortOrder);
+        return localLinks.getActive();
     }
 
     @Override
     public Single<Link> getLink(@NonNull final String linkId) {
         checkNotNull(linkId);
-        return localLinks.getLink(linkId);
+        return localLinks.get(linkId);
     }
 
     @Override
     public void saveLink(@NonNull final Link link) {
         checkNotNull(link);
 
-        long rowId = localLinks.saveLink(link).blockingGet();
+        long rowId = localLinks.save(link).blockingGet();
         if (rowId <= 0) {
             Log.e(TAG, "Link was not saved [" + link.getId() + "]");
         }
@@ -76,7 +71,7 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public void deleteAllLinks() {
-        localLinks.deleteLinks().blockingGet();
+        localLinks.delete().blockingGet();
     }
 
     @Override
@@ -85,17 +80,17 @@ public class LocalDataSource implements DataSource {
 
         SyncState state;
         try {
-            state = localLinks.getLinkSyncState(linkId).blockingGet();
+            state = localLinks.getSyncState(linkId).blockingGet();
         } catch (NoSuchElementException e) {
             return; // Nothing to delete
         } // let throw NullPointerException
         int numRows;
         if (!state.isSynced() && state.getETag() == null) {
             // NOTE: if one has never been synced
-            numRows = localLinks.deleteLink(linkId).blockingGet();
+            numRows = localLinks.delete(linkId).blockingGet();
         } else {
             SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
-            numRows = localLinks.updateLink(linkId, deletedState)
+            numRows = localLinks.update(linkId, deletedState)
                     .blockingGet();
         }
         if (numRows != 1) {
@@ -105,32 +100,27 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public Single<Boolean> isConflictedLinks() {
-        return localLinks.isConflictedLinks();
+        return localLinks.isConflicted();
     }
 
     // Favorites
 
     @Override
     public Observable<Favorite> getFavorites() {
-        final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_DELETED + " = ?" +
-                " OR " + LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED + " = ?";
-        final String[] selectionArgs = {"0", "1"};
-        final String sortOrder = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " ASC";
-
-        return localFavorites.getFavorites(selection, selectionArgs, sortOrder);
+        return localFavorites.getActive();
     }
 
     @Override
     public Single<Favorite> getFavorite(@NonNull final String favoriteId) {
         checkNotNull(favoriteId);
-        return localFavorites.getFavorite(favoriteId);
+        return localFavorites.get(favoriteId);
     }
 
     @Override
     public void saveFavorite(@NonNull final Favorite favorite) {
         checkNotNull(favorite);
 
-        long rowId = localFavorites.saveFavorite(favorite).blockingGet();
+        long rowId = localFavorites.save(favorite).blockingGet();
         if (rowId <= 0) {
             Log.e(TAG, "Favorite was not saved [" + favorite.getId() + "]");
         }
@@ -138,7 +128,7 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public void deleteAllFavorites() {
-        localFavorites.deleteFavorites().blockingGet();
+        localFavorites.delete().blockingGet();
     }
 
     @Override
@@ -147,17 +137,17 @@ public class LocalDataSource implements DataSource {
 
         SyncState state;
         try {
-            state = localFavorites.getFavoriteSyncState(favoriteId).blockingGet();
+            state = localFavorites.getSyncState(favoriteId).blockingGet();
         } catch (NoSuchElementException e) {
             return; // Nothing to delete
         } // let throw NullPointerException
         int numRows;
         if (!state.isSynced() && state.getETag() == null) {
             // NOTE: if one has never been synced
-            numRows = localFavorites.deleteFavorite(favoriteId).blockingGet();
+            numRows = localFavorites.delete(favoriteId).blockingGet();
         } else {
             SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
-            numRows = localFavorites.updateFavorite(favoriteId, deletedState)
+            numRows = localFavorites.update(favoriteId, deletedState)
                     .blockingGet();
         }
         if (numRows != 1) {
@@ -167,32 +157,27 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public Single<Boolean> isConflictedFavorites() {
-        return localFavorites.isConflictedFavorites();
+        return localFavorites.isConflicted();
     }
 
     // Notes
 
     @Override
     public Observable<Note> getNotes() {
-        final String selection = LocalContract.NoteEntry.COLUMN_NAME_DELETED + " = ?" +
-                " OR " + LocalContract.NoteEntry.COLUMN_NAME_CONFLICTED + " = ?";
-        final String[] selectionArgs = {"0", "1"};
-        final String sortOrder = LocalContract.NoteEntry.COLUMN_NAME_CREATED + " DESC";
-
-        return localNotes.getNotes(selection, selectionArgs, sortOrder);
+        return localNotes.getActive();
     }
 
     @Override
     public Single<Note> getNote(@NonNull final String noteId) {
         checkNotNull(noteId);
-        return localNotes.getNote(noteId);
+        return localNotes.get(noteId);
     }
 
     @Override
     public void saveNote(@NonNull final Note note) {
         checkNotNull(note);
 
-        long rowId = localNotes.saveNote(note).blockingGet();
+        long rowId = localNotes.save(note).blockingGet();
         if (rowId <= 0) {
             Log.e(TAG, "Note was not saved [" + note.getId() + "]");
         }
@@ -200,7 +185,7 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public void deleteAllNotes() {
-        localNotes.deleteNotes().blockingGet();
+        localNotes.delete().blockingGet();
     }
 
     @Override
@@ -209,17 +194,17 @@ public class LocalDataSource implements DataSource {
 
         SyncState state;
         try {
-            state = localNotes.getNoteSyncState(noteId).blockingGet();
+            state = localNotes.getSyncState(noteId).blockingGet();
         } catch (NoSuchElementException e) {
             return; // Nothing to delete
         } // let throw NullPointerException
         int numRows;
         if (!state.isSynced() && state.getETag() == null) {
             // NOTE: if one has never been synced
-            numRows = localNotes.deleteNote(noteId).blockingGet();
+            numRows = localNotes.delete(noteId).blockingGet();
         } else {
             SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
-            numRows = localNotes.updateNote(noteId, deletedState)
+            numRows = localNotes.update(noteId, deletedState)
                     .blockingGet();
         }
         if (numRows != 1) {
@@ -229,7 +214,7 @@ public class LocalDataSource implements DataSource {
 
     @Override
     public Single<Boolean> isConflictedNotes() {
-        return localNotes.isConflictedNotes();
+        return localNotes.isConflicted();
     }
 
     // Tags
@@ -263,18 +248,14 @@ public class LocalDataSource implements DataSource {
     public static Single<SyncState> getSyncState(
             final ContentResolver contentResolver, final Uri uri) {
         return Single.fromCallable(() -> {
-            Cursor cursor = contentResolver.query(
-                    uri, LocalContract.SYNC_STATE_COLUMNS, null, null, null);
-            if (cursor == null) return null; // NOTE: NullPointerException
+            try (Cursor cursor = contentResolver.query(
+                    uri, LocalContract.SYNC_STATE_COLUMNS, null, null, null)) {
+                if (cursor == null) return null;
 
-            if (!cursor.moveToLast()) {
-                cursor.close();
-                throw new NoSuchElementException("The requested favorite was not found");
-            }
-            try {
+                if (!cursor.moveToLast()) {
+                    throw new NoSuchElementException("The requested favorite was not found");
+                }
                 return SyncState.from(cursor);
-            } finally {
-                cursor.close();
             }
         });
     }
@@ -290,11 +271,11 @@ public class LocalDataSource implements DataSource {
                 stateEmitter.onError(new NullPointerException("An error while retrieving the cursor"));
                 return null;
             }
-            if (!cursor.moveToNext()) {
+            if (cursor.moveToNext()) {
+                stateEmitter.onNext(SyncState.from(cursor));
+            } else {
                 stateEmitter.onComplete();
-                return cursor;
             }
-            stateEmitter.onNext(SyncState.from(cursor));
             return cursor;
         }, Cursor::close);
     }
@@ -310,13 +291,13 @@ public class LocalDataSource implements DataSource {
                 emitter.onError(new NullPointerException("An error while retrieving the cursor"));
                 return null;
             }
-            if (!cursor.moveToNext()) {
+            if (cursor.moveToNext()) {
+                String id = cursor.getString(
+                        cursor.getColumnIndexOrThrow(BaseEntry.COLUMN_NAME_ENTRY_ID));
+                emitter.onNext(id);
+            } else {
                 emitter.onComplete();
-                return cursor;
             }
-            String id = cursor.getString(cursor.getColumnIndexOrThrow(
-                    BaseEntry.COLUMN_NAME_ENTRY_ID));
-            emitter.onNext(id);
             return cursor;
         }, Cursor::close);
     }

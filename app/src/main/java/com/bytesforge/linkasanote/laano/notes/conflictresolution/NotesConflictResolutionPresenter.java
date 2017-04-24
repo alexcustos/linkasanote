@@ -4,7 +4,7 @@ import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.Repository;
-import com.bytesforge.linkasanote.data.source.cloud.CloudNotes;
+import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.laano.notes.NoteId;
 import com.bytesforge.linkasanote.sync.SyncState;
@@ -25,8 +25,8 @@ public final class NotesConflictResolutionPresenter implements
         NotesConflictResolutionContract.Presenter {
 
     private final Repository repository; // NOTE: for cache control
-    private final LocalNotes localNotes;
-    private final CloudNotes cloudNotes;
+    private final LocalNotes<Note> localNotes;
+    private final CloudItem<Note> cloudNotes;
     private final NotesConflictResolutionContract.View view;
     private final NotesConflictResolutionContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
@@ -41,7 +41,7 @@ public final class NotesConflictResolutionPresenter implements
 
     @Inject
     NotesConflictResolutionPresenter(
-            Repository repository, LocalNotes localNotes, CloudNotes cloudNotes,
+            Repository repository, LocalNotes<Note> localNotes, CloudItem<Note> cloudNotes,
             NotesConflictResolutionContract.View view,
             NotesConflictResolutionContract.ViewModel viewModel,
             BaseSchedulerProvider schedulerProvider, @NoteId String noteId) {
@@ -83,14 +83,14 @@ public final class NotesConflictResolutionPresenter implements
     @Override
     public Single<Boolean> autoResolve() {
         return Single.fromCallable(() -> {
-            Note note = localNotes.getNote(noteId).blockingGet();
+            Note note = localNotes.get(noteId).blockingGet();
             if (note.isDuplicated()) {
                 try {
                     // TODO: remove
-                    localNotes.getMainNote(note.getNote()).blockingGet();
+                    localNotes.getMain(note.getNote()).blockingGet();
                 } catch (NoSuchElementException e) {
                     SyncState state = new SyncState(SyncState.State.SYNCED);
-                    int numRows = localNotes.updateNote(noteId, state).blockingGet();
+                    int numRows = localNotes.update(noteId, state).blockingGet();
                     if (numRows == 1) {
                         repository.refreshNotes();
                         return true;
@@ -103,7 +103,7 @@ public final class NotesConflictResolutionPresenter implements
 
     private void loadLocalNote() {
         localDisposable.clear();
-        Disposable disposable = localNotes.getNote(noteId)
+        Disposable disposable = localNotes.get(noteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(note -> {
@@ -127,10 +127,9 @@ public final class NotesConflictResolutionPresenter implements
 
     private void populateLocalNote(@NonNull final Note note) {
         checkNotNull(note);
-
         if (note.isDuplicated()) {
             viewModel.populateCloudNote(note);
-            localNotes.getMainNote(note.getNote())
+            localNotes.getMain(note.getNote())
                     .subscribeOn(schedulerProvider.computation())
                     .observeOn(schedulerProvider.ui())
                     // NOTE: recursion, but mainNote is not duplicated by definition
@@ -139,7 +138,7 @@ public final class NotesConflictResolutionPresenter implements
                             // NOTE: main position is empty, so the conflict can be resolved automatically
                             // TODO: remove in favor of autoResolve
                             SyncState state = new SyncState(SyncState.State.SYNCED);
-                            int numRows = localNotes.updateNote(noteId, state).blockingGet();
+                            int numRows = localNotes.update(noteId, state).blockingGet();
                             if (numRows == 1) {
                                 repository.refreshNotes();
                                 view.finishActivity();
@@ -161,7 +160,7 @@ public final class NotesConflictResolutionPresenter implements
 
     private void loadCloudNote() {
         cloudDisposable.clear();
-        Disposable disposable = cloudNotes.downloadNote(noteId)
+        Disposable disposable = cloudNotes.download(noteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(viewModel::populateCloudNote, throwable -> {
@@ -178,7 +177,7 @@ public final class NotesConflictResolutionPresenter implements
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
         if (viewModel.isStateDuplicated()) {
-            localNotes.getMainNote(viewModel.getLocalName())
+            localNotes.getMain(viewModel.getLocalName())
                     .subscribeOn(schedulerProvider.computation())
                     .observeOn(schedulerProvider.ui())
                     .subscribe(
@@ -193,21 +192,20 @@ public final class NotesConflictResolutionPresenter implements
             @NonNull final String mainNoteId, @NonNull final String noteId) {
         checkNotNull(mainNoteId);
         checkNotNull(noteId);
-
         // DB operation is blocking; Cloud is on computation
-        cloudNotes.deleteNote(mainNoteId)
+        cloudNotes.delete(mainNoteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(result -> {
                     boolean isSuccess = false;
                     if (result.isSuccess()) {
-                        int numRows = localNotes.deleteNote(mainNoteId).blockingGet();
+                        int numRows = localNotes.delete(mainNoteId).blockingGet();
                         isSuccess = (numRows == 1);
                     }
                     if (isSuccess) {
                         repository.deleteCachedNote(mainNoteId);
                         SyncState state = new SyncState(SyncState.State.SYNCED);
-                        int numRows = localNotes.updateNote(noteId, state).blockingGet();
+                        int numRows = localNotes.update(noteId, state).blockingGet();
                         isSuccess = (numRows == 1);
                     }
                     if (isSuccess) {
@@ -221,14 +219,13 @@ public final class NotesConflictResolutionPresenter implements
 
     private void deleteNote(@NonNull final String noteId) {
         checkNotNull(noteId);
-
-        cloudNotes.deleteNote(noteId)
+        cloudNotes.delete(noteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(result -> {
                     boolean isSuccess = false;
                     if (result.isSuccess()) {
-                        int numRows = localNotes.deleteNote(noteId).blockingGet();
+                        int numRows = localNotes.delete(noteId).blockingGet();
                         isSuccess = (numRows == 1);
                     }
                     if (isSuccess) {
@@ -255,8 +252,8 @@ public final class NotesConflictResolutionPresenter implements
     @Override
     public void onLocalUploadClick() {
         viewModel.deactivateButtons();
-        Note note = localNotes.getNote(noteId).blockingGet();
-        cloudNotes.uploadNote(note)
+        Note note = localNotes.get(noteId).blockingGet();
+        cloudNotes.upload(note)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(result -> {
@@ -264,7 +261,7 @@ public final class NotesConflictResolutionPresenter implements
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        int numRows = localNotes.updateNote(note.getId(), state)
+                        int numRows = localNotes.update(note.getId(), state)
                                 .blockingGet();
                         isSuccess = (numRows == 1);
                     }
@@ -280,11 +277,11 @@ public final class NotesConflictResolutionPresenter implements
     @Override
     public void onCloudDownloadClick() {
         viewModel.deactivateButtons();
-        cloudNotes.downloadNote(noteId)
+        cloudNotes.download(noteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(note -> {
-                    long rowId = localNotes.saveNote(note).blockingGet();
+                    long rowId = localNotes.save(note).blockingGet();
                     if (rowId > 0) {
                         repository.refreshNotes();
                         view.finishActivity();

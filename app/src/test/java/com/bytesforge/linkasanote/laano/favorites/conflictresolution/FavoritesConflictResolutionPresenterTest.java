@@ -3,7 +3,7 @@ package com.bytesforge.linkasanote.laano.favorites.conflictresolution;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Repository;
-import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
+import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
@@ -29,10 +29,10 @@ public class FavoritesConflictResolutionPresenterTest {
     Repository repository;
 
     @Mock
-    LocalFavorites localFavorites;
+    LocalFavorites<Favorite> localFavorites;
 
     @Mock
-    CloudFavorites cloudFavorites;
+    CloudItem<Favorite> cloudFavorites;
 
     @Mock
     FavoritesConflictResolutionContract.View view;
@@ -63,7 +63,7 @@ public class FavoritesConflictResolutionPresenterTest {
     public void notConflictedFavorite_finishesActivityWithSuccess() {
         SyncState state = new SyncState(SyncState.State.SYNCED);
         Favorite favorite = new Favorite(defaultFavorite, state);
-        when(localFavorites.getFavorite(eq(favoriteId)))
+        when(localFavorites.get(eq(favoriteId)))
                 .thenReturn(Single.fromCallable(() -> favorite));
         presenter.subscribe();
         verify(repository).refreshFavorites();
@@ -72,7 +72,7 @@ public class FavoritesConflictResolutionPresenterTest {
 
     @Test
     public void wrongId_finishesActivityWithSuccess() {
-        when(localFavorites.getFavorite(eq(favoriteId)))
+        when(localFavorites.get(eq(favoriteId)))
                 .thenReturn(Single.error(new NoSuchElementException()));
         presenter.subscribe();
         verify(repository).refreshFavorites();
@@ -81,9 +81,9 @@ public class FavoritesConflictResolutionPresenterTest {
 
     @Test
     public void databaseError_showsErrorThenTriesToLoadCloudFavorite() {
-        when(localFavorites.getFavorite(eq(favoriteId)))
+        when(localFavorites.get(eq(favoriteId)))
                 .thenReturn(Single.error(new NullPointerException()));
-        when(cloudFavorites.downloadFavorite(eq(favoriteId)))
+        when(cloudFavorites.download(eq(favoriteId)))
                 .thenReturn(Single.fromCallable(() -> defaultFavorite));
         presenter.subscribe();
         verify(viewModel).showDatabaseError();
@@ -96,9 +96,9 @@ public class FavoritesConflictResolutionPresenterTest {
         Favorite favorite = new Favorite(defaultFavorite, state);
         Favorite mainFavorite = new Favorite(
                 TestUtils.KEY_PREFIX + 'B', "Favorite", TestUtils.TAGS);
-        when(localFavorites.getFavorite(eq(favoriteId)))
+        when(localFavorites.get(eq(favoriteId)))
                 .thenReturn(Single.fromCallable(() -> favorite));
-        when(localFavorites.getMainFavorite(eq(favorite.getName())))
+        when(localFavorites.getMain(eq(favorite.getName())))
                 .thenReturn(Single.fromCallable(() -> mainFavorite));
         when(viewModel.isCloudPopulated()).thenReturn(true);
         presenter.subscribe();
@@ -110,12 +110,12 @@ public class FavoritesConflictResolutionPresenterTest {
     public void duplicatedFavoriteWithNoMainRecord_resolvesConflictAutomatically() {
         SyncState state = new SyncState(E_TAGL, 1); // duplicated
         Favorite favorite = new Favorite(defaultFavorite, state);
-        when(localFavorites.getFavorite(eq(favoriteId)))
+        when(localFavorites.get(eq(favoriteId)))
                 .thenReturn(Single.fromCallable(() -> favorite));
-        when(localFavorites.getMainFavorite(eq(favorite.getName())))
+        when(localFavorites.getMain(eq(favorite.getName())))
                 .thenReturn(Single.error(new NoSuchElementException()));
         when(viewModel.isCloudPopulated()).thenReturn(true);
-        when(localFavorites.updateFavorite(eq(favoriteId), any(SyncState.class)))
+        when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.fromCallable(() -> 1));
         presenter.subscribe();
         verify(viewModel).populateCloudFavorite(eq(favorite));

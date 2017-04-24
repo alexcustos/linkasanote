@@ -27,6 +27,7 @@ import io.reactivex.Single;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -89,7 +90,7 @@ public class AddEditLinkPresenterTest {
         presenter.saveLink(defaultLink.getLink(), defaultLink.getName(),
                 defaultLink.isDisabled(), defaultLink.getTags());
         verify(repository).saveLink(any(Link.class));
-        verify(view).finishActivity();
+        verify(view).finishActivity(eq(defaultLink.getId()));
     }
 
     @Test
@@ -106,14 +107,14 @@ public class AddEditLinkPresenterTest {
                 repository, view, viewModel, schedulerProvider, defaultLink.getId());
         presenter.saveLink(defaultLink.getLink(), defaultLink.getName(), false, defaultLink.getTags());
         verify(repository).saveLink(any(Link.class));
-        verify(view).finishActivity();
+        verify(view).finishActivity(eq(defaultLink.getId()));
     }
 
     @Test
     public void saveLinkWithExistedName_showsDuplicateError() {
         doThrow(new SQLiteConstraintException()).when(repository).saveLink(any(Link.class));
         presenter.saveLink(defaultLink.getLink(), defaultLink.getName(), false, defaultLink.getTags());
-        verify(view, never()).finishActivity();
+        verify(view, never()).finishActivity(eq(defaultLink.getId()));
         verify(viewModel).showDuplicateKeyError();
     }
 

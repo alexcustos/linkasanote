@@ -4,7 +4,7 @@ import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.source.Repository;
-import com.bytesforge.linkasanote.data.source.cloud.CloudLinks;
+import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.laano.links.LinkId;
 import com.bytesforge.linkasanote.sync.SyncState;
@@ -25,8 +25,8 @@ public final class LinksConflictResolutionPresenter implements
         LinksConflictResolutionContract.Presenter {
 
     private final Repository repository; // NOTE: for cache control
-    private final LocalLinks localLinks;
-    private final CloudLinks cloudLinks;
+    private final LocalLinks<Link> localLinks;
+    private final CloudItem<Link> cloudLinks;
     private final LinksConflictResolutionContract.View view;
     private final LinksConflictResolutionContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
@@ -41,7 +41,7 @@ public final class LinksConflictResolutionPresenter implements
 
     @Inject
     LinksConflictResolutionPresenter(
-            Repository repository, LocalLinks localLinks, CloudLinks cloudLinks,
+            Repository repository, LocalLinks<Link> localLinks, CloudItem<Link> cloudLinks,
             LinksConflictResolutionContract.View view,
             LinksConflictResolutionContract.ViewModel viewModel,
             BaseSchedulerProvider schedulerProvider, @LinkId String linkId) {
@@ -83,13 +83,13 @@ public final class LinksConflictResolutionPresenter implements
     @Override
     public Single<Boolean> autoResolve() {
         return Single.fromCallable(() -> {
-            Link link = localLinks.getLink(linkId).blockingGet();
+            Link link = localLinks.get(linkId).blockingGet();
             if (link.isDuplicated()) {
                 try {
-                    localLinks.getMainLink(link.getName()).blockingGet();
+                    localLinks.getMain(link.getName()).blockingGet();
                 } catch (NoSuchElementException e) {
                     SyncState state = new SyncState(SyncState.State.SYNCED);
-                    int numRows = localLinks.updateLink(linkId, state).blockingGet();
+                    int numRows = localLinks.update(linkId, state).blockingGet();
                     if (numRows == 1) {
                         repository.refreshLinks();
                         return true;
@@ -102,7 +102,7 @@ public final class LinksConflictResolutionPresenter implements
 
     private void loadLocalLink() {
         localDisposable.clear();
-        Disposable disposable = localLinks.getLink(linkId)
+        Disposable disposable = localLinks.get(linkId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(link -> {
@@ -126,10 +126,9 @@ public final class LinksConflictResolutionPresenter implements
 
     private void populateLocalLink(@NonNull final Link link) {
         checkNotNull(link);
-
         if (link.isDuplicated()) {
             viewModel.populateCloudLink(link);
-            localLinks.getMainLink(link.getName())
+            localLinks.getMain(link.getName())
                     .subscribeOn(schedulerProvider.computation())
                     .observeOn(schedulerProvider.ui())
                     // NOTE: recursion, but mainLink is not duplicated by definition
@@ -138,7 +137,7 @@ public final class LinksConflictResolutionPresenter implements
                             // NOTE: main position is empty, so the conflict can be resolved automatically
                             // TODO: remove in favor of autoResolve
                             SyncState state = new SyncState(SyncState.State.SYNCED);
-                            int numRows = localLinks.updateLink(linkId, state).blockingGet();
+                            int numRows = localLinks.update(linkId, state).blockingGet();
                             if (numRows == 1) {
                                 repository.refreshLinks();
                                 view.finishActivity();
@@ -160,7 +159,7 @@ public final class LinksConflictResolutionPresenter implements
 
     private void loadCloudLink() {
         cloudDisposable.clear();
-        Disposable disposable = cloudLinks.downloadLink(linkId)
+        Disposable disposable = cloudLinks.download(linkId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(viewModel::populateCloudLink, throwable -> {
@@ -177,7 +176,7 @@ public final class LinksConflictResolutionPresenter implements
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
         if (viewModel.isStateDuplicated()) {
-            localLinks.getMainLink(viewModel.getLocalName())
+            localLinks.getMain(viewModel.getLocalName())
                     .subscribeOn(schedulerProvider.computation())
                     .observeOn(schedulerProvider.ui())
                     .subscribe(
@@ -192,21 +191,20 @@ public final class LinksConflictResolutionPresenter implements
             @NonNull final String mainLinkId, @NonNull final String linkId) {
         checkNotNull(mainLinkId);
         checkNotNull(linkId);
-
         // DB operation is blocking; Cloud is on computation
-        cloudLinks.deleteLink(mainLinkId)
+        cloudLinks.delete(mainLinkId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(result -> {
                     boolean isSuccess = false;
                     if (result.isSuccess()) {
-                        int numRows = localLinks.deleteLink(mainLinkId).blockingGet();
+                        int numRows = localLinks.delete(mainLinkId).blockingGet();
                         isSuccess = (numRows == 1);
                     }
                     if (isSuccess) {
                         repository.deleteCachedLink(mainLinkId);
                         SyncState state = new SyncState(SyncState.State.SYNCED);
-                        int numRows = localLinks.updateLink(linkId, state).blockingGet();
+                        int numRows = localLinks.update(linkId, state).blockingGet();
                         isSuccess = (numRows == 1);
                     }
                     if (isSuccess) {
@@ -220,14 +218,13 @@ public final class LinksConflictResolutionPresenter implements
 
     private void deleteLink(@NonNull final String linkId) {
         checkNotNull(linkId);
-
-        cloudLinks.deleteLink(linkId)
+        cloudLinks.delete(linkId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(result -> {
                     boolean isSuccess = false;
                     if (result.isSuccess()) {
-                        int numRows = localLinks.deleteLink(linkId).blockingGet();
+                        int numRows = localLinks.delete(linkId).blockingGet();
                         isSuccess = (numRows == 1);
                     }
                     if (isSuccess) {
@@ -254,8 +251,8 @@ public final class LinksConflictResolutionPresenter implements
     @Override
     public void onLocalUploadClick() {
         viewModel.deactivateButtons();
-        Link link = localLinks.getLink(linkId).blockingGet();
-        cloudLinks.uploadLink(link)
+        Link link = localLinks.get(linkId).blockingGet();
+        cloudLinks.upload(link)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(result -> {
@@ -263,7 +260,7 @@ public final class LinksConflictResolutionPresenter implements
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        int numRows = localLinks.updateLink(link.getId(), state)
+                        int numRows = localLinks.update(link.getId(), state)
                                 .blockingGet();
                         isSuccess = (numRows == 1);
                     }
@@ -279,11 +276,11 @@ public final class LinksConflictResolutionPresenter implements
     @Override
     public void onCloudDownloadClick() {
         viewModel.deactivateButtons();
-        cloudLinks.downloadLink(linkId)
+        cloudLinks.download(linkId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(link -> {
-                    long rowId = localLinks.saveLink(link).blockingGet();
+                    long rowId = localLinks.save(link).blockingGet();
                     if (rowId > 0) {
                         repository.refreshLinks();
                         view.finishActivity();

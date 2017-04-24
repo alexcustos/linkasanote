@@ -4,10 +4,12 @@ import android.accounts.AccountManager;
 import android.content.ContentResolver;
 import android.content.Context;
 
+import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.ItemFactory;
+import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
-import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
-import com.bytesforge.linkasanote.data.source.cloud.CloudLinks;
-import com.bytesforge.linkasanote.data.source.cloud.CloudNotes;
+import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
@@ -32,53 +34,63 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
-    public LocalLinks provideLocalLinks(
+    public LocalLinks<Link> provideLocalLinks(
             Context context, ContentResolver contentResolver,
-            LocalTags localTags, LocalNotes localNotes) {
-        return new LocalLinks(context, contentResolver, localTags, localNotes);
+            LocalTags localTags, LocalNotes<Note> localNotes) {
+        ItemFactory<Link> linkFactory = Link.getFactory();
+        return new LocalLinks<>(context, contentResolver, localTags, localNotes, linkFactory);
     }
 
     @Provides
     @Singleton
-    public CloudLinks provideCloudLinks(
+    public CloudItem<Link> provideCloudLinks(
             Context context, AccountManager accountManager, Settings settings) {
-        return new CloudLinks(context, accountManager, settings);
+        ItemFactory<Link> linkFactory = Link.getFactory();
+        return new CloudItem<>(context, accountManager, settings,
+                Link.CLOUD_DIRECTORY_NAME, Link.SETTING_LAST_SYNCED_ETAG, linkFactory);
     }
 
     @Provides
     @Singleton
-    public LocalFavorites provideLocalFavorites(
+    public LocalFavorites<Favorite> provideLocalFavorites(
             Context context, ContentResolver contentResolver, LocalTags localTags) {
-        return new LocalFavorites(context, contentResolver, localTags);
+        ItemFactory<Favorite> favoriteFactory = Favorite.getFactory();
+        return new LocalFavorites<>(context, contentResolver, localTags, favoriteFactory);
     }
 
     @Provides
     @Singleton
-    public CloudFavorites provideCloudFavorites(
+    public CloudItem<Favorite> provideCloudFavorites(
             Context context, AccountManager accountManager, Settings settings) {
-        return new CloudFavorites(context, accountManager, settings);
+        ItemFactory<Favorite> favoriteFactory = Favorite.getFactory();
+        return new CloudItem<>(context, accountManager, settings,
+                Favorite.CLOUD_DIRECTORY_NAME, Favorite.SETTING_LAST_SYNCED_ETAG, favoriteFactory);
     }
 
     @Provides
     @Singleton
-    public LocalNotes provideLocalNotes(
+    public LocalNotes<Note> provideLocalNotes(
             Context context, ContentResolver contentResolver, LocalTags localTags) {
-        return new LocalNotes(context, contentResolver, localTags);
+        ItemFactory<Note> noteFactory = Note.getFactory();
+        return new LocalNotes<>(context, contentResolver, localTags, noteFactory);
     }
 
     @Provides
     @Singleton
-    public CloudNotes provideCloudNotes(
+    public CloudItem<Note> provideCloudNotes(
             Context context, AccountManager accountManager, Settings settings) {
-        return new CloudNotes(context, accountManager, settings);
+        ItemFactory<Note> noteFactory = Note.getFactory();
+        return new CloudItem<>(context, accountManager, settings,
+                Note.CLOUD_DIRECTORY_NAME, Note.SETTING_LAST_SYNCED_ETAG, noteFactory);
     }
 
     @Provides
     @Singleton
     @Local
     public DataSource provideLocalDataSource(
-            ContentResolver contentResolver, LocalLinks localLinks,
-            LocalFavorites localFavorites, LocalNotes localNotes, LocalTags localTags) {
+            ContentResolver contentResolver, LocalLinks<Link> localLinks,
+            LocalFavorites<Favorite> localFavorites, LocalNotes<Note> localNotes,
+            LocalTags localTags) {
         return new LocalDataSource(contentResolver, localLinks,
                 localFavorites, localNotes, localTags);
     }
@@ -88,9 +100,9 @@ public class RepositoryModule {
     @Cloud
     public DataSource provideCloudDataSource(
             Context context, BaseSchedulerProvider schedulerProvider,
-            LocalLinks localLinks, CloudLinks cloudLinks,
-            LocalFavorites localFavorites, CloudFavorites cloudFavorites,
-            LocalNotes localNotes, CloudNotes cloudNotes) {
+            LocalLinks<Link> localLinks, CloudItem<Link> cloudLinks,
+            LocalFavorites<Favorite> localFavorites, CloudItem<Favorite> cloudFavorites,
+            LocalNotes<Note> localNotes, CloudItem<Note> cloudNotes) {
         return new CloudDataSource(context, schedulerProvider,
                 localLinks, cloudLinks,
                 localFavorites, cloudFavorites,

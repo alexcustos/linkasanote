@@ -44,20 +44,20 @@ public class CloudDataSource implements DataSource {
 
     private final Context context;
     private final BaseSchedulerProvider schedulerProvider;
-    private final LocalLinks localLinks;
-    private final CloudLinks cloudLinks;
-    private final LocalFavorites localFavorites;
-    private final CloudFavorites cloudFavorites;
-    private final LocalNotes localNotes;
-    private final CloudNotes cloudNotes;
+    private final LocalLinks<Link> localLinks;
+    private final CloudItem<Link> cloudLinks;
+    private final LocalFavorites<Favorite> localFavorites;
+    private final CloudItem<Favorite> cloudFavorites;
+    private final LocalNotes<Note> localNotes;
+    private final CloudItem<Note> cloudNotes;
 
     private final CompositeDisposable disposable;
 
     public CloudDataSource(
             Context context, BaseSchedulerProvider schedulerProvider,
-            LocalLinks localLinks, CloudLinks cloudLinks,
-            LocalFavorites localFavorites, CloudFavorites cloudFavorites,
-            LocalNotes localNotes, CloudNotes cloudNotes) {
+            LocalLinks<Link> localLinks, CloudItem<Link> cloudLinks,
+            LocalFavorites<Favorite> localFavorites, CloudItem<Favorite> cloudFavorites,
+            LocalNotes<Note> localNotes, CloudItem<Note> cloudNotes) {
         this.context = context;
         this.schedulerProvider = schedulerProvider;
         this.localLinks = localLinks;
@@ -80,14 +80,12 @@ public class CloudDataSource implements DataSource {
     @Override
     public Single<Link> getLink(@NonNull String linkId) {
         checkNotNull(linkId);
-
-        return cloudLinks.downloadLink(linkId);
+        return cloudLinks.download(linkId);
     }
 
     @Override
     public void saveLink(@NonNull final Link link) {
         checkNotNull(link);
-
         // NOTE: do not cache, because it can be changed in any time
         Disposable disposable = getSaveLink(link)
                 .subscribeOn(schedulerProvider.computation())
@@ -97,11 +95,11 @@ public class CloudDataSource implements DataSource {
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        numRows = localLinks.updateLink(link.getId(), state)
+                        numRows = localLinks.update(link.getId(), state)
                                 .blockingGet();
                     } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                         SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-                        numRows = localLinks.updateLink(link.getId(), state)
+                        numRows = localLinks.update(link.getId(), state)
                                 .blockingGet();
                     }
                     if (numRows != 1) {
@@ -124,7 +122,7 @@ public class CloudDataSource implements DataSource {
             SyncState oldState = null;
             boolean isReady = false;
             try {
-                oldState = localLinks.getLinkSyncState(linkId).blockingGet();
+                oldState = localLinks.getSyncState(linkId).blockingGet();
             } catch (NoSuchElementException e) {
                 isReady = true;
             } catch (NullPointerException e) {
@@ -136,14 +134,14 @@ public class CloudDataSource implements DataSource {
             if (!isReady) return null;
             // Check cloud
             try {
-                RemoteFile file = cloudLinks.readLinkFile(linkId).blockingGet();
+                RemoteFile file = cloudLinks.readFile(linkId).blockingGet();
                 if (oldState == null || !file.getEtag().equals(oldState.getETag())) {
                     return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
                 }
             } catch (NoSuchElementException e) {
                 // NOTE: It's expected state if there is no file in the cloud
             }
-            return cloudLinks.uploadLink(link).blockingGet();
+            return cloudLinks.upload(link).blockingGet();
         });
     }
 
@@ -154,16 +152,15 @@ public class CloudDataSource implements DataSource {
     @Override
     public void deleteLink(@NonNull String linkId) {
         checkNotNull(linkId);
-
         Disposable disposable = getDeleteLink(linkId)
                 .subscribeOn(schedulerProvider.computation())
                 .subscribe(result -> {
                     int numRows = -1;
                     if (result.isSuccess()) {
-                        numRows = localLinks.deleteLink(linkId).blockingGet();
+                        numRows = localLinks.delete(linkId).blockingGet();
                     } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                         SyncState state = new SyncState(SyncState.State.CONFLICTED_DELETE);
-                        numRows = localLinks.updateLink(linkId, state).blockingGet();
+                        numRows = localLinks.update(linkId, state).blockingGet();
                     }
                     if (numRows != 1) {
                         Log.e(TAG, "Unexpected number of rows were processed [" + numRows + "]");
@@ -184,7 +181,7 @@ public class CloudDataSource implements DataSource {
             SyncState state = null;
             boolean isReady = false;
             try {
-                state = localLinks.getLinkSyncState(linkId).blockingGet();
+                state = localLinks.getSyncState(linkId).blockingGet();
             } catch (NoSuchElementException e) {
                 isReady = true;
             } catch (NullPointerException e) {
@@ -196,14 +193,14 @@ public class CloudDataSource implements DataSource {
             if (!isReady) return null;
             // Check cloud
             try {
-                RemoteFile file = cloudLinks.readLinkFile(linkId).blockingGet();
+                RemoteFile file = cloudLinks.readFile(linkId).blockingGet();
                 if (state != null && !file.getEtag().equals(state.getETag())) {
                     return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
                 }
             } catch (NoSuchElementException e) {
                 return new RemoteOperationResult(RemoteOperationResult.ResultCode.OK);
             }
-            return cloudLinks.deleteLink(linkId).blockingGet();
+            return cloudLinks.delete(linkId).blockingGet();
         });
     }
 
@@ -222,14 +219,12 @@ public class CloudDataSource implements DataSource {
     @Override
     public Single<Favorite> getFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-
-        return cloudFavorites.downloadFavorite(favoriteId);
+        return cloudFavorites.download(favoriteId);
     }
 
     @Override
     public void saveFavorite(@NonNull final Favorite favorite) {
         checkNotNull(favorite);
-
         // NOTE: do not cache, because it can be changed in any time
         Disposable disposable = getSaveFavorite(favorite)
                 .subscribeOn(schedulerProvider.computation())
@@ -239,11 +234,11 @@ public class CloudDataSource implements DataSource {
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        numRows = localFavorites.updateFavorite(favorite.getId(), state)
+                        numRows = localFavorites.update(favorite.getId(), state)
                                 .blockingGet();
                     } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                         SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-                        numRows = localFavorites.updateFavorite(favorite.getId(), state)
+                        numRows = localFavorites.update(favorite.getId(), state)
                                 .blockingGet();
                     }
                     if (numRows != 1) {
@@ -266,7 +261,7 @@ public class CloudDataSource implements DataSource {
             SyncState oldState = null;
             boolean isReady = false;
             try {
-                oldState = localFavorites.getFavoriteSyncState(favoriteId).blockingGet();
+                oldState = localFavorites.getSyncState(favoriteId).blockingGet();
             } catch (NoSuchElementException e) {
                 isReady = true;
             } catch (NullPointerException e) {
@@ -278,14 +273,14 @@ public class CloudDataSource implements DataSource {
             if (!isReady) return null;
             // Check cloud
             try {
-                RemoteFile file = cloudFavorites.readFavoriteFile(favoriteId).blockingGet();
+                RemoteFile file = cloudFavorites.readFile(favoriteId).blockingGet();
                 if (oldState == null || !file.getEtag().equals(oldState.getETag())) {
                     return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
                 }
             } catch (NoSuchElementException e) {
                 // NOTE: It's expected state if there is no file in the cloud
             }
-            return cloudFavorites.uploadFavorite(favorite).blockingGet();
+            return cloudFavorites.upload(favorite).blockingGet();
         });
     }
 
@@ -296,16 +291,15 @@ public class CloudDataSource implements DataSource {
     @Override
     public void deleteFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-
         Disposable disposable = getDeleteFavorite(favoriteId)
                 .subscribeOn(schedulerProvider.computation())
                 .subscribe(result -> {
                     int numRows = -1;
                     if (result.isSuccess()) {
-                        numRows = localFavorites.deleteFavorite(favoriteId).blockingGet();
+                        numRows = localFavorites.delete(favoriteId).blockingGet();
                     } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                         SyncState state = new SyncState(SyncState.State.CONFLICTED_DELETE);
-                        numRows = localFavorites.updateFavorite(favoriteId, state).blockingGet();
+                        numRows = localFavorites.update(favoriteId, state).blockingGet();
                     }
                     if (numRows != 1) {
                         Log.e(TAG, "Unexpected number of rows were processed [" + numRows + "]");
@@ -326,7 +320,7 @@ public class CloudDataSource implements DataSource {
             SyncState state = null;
             boolean isReady = false;
             try {
-                state = localFavorites.getFavoriteSyncState(favoriteId).blockingGet();
+                state = localFavorites.getSyncState(favoriteId).blockingGet();
             } catch (NoSuchElementException e) {
                 isReady = true;
             } catch (NullPointerException e) {
@@ -338,14 +332,14 @@ public class CloudDataSource implements DataSource {
             if (!isReady) return null;
             // Check cloud
             try {
-                RemoteFile file = cloudFavorites.readFavoriteFile(favoriteId).blockingGet();
+                RemoteFile file = cloudFavorites.readFile(favoriteId).blockingGet();
                 if (state != null && !file.getEtag().equals(state.getETag())) {
                     return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
                 }
             } catch (NoSuchElementException e) {
                 return new RemoteOperationResult(RemoteOperationResult.ResultCode.OK);
             }
-            return cloudFavorites.deleteFavorite(favoriteId).blockingGet();
+            return cloudFavorites.delete(favoriteId).blockingGet();
         });
     }
 
@@ -364,14 +358,12 @@ public class CloudDataSource implements DataSource {
     @Override
     public Single<Note> getNote(@NonNull String noteId) {
         checkNotNull(noteId);
-
-        return cloudNotes.downloadNote(noteId);
+        return cloudNotes.download(noteId);
     }
 
     @Override
     public void saveNote(@NonNull final Note note) {
         checkNotNull(note);
-
         // NOTE: do not cache, because it can be changed in any time
         Disposable disposable = getSaveNote(note)
                 .subscribeOn(schedulerProvider.computation())
@@ -381,11 +373,11 @@ public class CloudDataSource implements DataSource {
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        numRows = localNotes.updateNote(note.getId(), state)
+                        numRows = localNotes.update(note.getId(), state)
                                 .blockingGet();
                     } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                         SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-                        numRows = localNotes.updateNote(note.getId(), state)
+                        numRows = localNotes.update(note.getId(), state)
                                 .blockingGet();
                     }
                     if (numRows != 1) {
@@ -408,7 +400,7 @@ public class CloudDataSource implements DataSource {
             SyncState oldState = null;
             boolean isReady = false;
             try {
-                oldState = localNotes.getNoteSyncState(noteId).blockingGet();
+                oldState = localNotes.getSyncState(noteId).blockingGet();
             } catch (NoSuchElementException e) {
                 isReady = true;
             } catch (NullPointerException e) {
@@ -420,14 +412,14 @@ public class CloudDataSource implements DataSource {
             if (!isReady) return null;
             // Check cloud
             try {
-                RemoteFile file = cloudNotes.readNoteFile(noteId).blockingGet();
+                RemoteFile file = cloudNotes.readFile(noteId).blockingGet();
                 if (oldState == null || !file.getEtag().equals(oldState.getETag())) {
                     return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
                 }
             } catch (NoSuchElementException e) {
                 // NOTE: It's expected state if there is no file in the cloud
             }
-            return cloudNotes.uploadNote(note).blockingGet();
+            return cloudNotes.upload(note).blockingGet();
         });
     }
 
@@ -438,16 +430,15 @@ public class CloudDataSource implements DataSource {
     @Override
     public void deleteNote(@NonNull String noteId) {
         checkNotNull(noteId);
-
         Disposable disposable = getDeleteNote(noteId)
                 .subscribeOn(schedulerProvider.computation())
                 .subscribe(result -> {
                     int numRows = -1;
                     if (result.isSuccess()) {
-                        numRows = localNotes.deleteNote(noteId).blockingGet();
+                        numRows = localNotes.delete(noteId).blockingGet();
                     } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                         SyncState state = new SyncState(SyncState.State.CONFLICTED_DELETE);
-                        numRows = localNotes.updateNote(noteId, state).blockingGet();
+                        numRows = localNotes.update(noteId, state).blockingGet();
                     }
                     if (numRows != 1) {
                         Log.e(TAG, "Unexpected number of rows were processed [" + numRows + "]");
@@ -468,7 +459,7 @@ public class CloudDataSource implements DataSource {
             SyncState state = null;
             boolean isReady = false;
             try {
-                state = localNotes.getNoteSyncState(noteId).blockingGet();
+                state = localNotes.getSyncState(noteId).blockingGet();
             } catch (NoSuchElementException e) {
                 isReady = true;
             } catch (NullPointerException e) {
@@ -480,14 +471,14 @@ public class CloudDataSource implements DataSource {
             if (!isReady) return null;
             // Check cloud
             try {
-                RemoteFile file = cloudNotes.readNoteFile(noteId).blockingGet();
+                RemoteFile file = cloudNotes.readFile(noteId).blockingGet();
                 if (state != null && !file.getEtag().equals(state.getETag())) {
                     return new RemoteOperationResult(RemoteOperationResult.ResultCode.SYNC_CONFLICT);
                 }
             } catch (NoSuchElementException e) {
                 return new RemoteOperationResult(RemoteOperationResult.ResultCode.OK);
             }
-            return cloudNotes.deleteNote(noteId).blockingGet();
+            return cloudNotes.delete(noteId).blockingGet();
         });
     }
 
@@ -574,7 +565,6 @@ public class CloudDataSource implements DataSource {
             @NonNull OwnCloudClient ocClient, @NonNull String dataSourceDirectory) {
         checkNotNull(ocClient);
         checkNotNull(dataSourceDirectory);
-
         final Map<String, String> dataSourceMap = new HashMap<>();
         getRemoteFiles(ocClient, dataSourceDirectory).subscribe(file -> {
             String fileMimeType = file.getMimeType();

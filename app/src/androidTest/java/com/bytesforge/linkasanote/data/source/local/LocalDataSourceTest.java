@@ -8,6 +8,9 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.ItemFactory;
+import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
@@ -47,9 +50,15 @@ public class LocalDataSourceTest {
     public void setupLocalDataSource() {
         FAVORITES = AndroidTestUtils.buildFavorites();
         LocalTags localTags = new LocalTags(contentResolver);
-        LocalNotes localNotes = new LocalNotes(context, contentResolver, localTags);
-        LocalLinks localLinks = new LocalLinks(context, contentResolver, localTags, localNotes);
-        LocalFavorites localFavorites = new LocalFavorites(context, contentResolver, localTags);
+        ItemFactory<Note> noteFactory = Note.getFactory();
+        LocalNotes<Note> localNotes = new LocalNotes<>(
+                context, contentResolver, localTags, noteFactory);
+        ItemFactory<Link> linkFactory = Link.getFactory();
+        LocalLinks<Link> localLinks = new LocalLinks<>(
+                context, contentResolver, localTags, localNotes, linkFactory);
+        ItemFactory<Favorite> favoriteFactory = Favorite.getFactory();
+        LocalFavorites<Favorite> localFavorites = new LocalFavorites<>(
+                context, contentResolver, localTags, favoriteFactory);
         localDataSource = new LocalDataSource(
                 contentResolver, localLinks, localFavorites, localNotes, localTags);
         cleanupLocalDataSource();

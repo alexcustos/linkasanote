@@ -5,7 +5,6 @@ import android.util.Log;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.Repository;
-import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
@@ -68,7 +67,6 @@ public class NotesPresenterTest {
         MockitoAnnotations.initMocks(this);
         PowerMockito.mockStatic(Log.class);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
-        // TODO: check if it's needed at all
         when(view.isActive()).thenReturn(true);
 
         presenter = new NotesPresenter(
@@ -78,7 +76,6 @@ public class NotesPresenterTest {
     @Test
     public void loadAllNotesFromRepository_loadsItIntoView() {
         when(repository.getNotes()).thenReturn(Observable.fromIterable(NOTES));
-        when(viewModel.getFilterType()).thenReturn(FilterType.ALL);
         presenter.loadNotes(true);
         verify(view).showNotes(NOTES);
     }
@@ -94,7 +91,7 @@ public class NotesPresenterTest {
     @Test
     public void clickOnAddNote_showAddNoteUi() {
         presenter.addNote();
-        verify(view).showAddNote();
+        verify(view).showAddNote(eq(null));
     }
 
     @Test

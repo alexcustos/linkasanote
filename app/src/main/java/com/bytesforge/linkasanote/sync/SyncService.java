@@ -8,8 +8,13 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.LaanoApplication;
-import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
+import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
+import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
+import com.bytesforge.linkasanote.data.source.local.LocalLinks;
+import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.settings.Settings;
 
 import javax.inject.Inject;
@@ -30,10 +35,22 @@ public class SyncService extends Service {
     AccountManager accountManager;
 
     @Inject
-    LocalFavorites localFavorites;
+    LocalLinks<Link> localLinks;
 
     @Inject
-    CloudFavorites cloudFavorites;
+    CloudItem<Link> cloudLinks;
+
+    @Inject
+    LocalFavorites<Favorite> localFavorites;
+
+    @Inject
+    CloudItem<Favorite> cloudFavorites;
+
+    @Inject
+    LocalNotes<Note> localNotes;
+
+    @Inject
+    CloudItem<Note> cloudNotes;
 
     @Override
     public void onCreate() {
@@ -44,10 +61,13 @@ public class SyncService extends Service {
         synchronized (syncAdapterLock) {
             if (syncAdapter == null) {
                 SyncNotifications syncNotifications = new SyncNotifications(context);
-                syncAdapter = new SyncAdapter(context, settings, true,
-                        accountManager, syncNotifications, localFavorites, cloudFavorites);
+                syncAdapter = new SyncAdapter(
+                        context, settings, true, accountManager, syncNotifications,
+                        localLinks, cloudLinks,
+                        localFavorites, cloudFavorites,
+                        localNotes, cloudNotes);
             }
-        } // synchronized
+        }
     }
 
     @Nullable

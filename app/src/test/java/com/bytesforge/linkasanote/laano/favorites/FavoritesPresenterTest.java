@@ -7,6 +7,7 @@ import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
@@ -48,6 +49,9 @@ public class FavoritesPresenterTest {
     @Mock
     private LaanoUiManager laanoUiManager;
 
+    @Mock
+    private Settings settings;
+
     private FavoritesPresenter presenter;
 
     @Captor
@@ -64,11 +68,10 @@ public class FavoritesPresenterTest {
         MockitoAnnotations.initMocks(this);
         PowerMockito.mockStatic(Log.class);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
-        // TODO: check if it's needed at all
         when(view.isActive()).thenReturn(true);
 
         presenter = new FavoritesPresenter(
-                repository, view, viewModel, schedulerProvider, laanoUiManager);
+                repository, view, viewModel, schedulerProvider, laanoUiManager, settings);
     }
 
     @Test

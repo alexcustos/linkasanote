@@ -3,12 +3,17 @@ package com.bytesforge.linkasanote.sync;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
-import com.bytesforge.linkasanote.data.source.cloud.CloudFavorites;
+import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
+import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
+import com.bytesforge.linkasanote.data.source.local.LocalLinks;
+import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.utils.CloudUtils;
@@ -46,7 +51,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Log.class, CloudUtils.class})
+@PrepareForTest({Log.class, CloudUtils.class, Uri.class})
 public class SyncAdapterTest {
 
     @Mock
@@ -62,10 +67,22 @@ public class SyncAdapterTest {
     SyncNotifications syncNotifications;
 
     @Mock
-    LocalFavorites localFavorites;
+    LocalLinks<Link> localLinks;
 
     @Mock
-    CloudFavorites cloudFavorites;
+    CloudItem<Link> cloudLinks;
+
+    @Mock
+    LocalFavorites<Favorite> localFavorites;
+
+    @Mock
+    CloudItem<Favorite> cloudFavorites;
+
+    @Mock
+    LocalNotes<Note> localNotes;
+
+    @Mock
+    CloudItem<Note> cloudNotes;
 
     @Mock
     OwnCloudClient ownCloudClient;
@@ -90,17 +107,18 @@ public class SyncAdapterTest {
         MockitoAnnotations.initMocks(this);
         PowerMockito.mockStatic(Log.class);
         PowerMockito.mockStatic(CloudUtils.class);
+        PowerMockito.mockStatic(Uri.class);
 
         when(context.getResources()).thenReturn(resources);
         when(CloudUtils.getOwnCloudClient(isNull(), any(Context.class))).thenReturn(ownCloudClient);
         when(CloudUtils.getAccountName(isNull())).thenReturn(ACCOUNT_NAME);
         when(cloudFavorites.getDataSourceETag(ownCloudClient)).thenReturn(E_TAGL);
         when(cloudFavorites.isCloudDataSourceChanged(E_TAGL)).thenReturn(true);
-        when(localFavorites.resetFavoritesSyncState()).thenReturn(Single.fromCallable(() -> 0));
-        when(localFavorites.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
+        when(localFavorites.resetSyncState()).thenReturn(Single.fromCallable(() -> 0));
+        when(localFavorites.isConflicted()).thenReturn(Single.fromCallable(() -> false));
 
-        syncAdapter = new SyncAdapter(context, settings, true,
-                accountManager, syncNotifications, localFavorites, cloudFavorites);
+        syncAdapter = new SyncAdapter(context, settings, true, accountManager, syncNotifications,
+                localLinks, cloudLinks, localFavorites, cloudFavorites, localNotes, cloudNotes);
     }
 
     @Test
@@ -120,18 +138,18 @@ public class SyncAdapterTest {
         file.setETag(E_TAGC);
         data.add(file);
         result.setData(data);
-        when(cloudFavorites.uploadFavorite(any(Favorite.class), eq(ownCloudClient)))
+        when(cloudFavorites.upload(any(Favorite.class), eq(ownCloudClient)))
                 .thenReturn(Single.fromCallable(() -> result));
-        when(localFavorites.updateFavorite(eq(favoriteId), any(SyncState.class)))
+        when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.fromCallable(() -> 1));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(cloudFavorites).uploadFavorite(eq(favorite), eq(ownCloudClient));
-        verify(localFavorites).updateFavorite(eq(favoriteId), syncStateCaptor.capture());
+        verify(cloudFavorites).upload(eq(favorite), eq(ownCloudClient));
+        verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
         assertEquals(syncStateCaptor.getValue().isSynced(), true);
         verify(syncNotifications).sendSyncBroadcast(
                 any(String.class), eq(SyncNotifications.STATUS_UPLOADED), any(String.class));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0); TODO: capture syncItem and check
     }
 
     @Test
@@ -146,17 +164,17 @@ public class SyncAdapterTest {
         setLocalFavorites(localFavorites, Collections.emptyList());
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
         // Download
-        when(cloudFavorites.downloadFavorite(eq(favoriteId), eq(ownCloudClient)))
+        when(cloudFavorites.download(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.fromCallable(() -> cloudFavorite));
-        when(localFavorites.saveFavorite(eq(cloudFavorite)))
+        when(localFavorites.save(eq(cloudFavorite)))
                 .thenReturn(Single.fromCallable(() -> 1L));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(cloudFavorites).downloadFavorite(eq(favoriteId), eq(ownCloudClient));
-        verify(localFavorites).saveFavorite(eq(cloudFavorite));
+        verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
+        verify(localFavorites).save(eq(cloudFavorite));
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                eq(SyncNotifications.STATUS_CREATED), eq(favoriteId));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     @Test
@@ -172,19 +190,19 @@ public class SyncAdapterTest {
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
-        when(cloudFavorites.downloadFavorite(eq(favoriteId), eq(ownCloudClient)))
+        when(cloudFavorites.download(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.fromCallable(() -> cloudFavorite));
-        when(localFavorites.updateFavorite(eq(favoriteId), any(SyncState.class)))
+        when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.fromCallable(() -> 1));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(cloudFavorites).downloadFavorite(eq(favoriteId), eq(ownCloudClient));
-        verify(localFavorites).updateFavorite(eq(favoriteId), syncStateCaptor.capture());
+        verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
+        verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
         assertEquals(syncStateCaptor.getValue().isSynced(), true);
         assertEquals(syncStateCaptor.getValue().getETag(), E_TAGC);
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_UPDATED), eq(favoriteId));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     @Test
@@ -200,20 +218,20 @@ public class SyncAdapterTest {
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
-        when(cloudFavorites.downloadFavorite(eq(favoriteId), eq(ownCloudClient)))
+        when(cloudFavorites.download(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.fromCallable(() -> cloudFavorite));
         RemoteOperationResult result = new RemoteOperationResult(RemoteOperationResult.ResultCode.OK);
-        when(cloudFavorites.deleteFavorite(eq(favoriteId), eq(ownCloudClient)))
+        when(cloudFavorites.delete(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.fromCallable(() -> result));
-        when(localFavorites.deleteFavorite(eq(favoriteId))).thenReturn(Single.fromCallable(() -> 1));
+        when(localFavorites.delete(eq(favoriteId))).thenReturn(Single.fromCallable(() -> 1));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(cloudFavorites).downloadFavorite(eq(favoriteId), eq(ownCloudClient));
-        verify(cloudFavorites).deleteFavorite(eq(favoriteId), eq(ownCloudClient));
-        verify(localFavorites).deleteFavorite(eq(favoriteId));
+        verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
+        verify(cloudFavorites).delete(eq(favoriteId), eq(ownCloudClient));
+        verify(localFavorites).delete(eq(favoriteId));
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_DELETED), eq(favoriteId));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     @Test
@@ -229,18 +247,18 @@ public class SyncAdapterTest {
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
-        when(cloudFavorites.downloadFavorite(eq(favoriteId), eq(ownCloudClient)))
+        when(cloudFavorites.download(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.fromCallable(() -> cloudFavorite));
-        when(localFavorites.updateFavorite(eq(favoriteId), any(SyncState.class)))
+        when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.fromCallable(() -> 1));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(cloudFavorites).downloadFavorite(eq(favoriteId), eq(ownCloudClient));
-        verify(localFavorites).updateFavorite(eq(favoriteId), syncStateCaptor.capture());
+        verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
+        verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
         assertEquals(syncStateCaptor.getValue().isConflicted(), true);
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_UPDATED), eq(favoriteId));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     @Test
@@ -256,15 +274,15 @@ public class SyncAdapterTest {
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
-        when(cloudFavorites.downloadFavorite(eq(favoriteId), eq(ownCloudClient)))
+        when(cloudFavorites.download(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.fromCallable(() -> cloudFavorite));
-        when(localFavorites.saveFavorite(eq(cloudFavorite))).thenReturn(Single.fromCallable(() -> 1L));
+        when(localFavorites.save(eq(cloudFavorite))).thenReturn(Single.fromCallable(() -> 1L));
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(cloudFavorites).downloadFavorite(eq(favoriteId), eq(ownCloudClient));
-        verify(localFavorites).saveFavorite(eq(cloudFavorite));
+        verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
+        verify(localFavorites).save(eq(cloudFavorite));
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_UPDATED), eq(favoriteId));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     @Test
@@ -277,13 +295,13 @@ public class SyncAdapterTest {
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, Collections.emptyList());
-        when(localFavorites.deleteFavorite(eq(favoriteId))).thenReturn(Single.fromCallable(() -> 1));
+        when(localFavorites.delete(eq(favoriteId))).thenReturn(Single.fromCallable(() -> 1));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(localFavorites).deleteFavorite(eq(favoriteId));
+        verify(localFavorites).delete(eq(favoriteId));
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_DELETED), eq(favoriteId));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     @Test
@@ -300,16 +318,16 @@ public class SyncAdapterTest {
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
         RemoteOperationResult result = new RemoteOperationResult(RemoteOperationResult.ResultCode.OK);
-        when(cloudFavorites.deleteFavorite(eq(favoriteId), eq(ownCloudClient)))
+        when(cloudFavorites.delete(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.fromCallable(() -> result));
-        when(localFavorites.deleteFavorite(eq(favoriteId))).thenReturn(Single.fromCallable(() -> 1));
+        when(localFavorites.delete(eq(favoriteId))).thenReturn(Single.fromCallable(() -> 1));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(cloudFavorites).deleteFavorite(eq(favoriteId), eq(ownCloudClient));
-        verify(localFavorites).deleteFavorite(eq(favoriteId));
+        verify(cloudFavorites).delete(eq(favoriteId), eq(ownCloudClient));
+        verify(localFavorites).delete(eq(favoriteId));
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_DELETED), eq(favoriteId));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     @Test
@@ -322,13 +340,13 @@ public class SyncAdapterTest {
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, Collections.emptyList());
-        when(localFavorites.deleteFavorite(eq(favoriteId))).thenReturn(Single.fromCallable(() -> 1));
+        when(localFavorites.delete(eq(favoriteId))).thenReturn(Single.fromCallable(() -> 1));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(localFavorites).deleteFavorite(eq(favoriteId));
+        verify(localFavorites).delete(eq(favoriteId));
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_DELETED), eq(favoriteId));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     @Test
@@ -341,16 +359,16 @@ public class SyncAdapterTest {
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, Collections.emptyList());
-        when(localFavorites.updateFavorite(eq(favoriteId), any(SyncState.class)))
+        when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.fromCallable(() -> 1));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(localFavorites).updateFavorite(eq(favoriteId), syncStateCaptor.capture());
+        verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
         assertEquals(syncStateCaptor.getValue().isDeleted(), false);
         assertEquals(syncStateCaptor.getValue().isConflicted(), true);
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_UPDATED), eq(favoriteId));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     @Test
@@ -363,16 +381,16 @@ public class SyncAdapterTest {
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, Collections.emptyList());
-        when(localFavorites.updateFavorite(eq(favoriteId), any(SyncState.class)))
+        when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.fromCallable(() -> 1));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(localFavorites).updateFavorite(eq(favoriteId), syncStateCaptor.capture());
+        verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
         assertEquals(syncStateCaptor.getValue().isDeleted(), true);
         assertEquals(syncStateCaptor.getValue().isConflicted(), true);
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_UPDATED), eq(favoriteId));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     @Test
@@ -396,30 +414,30 @@ public class SyncAdapterTest {
         file.setETag(E_TAGC);
         data.add(file);
         result.setData(data);
-        when(cloudFavorites.uploadFavorite(any(Favorite.class), eq(ownCloudClient)))
+        when(cloudFavorites.upload(any(Favorite.class), eq(ownCloudClient)))
                 .thenReturn(Single.fromCallable(() -> result));
-        when(localFavorites.updateFavorite(eq(favoriteId), any(SyncState.class)))
+        when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.fromCallable(() -> 1));
 
         syncAdapter.onPerformSync(null, null, null, null, null);
-        verify(cloudFavorites).uploadFavorite(eq(localFavorite), eq(ownCloudClient));
-        verify(localFavorites).updateFavorite(eq(favoriteId), syncStateCaptor.capture());
+        verify(cloudFavorites).upload(eq(localFavorite), eq(ownCloudClient));
+        verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
         assertEquals(syncStateCaptor.getValue().isSynced(), true);
         verify(syncNotifications).sendSyncBroadcast(
                 any(String.class), eq(SyncNotifications.STATUS_UPLOADED), any(String.class));
-        assertEquals(syncAdapter.getFavoriteFailsCount(), 0);
+        //assertEquals(syncAdapter.getFailsCount(), 0);
     }
 
     // Helpers
 
     private void setLocalFavorites(LocalFavorites localFavorites, List<Favorite> favorites) {
-        when(localFavorites.getFavorites()).thenReturn(Observable.fromIterable(favorites));
+        when(localFavorites.getAll()).thenReturn(Observable.fromIterable(favorites));
         Set<String> localFavoriteIds = favorites.stream()
                 .map(Favorite::getId).collect(Collectors.toSet());
-        when(localFavorites.getFavoriteIds()).thenReturn(Observable.fromIterable(localFavoriteIds));
+        when(localFavorites.getIds()).thenReturn(Observable.fromIterable(localFavoriteIds));
     }
 
-    private void setCloudFavorites(CloudFavorites cloudFavorites, List<Favorite> favorites) {
+    private void setCloudFavorites(CloudItem<Favorite> cloudFavorites, List<Favorite> favorites) {
         Map<String, String> cloudDataSourceMap = new HashMap<>(favorites.size());
         for (Favorite favorite : favorites) {
             cloudDataSourceMap.put(favorite.getId(), favorite.getETag());

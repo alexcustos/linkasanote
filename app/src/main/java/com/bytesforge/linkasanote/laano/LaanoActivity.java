@@ -346,10 +346,8 @@ public class LaanoActivity extends AppCompatActivity implements
                 case SyncNotifications.ACTION_SYNC_LINKS:
                     tabPosition = LaanoFragmentPagerAdapter.LINKS_TAB;
                     if (status == SyncNotifications.STATUS_SYNC_STOP) {
-                        //linksPresenter.loadLinks(true);
-                        //linksPresenter.updateTabNormalState();
-                        laanoUiManager.setTabNormalState(
-                                tabPosition, linksPresenter.isConflicted());
+                        linksPresenter.loadLinks(true);
+                        linksPresenter.updateTabNormalState();
                     }
                     break;
                 case SyncNotifications.ACTION_SYNC_FAVORITES:
@@ -362,10 +360,9 @@ public class LaanoActivity extends AppCompatActivity implements
                 case SyncNotifications.ACTION_SYNC_NOTES:
                     tabPosition = LaanoFragmentPagerAdapter.NOTES_TAB;
                     if (status == SyncNotifications.STATUS_SYNC_STOP) {
-                        //notesPresenter.loadNotes(true);
-                        //notesPresenter.updateTabNormalState();
-                        laanoUiManager.setTabNormalState(
-                                tabPosition, notesPresenter.isConflicted());
+                        notesPresenter.loadNotes(true);
+                        linksPresenter.loadLinks(true);
+                        notesPresenter.updateTabNormalState();
                     }
                     break;
                 default:
