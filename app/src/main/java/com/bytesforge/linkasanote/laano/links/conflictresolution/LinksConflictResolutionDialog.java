@@ -15,8 +15,6 @@ import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.databinding.DialogLinkConflictResolutionBinding;
 
-import java.util.NoSuchElementException;
-
 import javax.inject.Inject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -99,18 +97,6 @@ public class LinksConflictResolutionDialog extends DialogFragment implements
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        // TODO: move this check outside of the dialog creation
-        try {
-            boolean conflictResolved = presenter.autoResolve().blockingGet();
-            if (conflictResolved) {
-                setShowsDialog(false);
-                finishActivity();
-                return new Dialog(getContext());
-            }
-        } catch (NullPointerException | NoSuchElementException e) {
-            cancelActivity();
-            return new Dialog(getContext());
-        }
         Context context = getActivity();
         LayoutInflater inflater = LayoutInflater.from(context);
         DialogLinkConflictResolutionBinding binding = DataBindingUtil.inflate(

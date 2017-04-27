@@ -22,7 +22,6 @@
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:background="@{viewModel.getNoteBackground(note.id, note.conflicted, viewModel.selectionChanged)}"
             android:onClick="@{() -> presenter.onNoteClick(note.id, note.conflicted)}"
             android:onLongClick="@{() -> presenter.onNoteLongClick(note.id)}">
@@ -61,8 +60,7 @@
                 app:layout_constraintTop_toTopOf="@+id/note_to_links"
                 app:layout_constraintBottom_toBottomOf="@+id/note_to_links"
                 app:layout_constraintStart_toStartOf="@id/note_to_links"
-                app:layout_constraintEnd_toEndOf="@+id/note_to_links"
-                />
+                app:layout_constraintEnd_toEndOf="@+id/note_to_links" />
 
             <TextView
                 android:id="@+id/note_filter_prefix"
@@ -103,7 +101,7 @@
                 android:onClick="@{() -> presenter.onToggleClick(note.id)}"
                 style="@style/Button.RecyclerView"
                 app:srcCompat="@{viewModel.isNoteVisible(note.id, viewModel.noteVisibilityChanged) ? @drawable/ic_expand_less : @drawable/ic_expand_more}"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/note_to_links"
                 app:layout_constraintBottom_toBottomOf="@+id/note_to_links"
                 app:layout_constraintStart_toEndOf="@id/note_note_caption"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -121,8 +119,8 @@
                 android:onClick="@{() -> presenter.onEditClick(note.id)}"
                 style="@style/Button.RecyclerView"
                 app:srcCompat="@drawable/ic_edit"
-                app:layout_constraintTop_toTopOf="@+id/note_toggle"
-                app:layout_constraintBottom_toBottomOf="@+id/note_toggle"
+                app:layout_constraintTop_toTopOf="@+id/note_to_links"
+                app:layout_constraintBottom_toBottomOf="@+id/note_to_links"
                 app:layout_constraintStart_toEndOf="@+id/note_note_caption"
                 app:layout_constraintEnd_toEndOf="parent" />
 

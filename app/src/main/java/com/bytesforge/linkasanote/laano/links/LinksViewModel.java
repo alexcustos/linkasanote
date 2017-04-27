@@ -152,6 +152,12 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     }
 
     @Override
+    public void notifyChange() {
+        snackbarId = null;
+        super.notifyChange();
+    }
+
+    @Override
     public void setPresenter(@NonNull LinksContract.Presenter presenter) {
         this.presenter = checkNotNull(presenter);
     }
@@ -198,7 +204,6 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     public void enableActionMode() {
         selectedIds.clear();
         actionMode.set(true);
-        snackbarId = null;
         notifyChange();
     }
 
@@ -206,7 +211,6 @@ public class LinksViewModel extends BaseObservable implements LinksContract.View
     public void disableActionMode() {
         selectedIds.clear();
         actionMode.set(false);
-        snackbarId = null;
         presenter.selectLinkFilter();
         notifyChange();
     }

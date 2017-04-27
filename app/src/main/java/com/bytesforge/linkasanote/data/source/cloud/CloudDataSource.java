@@ -209,6 +209,11 @@ public class CloudDataSource implements DataSource {
         return null;
     }
 
+    @Override
+    public Single<Boolean> autoResolveLinkConflict(@NonNull String linkId) {
+        throw new RuntimeException("autoResolveLinkConflict() was called but this operation cannot be applied to the cloud");
+    }
+
     // Favorites
 
     @Override
@@ -346,6 +351,11 @@ public class CloudDataSource implements DataSource {
     @Override
     public Single<Boolean> isConflictedFavorites() {
         return null;
+    }
+
+    @Override
+    public Single<Boolean> autoResolveFavoriteConflict(@NonNull String favoriteId) {
+        throw new RuntimeException("autoResolveFavoriteConflict() was called but this operation cannot be applied to the cloud");
     }
 
     // Notes

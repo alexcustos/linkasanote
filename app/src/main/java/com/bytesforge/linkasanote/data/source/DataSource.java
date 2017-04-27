@@ -18,6 +18,7 @@ public interface DataSource {
     void deleteAllLinks();
     void deleteLink(@NonNull String linkId);
     Single<Boolean> isConflictedLinks();
+    Single<Boolean> autoResolveLinkConflict(@NonNull String linkId);
 
     Observable<Favorite> getFavorites();
     Single<Favorite> getFavorite(@NonNull String favoriteId);
@@ -25,6 +26,7 @@ public interface DataSource {
     void deleteAllFavorites();
     void deleteFavorite(@NonNull String favoriteId);
     Single<Boolean> isConflictedFavorites();
+    Single<Boolean> autoResolveFavoriteConflict(@NonNull String favoriteId);
 
     Observable<Note> getNotes();
     Single<Note> getNote(@NonNull String noteId);

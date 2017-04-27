@@ -28,7 +28,6 @@ public class Repository implements DataSource {
     private final DataSource localDataSource;
     private final DataSource cloudDataSource;
 
-    // TODO: change to links
     @VisibleForTesting
     @Nullable
     Map<String, Link> cachedLinks;
@@ -92,7 +91,6 @@ public class Repository implements DataSource {
     @Override
     public Single<Link> getLink(@NonNull String linkId) {
         checkNotNull(linkId);
-
         if (!isKeyValidUuid(linkId)) {
             throw new InvalidParameterException("getLink() called with invalid UUID");
         }
@@ -101,7 +99,6 @@ public class Repository implements DataSource {
 
     public Single<Link> getLink(@NonNull String linkId, boolean forceCacheUpdate) {
         checkNotNull(linkId);
-
         if (forceCacheUpdate) return getAndCacheLocalLink(linkId);
 
         final Link cachedLink = getCachedLink(linkId);
@@ -133,7 +130,6 @@ public class Repository implements DataSource {
     @Nullable
     private Link getCachedLink(@NonNull String id) {
         checkNotNull(id);
-
         if (cachedLinks != null && !cachedLinks.isEmpty()) {
             return cachedLinks.get(id);
         }
@@ -143,7 +139,6 @@ public class Repository implements DataSource {
     @Override
     public void saveLink(@NonNull Link link) {
         checkNotNull(link);
-
         localDataSource.saveLink(link); // blocking operation
         cloudDataSource.saveLink(link);
 
@@ -179,7 +174,6 @@ public class Repository implements DataSource {
     @Override
     public void deleteLink(@NonNull String linkId) {
         checkNotNull(linkId);
-
         localDataSource.deleteLink(linkId); // blocking
         cloudDataSource.deleteLink(linkId);
 
@@ -193,6 +187,15 @@ public class Repository implements DataSource {
         return localDataSource.isConflictedLinks();
     }
 
+    @Override
+    public Single<Boolean> autoResolveLinkConflict(@NonNull String linkId) {
+        checkNotNull(linkId);
+        return localDataSource.autoResolveLinkConflict(linkId)
+                .doOnSuccess(success -> {
+                    if (success) linkCacheIsDirty = true;
+                });
+    }
+
     // TODO: implement cache invalidation for one specific item
     public void refreshLinks() {
         linkCacheIsDirty = true;
@@ -200,7 +203,6 @@ public class Repository implements DataSource {
 
     public void deleteCachedLink(@NonNull String linkId) {
         checkNotNull(linkId);
-
         if (cachedLinks == null) {
             cachedLinks = new LinkedHashMap<>();
         }
@@ -239,7 +241,6 @@ public class Repository implements DataSource {
     @Override
     public Single<Favorite> getFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-
         if (!isKeyValidUuid(favoriteId)) {
             throw new InvalidParameterException("getFavorite() called with invalid UUID");
         }
@@ -248,7 +249,6 @@ public class Repository implements DataSource {
 
     public Single<Favorite> getFavorite(@NonNull String favoriteId, boolean forceCacheUpdate) {
         checkNotNull(favoriteId);
-
         if (forceCacheUpdate) return getAndCacheLocalFavorite(favoriteId);
 
         final Favorite cachedFavorite = getCachedFavorite(favoriteId);
@@ -280,7 +280,6 @@ public class Repository implements DataSource {
     @Nullable
     private Favorite getCachedFavorite(@NonNull String id) {
         checkNotNull(id);
-
         if (cachedFavorites != null && !cachedFavorites.isEmpty()) {
             return cachedFavorites.get(id);
         }
@@ -290,7 +289,6 @@ public class Repository implements DataSource {
     @Override
     public void saveFavorite(@NonNull Favorite favorite) {
         checkNotNull(favorite);
-
         localDataSource.saveFavorite(favorite); // blocking operation
         cloudDataSource.saveFavorite(favorite);
 
@@ -326,7 +324,6 @@ public class Repository implements DataSource {
     @Override
     public void deleteFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-
         localDataSource.deleteFavorite(favoriteId); // blocking
         cloudDataSource.deleteFavorite(favoriteId);
 
@@ -338,6 +335,15 @@ public class Repository implements DataSource {
         return localDataSource.isConflictedFavorites();
     }
 
+    @Override
+    public Single<Boolean> autoResolveFavoriteConflict(@NonNull String favoriteId) {
+        checkNotNull(favoriteId);
+        return localDataSource.autoResolveFavoriteConflict(favoriteId)
+                .doOnSuccess(success -> {
+                    if (success) favoriteCacheIsDirty = true; // OPTIMIZATION: reload the one item only
+                });
+    }
+
     // TODO: implement cache invalidation for one specific item
     public void refreshFavorites() {
         favoriteCacheIsDirty = true;
@@ -345,7 +351,6 @@ public class Repository implements DataSource {
 
     public void deleteCachedFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-
         if (cachedFavorites == null) {
             cachedFavorites = new LinkedHashMap<>();
         }
@@ -384,7 +389,6 @@ public class Repository implements DataSource {
     @Override
     public Single<Note> getNote(@NonNull String noteId) {
         checkNotNull(noteId);
-
         if (!isKeyValidUuid(noteId)) {
             throw new InvalidParameterException("getNote() called with invalid UUID");
         }
@@ -393,7 +397,6 @@ public class Repository implements DataSource {
 
     public Single<Note> getNote(@NonNull String noteId, boolean forceCacheUpdate) {
         checkNotNull(noteId);
-
         if (forceCacheUpdate) return getAndCacheLocalNote(noteId);
 
         final Note cachedNote = getCachedNote(noteId);
@@ -425,7 +428,6 @@ public class Repository implements DataSource {
     @Nullable
     private Note getCachedNote(@NonNull String id) {
         checkNotNull(id);
-
         if (cachedNotes != null && !cachedNotes.isEmpty()) {
             return cachedNotes.get(id);
         }
@@ -435,7 +437,6 @@ public class Repository implements DataSource {
     @Override
     public void saveNote(@NonNull Note note) {
         checkNotNull(note);
-
         // TODO: chain with cloud save and make both async
         localDataSource.saveNote(note); // blocking operation
         cloudDataSource.saveNote(note);
@@ -472,7 +473,6 @@ public class Repository implements DataSource {
     @Override
     public void deleteNote(@NonNull String noteId) {
         checkNotNull(noteId);
-
         localDataSource.deleteNote(noteId); // blocking
         cloudDataSource.deleteNote(noteId);
 
@@ -493,7 +493,6 @@ public class Repository implements DataSource {
 
     public void deleteCachedNote(@NonNull String noteId) {
         checkNotNull(noteId);
-
         if (cachedNotes == null) {
             cachedNotes = new LinkedHashMap<>();
         }
@@ -521,7 +520,6 @@ public class Repository implements DataSource {
     @Override
     public Single<Tag> getTag(@NonNull String tagName) {
         checkNotNull(tagName);
-
         final Tag cachedTag = getCachedTag(tagName);
         if (cachedTag != null) {
             return Single.just(cachedTag);
@@ -537,7 +535,6 @@ public class Repository implements DataSource {
     @Nullable
     private Tag getCachedTag(@NonNull String name) {
         checkNotNull(name);
-
         if (cachedTags == null || cachedTags.isEmpty()) {
             return null;
         } else {
@@ -548,7 +545,6 @@ public class Repository implements DataSource {
     @Override
     public void saveTag(@NonNull Tag tag) {
         checkNotNull(tag);
-
         localDataSource.saveTag(tag);
         if (cachedTags == null) {
             cachedTags = new LinkedHashMap<>();

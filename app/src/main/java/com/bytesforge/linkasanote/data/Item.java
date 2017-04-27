@@ -16,6 +16,7 @@ public interface Item {
     long getRowId();
     @Nullable String getETag();
     boolean isDuplicated();
+    boolean isConflicted();
     boolean isDeleted();
     boolean isSynced();
     @NonNull String getId();

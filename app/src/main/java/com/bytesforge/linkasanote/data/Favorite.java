@@ -200,6 +200,7 @@ public final class Favorite implements Comparable<Favorite>, Item {
         return state.isDuplicated();
     }
 
+    @Override
     public boolean isConflicted() {
         return state.isConflicted();
     }

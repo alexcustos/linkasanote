@@ -3,14 +3,19 @@ package com.bytesforge.linkasanote.laano.favorites.conflictresolution;
 import android.content.Context;
 import android.content.res.Resources;
 import android.databinding.BaseObservable;
+import android.databinding.Bindable;
 import android.databinding.ObservableBoolean;
 import android.databinding.ObservableField;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.Tag;
+
+import java.util.ArrayList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -33,18 +38,17 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
     private static final String STATE_CLOUD_RETRY_BUTTON = "CLOUD_RETRY_BUTTON";
 
     private static final String STATE_BUTTONS_ACTIVE = "BUTTONS_ACTIVE";
+    private static final String STATE_PROGRESS_OVERLAY = "PROGRESS_OVERLAY";
 
     public final ObservableField<String> localState = new ObservableField<>();
     public final ObservableField<String> localStatus = new ObservableField<>();
     public final ObservableField<String> localName = new ObservableField<>();
-    public final ObservableField<String> localTags = new ObservableField<>();
     public final ObservableBoolean localDeleteButton = new ObservableBoolean();
     public final ObservableBoolean localUploadButton = new ObservableBoolean();
 
     public final ObservableField<String> cloudState = new ObservableField<>();
     public final ObservableField<String> cloudStatus = new ObservableField<>();
     public final ObservableField<String> cloudName = new ObservableField<>();
-    public final ObservableField<String> cloudTags = new ObservableField<>();
     public final ObservableBoolean cloudDeleteButton = new ObservableBoolean();
     public final ObservableBoolean cloudDownloadButton = new ObservableBoolean();
     public final ObservableBoolean cloudRetryButton = new ObservableBoolean();
@@ -57,6 +61,15 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
     public FavoritesConflictResolutionViewModel(Context context) {
         resources = context.getResources();
     }
+
+    @Bindable
+    public ArrayList<Tag> localTags;
+
+    @Bindable
+    public ArrayList<Tag> cloudTags;
+
+    @Bindable
+    public boolean progressOverlay;
 
     @Override
     public void setInstanceState(@Nullable Bundle savedInstanceState) {
@@ -74,19 +87,20 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         outState.putString(STATE_LOCAL_STATE, localState.get());
         outState.putString(STATE_LOCAL_STATUS, localStatus.get());
         outState.putString(STATE_LOCAL_NAME, localName.get());
-        outState.putString(STATE_LOCAL_TAGS, localTags.get());
+        outState.putParcelableArrayList(STATE_LOCAL_TAGS, localTags);
         outState.putBoolean(STATE_LOCAL_DELETE_BUTTON, localDeleteButton.get());
         outState.putBoolean(STATE_LOCAL_UPLOAD_BUTTON, localUploadButton.get());
 
         outState.putString(STATE_CLOUD_STATE, cloudState.get());
         outState.putString(STATE_CLOUD_STATUS, cloudStatus.get());
         outState.putString(STATE_CLOUD_NAME, cloudName.get());
-        outState.putString(STATE_CLOUD_TAGS, cloudTags.get());
+        outState.putParcelableArrayList(STATE_CLOUD_TAGS, cloudTags);
         outState.putBoolean(STATE_CLOUD_DELETE_BUTTON, cloudDeleteButton.get());
         outState.putBoolean(STATE_CLOUD_DOWNLOAD_BUTTON, cloudDownloadButton.get());
         outState.putBoolean(STATE_CLOUD_RETRY_BUTTON, cloudRetryButton.get());
 
         outState.putBoolean(STATE_BUTTONS_ACTIVE, buttonsActive.get());
+        outState.putBoolean(STATE_PROGRESS_OVERLAY, progressOverlay);
     }
 
     @Override
@@ -96,19 +110,20 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         localState.set(state.getString(STATE_LOCAL_STATE));
         localStatus.set(state.getString(STATE_LOCAL_STATUS));
         localName.set(state.getString(STATE_LOCAL_NAME));
-        localTags.set(state.getString(STATE_LOCAL_TAGS));
+        localTags = state.getParcelableArrayList(STATE_LOCAL_TAGS);
         localDeleteButton.set(state.getBoolean(STATE_LOCAL_DELETE_BUTTON));
         localUploadButton.set(state.getBoolean(STATE_LOCAL_UPLOAD_BUTTON));
 
         cloudState.set(state.getString(STATE_CLOUD_STATE));
         cloudStatus.set(state.getString(STATE_CLOUD_STATUS));
         cloudName.set(state.getString(STATE_CLOUD_NAME));
-        cloudTags.set(state.getString(STATE_CLOUD_TAGS));
+        cloudTags = state.getParcelableArrayList(STATE_CLOUD_TAGS);
         cloudDeleteButton.set(state.getBoolean(STATE_CLOUD_DELETE_BUTTON));
         cloudDownloadButton.set(state.getBoolean(STATE_CLOUD_DOWNLOAD_BUTTON));
         cloudRetryButton.set(state.getBoolean(STATE_CLOUD_RETRY_BUTTON));
 
         buttonsActive.set(state.getBoolean(STATE_BUTTONS_ACTIVE));
+        progressOverlay = state.getBoolean(STATE_PROGRESS_OVERLAY);
 
         notifyChange();
     }
@@ -119,19 +134,20 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         defaultState.putString(STATE_LOCAL_STATE, null);
         defaultState.putString(STATE_LOCAL_STATUS, resources.getString(R.string.status_loading));
         defaultState.putString(STATE_LOCAL_NAME, null);
-        defaultState.putString(STATE_LOCAL_TAGS, null);
+        defaultState.putParcelableArrayList(STATE_LOCAL_TAGS, null);
         defaultState.putBoolean(STATE_LOCAL_DELETE_BUTTON, false);
         defaultState.putBoolean(STATE_LOCAL_UPLOAD_BUTTON, false);
 
         defaultState.putString(STATE_CLOUD_STATE, null);
         defaultState.putString(STATE_CLOUD_STATUS, resources.getString(R.string.status_loading));
         defaultState.putString(STATE_CLOUD_NAME, null);
-        defaultState.putString(STATE_CLOUD_TAGS, null);
+        defaultState.putParcelableArrayList(STATE_CLOUD_TAGS, null);
         defaultState.putBoolean(STATE_CLOUD_DELETE_BUTTON, false);
         defaultState.putBoolean(STATE_CLOUD_DOWNLOAD_BUTTON, false);
         defaultState.putBoolean(STATE_CLOUD_RETRY_BUTTON, false);
 
         defaultState.putBoolean(STATE_BUTTONS_ACTIVE, false);
+        defaultState.putBoolean(STATE_PROGRESS_OVERLAY, false);
 
         return defaultState;
     }
@@ -161,7 +177,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
             localDeleteButton.set(true);
         }
         localName.set(favorite.getName());
-        localTags.set(favorite.getTagsAsString());
+        localTags = (ArrayList<Tag>) favorite.getTags();
         localStatus.set(null);
         notifyChange(); // NOTE: it is really needed
     }
@@ -187,7 +203,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
             cloudDownloadButton.set(true);
         }
         cloudName.set(favorite.getName());
-        cloudTags.set(favorite.getTagsAsString());
+        cloudTags = (ArrayList<Tag>) favorite.getTags();
         cloudStatus.set(null);
         notifyChange();
     }
@@ -248,5 +264,23 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
     @Override
     public void deactivateButtons() {
         buttonsActive.set(false);
+    }
+
+    // Progress
+
+    @Override
+    public void showProgressOverlay() {
+        if (!progressOverlay) {
+            progressOverlay = true;
+            notifyPropertyChanged(BR.progressOverlay);
+        }
+    }
+
+    @Override
+    public void hideProgressOverlay() {
+        if (progressOverlay) {
+            progressOverlay = false;
+            notifyPropertyChanged(BR.progressOverlay);
+        }
     }
 }

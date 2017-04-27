@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,6 +19,7 @@ public interface FavoritesContract {
 
         void setViewModel(@NonNull FavoritesContract.ViewModel viewModel);
         boolean isActive();
+        void onActivityResult(int requestCode, int resultCode, Intent data);
 
         void showAddFavorite();
         void showEditFavorite(@NonNull String favoriteId);

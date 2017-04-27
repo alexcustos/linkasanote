@@ -255,6 +255,9 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
 
         MenuItem filterNoTagsMenuItem = menu.findItem(R.id.filter_no_tags);
         filterNoTagsMenuItem.setVisible(false);
+
+        MenuItem filterUnboundMenuItem = menu.findItem(R.id.filter_unbound);
+        filterUnboundMenuItem.setVisible(false);
         popupMenu.show();
     }
 

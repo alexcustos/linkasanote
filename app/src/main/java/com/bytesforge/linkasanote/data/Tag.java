@@ -2,6 +2,8 @@ package com.bytesforge.linkasanote.data;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -18,11 +20,11 @@ import java.io.Serializable;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
-public final class Tag implements Serializable, Comparable<Tag> {
+public final class Tag implements Serializable, Parcelable, Comparable<Tag> {
 
     private static final String TAG = Tag.class.getSimpleName();
 
-    // NOTE: tag is saved to the other containers, so it has no version
+    // NOTE: tag is a part of the other containers, so it itself has no version information
     private static final String JSON_PROPERTY_NAME = "name";
 
     private final long created;
@@ -37,6 +39,35 @@ public final class Tag implements Serializable, Comparable<Tag> {
     public Tag(long created, @Nullable String name) {
         this.created = created;
         this.name = name;
+    }
+
+    protected Tag(Parcel in) {
+        created = in.readLong();
+        name = in.readString();
+    }
+
+    public static final Creator<Tag> CREATOR = new Creator<Tag>() {
+
+        @Override
+        public Tag createFromParcel(Parcel in) {
+            return new Tag(in);
+        }
+
+        @Override
+        public Tag[] newArray(int size) {
+            return new Tag[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return super.hashCode();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(created);
+        dest.writeString(name);
     }
 
     public static Tag from(Cursor cursor) {
@@ -62,7 +93,7 @@ public final class Tag implements Serializable, Comparable<Tag> {
             return new Tag(name);
         } catch (JSONException e) {
             Log.v(TAG, "Exception while processing Tag JSON object");
-            return new Tag(null);
+            return new Tag((String) null);
         }
     }
 

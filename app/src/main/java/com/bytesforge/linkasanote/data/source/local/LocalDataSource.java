@@ -62,7 +62,6 @@ public class LocalDataSource implements DataSource {
     @Override
     public void saveLink(@NonNull final Link link) {
         checkNotNull(link);
-
         long rowId = localLinks.save(link).blockingGet();
         if (rowId <= 0) {
             Log.e(TAG, "Link was not saved [" + link.getId() + "]");
@@ -77,7 +76,6 @@ public class LocalDataSource implements DataSource {
     @Override
     public void deleteLink(@NonNull String linkId) {
         checkNotNull(linkId);
-
         SyncState state;
         try {
             state = localLinks.getSyncState(linkId).blockingGet();
@@ -103,6 +101,12 @@ public class LocalDataSource implements DataSource {
         return localLinks.isConflicted();
     }
 
+    @Override
+    public Single<Boolean> autoResolveLinkConflict(@NonNull String linkId) {
+        checkNotNull(linkId);
+        return localLinks.autoResolveConflict(linkId);
+    }
+
     // Favorites
 
     @Override
@@ -119,7 +123,6 @@ public class LocalDataSource implements DataSource {
     @Override
     public void saveFavorite(@NonNull final Favorite favorite) {
         checkNotNull(favorite);
-
         long rowId = localFavorites.save(favorite).blockingGet();
         if (rowId <= 0) {
             Log.e(TAG, "Favorite was not saved [" + favorite.getId() + "]");
@@ -134,7 +137,6 @@ public class LocalDataSource implements DataSource {
     @Override
     public void deleteFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-
         SyncState state;
         try {
             state = localFavorites.getSyncState(favoriteId).blockingGet();
@@ -160,6 +162,12 @@ public class LocalDataSource implements DataSource {
         return localFavorites.isConflicted();
     }
 
+    @Override
+    public Single<Boolean> autoResolveFavoriteConflict(@NonNull String favoriteId) {
+        checkNotNull(favoriteId);
+        return localFavorites.autoResolveConflict(favoriteId);
+    }
+
     // Notes
 
     @Override
@@ -176,7 +184,6 @@ public class LocalDataSource implements DataSource {
     @Override
     public void saveNote(@NonNull final Note note) {
         checkNotNull(note);
-
         long rowId = localNotes.save(note).blockingGet();
         if (rowId <= 0) {
             Log.e(TAG, "Note was not saved [" + note.getId() + "]");
@@ -191,7 +198,6 @@ public class LocalDataSource implements DataSource {
     @Override
     public void deleteNote(@NonNull String noteId) {
         checkNotNull(noteId);
-
         SyncState state;
         try {
             state = localNotes.getSyncState(noteId).blockingGet();

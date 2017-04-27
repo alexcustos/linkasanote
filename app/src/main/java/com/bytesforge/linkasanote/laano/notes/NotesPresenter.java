@@ -185,6 +185,8 @@ public final class NotesPresenter implements NotesContract.Presenter {
                             return !Collections.disjoint(favoriteFilterTags, noteTags);
                         case NO_TAGS:
                             return note.getTags() == null;
+                        case UNBOUND:
+                            return note.getLinkId() == null;
                         case ALL:
                         default:
                             return true;
@@ -216,8 +218,6 @@ public final class NotesPresenter implements NotesContract.Presenter {
     public void onNoteClick(String noteId, boolean isConflicted) {
         if (viewModel.isActionMode()) {
             onNoteSelected(noteId);
-        } else if (isConflicted) {
-            view.showConflictResolution(noteId);
         } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
             int position = getPosition(noteId);
             boolean selected = viewModel.toggleSingleSelection(position);
@@ -362,6 +362,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
             case ALL:
             case CONFLICTED:
             case NO_TAGS:
+            case UNBOUND:
                 if (this.filterType == filterType) {
                     return null;
                 }

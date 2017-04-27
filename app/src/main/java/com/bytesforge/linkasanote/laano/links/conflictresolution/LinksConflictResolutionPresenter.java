@@ -1,16 +1,21 @@
 package com.bytesforge.linkasanote.laano.links.conflictresolution;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
+import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.laano.links.LinkId;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.inject.Inject;
@@ -24,9 +29,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class LinksConflictResolutionPresenter implements
         LinksConflictResolutionContract.Presenter {
 
+    private static final String TAG = LinksConflictResolutionPresenter.class.getSimpleName();
+
     private final Repository repository; // NOTE: for cache control
+    private final Settings settings;
     private final LocalLinks<Link> localLinks;
     private final CloudItem<Link> cloudLinks;
+    private final LocalNotes<Note> localNotes;
+    private final CloudItem<Note> cloudNotes;
     private final LinksConflictResolutionContract.View view;
     private final LinksConflictResolutionContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
@@ -41,13 +51,18 @@ public final class LinksConflictResolutionPresenter implements
 
     @Inject
     LinksConflictResolutionPresenter(
-            Repository repository, LocalLinks<Link> localLinks, CloudItem<Link> cloudLinks,
+            Repository repository, Settings settings,
+            LocalLinks<Link> localLinks, CloudItem<Link> cloudLinks,
+            LocalNotes<Note> localNotes, CloudItem<Note> cloudNotes,
             LinksConflictResolutionContract.View view,
             LinksConflictResolutionContract.ViewModel viewModel,
             BaseSchedulerProvider schedulerProvider, @LinkId String linkId) {
         this.repository = repository;
+        this.settings = settings;
         this.localLinks = localLinks;
         this.cloudLinks = cloudLinks;
+        this.localNotes = localNotes;
+        this.cloudNotes = cloudNotes;
         this.view = view;
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
@@ -80,26 +95,6 @@ public final class LinksConflictResolutionPresenter implements
         loadLocalLink(); // first step, then cloud one will be loaded
     }
 
-    @Override
-    public Single<Boolean> autoResolve() {
-        return Single.fromCallable(() -> {
-            Link link = localLinks.get(linkId).blockingGet();
-            if (link.isDuplicated()) {
-                try {
-                    localLinks.getMain(link.getName()).blockingGet();
-                } catch (NoSuchElementException e) {
-                    SyncState state = new SyncState(SyncState.State.SYNCED);
-                    int numRows = localLinks.update(linkId, state).blockingGet();
-                    if (numRows == 1) {
-                        repository.refreshLinks();
-                        return true;
-                    }
-                }
-            }
-            return false;
-        });
-    }
-
     private void loadLocalLink() {
         localDisposable.clear();
         Disposable disposable = localLinks.get(linkId)
@@ -107,7 +102,8 @@ public final class LinksConflictResolutionPresenter implements
                 .observeOn(schedulerProvider.ui())
                 .subscribe(link -> {
                     if (!link.isConflicted()) {
-                        repository.refreshLinks(); // NOTE: maybe there is a problem with cache
+                        // NOTE: to make sure that there is no problem with the cache
+                        repository.refreshLinks();
                         view.finishActivity();
                     } else {
                         populateLocalLink(link);
@@ -128,14 +124,14 @@ public final class LinksConflictResolutionPresenter implements
         checkNotNull(link);
         if (link.isDuplicated()) {
             viewModel.populateCloudLink(link);
-            localLinks.getMain(link.getName())
+            localLinks.getMain(link.getDuplicatedKey())
                     .subscribeOn(schedulerProvider.computation())
                     .observeOn(schedulerProvider.ui())
                     // NOTE: recursion, but mainLink is not duplicated by definition
                     .subscribe(this::populateLocalLink, throwable -> {
                         if (throwable instanceof NoSuchElementException) {
-                            // NOTE: main position is empty, so the conflict can be resolved automatically
-                            // TODO: remove in favor of autoResolve
+                            // NOTE: very bad behaviour, but it's the best choice if it had happened
+                            Log.e(TAG, "Fallback for the auto Link conflict resolution was called");
                             SyncState state = new SyncState(SyncState.State.SYNCED);
                             int numRows = localLinks.update(linkId, state).blockingGet();
                             if (numRows == 1) {
@@ -154,7 +150,7 @@ public final class LinksConflictResolutionPresenter implements
             if (!viewModel.isCloudPopulated()) {
                 loadCloudLink();
             }
-        } // if
+        }
     }
 
     private void loadCloudLink() {
@@ -175,8 +171,9 @@ public final class LinksConflictResolutionPresenter implements
     @Override
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
+        viewModel.showProgressOverlay();
         if (viewModel.isStateDuplicated()) {
-            localLinks.getMain(viewModel.getLocalName())
+            localLinks.getMain(viewModel.getLocalLink())
                     .subscribeOn(schedulerProvider.computation())
                     .observeOn(schedulerProvider.ui())
                     .subscribe(
@@ -191,23 +188,19 @@ public final class LinksConflictResolutionPresenter implements
             @NonNull final String mainLinkId, @NonNull final String linkId) {
         checkNotNull(mainLinkId);
         checkNotNull(linkId);
-        // DB operation is blocking; Cloud is on computation
-        cloudLinks.delete(mainLinkId)
+        deleteLinkSingle(mainLinkId)
                 .subscribeOn(schedulerProvider.computation())
-                .observeOn(schedulerProvider.ui())
-                .subscribe(result -> {
-                    boolean isSuccess = false;
-                    if (result.isSuccess()) {
-                        int numRows = localLinks.delete(mainLinkId).blockingGet();
-                        isSuccess = (numRows == 1);
-                    }
-                    if (isSuccess) {
-                        repository.deleteCachedLink(mainLinkId);
+                .map(success -> {
+                    if (success) {
                         SyncState state = new SyncState(SyncState.State.SYNCED);
                         int numRows = localLinks.update(linkId, state).blockingGet();
-                        isSuccess = (numRows == 1);
+                        success = (numRows == 1);
                     }
-                    if (isSuccess) {
+                    return success;
+                })
+                .observeOn(schedulerProvider.ui())
+                .subscribe(success -> {
+                    if (success) {
                         repository.refreshLinks();
                         view.finishActivity();
                     } else {
@@ -217,18 +210,11 @@ public final class LinksConflictResolutionPresenter implements
     }
 
     private void deleteLink(@NonNull final String linkId) {
-        checkNotNull(linkId);
-        cloudLinks.delete(linkId)
+        deleteLinkSingle(checkNotNull(linkId))
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .subscribe(result -> {
-                    boolean isSuccess = false;
-                    if (result.isSuccess()) {
-                        int numRows = localLinks.delete(linkId).blockingGet();
-                        isSuccess = (numRows == 1);
-                    }
-                    if (isSuccess) {
-                        repository.deleteCachedLink(linkId);
+                .subscribe(success -> {
+                    if (success) {
                         view.finishActivity();
                     } else {
                         view.cancelActivity();
@@ -236,9 +222,67 @@ public final class LinksConflictResolutionPresenter implements
                 }, throwable -> view.cancelActivity());
     }
 
+    private Single<Boolean> deleteLinkSingle(@NonNull final String linkId) {
+        return cloudLinks.delete(checkNotNull(linkId))
+                .flatMap(result -> {
+                    if (!result.isSuccess()) {
+                        Log.e(TAG, "There was an error while deleting the Link from the cloud storage [" + linkId + "]");
+                        throw new RuntimeException("Cloud storage: Link removal exception [" + result.getLogMessage() + "]");
+                    }
+                    return localLinks.get(linkId);
+                })
+                .map(link -> {
+                    List<Note> notes = link.getNotes();
+                    if (notes == null) return true;
+
+                    boolean success = true;
+                    for (Note note : notes) {
+                        if (success) {
+                            success = deleteNoteSingle(note.getId()).blockingGet();
+                        } else break;
+                    }
+                    return success;
+                })
+                .map(success -> {
+                    if (success) {
+                        int numRows = localLinks.delete(linkId).blockingGet();
+                        return numRows == 1;
+                    }
+                    return false;
+                })
+                .doOnSuccess(success -> {
+                    if (success) {
+                        repository.deleteCachedLink(linkId);
+                        settings.resetLinkFilter(linkId);
+                    }
+                });
+    }
+
+    private Single<Boolean> deleteNoteSingle(@NonNull final String noteId) {
+        checkNotNull(noteId);
+        return cloudNotes.delete(noteId)
+                .map(result -> {
+                    boolean success = false;
+                    if (result.isSuccess()) {
+                        int numRows = localNotes.delete(noteId).blockingGet();
+                        success = (numRows == 1);
+                    } else {
+                        Log.e(TAG, "There was an error while deleting the Note from the cloud storage [" + noteId + "]");
+                    }
+                    return success;
+                })
+                .doOnSuccess(success -> {
+                    if (success) {
+                        repository.deleteCachedNote(noteId);
+                        settings.resetNoteFilter(noteId);
+                    }
+                });
+    }
+
     @Override
     public void onCloudDeleteClick() {
         viewModel.deactivateButtons();
+        viewModel.showProgressOverlay();
         deleteLink(linkId);
     }
 
@@ -251,20 +295,24 @@ public final class LinksConflictResolutionPresenter implements
     @Override
     public void onLocalUploadClick() {
         viewModel.deactivateButtons();
+        viewModel.showProgressOverlay();
         Link link = localLinks.get(linkId).blockingGet();
         cloudLinks.upload(link)
                 .subscribeOn(schedulerProvider.computation())
-                .observeOn(schedulerProvider.ui())
-                .subscribe(result -> {
-                    boolean isSuccess = false;
+                .map(result -> {
+                    boolean success = false;
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
                         int numRows = localLinks.update(link.getId(), state)
                                 .blockingGet();
-                        isSuccess = (numRows == 1);
+                        success = (numRows == 1);
                     }
-                    if (isSuccess) {
+                    return success;
+                })
+                .observeOn(schedulerProvider.ui())
+                .subscribe(success -> {
+                    if (success) {
                         repository.refreshLinks();
                         view.finishActivity();
                     } else {
@@ -276,12 +324,16 @@ public final class LinksConflictResolutionPresenter implements
     @Override
     public void onCloudDownloadClick() {
         viewModel.deactivateButtons();
+        viewModel.showProgressOverlay();
         cloudLinks.download(linkId)
                 .subscribeOn(schedulerProvider.computation())
-                .observeOn(schedulerProvider.ui())
-                .subscribe(link -> {
+                .map(link -> {
                     long rowId = localLinks.save(link).blockingGet();
-                    if (rowId > 0) {
+                    return rowId > 0;
+                })
+                .observeOn(schedulerProvider.ui())
+                .subscribe(success -> {
+                    if (success) {
                         repository.refreshLinks();
                         view.finishActivity();
                     } else {

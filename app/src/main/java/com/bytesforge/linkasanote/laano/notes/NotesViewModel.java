@@ -50,8 +50,7 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
     private SparseBooleanArray visibleNoteIds;
     private String searchText;
 
-    public enum SnackbarId {
-        DATABASE_ERROR, CONFLICT_RESOLUTION_SUCCESSFUL, CONFLICT_RESOLUTION_ERROR};
+    public enum SnackbarId {DATABASE_ERROR};
 
     @Bindable
     public SnackbarId snackbarId;
@@ -84,16 +83,6 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
                 Snackbar.make(view, R.string.error_database, Snackbar.LENGTH_INDEFINITE)
                         .setAction(R.string.snackbar_button_ok, v -> { /* just inform */ })
                         .show();
-                break;
-            case CONFLICT_RESOLUTION_SUCCESSFUL:
-                Snackbar.make(view,
-                        R.string.dialog_note_conflict_resolved_success,
-                        Snackbar.LENGTH_LONG).show();
-                break;
-            case CONFLICT_RESOLUTION_ERROR:
-                Snackbar.make(view,
-                        R.string.dialog_note_conflict_resolved_error,
-                        Snackbar.LENGTH_LONG).show();
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected snackbar has been requested");
@@ -150,6 +139,12 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
     }
 
     @Override
+    public void notifyChange() {
+        snackbarId = null;
+        super.notifyChange();
+    }
+
+    @Override
     public void setPresenter(@NonNull NotesContract.Presenter presenter) {
         this.presenter = checkNotNull(presenter);
     }
@@ -192,7 +187,6 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
     public void enableActionMode() {
         selectedIds.clear();
         actionMode.set(true);
-        snackbarId = null;
         notifyChange();
     }
 
@@ -200,7 +194,6 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
     public void disableActionMode() {
         selectedIds.clear();
         actionMode.set(false);
-        snackbarId = null;
         presenter.selectNoteFilter();
         notifyChange();
     }
@@ -360,18 +353,6 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
     @Override
     public void showDatabaseErrorSnackbar() {
         snackbarId = SnackbarId.DATABASE_ERROR;
-        notifyPropertyChanged(BR.snackbarId);
-    }
-
-    @Override
-    public void showConflictResolutionSuccessfulSnackbar() {
-        snackbarId = SnackbarId.CONFLICT_RESOLUTION_SUCCESSFUL;
-        notifyPropertyChanged(BR.snackbarId);
-    }
-
-    @Override
-    public void showConflictResolutionErrorSnackbar() {
-        snackbarId = SnackbarId.CONFLICT_RESOLUTION_ERROR;
         notifyPropertyChanged(BR.snackbarId);
     }
 

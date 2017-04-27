@@ -17,6 +17,9 @@
         android:id="@+id/filter_no_tags"
         android:title="@string/filter_no_tags" />
     <item
+        android:id="@+id/filter_unbound"
+        android:title="@string/filter_unbound" />
+    <item
         android:id="@+id/filter_conflicted"
         android:title="@string/filter_conflicted" />
 </menu>

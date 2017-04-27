@@ -32,7 +32,6 @@ import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
 import com.bytesforge.linkasanote.laano.links.LinksViewModel;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteActivity;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteFragment;
-import com.bytesforge.linkasanote.laano.notes.conflictresolution.NotesConflictResolutionDialog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +42,6 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
 
     public static final int REQUEST_ADD_NOTE = 1;
     public static final int REQUEST_EDIT_NOTE = 2;
-    public static final int REQUEST_NOTE_CONFLICT_RESOLUTION = 3;
 
     private NotesContract.Presenter presenter;
     private NotesContract.ViewModel viewModel;
@@ -212,16 +210,6 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
                     adapter.notifyDataSetChanged();
                 }
                 break;
-            case REQUEST_NOTE_CONFLICT_RESOLUTION:
-                adapter.notifyDataSetChanged();
-                presenter.updateTabNormalState();
-                presenter.loadNotes(false);
-                if (resultCode == NotesConflictResolutionDialog.RESULT_OK) {
-                    viewModel.showConflictResolutionSuccessfulSnackbar();
-                } else if (resultCode == NotesConflictResolutionDialog.RESULT_FAILED){
-                    viewModel.showConflictResolutionErrorSnackbar();
-                }
-                break;
             default:
                 throw new IllegalStateException("The result received from the unexpected activity");
         }
@@ -253,6 +241,9 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
                     break;
                 case R.id.filter_no_tags:
                     presenter.setFilterType(FilterType.NO_TAGS);
+                    break;
+                case R.id.filter_unbound:
+                    presenter.setFilterType(FilterType.UNBOUND);
                     break;
                 case R.id.filter_conflicted:
                     presenter.setFilterType(FilterType.CONFLICTED);
@@ -360,16 +351,6 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
 
     public void removeNotes(int[] selectedIds) {
         presenter.deleteNotes(selectedIds);
-    }
-
-    @Override
-    public void showConflictResolution(@NonNull String noteId) {
-        checkNotNull(noteId);
-
-        NotesConflictResolutionDialog dialog =
-                NotesConflictResolutionDialog.newInstance(noteId);
-        dialog.setTargetFragment(this, REQUEST_NOTE_CONFLICT_RESOLUTION);
-        dialog.show(getFragmentManager(), NotesConflictResolutionDialog.DIALOG_TAG);
     }
 
     public class NotesActionModeCallback implements ActionMode.Callback {

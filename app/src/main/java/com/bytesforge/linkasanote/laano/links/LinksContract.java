@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.laano.links;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -19,6 +20,7 @@ public interface LinksContract {
 
         void setViewModel(@NonNull LinksContract.ViewModel viewModel);
         boolean isActive();
+        void onActivityResult(int requestCode, int resultCode, Intent data);
 
         void showAddLink();
         void showAddNote(@NonNull String linkId);
@@ -34,6 +36,7 @@ public interface LinksContract {
         void openLink(@NonNull Uri uri);
         void confirmLinksRemoval(int[] selectedIds);
         void showConflictResolution(@NonNull String linkId);
+        void showConflictResolutionWarning(@NonNull String linkId);
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -95,5 +98,6 @@ public interface LinksContract {
         boolean isNoteFilter();
         void deleteLinks(int[] selectedIds, boolean deleteNotes);
         boolean isExpandLinks();
+        void setShowConflictResolutionWarning(boolean show);
     }
 }

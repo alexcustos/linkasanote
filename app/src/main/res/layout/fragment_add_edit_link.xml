@@ -54,7 +54,7 @@
                         android:layout_toStartOf="@+id/checkbox_disabled"
                         android:layout_centerVertical="true"
                         android:text="@string/add_edit_link_disabled_hint" />
-                    <CheckBox
+                    <android.support.v7.widget.AppCompatCheckBox
                         android:id="@+id/checkbox_disabled"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

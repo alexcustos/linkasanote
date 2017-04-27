@@ -8,8 +8,6 @@ import com.bytesforge.linkasanote.BasePresenter;
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Link;
 
-import io.reactivex.Single;
-
 public interface LinksConflictResolutionContract {
 
     interface View extends BaseView<Presenter> {
@@ -35,9 +33,11 @@ public interface LinksConflictResolutionContract {
         void showDatabaseError();
         void showCloudLoading();
         boolean isStateDuplicated();
-        String getLocalName();
+        String getLocalLink();
         void activateButtons();
         void deactivateButtons();
+        void showProgressOverlay();
+        void hideProgressOverlay();
     }
 
     interface Presenter extends BasePresenter {
@@ -47,6 +47,5 @@ public interface LinksConflictResolutionContract {
         void onCloudRetryClick();
         void onLocalUploadClick();
         void onCloudDownloadClick();
-        Single<Boolean> autoResolve();
     }
 }

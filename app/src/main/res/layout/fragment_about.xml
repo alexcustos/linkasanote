@@ -67,7 +67,6 @@
                 android:layout_height="wrap_content"
                 android:gravity="end"
                 android:paddingTop="@dimen/dialog_padding_button_bar_top"
-                android:paddingBottom="@dimen/dialog_padding_button_bar_bottom"
                 style="?android:attr/buttonBarStyle">
 
                 <Button
@@ -101,7 +100,6 @@
                 android:layout_height="wrap_content"
                 android:gravity="end"
                 android:paddingTop="@dimen/dialog_padding_button_bar_top"
-                android:paddingBottom="@dimen/dialog_padding_button_bar_bottom"
                 style="?android:attr/buttonBarStyle">
 
                 <Button

@@ -147,6 +147,12 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     }
 
     @Override
+    public void notifyChange() {
+        snackbarId = null;
+        super.notifyChange();
+    }
+
+    @Override
     public void setPresenter(@NonNull FavoritesContract.Presenter presenter) {
         this.presenter = checkNotNull(presenter);
     }
@@ -184,7 +190,6 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     public void enableActionMode() {
         selectedIds.clear();
         actionMode.set(true);
-        snackbarId = null; // TODO: get rid of this workaround
         notifyChange();
     }
 
@@ -192,7 +197,6 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
     public void disableActionMode() {
         selectedIds.clear();
         actionMode.set(false);
-        snackbarId = null;
         presenter.selectFavoriteFilter();
         notifyChange();
     }

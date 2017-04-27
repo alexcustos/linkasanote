@@ -2,6 +2,7 @@ package com.bytesforge.linkasanote.laano.links;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
@@ -23,10 +24,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 
 import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.databinding.DialogDoNotShowCheckboxBinding;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoLinksBinding;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
@@ -199,7 +202,6 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     @Override
     public void showLinks(@NonNull List<Link> links) {
         checkNotNull(links);
-
         adapter.swapItems(links);
         viewModel.setLinkListSize(links.size());
         if (viewModel.isActionMode()) {
@@ -282,6 +284,9 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
         MenuItem filterLinkMenuItem = menu.findItem(R.id.filter_link);
         filterLinkMenuItem.setVisible(false);
 
+        MenuItem filterUnboundMenuItem = menu.findItem(R.id.filter_unbound);
+        filterUnboundMenuItem.setVisible(false);
+
         MenuItem filterFavoriteMenuItem = menu.findItem(R.id.filter_favorite);
         boolean isFavoriteFilter = presenter.isFavoriteFilter();
         filterFavoriteMenuItem.setTitle(
@@ -357,7 +362,7 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
             if (adapter.getItemCount() <= 0) {
                 finishActionMode();
             }
-        } // if
+        }
     }
 
     @Override
@@ -389,11 +394,24 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     @Override
     public void showConflictResolution(@NonNull String linkId) {
         checkNotNull(linkId);
-
         LinksConflictResolutionDialog dialog =
                 LinksConflictResolutionDialog.newInstance(linkId);
         dialog.setTargetFragment(this, REQUEST_LINK_CONFLICT_RESOLUTION);
         dialog.show(getFragmentManager(), LinksConflictResolutionDialog.DIALOG_TAG);
+    }
+
+    @Override
+    public void showConflictResolutionWarning(@NonNull String linkId) {
+        checkNotNull(linkId);
+        LinkConflictResolutionWarningDialog dialog =
+                LinkConflictResolutionWarningDialog.newInstance(linkId);
+        dialog.setTargetFragment(this, LinkConflictResolutionWarningDialog.DIALOG_REQUEST_CODE);
+        dialog.show(getFragmentManager(), LinkConflictResolutionWarningDialog.DIALOG_TAG);
+    }
+
+    // NOTE: callback from AlertDialog
+    public void setShowConflictResolutionWarning(boolean show) {
+        presenter.setShowConflictResolutionWarning(show);
     }
 
     public class LinksActionModeCallback implements ActionMode.Callback {
@@ -471,6 +489,57 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
                     .setNeutralButton(R.string.dialog_button_keep_notes, (dialog, which) ->
                             ((LinksFragment) getTargetFragment()).deleteLinks(selectedIds, false))
                     .setNegativeButton(R.string.dialog_button_cancel, null)
+                    .create();
+        }
+    }
+
+    public static class LinkConflictResolutionWarningDialog extends DialogFragment {
+
+        public static final String ARGUMENT_LINK_ID = "LINK_ID";
+
+        public static final String DIALOG_TAG = "LINK_CONFLICT_RESOLUTION_WARNING";
+        public static final int DIALOG_REQUEST_CODE = 0;
+
+        private String linkId;
+
+        public static LinkConflictResolutionWarningDialog newInstance(@NonNull String linkId) {
+            checkNotNull(linkId);
+            Bundle args = new Bundle();
+            args.putString(ARGUMENT_LINK_ID, linkId);
+            LinkConflictResolutionWarningDialog dialog = new LinkConflictResolutionWarningDialog();
+            dialog.setArguments(args);
+            return dialog;
+        }
+
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            linkId = getArguments().getString(ARGUMENT_LINK_ID);
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            Context context = getContext();
+            LayoutInflater inflater = LayoutInflater.from(context);
+            DialogDoNotShowCheckboxBinding binding =
+                    DialogDoNotShowCheckboxBinding.inflate(inflater, null, false);
+            CheckBox checkBox = binding.doNotShowCheckbox;
+
+            return new AlertDialog.Builder(context)
+                    .setView(binding.getRoot())
+                    .setTitle(R.string.links_conflict_resolution_warning_title)
+                    .setMessage(R.string.links_conflict_resolution_warning_message)
+                    .setIcon(R.drawable.ic_warning)
+                    .setPositiveButton(R.string.dialog_button_continue, (dialog, which) -> {
+                        LinksFragment fragment = (LinksFragment) getTargetFragment();
+                        fragment.setShowConflictResolutionWarning(!checkBox.isChecked());
+                        fragment.showConflictResolution(linkId);
+                    })
+                    .setNegativeButton(R.string.dialog_button_cancel, (dialog, which) -> {
+                        LinksFragment fragment = (LinksFragment) getTargetFragment();
+                        fragment.setShowConflictResolutionWarning(!checkBox.isChecked());
+                    })
                     .create();
         }
     }

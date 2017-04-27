@@ -1,12 +1,14 @@
 package com.bytesforge.linkasanote.laano.favorites.conflictresolution;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.laano.favorites.FavoriteId;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
@@ -24,7 +26,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class FavoritesConflictResolutionPresenter implements
         FavoritesConflictResolutionContract.Presenter {
 
+    private static final String TAG = FavoritesConflictResolutionPresenter .class.getSimpleName();
+
     private final Repository repository; // NOTE: for cache control
+    private final Settings settings;
     private final LocalFavorites<Favorite> localFavorites;
     private final CloudItem<Favorite> cloudFavorites;
     private final FavoritesConflictResolutionContract.View view;
@@ -41,12 +46,13 @@ public final class FavoritesConflictResolutionPresenter implements
 
     @Inject
     FavoritesConflictResolutionPresenter(
-            Repository repository, LocalFavorites<Favorite> localFavorites,
-            CloudItem<Favorite> cloudFavorites,
+            Repository repository, Settings settings,
+            LocalFavorites<Favorite> localFavorites, CloudItem<Favorite> cloudFavorites,
             FavoritesConflictResolutionContract.View view,
             FavoritesConflictResolutionContract.ViewModel viewModel,
             BaseSchedulerProvider schedulerProvider, @FavoriteId String favoriteId) {
         this.repository = repository;
+        this.settings = settings;
         this.localFavorites = localFavorites;
         this.cloudFavorites = cloudFavorites;
         this.view = view;
@@ -81,26 +87,6 @@ public final class FavoritesConflictResolutionPresenter implements
         loadLocalFavorite(); // first step, then cloud one will be loaded
     }
 
-    @Override
-    public Single<Boolean> autoResolve() {
-        return Single.fromCallable(() -> {
-            Favorite favorite = localFavorites.get(favoriteId).blockingGet();
-            if (favorite.isDuplicated()) {
-                try {
-                    localFavorites.getMain(favorite.getName()).blockingGet();
-                } catch (NoSuchElementException e) {
-                    SyncState state = new SyncState(SyncState.State.SYNCED);
-                    int numRows = localFavorites.update(favoriteId, state).blockingGet();
-                    if (numRows == 1) {
-                        repository.refreshFavorites();
-                        return true;
-                    }
-                }
-            }
-            return false;
-        });
-    }
-
     private void loadLocalFavorite() {
         localDisposable.clear();
         Disposable disposable = localFavorites.get(favoriteId)
@@ -108,7 +94,8 @@ public final class FavoritesConflictResolutionPresenter implements
                 .observeOn(schedulerProvider.ui())
                 .subscribe(favorite -> {
                     if (!favorite.isConflicted()) {
-                        repository.refreshFavorites(); // NOTE: maybe there is a problem with cache
+                        // NOTE: to make sure that there is no problem with the cache
+                        repository.refreshFavorites();
                         view.finishActivity();
                     } else {
                         populateLocalFavorite(favorite);
@@ -129,14 +116,14 @@ public final class FavoritesConflictResolutionPresenter implements
         checkNotNull(favorite);
         if (favorite.isDuplicated()) {
             viewModel.populateCloudFavorite(favorite);
-            localFavorites.getMain(favorite.getName())
+            localFavorites.getMain(favorite.getDuplicatedKey())
                     .subscribeOn(schedulerProvider.computation())
                     .observeOn(schedulerProvider.ui())
                     // NOTE: recursion, but mainFavorite is not duplicated by definition
                     .subscribe(this::populateLocalFavorite, throwable -> {
                         if (throwable instanceof NoSuchElementException) {
-                            // NOTE: main position is empty, so the conflict can be resolved automatically
-                            // TODO: remove in favor of autoResolve
+                            // NOTE: very bad behaviour, but it's the best choice if it had happened
+                            Log.e(TAG, "Fallback for the auto Favorite conflict resolution was called");
                             SyncState state = new SyncState(SyncState.State.SYNCED);
                             int numRows = localFavorites.update(favoriteId, state).blockingGet();
                             if (numRows == 1) {
@@ -176,6 +163,7 @@ public final class FavoritesConflictResolutionPresenter implements
     @Override
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
+        viewModel.showProgressOverlay();
         if (viewModel.isStateDuplicated()) {
             localFavorites.getMain(viewModel.getLocalName())
                     .subscribeOn(schedulerProvider.computation())
@@ -192,24 +180,20 @@ public final class FavoritesConflictResolutionPresenter implements
             @NonNull final String mainFavoriteId, @NonNull final String favoriteId) {
         checkNotNull(mainFavoriteId);
         checkNotNull(favoriteId);
-        // DB operation is blocking; Cloud is on computation
-        cloudFavorites.delete(mainFavoriteId)
+        deleteFavoriteSingle(mainFavoriteId)
                 .subscribeOn(schedulerProvider.computation())
-                .observeOn(schedulerProvider.ui())
-                .subscribe(result -> {
-                    boolean isSuccess = false;
-                    if (result.isSuccess()) {
-                        int numRows = localFavorites.delete(mainFavoriteId).blockingGet();
-                        isSuccess = (numRows == 1);
-                    }
-                    if (isSuccess) {
-                        repository.deleteCachedFavorite(mainFavoriteId);
+                .map(success -> {
+                    if (success) {
                         SyncState state = new SyncState(SyncState.State.SYNCED);
                         int numRows = localFavorites.update(favoriteId, state).blockingGet();
-                        isSuccess = (numRows == 1);
+                        success = (numRows == 1);
                     }
-                    if (isSuccess) {
-                        repository.refreshFavorites();
+                    return success;
+                })
+                .observeOn(schedulerProvider.ui())
+                .subscribe(success -> {
+                    if (success) {
+                        repository.refreshFavorites(); // OPTIMIZATION: reload one item
                         view.finishActivity();
                     } else {
                         view.cancelActivity();
@@ -219,17 +203,11 @@ public final class FavoritesConflictResolutionPresenter implements
 
     private void deleteFavorite(@NonNull final String favoriteId) {
         checkNotNull(favoriteId);
-        cloudFavorites.delete(favoriteId)
+        deleteFavoriteSingle(favoriteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .subscribe(result -> {
-                    boolean isSuccess = false;
-                    if (result.isSuccess()) {
-                        int numRows = localFavorites.delete(favoriteId).blockingGet();
-                        isSuccess = (numRows == 1);
-                    }
-                    if (isSuccess) {
-                        repository.deleteCachedFavorite(favoriteId);
+                .subscribe(success -> {
+                    if (success) {
                         view.finishActivity();
                     } else {
                         view.cancelActivity();
@@ -237,9 +215,31 @@ public final class FavoritesConflictResolutionPresenter implements
                 }, throwable -> view.cancelActivity());
     }
 
+    private Single<Boolean> deleteFavoriteSingle(@NonNull final String favoriteId) {
+        checkNotNull(favoriteId);
+        return cloudFavorites.delete(favoriteId)
+                .map(result -> {
+                    boolean success = false;
+                    if (result.isSuccess()) {
+                        int numRows = localFavorites.delete(favoriteId).blockingGet();
+                        success = (numRows == 1);
+                    } else {
+                        Log.e(TAG, "There was an error while deleting the Favorite from the cloud storage [" + favoriteId + "]");
+                    }
+                    return success;
+                })
+                .doOnSuccess(success -> {
+                    if (success) {
+                        repository.deleteCachedFavorite(favoriteId);
+                        settings.resetFavoriteFilter(favoriteId);
+                    }
+                });
+    }
+
     @Override
     public void onCloudDeleteClick() {
         viewModel.deactivateButtons();
+        viewModel.showProgressOverlay();
         deleteFavorite(favoriteId);
     }
 
@@ -252,20 +252,23 @@ public final class FavoritesConflictResolutionPresenter implements
     @Override
     public void onLocalUploadClick() {
         viewModel.deactivateButtons();
+        viewModel.showProgressOverlay();
         Favorite favorite = localFavorites.get(favoriteId).blockingGet();
         cloudFavorites.upload(favorite)
                 .subscribeOn(schedulerProvider.computation())
-                .observeOn(schedulerProvider.ui())
-                .subscribe(result -> {
-                    boolean isSuccess = false;
+                .map(result -> {
+                    boolean success = false;
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        int numRows = localFavorites.update(favorite.getId(), state)
-                                .blockingGet();
-                        isSuccess = (numRows == 1);
+                        int numRows = localFavorites.update(favorite.getId(), state).blockingGet();
+                        success = (numRows == 1);
                     }
-                    if (isSuccess) {
+                    return success;
+                })
+                .observeOn(schedulerProvider.ui())
+                .subscribe(success -> {
+                    if (success) {
                         repository.refreshFavorites();
                         view.finishActivity();
                     } else {
@@ -277,12 +280,16 @@ public final class FavoritesConflictResolutionPresenter implements
     @Override
     public void onCloudDownloadClick() {
         viewModel.deactivateButtons();
+        viewModel.showProgressOverlay();
         cloudFavorites.download(favoriteId)
                 .subscribeOn(schedulerProvider.computation())
-                .observeOn(schedulerProvider.ui())
-                .subscribe(favorite -> {
+                .map(favorite -> {
                     long rowId = localFavorites.save(favorite).blockingGet();
-                    if (rowId > 0) {
+                    return rowId > 0;
+                })
+                .observeOn(schedulerProvider.ui())
+                .subscribe(success -> {
+                    if (success) {
                         repository.refreshFavorites();
                         view.finishActivity();
                     } else {

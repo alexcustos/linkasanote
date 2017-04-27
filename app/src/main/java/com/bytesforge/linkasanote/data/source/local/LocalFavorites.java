@@ -6,6 +6,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.ItemFactory;
@@ -22,6 +23,8 @@ import io.reactivex.Single;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocalFavorites<T extends Item> implements LocalItem<T> {
+
+    private static final String TAG = LocalFavorites.class.getSimpleName();
 
     private static final Uri FAVORITE_URI = LocalContract.FavoriteEntry.buildUri();
 
@@ -199,11 +202,11 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
         return LocalDataSource.isConflicted(contentResolver, FAVORITE_URI);
     }
 
-    private Single<Integer> getNextDuplicated(final String favoriteName) {
+    private Single<Integer> getNextDuplicated(final String duplicatedKey) {
         final String[] columns = new String[]{
                 "MAX(" + LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + ") + 1"};
         final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " = ?";
-        final String[] selectionArgs = {favoriteName};
+        final String[] selectionArgs = {duplicatedKey};
 
         return Single.fromCallable(() -> {
             try (Cursor cursor = Provider.rawQuery(context,
@@ -218,10 +221,10 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
     }
 
     @Override
-    public Single<T> getMain(final String favoriteName) {
+    public Single<T> getMain(final String duplicatedKey) {
         final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " = ?" +
                 " AND " + LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + " = ?";
-        final String[] selectionArgs = {favoriteName, "0"};
+        final String[] selectionArgs = {duplicatedKey, "0"};
 
         return Single.fromCallable(() -> {
             try (Cursor cursor = Provider.rawQuery(context,
@@ -236,5 +239,24 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
                 return factory.from(cursor);
             }
         }).flatMap(this::buildFavorite);
+    }
+
+    @Override
+    public Single<Boolean> autoResolveConflict(final String favoriteId) {
+        return get(favoriteId)
+                .map(favorite -> {
+                    if (!favorite.isDuplicated()) {
+                        Log.e(TAG, "autoResolveConflict() was called on the Favorite which is not duplicated [" + favoriteId + "]");
+                        return !favorite.isConflicted();
+                    }
+                    try {
+                        getMain(favorite.getDuplicatedKey()).blockingGet();
+                        return false;
+                    } catch (NoSuchElementException e) {
+                        SyncState state = new SyncState(SyncState.State.SYNCED);
+                        int numRows = update(favoriteId, state).blockingGet();
+                        return numRows == 1;
+                    }
+                });
     }
 }

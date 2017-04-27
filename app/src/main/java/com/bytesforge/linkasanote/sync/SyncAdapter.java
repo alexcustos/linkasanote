@@ -150,19 +150,19 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             int linkFailsCount = linksSyncResult.getFailsCount();
             if (linkFailsCount > 0) {
                 failSources.add(resources.getQuantityString(
-                        R.plurals.sync_adapter_text_failed_links,
+                        R.plurals.count_links,
                         linkFailsCount, linkFailsCount));
             }
             int favoriteFailsCount = favoritesSyncResult.getFailsCount();
             if (favoriteFailsCount > 0) {
                 failSources.add(resources.getQuantityString(
-                        R.plurals.sync_adapter_text_failed_favorites,
+                        R.plurals.count_favorites,
                         favoriteFailsCount, favoriteFailsCount));
             }
             int noteFailsCount = notesSyncResult.getFailsCount();
             if (noteFailsCount > 0) {
                 failSources.add(resources.getQuantityString(
-                        R.plurals.sync_adapter_text_failed_notes,
+                        R.plurals.count_notes,
                         noteFailsCount, noteFailsCount));
             }
             if (!failSources.isEmpty()) {

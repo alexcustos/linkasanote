@@ -27,6 +27,7 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
     private String eTag;
 
     public static final Creator<JsonFile> CREATOR = new Creator<JsonFile>() {
+
         @Override
         public JsonFile createFromParcel(Parcel in) {
             return new JsonFile(in);

@@ -40,6 +40,8 @@ public class Settings {
     private static final String SETTING_LINK_FILTER = "LINK_FILTER";
     private static final String SETTING_FAVORITE_FILTER = "FAVORITE_FILTER";
     private static final String SETTING_NOTE_FILTER = "NOTE_FILTER";
+    private static final String SETTING_SHOW_CONFLICT_RESOLUTION_WARNING =
+            "SHOW_CONFLICT_RESOLUTION_WARNING";
 
     private static final long DEFAULT_LAST_SYNC_TIME = 0;
     private static final int DEFAULT_LAST_SYNC_STATUS = SyncAdapter.LAST_SYNC_STATUS_UNKNOWN;
@@ -48,6 +50,7 @@ public class Settings {
     private static final String DEFAULT_LINK_FILTER = null;
     private static final String DEFAULT_FAVORITE_FILTER = null;
     private static final String DEFAULT_NOTE_FILTER = null;
+    private static final boolean DEFAULT_SHOW_CONFLICT_RESOLUTION_WARNING = true;
 
     private final Resources resources;
     private final SharedPreferences sharedPreferences;
@@ -133,16 +136,14 @@ public class Settings {
     }
 
     public synchronized void updateLastSyncTime() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putLong(SETTING_LAST_SYNC_TIME, currentTimeMillis());
-        editor.apply();
+        putLongSetting(SETTING_LAST_SYNC_TIME, currentTimeMillis());
     }
 
     public String getLastSyncedETag(@NonNull String key) {
         return sharedPreferences.getString(checkNotNull(key), DEFAULT_LAST_SYNCED_ETAG);
     }
 
-    public void setLastSyncedETag(@NonNull String key, String lastSyncedETag) {
+    public synchronized void setLastSyncedETag(@NonNull String key, String lastSyncedETag) {
         putStringSetting(checkNotNull(key), lastSyncedETag);
     }
 
@@ -239,6 +240,19 @@ public class Settings {
         }
     }
 
+    public boolean isShowConflictResolutionWarning() {
+        return sharedPreferences.getBoolean(
+                SETTING_SHOW_CONFLICT_RESOLUTION_WARNING,
+                DEFAULT_SHOW_CONFLICT_RESOLUTION_WARNING);
+    }
+
+    public synchronized void setShowConflictResolutionWarning(boolean show) {
+        boolean oldValue = isShowConflictResolutionWarning();
+        if (show != oldValue) {
+            putBooleanSetting(SETTING_SHOW_CONFLICT_RESOLUTION_WARNING, show);
+        }
+    }
+
     private void putStringSetting(String key, String value) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(key, value);
@@ -248,6 +262,18 @@ public class Settings {
     private void putIntSetting(String key, int value) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(key, value);
+        editor.apply();
+    }
+
+    private void putLongSetting(String key, long value) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong(key, value);
+        editor.apply();
+    }
+
+    private void putBooleanSetting(String key, boolean value) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(key, value);
         editor.apply();
     }
 }

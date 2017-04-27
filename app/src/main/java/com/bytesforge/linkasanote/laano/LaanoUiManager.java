@@ -126,6 +126,9 @@ public class LaanoUiManager {
             case NO_TAGS:
                 normalTitle = resources.getString(R.string.filter_no_tags);
                 break;
+            case UNBOUND:
+                normalTitle = resources.getString(R.string.filter_unbound);
+                break;
             default:
                 throw new IllegalArgumentException("Unexpected filtering type [" + filterType.name() + "]");
         }

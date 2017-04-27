@@ -7,5 +7,6 @@ public enum FilterType {
     LINK,
     FAVORITE,
     NOTE,
-    NO_TAGS
+    NO_TAGS,
+    UNBOUND
 }

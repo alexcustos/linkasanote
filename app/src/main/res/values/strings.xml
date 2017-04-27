@@ -4,6 +4,8 @@
     <string name="placeholder_text">This is a placeholder</string>
     <string name="error_database">Cannot access to database, please reinstall the application</string>
     <string name="status_loading">Loading…</string>
+    <string name="status_enabled">enabled</string>
+    <string name="status_disabled">disabled</string>
     <string name="snackbar_no_permission">Unable to continue, required permission was not granted</string>
     <string name="snackbar_something_wrong">Something went wrong, please try again</string>
     <string name="drawer_header_title">LaaNo</string>
@@ -22,6 +24,7 @@
     <string name="dialog_button_keep_notes">Keep Notes</string>
     <string name="dialog_button_upload">Upload</string>
     <string name="dialog_button_download">Download</string>
+    <string name="dialog_button_continue">Continue</string>
     <string name="dialog_button_retry">Retry</string>
     <string name="laano_tab_links_title">Links</string>
     <string name="laano_tab_favorites_title">Favorites</string>
@@ -50,10 +53,11 @@
     <string name="actionbar_title_edit_favorite">Edit Favorite</string>
     <string name="actionbar_title_about">About</string>
     <string name="filter_all">All</string>
-    <string name="filter_link">Selected link</string>
-    <string name="filter_favorite">Selected favorite</string>
-    <string name="filter_note">Selected note</string>
-    <string name="filter_no_tags">With no tags</string>
+    <string name="filter_link">Selected Link</string>
+    <string name="filter_favorite">Selected Favorite</string>
+    <string name="filter_note">Selected Note</string>
+    <string name="filter_no_tags">With no Tags</string>
+    <string name="filter_unbound">Unbound</string>
     <string name="filter_conflicted">Conflicted</string>
     <string name="add_edit_account_permission_get_accounts">GET ACCOUNTS (Contacts) permission is needed to check possibility to add new account</string>
     <string name="add_edit_accounts_unsupported_multiple_accounts">Multiple accounts are not supported yet</string>
@@ -238,18 +242,20 @@
     <string name="dialog_note_conflict_state_not_found">not found</string>
     <string name="dialog_note_conflict_state_error">error</string>
     <string name="dialog_note_conflict_status_error_download">There was an error while downloading</string>
-    <string name="dialog_note_conflict_resolved_success">Conflict is successfully resolved</string>
-    <string name="dialog_note_conflict_resolved_error">There was an error while trying to resolve the conflict</string>
+    <string name="dialog_do_not_show_checkbox">OK, please do not show again</string>
+    <string name="links_conflict_resolution_warning_title">Warning</string>
+    <string name="links_conflict_resolution_warning_message">All operations on the conflict resolution dialog will affect the Link and all it\'s Notes. If you want to process the Notes separately, please resolve the conflict manually.</string>
+    <string name="links_conflict_resolution_info">Status: %1$s, %2$s</string>
 
-    <plurals name="sync_adapter_text_failed_favorites">
+    <plurals name="count_favorites">
         <item quantity="one">%d Favorite</item>
         <item quantity="other">%d Favorites</item>
     </plurals>
-    <plurals name="sync_adapter_text_failed_links">
+    <plurals name="count_links">
         <item quantity="one">%d Link</item>
         <item quantity="other">%d Links</item>
     </plurals>
-    <plurals name="sync_adapter_text_failed_notes">
+    <plurals name="count_notes">
         <item quantity="one">%d Note</item>
         <item quantity="other">%d Notes</item>
     </plurals>

@@ -225,6 +225,7 @@ public final class Link implements Comparable<Link>, Item {
         return state.isDuplicated();
     }
 
+    @Override
     public boolean isConflicted() {
         return state.isConflicted();
     }
@@ -273,6 +274,12 @@ public final class Link implements Comparable<Link>, Item {
     @Nullable
     public List<Note> getNotes() {
         return notes;
+    }
+
+    public int getNotesSize() {
+        if (notes == null) return 0;
+
+        return notes.size();
     }
 
     @Nullable

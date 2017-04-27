@@ -8,8 +8,6 @@ import com.bytesforge.linkasanote.BasePresenter;
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Favorite;
 
-import io.reactivex.Single;
-
 public interface FavoritesConflictResolutionContract {
 
     interface View extends BaseView<Presenter> {
@@ -38,6 +36,8 @@ public interface FavoritesConflictResolutionContract {
         String getLocalName();
         void activateButtons();
         void deactivateButtons();
+        void showProgressOverlay();
+        void hideProgressOverlay();
     }
 
     interface Presenter extends BasePresenter {
@@ -47,6 +47,5 @@ public interface FavoritesConflictResolutionContract {
         void onCloudRetryClick();
         void onLocalUploadClick();
         void onCloudDownloadClick();
-        Single<Boolean> autoResolve();
     }
 }

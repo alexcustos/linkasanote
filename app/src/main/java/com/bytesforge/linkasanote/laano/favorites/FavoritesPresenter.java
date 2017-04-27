@@ -6,6 +6,7 @@ import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
+import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionDialog;
 import com.bytesforge.linkasanote.laano.links.LinksPresenter;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.settings.Settings;
@@ -143,7 +144,25 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         if (viewModel.isActionMode()) {
             onFavoriteSelected(favoriteId);
         } else if (isConflicted) {
-            view.showConflictResolution(favoriteId);
+            repository.autoResolveFavoriteConflict(favoriteId)
+                    .subscribeOn(schedulerProvider.computation())
+                    .observeOn(schedulerProvider.ui())
+                    .subscribe(success -> {
+                        if (success) {
+                            view.onActivityResult(
+                                    FavoritesFragment.REQUEST_FAVORITE_CONFLICT_RESOLUTION,
+                                    FavoritesConflictResolutionDialog.RESULT_OK, null);
+                        } else {
+                            view.showConflictResolution(favoriteId);
+                        }
+                    }, throwable -> {
+                        if (throwable instanceof NullPointerException) {
+                            viewModel.showDatabaseErrorSnackbar();
+                        } else {
+                            // NOTE: if there is any problem show it in the dialog
+                            view.showConflictResolution(favoriteId);
+                        }
+                    });
         } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
             int position = getPosition(favoriteId);
             boolean selected = viewModel.toggleSingleSelection(position);

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.ItemFactory;
@@ -23,6 +24,8 @@ import io.reactivex.Single;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocalLinks<T extends Item> implements LocalItem<T> {
+
+    private static final String TAG = LocalLinks.class.getSimpleName();
 
     private static final Uri LINK_URI = LocalContract.LinkEntry.buildUri();
 
@@ -155,10 +158,12 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
     }
 
     @Override
+    // TODO: return Boolean for the update & delete like this one
     public Single<Integer> update(final String linkId, final SyncState state) {
         return Single.fromCallable(() -> {
             ContentValues values = state.getContentValues();
             Uri uri = LocalContract.LinkEntry.buildUriWith(linkId);
+            // TODO: add check if syncState parts are not equal to the requested state
             return contentResolver.update(uri, values, null, null);
         });
     }
@@ -225,10 +230,10 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
     }
 
     @Override
-    public Single<T> getMain(final String linkName) {
+    public Single<T> getMain(final String duplidatedKey) {
         final String selection = LocalContract.LinkEntry.COLUMN_NAME_LINK + " = ?" +
                 " AND " + LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + " = ?";
-        final String[] selectionArgs = {linkName, "0"};
+        final String[] selectionArgs = {duplidatedKey, "0"};
 
         return Single.fromCallable(() -> {
             try (Cursor cursor = Provider.rawQuery(context,
@@ -243,5 +248,24 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
                 return factory.from(cursor);
             }
         }).flatMap(this::buildLink);
+    }
+
+    @Override
+    public Single<Boolean> autoResolveConflict(final String linkId) {
+        return get(linkId)
+                .map(link -> {
+                    if (!link.isDuplicated()) {
+                        Log.e(TAG, "autoResolveConflict() was called on the Link which is not duplicated [" + linkId + "]");
+                        return !link.isConflicted();
+                    }
+                    try {
+                        getMain(link.getDuplicatedKey()).blockingGet();
+                        return false;
+                    } catch (NoSuchElementException e) {
+                        SyncState state = new SyncState(SyncState.State.SYNCED);
+                        int numRows = update(linkId, state).blockingGet();
+                        return numRows == 1;
+                    }
+                });
     }
 }

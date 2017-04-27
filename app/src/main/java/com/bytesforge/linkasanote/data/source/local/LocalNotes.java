@@ -10,7 +10,6 @@ import android.support.annotation.NonNull;
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.ItemFactory;
 import com.bytesforge.linkasanote.data.Tag;
-import com.bytesforge.linkasanote.data.source.Provider;
 import com.bytesforge.linkasanote.sync.SyncState;
 
 import java.util.List;
@@ -140,11 +139,7 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
 
     @Override
     public Single<Long> saveDuplicated(final T note) {
-        return getNextDuplicated(note.getDuplicatedKey())
-                .flatMap(duplicated -> {
-                    SyncState state = new SyncState(note.getETag(), duplicated);
-                    return Single.just(factory.build(note, state));
-                }).flatMap(this::save);
+        throw new RuntimeException("saveDuplicated(): there is no Conflict Resolution implementation available for the Notes");
     }
 
     @Override
@@ -199,42 +194,13 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
         return LocalDataSource.isConflicted(contentResolver, NOTE_URI);
     }
 
-    private Single<Integer> getNextDuplicated(final String noteName) {
-        final String[] columns = new String[]{
-                "MAX(" + LocalContract.NoteEntry.COLUMN_NAME_DUPLICATED + ") + 1"};
-        final String selection = LocalContract.NoteEntry.COLUMN_NAME_NOTE + " = ?";
-        final String[] selectionArgs = {noteName};
-
-        return Single.fromCallable(() -> {
-            try (Cursor cursor = Provider.rawQuery(context,
-                    LocalContract.NoteEntry.TABLE_NAME,
-                    columns, selection, selectionArgs, null)) {
-                if (cursor.moveToLast()) {
-                    return cursor.getInt(0);
-                }
-                return 0;
-            }
-        });
+    @Override
+    public Single<T> getMain(final String duplicatedKey) {
+        throw new RuntimeException("getMain(): there is no Conflict Resolution implementation available for the Notes");
     }
 
     @Override
-    public Single<T> getMain(final String noteName) {
-        final String selection = LocalContract.NoteEntry.COLUMN_NAME_NOTE + " = ?" +
-                " AND " + LocalContract.NoteEntry.COLUMN_NAME_DUPLICATED + " = ?";
-        final String[] selectionArgs = {noteName, "0"};
-
-        return Single.fromCallable(() -> {
-            try (Cursor cursor = Provider.rawQuery(context,
-                    LocalContract.NoteEntry.TABLE_NAME,
-                    LocalContract.NoteEntry.NOTE_COLUMNS,
-                    selection, selectionArgs, null)) {
-                if (cursor == null) {
-                    return null; // NOTE: NullPointerException
-                } else if (!cursor.moveToLast()) {
-                    throw new NoSuchElementException("The requested note was not found");
-                }
-                return factory.from(cursor);
-            }
-        }).flatMap(this::buildNote);
+    public Single<Boolean> autoResolveConflict(String noteId) {
+        throw new RuntimeException("autoResolveConflict(): there is no Conflict Resolution implementation available for the Notes");
     }
 }

@@ -30,7 +30,6 @@ public interface NotesContract {
         int getPosition(String noteId);
         void scrollToPosition(int position);
         void confirmNotesRemoval(int[] selectedIds);
-        void showConflictResolution(@NonNull String noteId);
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -55,8 +54,6 @@ public interface NotesContract {
         int getSelectedCount();
         int[] getSelectedIds();
         void showDatabaseErrorSnackbar();
-        void showConflictResolutionSuccessfulSnackbar();
-        void showConflictResolutionErrorSnackbar();
         void showProgressOverlay();
         void hideProgressOverlay();
 

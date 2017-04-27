@@ -33,11 +33,12 @@
     <dimen name="recycler_view_left_button_padding_start">16dp</dimen>
     <dimen name="recycler_view_tags_margin_bottom">16dp</dimen>
     <dimen name="dialog_padding">8dp</dimen>
-    <dimen name="dialog_padding_content">16dp</dimen>
-    <dimen name="dialog_padding_title">20dp</dimen>
+    <dimen name="dialog_margin_content">24dp</dimen>
+    <dimen name="dialog_title_vertical_padding">8dp</dimen>
+    <dimen name="dialog_title_spacer">16dp</dimen>
     <dimen name="dialog_padding_button_bar_top">8dp</dimen>
-    <dimen name="dialog_padding_button_bar_bottom">0dp</dimen>
-    <dimen name="dialog_padding_name">8dp</dimen>
+    <dimen name="dialog_tags_margin_top">12dp</dimen>
+    <dimen name="dialog_state_margin_end">8dp</dimen>
     <dimen name="about_margin_vertical_text">16dp</dimen>
     <dimen name="about_margin_vertical_title">4dp</dimen>
 

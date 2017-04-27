@@ -51,11 +51,25 @@
     </style>
 
     <!-- Conflict resolution -->
-    <style name="ConflictResolutionTitle" parent="TextAppearance.AppCompat.Title" />
-    <style name="ConflictResolutionTitle.Source" parent="ConflictResolutionTitle" >
+    <style name="ConflictResolution" parent="TextAppearance.AppCompat.Subhead" />
+    <style name="ConflictResolution.Title" parent="ConflictResolution">
         <item name="android:textStyle">bold</item>
+        <item name="android:textSize">18sp</item>
     </style>
-    <style name="ConflictResolutionSubhead" parent="TextAppearance.AppCompat.Subhead" />
+    <style name="ConflictResolution.TitleSource" parent="ConflictResolution" >
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+    <style name="ConflictResolution.Name" parent="ConflictResolution">
+        <item name="android:textSize">18sp</item>
+    </style>
+    <style name="ConflictResolution.Link" parent="ConflictResolution.Name">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?android:textColorSecondary</item>
+    </style>
+    <style name="ConflictResolution.Info" parent="ConflictResolution.Name">
+        <item name="android:textSize">14sp</item>
+    </style>
 
     <!-- Drawer -->
     <style name="DrawerText" parent="TextAppearance.AppCompat.Subhead">

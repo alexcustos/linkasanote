@@ -11,6 +11,7 @@ import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
+import com.bytesforge.linkasanote.laano.links.conflictresolution.LinksConflictResolutionDialog;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CommonUtils;
@@ -228,7 +229,29 @@ public final class LinksPresenter implements LinksContract.Presenter {
         if (viewModel.isActionMode()) {
             onLinkSelected(linkId);
         } else if (isConflicted) {
-            view.showConflictResolution(linkId);
+            repository.autoResolveLinkConflict(linkId)
+                    .subscribeOn(schedulerProvider.computation())
+                    .observeOn(schedulerProvider.ui())
+                    .subscribe(success -> {
+                        if (success) {
+                            view.onActivityResult(
+                                    LinksFragment.REQUEST_LINK_CONFLICT_RESOLUTION,
+                                    LinksConflictResolutionDialog.RESULT_OK, null);
+                        } else {
+                            if (settings.isShowConflictResolutionWarning()) {
+                                view.showConflictResolutionWarning(linkId);
+                            } else {
+                                view.showConflictResolution(linkId);
+                            }
+                        }
+                    }, throwable -> {
+                        if (throwable instanceof NullPointerException) {
+                            viewModel.showDatabaseErrorSnackbar();
+                        } else {
+                            // NOTE: if there is any problem show it in the dialog
+                            view.showConflictResolution(linkId);
+                        }
+                    });
         } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
             int position = getPosition(linkId);
             boolean selected = viewModel.toggleSingleSelection(position);
@@ -292,7 +315,6 @@ public final class LinksPresenter implements LinksContract.Presenter {
     @Override
     public void onToNotesClick(@NonNull String linkId) {
         checkNotNull(linkId);
-
         int position = getPosition(linkId);
         viewModel.setSingleSelection(position, true);
         settings.setFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE, FilterType.LINK);
@@ -308,7 +330,6 @@ public final class LinksPresenter implements LinksContract.Presenter {
     @Override
     public void onToggleClick(@NonNull String linkId) {
         checkNotNull(linkId);
-
         int position = getPosition(linkId);
         viewModel.toggleLinkVisibility(position);
         view.linkVisibilityChanged(position);
@@ -330,34 +351,36 @@ public final class LinksPresenter implements LinksContract.Presenter {
         for (int selectedId : selectedIds) {
             viewModel.removeSelection(selectedId);
             String linkId = view.removeLink(selectedId);
-            if (deleteNotes) {
-                repository.getLink(linkId)
-                        .subscribeOn(schedulerProvider.computation())
-                        .map(link -> {
-                            List<Note> notes = link.getNotes();
-                            if (notes != null) {
-                                for (Note note : notes) {
-                                    repository.deleteNote(note.getId());
-                                }
-                            }
-                            return link;
-                        })
-                        .observeOn(schedulerProvider.ui())
-                        .subscribe(
-                                link -> {
-                                    String id = link.getId();
-                                    repository.deleteLink(id);
-                                    settings.resetLinkFilter(id);
-                                }, throwable -> viewModel.showDatabaseErrorSnackbar());
-            } else {
-                try {
-                    repository.deleteLink(linkId);
-                    settings.resetLinkFilter(linkId);
-                } catch (NullPointerException e) {
-                    viewModel.showDatabaseErrorSnackbar();
-                }
-            }
+            deleteLink(linkId, deleteNotes);
         }
+    }
+
+    private void deleteLink(final @NonNull String linkId, final boolean deleteNotes) {
+        checkNotNull(linkId);
+        repository.getLink(linkId)
+                .subscribeOn(schedulerProvider.computation())
+                .map(link -> {
+                    if (deleteNotes) {
+                        List<Note> notes = link.getNotes();
+                        if (notes != null) {
+                            for (Note note : notes) {
+                                repository.deleteNote(note.getId());
+                            }
+                        }
+                    }
+                    return link;
+                })
+                .observeOn(schedulerProvider.ui())
+                .subscribe(
+                        link -> {
+                            String id = link.getId();
+                            repository.deleteLink(id);
+                            settings.resetLinkFilter(id);
+                        }, throwable -> {
+                            if (throwable instanceof NullPointerException) {
+                                viewModel.showDatabaseErrorSnackbar();
+                            } // TODO: force Notes cleanup by linkId if Link has not been found
+                        });
     }
 
     @Override
@@ -373,7 +396,6 @@ public final class LinksPresenter implements LinksContract.Presenter {
     @Override
     public void setFilterType(@NonNull FilterType filterType) {
         checkNotNull(filterType);
-
         settings.setFilterType(SETTING_LINKS_FILTER_TYPE, filterType);
         if (this.filterType != filterType) {
             loadLinks(false);
@@ -469,5 +491,10 @@ public final class LinksPresenter implements LinksContract.Presenter {
     @Override
     public void updateTabNormalState() {
         laanoUiManager.setTabNormalState(TAB, isConflicted());
+    }
+
+    @Override
+    public void setShowConflictResolutionWarning(boolean show) {
+        settings.setShowConflictResolutionWarning(show);
     }
 }

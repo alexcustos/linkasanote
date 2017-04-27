@@ -27,5 +27,6 @@ public interface LocalItem<T> {
     Observable<SyncState> getSyncStates();
     Observable<String> getIds();
     Single<Boolean> isConflicted();
-    Single<T> getMain(final String itemName);
+    Single<T> getMain(final String duplicatedKey);
+    Single<Boolean> autoResolveConflict(final String linkId);
 }

@@ -207,6 +207,7 @@ public final class Note implements Comparable<Note>, Item {
         return state.isDuplicated();
     }
 
+    @Override
     public boolean isConflicted() {
         return state.isConflicted();
     }

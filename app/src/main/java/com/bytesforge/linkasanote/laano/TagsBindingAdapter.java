@@ -25,7 +25,7 @@ public class TagsBindingAdapter {
 
     @BindingAdapter({"android:text"})
     public static void showNoteTags(TextView view, List<Tag> tags) {
-        if (view == null || tags == null) return;
+        if (view == null || tags == null || tags.isEmpty()) return;
 
         // NOTE: it's to prevent the view to be changed from empty to filled when adapter rebind the item
         if (tagsViewWidths.get(view.getId()) > 0) {

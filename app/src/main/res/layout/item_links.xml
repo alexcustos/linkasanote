@@ -28,6 +28,7 @@
             android:onLongClick="@{() -> presenter.onLinkLongClick(link.id)}">
             <!--android:background="?android:attr/selectableItemBackground"-->
 
+            <!-- bind:imageButtonEnabled="@{!(link.conflicted || link.disabled)}" -->
             <ImageButton
                 android:id="@+id/link_open_button"
                 android:layout_width="wrap_content"
@@ -40,7 +41,7 @@
                 android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
                 android:onClick="@{() -> presenter.onLinkOpenClick(link.id)}"
                 style="@style/Button.RecyclerView"
-                bind:imageButtonEnabled="@{!(link.conflicted || link.disabled)}"
+                bind:imageButtonEnabled="@{!link.disabled}"
                 app:srcCompat="@drawable/ic_link"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toTopOf="@+id/link_link"
@@ -86,6 +87,7 @@
                 app:layout_constraintStart_toEndOf="@+id/link_filter_prefix"
                 app:layout_constraintEnd_toStartOf="@+id/link_to_notes" />
 
+            <!-- bind:imageButtonEnabled="@{!link.conflicted}" -->
             <ImageButton
                 android:id="@+id/link_to_notes"
                 android:layout_width="wrap_content"
@@ -98,7 +100,6 @@
                 android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
                 android:onClick="@{() -> presenter.onToNotesClick(link.id)}"
                 style="@style/Button.RecyclerView"
-                bind:imageButtonEnabled="@{!link.conflicted}"
                 app:srcCompat="@drawable/ic_chevron_right"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -213,7 +214,6 @@
                 app:layout_constraintBottom_toTopOf="@+id/note_bottom_spacer"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
-
             <Space
                 android:id="@+id/note_bottom_spacer"
                 android:layout_width="0dp"
