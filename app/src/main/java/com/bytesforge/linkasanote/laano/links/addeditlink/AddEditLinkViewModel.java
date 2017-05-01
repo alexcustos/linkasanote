@@ -217,7 +217,6 @@ public class AddEditLinkViewModel extends BaseObservable implements
     @Override
     public void populateLink(@NonNull Link link) {
         checkNotNull(link);
-
         linkLink.set(link.getLink());
         linkName.set(link.getName());
         linkDisabled.set(link.isDisabled());
@@ -225,13 +224,37 @@ public class AddEditLinkViewModel extends BaseObservable implements
         checkAddButton();
     }
 
+    @Override
+    public void setLinkLink(String linkLink) {
+        this.linkLink.set(linkLink);
+    }
+
+    @Override
+    public void setLinkName(String linkName) {
+        this.linkName.set(linkName);
+    }
+
+    @Override
+    public void setStateLinkDisabled(boolean disabled) {
+        this.linkDisabled.set(disabled);
+    }
+
     private void setLinkTags(List<Tag> tags) {
-        if (tags == null) {
-            linkTags.clear();
-            return;
-        }
+        linkTags.clear();
+        if (tags == null || tags.isEmpty()) return;
+
         for (Tag tag : tags) {
             linkTags.addObject(tag);
+        }
+    }
+
+    @Override
+    public void setLinkTags(String[] tags) {
+        linkTags.clear();
+        if (tags == null || tags.length <= 0) return;
+
+        for (String tag : tags) {
+            linkTags.addObject(new Tag(tag));
         }
     }
 }

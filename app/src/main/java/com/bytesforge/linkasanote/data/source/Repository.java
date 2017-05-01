@@ -45,13 +45,13 @@ public class Repository implements DataSource {
     Map<String, Tag> cachedTags;
 
     @VisibleForTesting
-    public boolean linkCacheIsDirty = false;
+    public boolean linkCacheIsDirty = true;
 
     @VisibleForTesting
-    public boolean favoriteCacheIsDirty = false;
+    public boolean favoriteCacheIsDirty = true;
 
     @VisibleForTesting
-    public boolean noteCacheIsDirty = false;
+    public boolean noteCacheIsDirty = true;
 
     //@Inject NOTE: @Provides is needed for testing to mock Repository
     public Repository(DataSource localDataSource, DataSource cloudDataSource) {

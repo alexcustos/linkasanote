@@ -7,8 +7,10 @@ import android.support.annotation.Nullable;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.links.LinkId;
 import com.bytesforge.linkasanote.laano.notes.NoteId;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
@@ -30,6 +32,7 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
     private final AddEditNoteContract.View view;
     private final AddEditNoteContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
+    private final Settings settings;
 
     private String noteId; // NOTE: can be reset to null if NoSuchElementException
     private String linkId;
@@ -47,11 +50,13 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
     AddEditNotePresenter(
             Repository repository, AddEditNoteContract.View view,
             AddEditNoteContract.ViewModel viewModel, BaseSchedulerProvider schedulerProvider,
+            Settings settings,
             @Nullable @NoteId String noteId, @Nullable @LinkId String linkId) {
         this.repository = repository;
         this.view = view;
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
+        this.settings = settings;
         this.noteId = noteId;
         this.linkId = linkId;
         tagsDisposable = new CompositeDisposable();
@@ -135,9 +140,10 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
 
     private void populateLink() {
         if (linkId == null) {
-            viewModel.showNoteIsUnboundMessage();
+            view.setUnboundTitle(isNewNote());
             return;
         }
+        viewModel.showLinkStatusLoading();
         EspressoIdlingResource.increment();
         linkDisposable.clear();
 
@@ -149,10 +155,17 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
                         EspressoIdlingResource.decrement();
                     }
                 })
-                .subscribe(viewModel::populateLink, throwable -> {
+                .subscribe(link -> {
+                    view.setBoundTitle(isNewNote());
+                    viewModel.populateLink(link);
+                }, throwable -> {
                     linkId = null;
-                    if (isNewNote()) viewModel.showNoteIsUnboundMessage();
-                    else viewModel.showNoteWillBeUnboundMessage();
+                    if (isNewNote()) {
+                        view.setUnboundTitle(true);
+                        viewModel.hideLinkStatus();
+                    } else {
+                        viewModel.showLinkStatusNoteWillBeUnbound();
+                    }
                 });
         linkDisposable.add(disposable);
     }
@@ -191,5 +204,25 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
         } catch (SQLiteConstraintException e) {
             viewModel.showDuplicateKeyError();
         }
+    }
+
+    @Override
+    public void onClipboardChanged(int clipboardType) {
+        view.setNotePaste(clipboardType);
+    }
+
+    @Override
+    public void onClipboardLinkExtraReady() {
+        view.setNotePaste(ClipboardService.CLIPBOARD_EXTRA);
+    }
+
+    @Override
+    public void setShowFillInFormInfo(boolean show) {
+        settings.setShowFillInFormInfo(show);
+    }
+
+    @Override
+    public boolean isShowFillInFormInfo() {
+        return settings.isShowFillInFormInfo();
     }
 }

@@ -41,7 +41,7 @@ public class LaanoBindingAdapters {
         view.setEnabled(enabled);
 
         if (enabled) view.setAlpha(1.0f);
-        else view.setAlpha(Settings.GLOBAL_IMAGE_BUTTON_ALPHA_DISABLED);
+        else view.setAlpha(Settings.GLOBAL_ICON_ALPHA_DISABLED);
     }
 
     @BindingAdapter({"app:srcCompat"})

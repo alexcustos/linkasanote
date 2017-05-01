@@ -14,7 +14,10 @@
     <string name="pref_sync_interval_manual_mode">0</string>
     <string name="pref_key_expand_links">expand_links</string>
     <string name="pref_key_expand_notes">expand_notes</string>
-    <string name="pref_key_clipboard_monitor">clipboard_monitor</string>
+    <string name="pref_key_clipboard_link_get_metadata">link_metadata</string>
+    <string name="pref_key_clipboard_link_follow">link_follow</string>
+    <string name="pref_key_clipboard_fill_in_forms">clipboard_fill_in_forms</string>
+    <string name="pref_key_clipboard_parameter_white_list">parameter_white_list</string>
     <string name="pref_key_sync_directory">sync_directory</string>
     <string name="pref_key_sync_interval">sync_interval</string>
 
@@ -25,5 +28,8 @@
         <li>Dagger 2</li>\n
         <li>Nextcloud Android Library</li>\n
         <li>TokenAutoComplete</li>
+    </string>
+    <string name="libraries_mit">
+        <li>jsoup: Java HTML Parser</li>
     </string>
 </resources>

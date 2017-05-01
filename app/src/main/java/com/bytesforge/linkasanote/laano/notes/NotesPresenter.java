@@ -42,7 +42,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
     private final Settings settings;
 
     @NonNull
-    private final CompositeDisposable disposable;
+    private final CompositeDisposable compositeDisposable;
 
     private String favoriteFilter;
     private String linkFilter;
@@ -61,7 +61,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
         this.schedulerProvider = schedulerProvider;
         this.laanoUiManager = laanoUiManager;
         this.settings = settings;
-        disposable = new CompositeDisposable();
+        compositeDisposable = new CompositeDisposable();
     }
 
     @Inject
@@ -78,7 +78,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
 
     @Override
     public void unsubscribe() {
-        disposable.clear();
+        compositeDisposable.clear();
     }
 
     @Override
@@ -104,7 +104,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
 
     private void loadNotes(boolean forceUpdate, final boolean showLoading) {
         EspressoIdlingResource.increment();
-        disposable.clear();
+        compositeDisposable.clear();
         if (forceUpdate) {
             repository.refreshNotes();
         }
@@ -211,7 +211,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
                     CommonUtils.logStackTrace(TAG, throwable);
                     viewModel.showDatabaseErrorSnackbar();
                 });
-        this.disposable.add(disposable);
+        compositeDisposable.add(disposable);
     }
 
     @Override

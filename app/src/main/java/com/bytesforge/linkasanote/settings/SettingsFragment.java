@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.settings;
 
 import android.accounts.Account;
+import android.content.Context;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -10,11 +11,14 @@ import android.support.v7.preference.CheckBoxPreference;
 import android.support.v7.preference.EditTextPreference;
 import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.PreferenceFragmentCompat;
+import android.text.format.Formatter;
 import android.view.View;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.owncloud.android.lib.resources.files.FileUtils;
 
 import java.util.Arrays;
@@ -29,9 +33,10 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     private static final String ARGUMENT_SETTINGS_ACCOUNT = "ACCOUNT";
 
+    private Context context;
+    private Resources resources;
     private ListPreference prefSyncInterval;
     private Account account;
-    private Resources resources;
 
     @Inject
     Settings settings;
@@ -49,6 +54,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        context = getContext();
         resources = getResources();
         account = getArguments().getParcelable(ARGUMENT_SETTINGS_ACCOUNT);
         LaanoApplication application = (LaanoApplication) getActivity().getApplication();
@@ -63,18 +69,71 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         CheckBoxPreference prefExpandLinks = (CheckBoxPreference) findPreference(
                 resources.getString(R.string.pref_key_expand_links));
-        boolean isExpandLinks = settings.isExpandLinks();
-        prefExpandLinks.setChecked(isExpandLinks);
+        boolean expandLinks = settings.isExpandLinks();
+        prefExpandLinks.setChecked(expandLinks);
 
         CheckBoxPreference prefExpandNotes = (CheckBoxPreference) findPreference(
                 resources.getString(R.string.pref_key_expand_notes));
-        boolean isExpandNotes = settings.isExpandNotes();
-        prefExpandNotes.setChecked(isExpandNotes);
+        boolean expandNotes = settings.isExpandNotes();
+        prefExpandNotes.setChecked(expandNotes);
+
+        CheckBoxPreference prefClipboardLinkGetMetadata = (CheckBoxPreference) findPreference(
+                resources.getString(R.string.pref_key_clipboard_link_get_metadata));
+        boolean clipboardLinkGetMetadata = settings.isClipboardLinkGetMetadata();
+        prefClipboardLinkGetMetadata.setChecked(clipboardLinkGetMetadata);
+        prefClipboardLinkGetMetadata.setSummary(resources.getString(
+                R.string.pref_summary_clipboard_link_get_metadata,
+                Formatter.formatShortFileSize(context, Settings.GLOBAL_LINK_MAX_BODY_SIZE_BYTES)));
+
+        CheckBoxPreference prefClipboardLinkFollow = (CheckBoxPreference) findPreference(
+                resources.getString(R.string.pref_key_clipboard_link_follow));
+        boolean clipboardLinkFollow = settings.isClipboardLinkFollow();
+        prefClipboardLinkFollow.setChecked(clipboardLinkFollow);
 
         CheckBoxPreference prefClipboardMonitor = (CheckBoxPreference) findPreference(
-                resources.getString(R.string.pref_key_clipboard_monitor));
-        boolean isClipboardMonitor = settings.isClipboardMonitor();
-        prefClipboardMonitor.setChecked(isClipboardMonitor);
+                resources.getString(R.string.pref_key_clipboard_fill_in_forms));
+        boolean clipboardFillInForms = settings.isClipboardFillInForms();
+        prefClipboardMonitor.setChecked(clipboardFillInForms);
+
+
+        EditTextPreference prefClipboardParameterWhiteList = (EditTextPreference) findPreference(
+                resources.getString(R.string.pref_key_clipboard_parameter_white_list));
+        String clipboardParameterWhiteList = settings.getClipboardParameterWhiteList();
+        prefClipboardParameterWhiteList.setText(clipboardParameterWhiteList);
+        if (Strings.isNullOrEmpty(clipboardParameterWhiteList)) {
+            prefClipboardParameterWhiteList.setSummary(
+                    resources.getString(R.string.pref_summary_clipboard_parameter_white_list));
+        } else {
+            prefClipboardParameterWhiteList.setSummary(clipboardParameterWhiteList);
+        }
+        prefClipboardParameterWhiteList.setOnPreferenceChangeListener((preference, newValue) -> {
+            String newWhiteList = (String) newValue;
+            if (Strings.isNullOrEmpty(newWhiteList)) {
+                prefClipboardParameterWhiteList.setSummary(
+                        resources.getString(R.string.pref_summary_clipboard_parameter_white_list));
+            } else {
+                Joiner joiner = Joiner.on(Settings.GLOBAL_PARAMETER_WHITE_LIST_DELIMITER);
+                String[] newWhiteListArray = newWhiteList.trim().split("\\W+");
+                String newWhiteListNormalized;
+                if (!newWhiteList.isEmpty() && Strings.isNullOrEmpty(newWhiteListArray[0])) {
+                    newWhiteListNormalized = joiner.join(
+                            Arrays.copyOfRange(newWhiteListArray, 1, newWhiteListArray.length));
+                } else {
+                    newWhiteListNormalized = joiner.join(newWhiteListArray);
+                }
+                prefClipboardParameterWhiteList.setSummary(newWhiteListNormalized);
+                if (!newWhiteList.equals(newWhiteListNormalized)) {
+                    prefClipboardParameterWhiteList.setText(newWhiteListNormalized);
+                    View view = getView();
+                    if (view != null) {
+                        Snackbar.make(view, R.string.settings_fragment_snackbar_normalized,
+                                Snackbar.LENGTH_LONG).show();
+                    }
+                    return false;
+                }
+            }
+            return true;
+        });
 
         EditTextPreference prefSyncDirectory = (EditTextPreference) findPreference(
                 resources.getString(R.string.pref_key_sync_directory));
@@ -145,7 +204,6 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     private int getSyncIntervalIndex(@NonNull String[] seconds, @NonNull String syncInterval) {
         checkNotNull(seconds);
         checkNotNull(syncInterval);
-
         String manualInterval = resources.getString(R.string.pref_sync_interval_manual_mode);
         List<String> secondList = Arrays.asList(seconds);
         int index = secondList.indexOf(syncInterval);

@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.reactivex.Observable;
 import io.reactivex.Single;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
@@ -122,7 +121,7 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
 
     @Override
     public Single<List<AccountItem>> loadAccountItems() {
-        return Observable.fromCallable(() -> {
+        return Single.fromCallable(() -> {
             Account[] accounts = getAccountsWithPermissionCheck();
             if (accounts == null) {
                 throw new NullPointerException("Required permission was not granted");
@@ -136,7 +135,7 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
                 accountItems.add(new AccountItem());
             }
             return accountItems;
-        }).firstOrError();
+        });
     }
 
     @Override

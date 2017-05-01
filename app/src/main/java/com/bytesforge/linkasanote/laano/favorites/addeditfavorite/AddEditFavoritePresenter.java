@@ -7,7 +7,9 @@ import android.support.annotation.Nullable;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.favorites.FavoriteId;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.tokenautocomplete.TokenCompleteTextView;
@@ -31,6 +33,7 @@ public final class AddEditFavoritePresenter implements
     private final AddEditFavoriteContract.View view;
     private final AddEditFavoriteContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
+    private final Settings settings;
 
     private String favoriteId; // NOTE: can be reset to null if NoSuchElementException
 
@@ -45,11 +48,12 @@ public final class AddEditFavoritePresenter implements
             Repository repository, AddEditFavoriteContract.View view,
             AddEditFavoriteContract.ViewModel viewModel,
             BaseSchedulerProvider schedulerProvider,
-            @Nullable @FavoriteId String favoriteId) {
+            Settings settings, @Nullable @FavoriteId String favoriteId) {
         this.repository = repository;
         this.view = view;
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
+        this.settings = settings;
         this.favoriteId = favoriteId;
         tagsDisposable = new CompositeDisposable();
         favoriteDisposable = new CompositeDisposable();
@@ -156,6 +160,26 @@ public final class AddEditFavoritePresenter implements
         } catch (SQLiteConstraintException e) {
             viewModel.showDuplicateKeyError();
         }
+    }
+
+    @Override
+    public void onClipboardChanged(int clipboardType) {
+        view.setFavoritePaste(clipboardType);
+    }
+
+    @Override
+    public void onClipboardLinkExtraReady() {
+        view.setFavoritePaste(ClipboardService.CLIPBOARD_EXTRA);
+    }
+
+    @Override
+    public void setShowFillInFormInfo(boolean show) {
+        settings.setShowFillInFormInfo(show);
+    }
+
+    @Override
+    public boolean isShowFillInFormInfo() {
+        return settings.isShowFillInFormInfo();
     }
 
     // ViewModel

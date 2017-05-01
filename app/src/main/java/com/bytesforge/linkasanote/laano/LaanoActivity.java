@@ -101,7 +101,18 @@ public class LaanoActivity extends AppCompatActivity implements
     private LaanoViewModel viewModel;
 
     @Override
+    protected void onStart() {
+        Log.i(TAG, "onStart()");
+        if (Settings.GLOBAL_CLIPBOARD_ON_START) {
+            // NOTE: application context
+            startClipboardService();
+        } // NOTE: else it will be started with the first launch of the addEdit... activity
+        super.onStart();
+    }
+
+    @Override
     protected void onResume() {
+        Log.i(TAG, "onResume()");
         super.onResume();
 
         notifyTabSelected(activeTab);
@@ -118,6 +129,7 @@ public class LaanoActivity extends AppCompatActivity implements
 
     @Override
     protected void onPause() {
+        Log.i(TAG, "onPause()");
         if (syncBroadcastReceiver != null) {
             unregisterReceiver(syncBroadcastReceiver);
             syncBroadcastReceiver = null;
@@ -126,7 +138,17 @@ public class LaanoActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onDestroy() {
+        Log.i(TAG, "onDestroy()");
+        if (!isChangingConfigurations()) {
+            stopClipboardService();
+        }
+        super.onDestroy();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.i(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
         if (savedInstanceState == null) {
             applyInstanceState(getDefaultInstanceState());
@@ -177,6 +199,16 @@ public class LaanoActivity extends AppCompatActivity implements
         favoritesPresenter.updateTabNormalState();
         notesPresenter.updateTabNormalState();
         updateDefaultAccount();
+    }
+
+    private void startClipboardService() {
+        Intent intent = new Intent(getApplicationContext(), ClipboardService.class);
+        startService(intent);
+    }
+
+    private void stopClipboardService() {
+        Intent intent = new Intent(getApplicationContext(), ClipboardService.class);
+        stopService(intent);
     }
 
     @Override
@@ -388,7 +420,6 @@ public class LaanoActivity extends AppCompatActivity implements
             @NonNull AppBarLayout appBarLayout, @NonNull FloatingActionButton fab) {
         checkNotNull(appBarLayout);
         checkNotNull(fab);
-
         appBarLayout.addOnOffsetChangedListener(new AppBarLayoutOnStateChangeListener() {
 
             @Override
@@ -406,7 +437,6 @@ public class LaanoActivity extends AppCompatActivity implements
             @NonNull ViewPager viewPager, @NonNull LaanoFragmentPagerAdapter pagerAdapter) {
         checkNotNull(viewPager);
         checkNotNull(pagerAdapter);
-
         viewPager.setAdapter(pagerAdapter);
         // NOTE: Fragments are needed immediately to build Presenters
         pagerAdapter.instantiateItem(viewPager, LaanoFragmentPagerAdapter.LINKS_TAB);
@@ -438,7 +468,6 @@ public class LaanoActivity extends AppCompatActivity implements
 
     private void setupDrawerLayout(@NonNull final DrawerLayout drawerLayout) {
         checkNotNull(drawerLayout);
-
         // NOTE: untestable behavior (swipeRight() doesn't open Drawer)
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(
@@ -467,8 +496,7 @@ public class LaanoActivity extends AppCompatActivity implements
 
     private void startSettingsActivity() {
         Intent settingsIntent = new Intent(this, SettingsActivity.class);
-        settingsIntent.putExtra(
-                SettingsActivity.EXTRA_ACCOUNT,
+        settingsIntent.putExtra(SettingsActivity.EXTRA_ACCOUNT,
                 CloudUtils.getDefaultAccount(this, accountManager));
         startActivity(settingsIntent);
     }
@@ -480,7 +508,6 @@ public class LaanoActivity extends AppCompatActivity implements
 
     private void setupDrawerContent(@NonNull NavigationView navigationView) {
         checkNotNull(navigationView);
-
         DrawerLayout drawerLayout = binding.drawerLayout;
         navigationView.setNavigationItemSelectedListener(
                 (menuItem) -> {
@@ -515,7 +542,6 @@ public class LaanoActivity extends AppCompatActivity implements
     private void setupTabLayout(@NonNull TabLayout tabLayout, @NonNull ViewPager viewPager) {
         checkNotNull(tabLayout);
         checkNotNull(viewPager);
-
         tabLayout.setupWithViewPager(viewPager);
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
 
@@ -536,7 +562,6 @@ public class LaanoActivity extends AppCompatActivity implements
 
     private void setupFabAdd(@NonNull FloatingActionButton fab) {
         checkNotNull(fab);
-
         fab.setOnClickListener(v -> {
                     switch (activeTab) {
                         case LaanoFragmentPagerAdapter.LINKS_TAB:

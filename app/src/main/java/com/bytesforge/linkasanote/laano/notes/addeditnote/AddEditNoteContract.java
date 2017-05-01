@@ -9,6 +9,7 @@ import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
 
 import java.util.List;
@@ -22,6 +23,9 @@ public interface AddEditNoteContract {
         void finishActivity(String noteId, String linkId);
 
         void swapTagsCompletionViewItems(List<Tag> tags);
+        void setBoundTitle(boolean newNote);
+        void setUnboundTitle(boolean newNote);
+        void setNotePaste(int clipboardState);
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -35,8 +39,9 @@ public interface AddEditNoteContract {
         void showEmptyNoteSnackbar();
         void showNoteNotFoundSnackbar();
         void showDuplicateKeyError();
-        void showNoteIsUnboundMessage();
-        void showNoteWillBeUnboundMessage();
+        void showLinkStatusNoteWillBeUnbound();
+        void showLinkStatusLoading();
+        void hideLinkStatus();
 
         boolean isValid();
         void checkAddButton();
@@ -47,13 +52,19 @@ public interface AddEditNoteContract {
 
         void populateNote(@NonNull Note note);
         void populateLink(@NonNull Link link);
+
+        void setNoteNote(String noteNote);
+        void setNoteTags(String[] tags);
     }
 
-    interface Presenter extends BasePresenter {
+    interface Presenter extends BasePresenter, ClipboardService.Callback {
 
         boolean isNewNote();
         void loadTags();
         void saveNote(String name, List<Tag> tags);
         void populateNote();
+
+        void setShowFillInFormInfo(boolean show);
+        boolean isShowFillInFormInfo();
     }
 }

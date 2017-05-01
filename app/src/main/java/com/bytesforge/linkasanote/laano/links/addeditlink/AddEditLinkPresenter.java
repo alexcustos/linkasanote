@@ -7,7 +7,9 @@ import android.support.annotation.Nullable;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.links.LinkId;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
@@ -29,6 +31,7 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
     private final AddEditLinkContract.View view;
     private final AddEditLinkContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
+    private final Settings settings;
 
     private String linkId; // NOTE: can be reset to null if NoSuchElementException
 
@@ -41,13 +44,13 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
     @Inject
     AddEditLinkPresenter(
             Repository repository, AddEditLinkContract.View view,
-            AddEditLinkContract.ViewModel viewModel,
-            BaseSchedulerProvider schedulerProvider,
-            @Nullable @LinkId String linkId) {
+            AddEditLinkContract.ViewModel viewModel, BaseSchedulerProvider schedulerProvider,
+            Settings settings, @Nullable @LinkId String linkId) {
         this.repository = repository;
         this.view = view;
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
+        this.settings = settings;
         this.linkId = linkId;
         tagsDisposable = new CompositeDisposable();
         linkDisposable = new CompositeDisposable();
@@ -157,5 +160,25 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
         } catch (SQLiteConstraintException e) {
             viewModel.showDuplicateKeyError();
         }
+    }
+
+    @Override
+    public void onClipboardChanged(int clipboardType) {
+        view.setLinkPaste(clipboardType);
+    }
+
+    @Override
+    public void onClipboardLinkExtraReady() {
+        view.setLinkPaste(ClipboardService.CLIPBOARD_EXTRA);
+    }
+
+    @Override
+    public void setShowFillInFormInfo(boolean show) {
+        settings.setShowFillInFormInfo(show);
+    }
+
+    @Override
+    public boolean isShowFillInFormInfo() {
+        return settings.isShowFillInFormInfo();
     }
 }

@@ -127,5 +127,5 @@
     <style name="NotesText.Note" parent="TextAppearance.AppCompat.Subhead">
         <item name="android:textSize">18sp</item>
     </style>
-    <style name="NotesText.LinkCaption" parent="TextAppearance.AppCompat.Subhead" />
+    <style name="NotesText.LinkName" parent="TextAppearance.AppCompat.Subhead" />
 </resources>

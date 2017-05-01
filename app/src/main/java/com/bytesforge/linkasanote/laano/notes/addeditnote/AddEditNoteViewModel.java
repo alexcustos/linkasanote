@@ -39,7 +39,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
     private int addButtonText;
 
     // NOTE: there is nothing to save here, these fields will be populated on every load
-    public final ObservableField<String> linkCaption = new ObservableField<>();
+    public final ObservableField<String> linkStatus = new ObservableField<>();
     public final ObservableField<String> linkName = new ObservableField<>();
     public final ObservableField<String> linkLink = new ObservableField<>();
 
@@ -87,7 +87,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
         noteErrorText = state.getString(STATE_NOTE_ERROR_TEXT);
 
-        linkCaption.set(resources.getString(R.string.status_loading));
+        linkStatus.set(null);
         linkName.set(null);
         linkLink.set(null);
     }
@@ -197,17 +197,18 @@ public class AddEditNoteViewModel extends BaseObservable implements
     }
 
     @Override
-    public void showNoteIsUnboundMessage() {
-        if (presenter.isNewNote()) {
-            linkCaption.set(resources.getString(R.string.add_edit_note_message_link_unbound_new));
-        } else {
-            linkCaption.set(resources.getString(R.string.add_edit_note_message_link_unbound_edit));
-        }
+    public void showLinkStatusNoteWillBeUnbound() {
+        linkStatus.set(resources.getString(R.string.add_edit_note_message_link_will_unbound));
     }
 
     @Override
-    public void showNoteWillBeUnboundMessage() {
-        linkCaption.set(resources.getString(R.string.add_edit_note_message_link_will_unbound));
+    public void showLinkStatusLoading() {
+        linkStatus.set(resources.getString(R.string.status_loading));
+    }
+
+    @Override
+    public void hideLinkStatus() {
+        linkStatus.set(null);
     }
 
     @Override
@@ -231,7 +232,6 @@ public class AddEditNoteViewModel extends BaseObservable implements
     @Override
     public void populateNote(@NonNull Note note) {
         checkNotNull(note);
-
         noteNote.set(note.getNote());
         setNoteTags(note.getTags());
         checkAddButton();
@@ -240,23 +240,32 @@ public class AddEditNoteViewModel extends BaseObservable implements
     @Override
     public void populateLink(@NonNull Link link) {
         checkNotNull(link);
-
-        if (presenter.isNewNote()) {
-            linkCaption.set(resources.getString(R.string.add_edit_note_message_link_bound_new));
-        } else {
-            linkCaption.set(resources.getString(R.string.add_edit_note_message_link_bound_edit));
-        }
+        linkStatus.set(null);
         linkName.set(link.getName());
         linkLink.set(link.getLink());
     }
 
+    @Override
+    public void setNoteNote(String noteNote) {
+        this.noteNote.set(noteNote);
+    }
+
     private void setNoteTags(List<Tag> tags) {
-        if (tags == null) {
-            noteTags.clear();
-            return;
-        }
+        noteTags.clear();
+        if (tags == null || tags.isEmpty()) return;
+
         for (Tag tag : tags) {
             noteTags.addObject(tag);
+        }
+    }
+
+    @Override
+    public void setNoteTags(String[] tags) {
+        noteTags.clear();
+        if (tags == null || tags.length <= 0) return;
+
+        for (String tag : tags) {
+            noteTags.addObject(new Tag(tag));
         }
     }
 }

@@ -14,21 +14,13 @@
             android:summary="@string/pref_summary_notes_expanding" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/pref_title_system">
-
-        <CheckBoxPreference
-            android:key="@string/pref_key_clipboard_monitor"
-            android:title="@string/pref_title_clipboard_monitor"
-            android:summary="@string/pref_summary_clipboard_monitor" />
-    </PreferenceCategory>
-
     <PreferenceCategory android:title="@string/pref_title_synchronization">
 
         <EditTextPreference
             android:key="@string/pref_key_sync_directory"
             android:title="@string/pref_title_sync_directory"
             android:summary="@string/placeholder_text"
-            android:inputType="textNoSuggestions" />
+            android:inputType="text|textNoSuggestions" />
 
         <ListPreference
             android:key="@string/pref_key_sync_interval"
@@ -37,5 +29,30 @@
             android:persistent="false"
             android:entries="@array/pref_sync_interval_names"
             android:entryValues="@array/pref_sync_interval_seconds" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_title_clipboard">
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_clipboard_link_get_metadata"
+            android:title="@string/pref_title_clipboard_link_get_metadata"
+            android:summary="@string/pref_summary_clipboard_link_get_metadata" />
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_clipboard_link_follow"
+            android:title="@string/pref_title_clipboard_link_follow"
+            android:summary="@string/pref_summary_clipboard_link_follow"
+            android:dependency="@string/pref_key_clipboard_link_get_metadata" />
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_clipboard_fill_in_forms"
+            android:title="@string/pref_title_clipboard_fill_in_forms"
+            android:summary="@string/pref_summary_clipboard_fill_in_forms" />
+
+        <EditTextPreference
+            android:key="@string/pref_key_clipboard_parameter_white_list"
+            android:title="@string/pref_title_clipboard_parameter_white_list"
+            android:summary="@string/pref_summary_clipboard_parameter_white_list"
+            android:inputType="text" />
     </PreferenceCategory>
 </PreferenceScreen>

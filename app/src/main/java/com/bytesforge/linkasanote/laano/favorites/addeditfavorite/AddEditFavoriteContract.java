@@ -8,6 +8,7 @@ import com.bytesforge.linkasanote.BasePresenter;
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public interface AddEditFavoriteContract {
         void finishActivity(String favoriteId);
 
         void swapTagsCompletionViewItems(List<Tag> tags);
+        void setFavoritePaste(int clipboardState);
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -44,13 +46,18 @@ public interface AddEditFavoriteContract {
         void afterTagsChanged();
 
         void populateFavorite(@NonNull Favorite favorite);
+        void setFavoriteName(String favoriteName);
+        void setFavoriteTags(String[] tags);
     }
 
-    interface Presenter extends BasePresenter {
+    interface Presenter extends BasePresenter, ClipboardService.Callback {
 
         boolean isNewFavorite();
         void loadTags();
         void saveFavorite(String name, List<Tag> tags);
         void populateFavorite();
+
+        void setShowFillInFormInfo(boolean show);
+        boolean isShowFillInFormInfo();
     }
 }

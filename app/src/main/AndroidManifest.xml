@@ -70,6 +70,7 @@
         </service>
 
         <service android:name=".sync.operations.OperationsService" />
+        <service android:name=".laano.ClipboardService" />
     </application>
 
 </manifest>

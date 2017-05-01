@@ -22,6 +22,7 @@ ext {
     nextcloudLibraryVersion = '1.0.11'
     uiAutomatorVersion = '2.1.2'
     daggerMockVersion = '0.6.4'
+    jsoupVersion = '1.10.2'
 }
 
 ext {

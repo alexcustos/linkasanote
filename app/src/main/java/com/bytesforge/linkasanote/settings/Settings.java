@@ -14,6 +14,7 @@ import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
+import com.google.common.base.Strings;
 
 import java.util.List;
 
@@ -24,16 +25,25 @@ import static java.lang.System.currentTimeMillis;
 
 public class Settings {
 
-    public static final float GLOBAL_IMAGE_BUTTON_ALPHA_DISABLED = 0.3f;
+    public static final float GLOBAL_ICON_ALPHA_DISABLED = 0.4f;
     public static final float GLOBAL_PROGRESS_OVERLAY_ALPHA = 0.4f;
     public static final long GLOBAL_PROGRESS_OVERLAY_DURATION = 200; // ms
     public static final long GLOBAL_PROGRESS_OVERLAY_SHOW_DELAY = 200; // ms
     public static final boolean GLOBAL_ITEM_CLICK_SELECT_FILTER = true;
+    public static final String GLOBAL_PARAMETER_WHITE_LIST_DELIMITER = ", ";
+
+    public static final int GLOBAL_LINK_MAX_KEYWORDS = 5;
+    public static final int GLOBAL_LINK_MAX_BODY_SIZE_BYTES = 10 * 1024;
+    public static final boolean GLOBAL_LINK_TOAST_ENABLED = true;
+    public static final boolean GLOBAL_CLIPBOARD_ON_START = false;
 
     private static final String DEFAULT_SYNC_DIRECTORY = "/.laano_sync";
     private static final boolean DEFAULT_EXPAND_LINKS = false;
     private static final boolean DEFAULT_EXPAND_NOTES = false;
-    private static final boolean DEFAULT_CLIPBOARD_MONITOR = true;
+    private static final boolean DEFAULT_CLIPBOARD_LINK_GET_METADATA = true;
+    private static final boolean DEFAULT_CLIPBOARD_LINK_FOLLOW = false;
+    private static final boolean DEFAULT_CLIPBOARD_FILL_IN_FORMS = true;
+    private static final String DEFAULT_CLIPBOARD_PARAMETER_WHITE_LIST = "id, page";
 
     private static final String SETTING_LAST_SYNC_TIME = "LAST_SYNC_TIME";
     private static final String SETTING_LAST_SYNC_STATUS = "LAST_SYNC_STATUS";
@@ -42,6 +52,7 @@ public class Settings {
     private static final String SETTING_NOTE_FILTER = "NOTE_FILTER";
     private static final String SETTING_SHOW_CONFLICT_RESOLUTION_WARNING =
             "SHOW_CONFLICT_RESOLUTION_WARNING";
+    private static final String SETTING_SHOW_FILL_IN_FORM_INFO = "SHOW_FILL_IN_FORM_INFO";
 
     private static final long DEFAULT_LAST_SYNC_TIME = 0;
     private static final int DEFAULT_LAST_SYNC_STATUS = SyncAdapter.LAST_SYNC_STATUS_UNKNOWN;
@@ -51,6 +62,8 @@ public class Settings {
     private static final String DEFAULT_FAVORITE_FILTER = null;
     private static final String DEFAULT_NOTE_FILTER = null;
     private static final boolean DEFAULT_SHOW_CONFLICT_RESOLUTION_WARNING = true;
+    private static final boolean DEFAULT_SHOW_FILL_IN_FORM_INFO = true;
+    private static final String[] EMPTY_STRING_ARRAY = {};
 
     private final Resources resources;
     private final SharedPreferences sharedPreferences;
@@ -70,9 +83,34 @@ public class Settings {
                 resources.getString(R.string.pref_key_expand_notes), DEFAULT_EXPAND_NOTES);
     }
 
-    public boolean isClipboardMonitor() {
-        return sharedPreferences.getBoolean(
-                resources.getString(R.string.pref_key_clipboard_monitor), DEFAULT_CLIPBOARD_MONITOR);
+    public boolean isClipboardLinkGetMetadata() {
+        return sharedPreferences.getBoolean(resources.getString(
+                R.string.pref_key_clipboard_link_get_metadata), DEFAULT_CLIPBOARD_LINK_GET_METADATA);
+    }
+
+    public boolean isClipboardLinkFollow() {
+        boolean clipboardLinkFollow = sharedPreferences.getBoolean(resources.getString(
+                R.string.pref_key_clipboard_link_follow), DEFAULT_CLIPBOARD_LINK_FOLLOW);
+        return isClipboardLinkGetMetadata() && clipboardLinkFollow;
+    }
+
+    public boolean isClipboardFillInForms() {
+        return sharedPreferences.getBoolean(resources.getString(
+                R.string.pref_key_clipboard_fill_in_forms), DEFAULT_CLIPBOARD_FILL_IN_FORMS);
+    }
+
+    public String getClipboardParameterWhiteList() {
+        return sharedPreferences.getString(resources.getString(
+                R.string.pref_key_clipboard_parameter_white_list), DEFAULT_CLIPBOARD_PARAMETER_WHITE_LIST);
+    }
+
+    public String[] getClipboardParameterWhiteListArray() {
+        String clipboardParameterWhiteList = sharedPreferences.getString(resources.getString(
+                R.string.pref_key_clipboard_parameter_white_list), DEFAULT_CLIPBOARD_PARAMETER_WHITE_LIST);
+        if (Strings.isNullOrEmpty(clipboardParameterWhiteList)) {
+            return EMPTY_STRING_ARRAY;
+        }
+        return clipboardParameterWhiteList.split(GLOBAL_PARAMETER_WHITE_LIST_DELIMITER);
     }
 
     public String getSyncDirectory() {
@@ -242,14 +280,25 @@ public class Settings {
 
     public boolean isShowConflictResolutionWarning() {
         return sharedPreferences.getBoolean(
-                SETTING_SHOW_CONFLICT_RESOLUTION_WARNING,
-                DEFAULT_SHOW_CONFLICT_RESOLUTION_WARNING);
+                SETTING_SHOW_CONFLICT_RESOLUTION_WARNING, DEFAULT_SHOW_CONFLICT_RESOLUTION_WARNING);
     }
 
     public synchronized void setShowConflictResolutionWarning(boolean show) {
         boolean oldValue = isShowConflictResolutionWarning();
         if (show != oldValue) {
             putBooleanSetting(SETTING_SHOW_CONFLICT_RESOLUTION_WARNING, show);
+        }
+    }
+
+    public boolean isShowFillInFormInfo() {
+        return sharedPreferences.getBoolean(
+                SETTING_SHOW_FILL_IN_FORM_INFO, DEFAULT_SHOW_FILL_IN_FORM_INFO);
+    }
+
+    public synchronized void setShowFillInFormInfo(boolean show) {
+        boolean oldValue = isShowFillInFormInfo();
+        if (show != oldValue) {
+            putBooleanSetting(SETTING_SHOW_FILL_IN_FORM_INFO, show);
         }
     }
 

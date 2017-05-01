@@ -40,11 +40,6 @@ public class AddEditNoteActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setDisplayShowHomeEnabled(true);
-            if (noteId == null) {
-                actionBar.setTitle(R.string.actionbar_title_new_note);
-            } else {
-                actionBar.setTitle(R.string.actionbar_title_edit_note);
-            }
         }
         // Fragment
         AddEditNoteFragment fragment = (AddEditNoteFragment) getSupportFragmentManager()

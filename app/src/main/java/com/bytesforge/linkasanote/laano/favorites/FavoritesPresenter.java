@@ -32,7 +32,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     private final Settings settings;
 
     @NonNull
-    private final CompositeDisposable disposable;
+    private final CompositeDisposable compositeDisposable;
 
     private boolean firstLoad = true;
 
@@ -47,7 +47,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         this.schedulerProvider = schedulerProvider;
         this.laanoUiManager = laanoUiManager;
         this.settings = settings;
-        disposable = new CompositeDisposable();
+        compositeDisposable = new CompositeDisposable();
     }
 
     @Inject
@@ -64,7 +64,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void unsubscribe() {
-        disposable.clear();
+        compositeDisposable.clear();
     }
 
     @Override
@@ -90,7 +90,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     private void loadFavorites(boolean forceUpdate, final boolean showLoading) {
         EspressoIdlingResource.increment();
-        disposable.clear();
+        compositeDisposable.clear();
         if (forceUpdate) {
             repository.refreshFavorites();
         }
@@ -135,7 +135,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
                     CommonUtils.logStackTrace(TAG, throwable);
                     viewModel.showDatabaseErrorSnackbar();
                 });
-        this.disposable.add(disposable);
+        compositeDisposable.add(disposable);
     }
 
     @Override

@@ -60,11 +60,10 @@ public final class ManageAccountsPresenter implements ManageAccountsContract.Pre
                         EspressoIdlingResource.decrement();
                     }
                 })
-                // NullPointerException
-                .doOnError(throwable -> view.showNotEnoughPermissionsSnackbar())
-                .subscribe((accountItems, throwable) -> {
-                    if (accountItems != null) view.swapItems(accountItems);
-                });
+                .subscribe(
+                        view::swapItems,
+                        // NullPointerException
+                        throwable -> view.showNotEnoughPermissionsSnackbar());
         this.disposable.add(disposable);
     }
 

@@ -9,6 +9,7 @@ import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterMod
 import com.bytesforge.linkasanote.data.source.ProviderModule;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.data.source.RepositoryModule;
+import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.LaanoComponent;
 import com.bytesforge.linkasanote.laano.LaanoUiManagerModule;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenterModule;
@@ -48,6 +49,7 @@ public interface ApplicationComponent {
     Repository getRepository();
 
     void inject(SyncService syncService);
+    void inject(ClipboardService clipboardService);
     void inject(SettingsFragment settingsFragment);
 
     // Subcomponents

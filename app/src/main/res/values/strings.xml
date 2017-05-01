@@ -25,6 +25,7 @@
     <string name="dialog_button_upload">Upload</string>
     <string name="dialog_button_download">Download</string>
     <string name="dialog_button_continue">Continue</string>
+    <string name="dialog_button_settings">Settings</string>
     <string name="dialog_button_retry">Retry</string>
     <string name="laano_tab_links_title">Links</string>
     <string name="laano_tab_favorites_title">Favorites</string>
@@ -37,9 +38,15 @@
     <string name="pref_summary_links_expanding">Show all Link notes with app opened</string>
     <string name="pref_title_notes_expanding">Expand Notes</string>
     <string name="pref_summary_notes_expanding">Show the whole card for all Notes with app opened</string>
-    <string name="pref_title_clipboard_monitor">Monitor clipboard content</string>
-    <string name="pref_summary_clipboard_monitor">Automatically fill in forms with clipboard content</string>
-    <string name="pref_title_system">System</string>
+    <string name="pref_title_clipboard_link_get_metadata">Retrieve the metadata for URLs</string>
+    <string name="pref_summary_clipboard_link_get_metadata">Download %s of the document and search for the metadata if a URL is found in the clipboard</string>
+    <string name="pref_title_clipboard_link_follow">Follow server redirects</string>
+    <string name="pref_summary_clipboard_link_follow">Find the target document, then normalize its URL and use it instead the original one</string>
+    <string name="pref_title_clipboard_fill_in_forms">Automatically fill in forms</string>
+    <string name="pref_summary_clipboard_fill_in_forms">Paste a normalized and extend clipboard content to the new forms</string>
+    <string name="pref_title_clipboard_parameter_white_list">Preserve parameters in the URL query</string>
+    <string name="pref_summary_clipboard_parameter_white_list">Completely remove the query string from the URL</string>
+    <string name="pref_title_clipboard">Clipboard</string>
     <string name="pref_title_sync_directory">Directory name on the cloud storage</string>
     <string name="pref_title_synchronization">Synchronization</string>
     <string name="pref_sync_interval_manual">Manual mode</string>
@@ -128,6 +135,7 @@
     <string name="laano_actionbar_manager_sync_title">Up: %1$d / dl: %2$d</string>
     <string name="toolbar_favorites_item_filter">Favorite filter</string>
     <string name="toolbar_favorites_search">Search</string>
+    <string name="toolbar_favorite_item_paste">Fill in form</string>
     <string name="favorites_delete_confirmation_title">Delete confirmation</string>
     <string name="dialog_favorite_conflict_title_local">Local:</string>
     <string name="dialog_favorite_conflict_title_cloud">Cloud:</string>
@@ -151,6 +159,7 @@
     <string name="drawer_header_status_unknown">Unknown</string>
     <string name="settings_fragment_snackbar_directory_error">An invalid character was found, new name was not saved</string>
     <string name="settings_fragment_snackbar_interval_error">An unexpected problem occurred, manual mode has been activated</string>
+    <string name="settings_fragment_snackbar_normalized">The input was normalized, please revise the new value</string>
     <string name="settings_fragment_sync_interval_not_available">Not available</string>
     <string name="about_license_info_version">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>
     <string name="about_info_warranty">This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</string>
@@ -186,6 +195,7 @@
     <string name="toolbar_links_item_collapse_all">Hide all Notes</string>
     <string name="toolbar_links_item_filter">Link filter</string>
     <string name="toolbar_links_search">Search</string>
+    <string name="toolbar_link_item_paste">Fill in form</string>
     <string name="links_delete_confirmation_title">Delete confirmation</string>
     <string name="dialog_link_conflict_title_local">Local:</string>
     <string name="dialog_link_conflict_title_cloud">Cloud:</string>
@@ -203,8 +213,8 @@
     <string name="card_button_expand_notes_description">Expand Notes</string>
     <string name="card_button_collapse_notes_description">Expand Notes</string>
 
-    <string name="actionbar_title_new_note">New Note</string>
-    <string name="actionbar_title_edit_note">Edit Note</string>
+    <string name="actionbar_title_new_note">New Note (%s)</string>
+    <string name="actionbar_title_edit_note">Edit Note (%s)</string>
     <string name="item_notes_note_to_links_button">Apply Note filter to Links</string>
     <string name="item_notes_note_to_notes_button">Apply Note filter to Notes</string>
     <string name="item_notes_edit_button">Edit Note</string>
@@ -218,11 +228,11 @@
     <string name="add_edit_note_warning_empty">The Note must be specified</string>
     <string name="add_edit_note_warning_not_existed">Requested Note has not already existed</string>
     <string name="add_edit_note_error_note_duplicated">This Note is already exists</string>
-    <string name="add_edit_note_message_link_bound_new">This Note will be bound with the Link:</string>
-    <string name="add_edit_note_message_link_bound_edit">This Note is bound with the Link:</string>
-    <string name="add_edit_note_message_link_unbound_new">This note will not be bound with any Link</string>
-    <string name="add_edit_note_message_link_unbound_edit">This Note is not attached to any Link</string>
-    <string name="add_edit_note_message_link_will_unbound">Unable to load related Link, this Note will be saved as unbound</string>
+    <string name="add_edit_note_message_link_bound_new">bound</string>
+    <string name="add_edit_note_message_link_bound_edit">bound</string>
+    <string name="add_edit_note_message_link_unbound_new">unbound</string>
+    <string name="add_edit_note_message_link_unbound_edit">unbound</string>
+    <string name="add_edit_note_message_link_will_unbound">Unable to load related Link, this Note will be saved as unbound.</string>
     <string name="action_mode_notes_delete">Delete</string>
     <string name="action_mode_notes_select_all">Check/Uncheck all Notes</string>
     <string name="laano_notes_action_mode_selected">%1$d of %2$d selected</string>
@@ -231,7 +241,7 @@
     <string name="toolbar_notes_item_collapse_all">Hide all Notes</string>
     <string name="toolbar_notes_item_filter">Note filter</string>
     <string name="toolbar_notes_search">Search</string>
-    <string name="toolbar_note_item_paste">Paste</string>
+    <string name="toolbar_note_item_paste">Fill in form</string>
     <string name="notes_delete_confirmation_title">Delete confirmation</string>
     <string name="dialog_note_conflict_title_local">Local:</string>
     <string name="dialog_note_conflict_title_cloud">Cloud:</string>
@@ -246,6 +256,11 @@
     <string name="links_conflict_resolution_warning_title">Warning</string>
     <string name="links_conflict_resolution_warning_message">All operations on the conflict resolution dialog will affect the Link and all it\'s Notes. If you want to process the Notes separately, please resolve the conflict manually.</string>
     <string name="links_conflict_resolution_info">Status: %1$s, %2$s</string>
+    <string name="clipboard_service_extra_ready">The URL metadata is ready</string>
+    <string name="clipboard_service_extra_empty">No metadata available for the URL</string>
+    <string name="clipboard_service_extra_failed">Failed to load the URL metadata</string>
+    <string name="fill_in_form_info_title">Information</string>
+    <string name="fill_in_form_info_message">This operation is using the normalized and extended clipboard content to try filling in or replacing the form fields. The original clipboard content remain intact, so feel free to use it as usual.</string>
 
     <plurals name="count_favorites">
         <item quantity="one">%d Favorite</item>

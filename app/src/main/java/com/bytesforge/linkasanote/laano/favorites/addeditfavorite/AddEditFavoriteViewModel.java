@@ -216,19 +216,32 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Override
     public void populateFavorite(@NonNull Favorite favorite) {
         checkNotNull(favorite);
-
         favoriteName.set(favorite.getName());
         setFavoriteTags(favorite.getTags());
         checkAddButton();
     }
 
+    @Override
+    public void setFavoriteName(String favoriteName) {
+        this.favoriteName.set(favoriteName);
+    }
+
     private void setFavoriteTags(List<Tag> tags) {
-        if (tags == null) {
-            favoriteTags.clear();
-            return;
-        }
+        favoriteTags.clear();
+        if (tags == null || tags.isEmpty()) return;
+
         for (Tag tag : tags) {
             favoriteTags.addObject(tag);
+        }
+    }
+
+    @Override
+    public void setFavoriteTags(String[] tags) {
+        favoriteTags.clear();
+        if (tags == null || tags.length <= 0) return;
+
+        for (String tag : tags) {
+            favoriteTags.addObject(new Tag(tag));
         }
     }
 }

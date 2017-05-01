@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/toolbar_note_paste"
+        android:id="@+id/toolbar_link_paste"
         android:icon="@drawable/ic_content_paste_white"
-        android:title="@string/toolbar_note_item_paste"
+        android:title="@string/toolbar_link_item_paste"
         app:showAsAction="always" />
 </menu>
