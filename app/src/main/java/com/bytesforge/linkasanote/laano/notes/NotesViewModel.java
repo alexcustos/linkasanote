@@ -167,13 +167,16 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
         return FILTER_PREFIX;
     }
 
-    public int getNoteBackground(String noteId, boolean conflicted, boolean changed) {
+    public int getNoteBackground(
+            String noteId, boolean conflicted, boolean readingMode, boolean changed) {
         if (conflicted) {
             return resources.getColor(R.color.item_conflicted, context.getTheme());
         }
         int position = presenter.getPosition(noteId);
         if (isSelected(position) && !isActionMode()) {
-            return resources.getColor(R.color.item_note_selected, context.getTheme());
+            return resources.getColor(readingMode
+                    ? R.color.item_note_reading_mode_selected
+                    : R.color.item_note_normal_mode_selected, context.getTheme());
         }
         return resources.getColor(android.R.color.transparent, context.getTheme());
     }

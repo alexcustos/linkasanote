@@ -2,7 +2,11 @@ package com.bytesforge.linkasanote.about;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,7 +18,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.bytesforge.linkasanote.BuildConfig;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.databinding.FragmentAboutBinding;
 import com.google.common.base.Charsets;
@@ -28,6 +34,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AboutFragment extends Fragment implements AboutContract.View {
 
+    private Context context;
     private AboutContract.Presenter presenter;
     private AboutContract.ViewModel viewModel;
 
@@ -65,6 +72,7 @@ public class AboutFragment extends Fragment implements AboutContract.View {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        context = getContext();
         FragmentAboutBinding binding = FragmentAboutBinding.inflate(inflater, container, false);
         viewModel.setInstanceState(savedInstanceState);
         binding.setPresenter(presenter);
@@ -79,6 +87,18 @@ public class AboutFragment extends Fragment implements AboutContract.View {
     }
 
     @Override
+    public void showGooglePlay() {
+        Uri uri = Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(context,
+                    R.string.about_launch_google_play_error, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
     public void showGplV3TermsAlertDialog() {
         LicenseTermsDialog dialog = LicenseTermsDialog.newInstance("gpl-3.0.en.html");
         dialog.show(getFragmentManager(), LicenseTermsDialog.DIALOG_TAG);
@@ -87,6 +107,12 @@ public class AboutFragment extends Fragment implements AboutContract.View {
     @Override
     public void showApacheV2TermsAlertDialog() {
         LicenseTermsDialog dialog = LicenseTermsDialog.newInstance("LICENSE-2.0.html");
+        dialog.show(getFragmentManager(), LicenseTermsDialog.DIALOG_TAG);
+    }
+
+    @Override
+    public void showMitTermsAlertDialog() {
+        LicenseTermsDialog dialog = LicenseTermsDialog.newInstance("MIT.html");
         dialog.show(getFragmentManager(), LicenseTermsDialog.DIALOG_TAG);
     }
 

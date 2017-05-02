@@ -26,6 +26,7 @@ public interface AddEditNoteContract {
         void setBoundTitle(boolean newNote);
         void setUnboundTitle(boolean newNote);
         void setNotePaste(int clipboardState);
+        void fillInForm();
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -44,6 +45,7 @@ public interface AddEditNoteContract {
         void hideLinkStatus();
 
         boolean isValid();
+        boolean isEmpty();
         void checkAddButton();
         void enableAddButton();
         void disableAddButton();

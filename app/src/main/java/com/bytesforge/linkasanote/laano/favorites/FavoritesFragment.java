@@ -96,9 +96,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         viewModel.setInstanceState(savedInstanceState);
         binding.setViewModel((FavoritesViewModel) viewModel);
         // RecyclerView
-        if (binding.rvFavorites != null) {
-            setupFavoritesRecyclerView(binding.rvFavorites);
-        }
+        setupFavoritesRecyclerView(binding.rvFavorites);
         return binding.getRoot();
     }
 

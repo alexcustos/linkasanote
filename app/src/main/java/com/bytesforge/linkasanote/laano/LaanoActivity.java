@@ -36,6 +36,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.LaanoApplication;
@@ -95,6 +96,7 @@ public class LaanoActivity extends AppCompatActivity implements
     @Inject
     Settings settings;
 
+    private boolean doubleBackPressed = false;
     private int activeTab;
     private SyncBroadcastReceiver syncBroadcastReceiver;
     private ActivityLaanoBinding binding;
@@ -103,7 +105,7 @@ public class LaanoActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         Log.i(TAG, "onStart()");
-        if (Settings.GLOBAL_CLIPBOARD_ON_START) {
+        if (Settings.GLOBAL_CLIPBOARD_MONITOR_ON_START) {
             // NOTE: application context
             startClipboardService();
         } // NOTE: else it will be started with the first launch of the addEdit... activity
@@ -265,6 +267,19 @@ public class LaanoActivity extends AppCompatActivity implements
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.toolbar_laano, menu);
         return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (doubleBackPressed) {
+            super.onBackPressed();
+            return;
+        }
+        doubleBackPressed = true;
+        Toast.makeText(this, R.string.laano_double_back_press_toast, Toast.LENGTH_SHORT).show();
+        new Handler().postDelayed(
+                () -> doubleBackPressed = false,
+                Settings.GLOBAL_DOUBLE_BACK_TO_EXIT_MILLIS);
     }
 
     private void updateDefaultAccount() {

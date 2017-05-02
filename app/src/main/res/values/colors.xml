@@ -19,7 +19,8 @@
     <color name="item_conflicted">@color/red_100</color>
     <color name="item_link_selected">@color/grey_50</color>
     <color name="item_favorite_selected">@color/grey_100</color>
-    <color name="item_note_selected">@color/item_link_selected</color>
+    <color name="item_note_normal_mode_selected">@color/item_link_selected</color>
+    <color name="item_note_reading_mode_selected">@color/item_favorite_selected</color>
     <color name="sync_state_neutral">@android:color/white</color>
     <color name="sync_state_success">@color/green_500</color>
     <color name="sync_state_error">@color/red_400</color>

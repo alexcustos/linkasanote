@@ -64,7 +64,6 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Override
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
-
         outState.putString(STATE_FAVORITE_NAME, favoriteName.get());
         outState.putBoolean(STATE_ADD_BUTTON, addButton.get());
         outState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
@@ -74,7 +73,6 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Override
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
-
         favoriteName.set(state.getString(STATE_FAVORITE_NAME));
         addButton.set(state.getBoolean(STATE_ADD_BUTTON));
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
@@ -169,6 +167,12 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Override
     public boolean isValid() {
         return isNameValid() && isTagsValid();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return Strings.isNullOrEmpty(favoriteName.get())
+                && favoriteTags.getText().length() <= 0;
     }
 
     @Override

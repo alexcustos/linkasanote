@@ -221,7 +221,8 @@ public class AddEditNoteFragment extends Fragment implements AddEditNoteContract
         return true;
     }
 
-    private void fillInForm() {
+    @Override
+    public void fillInForm() {
         if (clipboardService == null) return;
 
         int clipboardState = clipboardService.getClipboardState();

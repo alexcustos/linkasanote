@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@{viewModel.getNoteBackground(note.id, note.conflicted, viewModel.selectionChanged)}">
+            android:background="@{viewModel.getNoteBackground(note.id, note.conflicted, false, viewModel.selectionChanged)}">
 
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"

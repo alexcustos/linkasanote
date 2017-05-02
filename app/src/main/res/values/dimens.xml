@@ -36,11 +36,11 @@
     <dimen name="dialog_margin_content">24dp</dimen>
     <dimen name="dialog_title_vertical_padding">8dp</dimen>
     <dimen name="dialog_title_spacer">16dp</dimen>
-    <dimen name="dialog_padding_button_bar_top">8dp</dimen>
+    <dimen name="dialog_padding_button_bar_vertical">8dp</dimen>
     <dimen name="dialog_tags_margin_top">12dp</dimen>
     <dimen name="dialog_state_margin_end">8dp</dimen>
     <dimen name="about_margin_vertical_text">16dp</dimen>
-    <dimen name="about_margin_vertical_title">4dp</dimen>
+    <dimen name="about_margin_vertical">4dp</dimen>
 
     <dimen name="card_spacer_padding_end">4dp</dimen>
     <dimen name="card_left_checkbox_margin_start">8dp</dimen>

@@ -6,6 +6,7 @@ import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
@@ -52,6 +53,7 @@ public class ClipboardService extends Service {
     @Inject
     BaseSchedulerProvider schedulerProvider;
 
+    private Resources resources;
     private ClipboardService.Callback callback;
     private CompositeDisposable compositeDisposable;
     private ClipboardManager clipboardManager;
@@ -105,6 +107,7 @@ public class ClipboardService extends Service {
 
         LaanoApplication application = (LaanoApplication) getApplication();
         application.getApplicationComponent().inject(this);
+        resources = getResources();
         compositeDisposable = new CompositeDisposable();
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         clipboardManager.addPrimaryClipChangedListener(primaryClipChangedListener);
@@ -124,6 +127,12 @@ public class ClipboardService extends Service {
         clipboardManager.removePrimaryClipChangedListener(primaryClipChangedListener);
         // NOTE: thread is continue running when service is destroyed
         compositeDisposable.clear();
+        if (settings.isClipboardLinkGetMetadata()) {
+            // NOTE: inform only if internet connection is involved
+            String message = resources.getString(
+                    R.string.clipboard_service_stopped, resources.getString(R.string.app_name));
+            Toast.makeText(ClipboardService.this, message, Toast.LENGTH_SHORT).show();
+        }
         super.onDestroy();
     }
 
@@ -220,7 +229,7 @@ public class ClipboardService extends Service {
                     Log.i(TAG, "Title [" + linkTitle + "]");
                     Log.i(TAG, "Description [" + linkDescription + "]");
                     Log.i(TAG, "Keywords [" + Arrays.toString(linkKeywords) + "]");
-                    if (Settings.GLOBAL_LINK_TOAST_ENABLED) {
+                    if (Settings.GLOBAL_CLIPBOARD_LINK_UPDATED_TOAST) {
                         @StringRes int messageId;
                         if (isLinkExtra()) {
                             messageId = R.string.clipboard_service_extra_ready;
@@ -237,7 +246,7 @@ public class ClipboardService extends Service {
                     linkDescription = null;
                     linkKeywords = null;
                     notifySubscriber();
-                    if (Settings.GLOBAL_LINK_TOAST_ENABLED) {
+                    if (Settings.GLOBAL_CLIPBOARD_LINK_UPDATED_TOAST) {
                         Toast.makeText(ClipboardService.this,
                                 R.string.clipboard_service_extra_failed,
                                 Toast.LENGTH_SHORT).show();

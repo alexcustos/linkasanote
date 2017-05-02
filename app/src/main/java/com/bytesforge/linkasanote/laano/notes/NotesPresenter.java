@@ -425,4 +425,19 @@ public final class NotesPresenter implements NotesContract.Presenter {
     public void updateTabNormalState() {
         laanoUiManager.setTabNormalState(LaanoFragmentPagerAdapter.NOTES_TAB, isConflicted());
     }
+
+    @Override
+    public boolean isNotesLayoutModeReading() {
+        return settings.isNotesLayoutModeReading();
+    }
+
+    /**
+     * @return Return true if reading mode is set to Enabled
+     */
+    @Override
+    public boolean toggleNotesLayoutModeReading() {
+        boolean readingMode = !settings.isNotesLayoutModeReading();
+        settings.setNotesLayoutModeReading(readingMode);
+        return readingMode;
+    }
 }

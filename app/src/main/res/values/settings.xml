@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Link as a Note</string>
+    <string name="app_name">LaaNo</string>
     <string name="app_url">https://www.laano.net</string>
     <string name="app_author">Aleksandr Borisenko</string>
     <string name="authenticator_account_type">linkasanote</string>

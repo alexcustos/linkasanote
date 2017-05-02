@@ -105,9 +105,7 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
         viewModel.setInstanceState(savedInstanceState);
         binding.setViewModel((LinksViewModel) viewModel);
         // RecyclerView
-        if (binding.rvLinks != null) {
-            setupLinksRecyclerView(binding.rvLinks);
-        }
+        setupLinksRecyclerView(binding.rvLinks);
         return binding.getRoot();
     }
 

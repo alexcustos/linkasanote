@@ -23,6 +23,7 @@ public interface AddEditFavoriteContract {
 
         void swapTagsCompletionViewItems(List<Tag> tags);
         void setFavoritePaste(int clipboardState);
+        void fillInForm();
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -38,6 +39,7 @@ public interface AddEditFavoriteContract {
         void showDuplicateKeyError();
 
         boolean isValid();
+        boolean isEmpty();
         void checkAddButton();
         void enableAddButton();
         void disableAddButton();

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:targetApi="25">
+
+    <shortcut
+        android:shortcutId="add_link"
+        android:enabled="true"
+        android:icon="@drawable/ic_link"
+        android:shortcutShortLabel="@string/laano_shortcut_add_link">
+
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.bytesforge.linkasanote.mock"
+            android:targetClass="com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="add_favorite"
+        android:enabled="true"
+        android:icon="@drawable/ic_favorite"
+        android:shortcutShortLabel="@string/laano_shortcut_add_favorite">
+
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.bytesforge.linkasanote.mock"
+            android:targetClass="com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="add_note"
+        android:enabled="true"
+        android:icon="@drawable/ic_note"
+        android:shortcutShortLabel="@string/laano_shortcut_add_note">
+
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.bytesforge.linkasanote.mock"
+            android:targetClass="com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

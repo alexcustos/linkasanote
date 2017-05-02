@@ -71,7 +71,6 @@ public class AddEditNoteViewModel extends BaseObservable implements
     @Override
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
-
         outState.putString(STATE_NOTE_NOTE, noteNote.get());
         outState.putBoolean(STATE_ADD_BUTTON, addButton.get());
         outState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
@@ -81,7 +80,6 @@ public class AddEditNoteViewModel extends BaseObservable implements
     @Override
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
-
         noteNote.set(state.getString(STATE_NOTE_NOTE));
         addButton.set(state.getBoolean(STATE_ADD_BUTTON));
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
@@ -176,6 +174,12 @@ public class AddEditNoteViewModel extends BaseObservable implements
     @Override
     public boolean isValid() {
         return isNoteValid();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return Strings.isNullOrEmpty(noteNote.get())
+                && noteTags.getText().length() <= 0;
     }
 
     @Override

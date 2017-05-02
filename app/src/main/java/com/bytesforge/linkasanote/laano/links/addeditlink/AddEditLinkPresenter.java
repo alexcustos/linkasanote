@@ -149,7 +149,6 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
 
     private void saveLink(@NonNull final Link link) {
         checkNotNull(link);
-
         if (link.isEmpty()) {
             viewModel.showEmptyLinkSnackbar();
             return;
@@ -165,11 +164,18 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
     @Override
     public void onClipboardChanged(int clipboardType) {
         view.setLinkPaste(clipboardType);
+        // NOTE: if data is ready either this method or linkExtraReady is called
+        if (viewModel.isEmpty() && settings.isClipboardFillInForms()) {
+            view.fillInForm();
+        }
     }
 
     @Override
     public void onClipboardLinkExtraReady() {
         view.setLinkPaste(ClipboardService.CLIPBOARD_EXTRA);
+        if (viewModel.isEmpty() && settings.isClipboardFillInForms()) {
+            view.fillInForm();
+        }
     }
 
     @Override

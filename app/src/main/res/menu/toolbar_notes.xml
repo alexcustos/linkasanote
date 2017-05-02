@@ -15,8 +15,7 @@
         app:showAsAction="always" />
     <item
         android:id="@+id/toolbar_notes_action_mode"
-        android:icon="@drawable/ic_edit_white"
-        android:title="@string/toolbar_notes_item_action_mode"
+        android:title="@string/toolbar_notes_item_mode_action"
         app:showAsAction="never" />
     <item
         android:id="@+id/toolbar_notes_expand_all"
@@ -25,5 +24,9 @@
     <item
         android:id="@+id/toolbar_notes_collapse_all"
         android:title="@string/toolbar_notes_item_collapse_all"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/toolbar_notes_layout_mode"
+        android:title="@string/toolbar_notes_item_mode_reading"
         app:showAsAction="never" />
 </menu>

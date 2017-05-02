@@ -33,6 +33,10 @@
     <string name="laano_permission_get_accounts">GET ACCOUNTS (Contacts) permission is needed to show list of existing accounts</string>
     <string name="laano_account_added">The account has been successfully added</string>
     <string name="laano_offline">Application is offline, please enable Internet connection</string>
+    <string name="laano_double_back_press_toast">Press once again to exit</string>
+    <string name="laano_shortcut_add_link">Add Link</string>
+    <string name="laano_shortcut_add_favorite">Add Favorite</string>
+    <string name="laano_shortcut_add_note">Add Note</string>
     <string name="pref_category_application">Application</string>
     <string name="pref_title_links_expanding">Expand Link cards</string>
     <string name="pref_summary_links_expanding">Show all Link notes with app opened</string>
@@ -164,8 +168,10 @@
     <string name="about_license_info_version">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>
     <string name="about_info_warranty">This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</string>
     <string name="about_button_license_terms">license terms</string>
+    <string name="about_button_launch_google_play">rate this app</string>
     <string name="about_notices_title">Notices</string>
-    <string name="about_notices_license_apache">Licensed under the Apache License, Version 2.0. You may not use this program except in compliance with the License.</string>
+    <string name="about_notices_license_apache_v2">Licensed under the Apache License, Version 2.0. You may not use this program except in compliance with the License.</string>
+    <string name="about_notices_license_mit">Licensed under the MIT License. You may not use this program except in compliance with the License.</string>
     <string name="about_app_version">Version %s</string>
     <string name="about_app_copyright">Copyright © %1$s %2$s</string>
     <string name="about_fragment_error_license">Could not read license file: %s</string>
@@ -236,10 +242,12 @@
     <string name="action_mode_notes_delete">Delete</string>
     <string name="action_mode_notes_select_all">Check/Uncheck all Notes</string>
     <string name="laano_notes_action_mode_selected">%1$d of %2$d selected</string>
-    <string name="toolbar_notes_item_action_mode">Switch to edit mode</string>
+    <string name="toolbar_notes_item_mode_action">Switch to Edit mode</string>
     <string name="toolbar_notes_item_expand_all">Show all Notes</string>
     <string name="toolbar_notes_item_collapse_all">Hide all Notes</string>
     <string name="toolbar_notes_item_filter">Note filter</string>
+    <string name="toolbar_notes_item_mode_normal">Switch to Normal mode</string>
+    <string name="toolbar_notes_item_mode_reading">Switch to Reading mode</string>
     <string name="toolbar_notes_search">Search</string>
     <string name="toolbar_note_item_paste">Fill in form</string>
     <string name="notes_delete_confirmation_title">Delete confirmation</string>
@@ -259,8 +267,10 @@
     <string name="clipboard_service_extra_ready">The URL metadata is ready</string>
     <string name="clipboard_service_extra_empty">No metadata available for the URL</string>
     <string name="clipboard_service_extra_failed">Failed to load the URL metadata</string>
+    <string name="clipboard_service_stopped">%s clipboard monitor is stopped</string>
     <string name="fill_in_form_info_title">Information</string>
     <string name="fill_in_form_info_message">This operation is using the normalized and extended clipboard content to try filling in or replacing the form fields. The original clipboard content remain intact, so feel free to use it as usual.</string>
+    <string name="about_launch_google_play_error">This device doesn\'t have Google Play installed</string>
 
     <plurals name="count_favorites">
         <item quantity="one">%d Favorite</item>

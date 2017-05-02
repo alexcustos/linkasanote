@@ -23,6 +23,7 @@ public interface AddEditLinkContract {
 
         void swapTagsCompletionViewItems(List<Tag> tags);
         void setLinkPaste(int clipboardType);
+        void fillInForm();
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -38,6 +39,7 @@ public interface AddEditLinkContract {
         void showDuplicateKeyError();
 
         boolean isValid();
+        boolean isEmpty();
         void checkAddButton();
         void enableAddButton();
         void disableAddButton();

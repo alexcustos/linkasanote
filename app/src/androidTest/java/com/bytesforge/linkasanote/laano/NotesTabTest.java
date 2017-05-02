@@ -192,7 +192,7 @@ public class NotesTabTest {
 
         openActionBarOverflowOrOptionsMenu(context);
         // NOTE: R.id.toolbar_note_action_mode does not work
-        onView(withText(R.string.toolbar_notes_item_action_mode)).perform(click());
+        onView(withText(R.string.toolbar_notes_item_mode_action)).perform(click());
         onView(withText(context.getResources()
                 .getString(R.string.laano_notes_action_mode_selected, 0, notes.size())))
                 .check(matches(isDisplayed()));

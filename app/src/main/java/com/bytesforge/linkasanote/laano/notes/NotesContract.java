@@ -85,5 +85,7 @@ public interface NotesContract {
         boolean isFavoriteFilter();
         boolean isLinkFilter();
         boolean isExpandNotes();
+        boolean isNotesLayoutModeReading();
+        boolean toggleNotesLayoutModeReading();
     }
 }

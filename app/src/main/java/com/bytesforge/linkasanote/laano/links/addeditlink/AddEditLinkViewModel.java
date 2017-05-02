@@ -68,7 +68,6 @@ public class AddEditLinkViewModel extends BaseObservable implements
     @Override
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
-
         outState.putString(STATE_LINK_LINK, linkLink.get());
         outState.putString(STATE_LINK_NAME, linkName.get());
         outState.putBoolean(STATE_LINK_DISABLED, linkDisabled.get());
@@ -80,7 +79,6 @@ public class AddEditLinkViewModel extends BaseObservable implements
     @Override
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
-
         linkLink.set(state.getString(STATE_LINK_LINK));
         linkName.set(state.getString(STATE_LINK_NAME));
         linkDisabled.set(state.getBoolean(STATE_LINK_DISABLED));
@@ -175,6 +173,14 @@ public class AddEditLinkViewModel extends BaseObservable implements
     @Override
     public boolean isValid() {
         return isLinkValid();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return Strings.isNullOrEmpty(linkLink.get())
+                && Strings.isNullOrEmpty(linkName.get())
+                && !linkDisabled.get()
+                && linkTags.getText().length() <= 0;
     }
 
     @Override

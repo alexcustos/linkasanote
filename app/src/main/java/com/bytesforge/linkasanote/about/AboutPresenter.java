@@ -29,6 +29,11 @@ public final class AboutPresenter implements AboutContract.Presenter {
     }
 
     @Override
+    public void onLaunchGooglePlay() {
+        view.showGooglePlay();
+    }
+
+    @Override
     public void onLicenseTermsGplV3Click() {
         view.showGplV3TermsAlertDialog();
     }
@@ -36,5 +41,10 @@ public final class AboutPresenter implements AboutContract.Presenter {
     @Override
     public void onLicenseTermsApacheV2Click() {
         view.showApacheV2TermsAlertDialog();
+    }
+
+    @Override
+    public void onLicenseTermsMitClick() {
+        view.showMitTermsAlertDialog();
     }
 }

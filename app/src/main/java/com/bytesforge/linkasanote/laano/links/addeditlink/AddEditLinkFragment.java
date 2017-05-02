@@ -215,7 +215,8 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
         return true;
     }
 
-    private void fillInForm() {
+    @Override
+    public void fillInForm() {
         if (clipboardService == null) return;
 
         int clipboardState = clipboardService.getClipboardState();

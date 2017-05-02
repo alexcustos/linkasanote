@@ -29,17 +29,19 @@ public class Settings {
     public static final float GLOBAL_PROGRESS_OVERLAY_ALPHA = 0.4f;
     public static final long GLOBAL_PROGRESS_OVERLAY_DURATION = 200; // ms
     public static final long GLOBAL_PROGRESS_OVERLAY_SHOW_DELAY = 200; // ms
-    public static final boolean GLOBAL_ITEM_CLICK_SELECT_FILTER = true;
+    public static final boolean GLOBAL_ITEM_CLICK_SELECT_FILTER = false;
     public static final String GLOBAL_PARAMETER_WHITE_LIST_DELIMITER = ", ";
+    public static final long GLOBAL_DOUBLE_BACK_TO_EXIT_MILLIS = 2000;
 
     public static final int GLOBAL_LINK_MAX_KEYWORDS = 5;
     public static final int GLOBAL_LINK_MAX_BODY_SIZE_BYTES = 10 * 1024;
-    public static final boolean GLOBAL_LINK_TOAST_ENABLED = true;
-    public static final boolean GLOBAL_CLIPBOARD_ON_START = false;
+    public static final boolean GLOBAL_CLIPBOARD_LINK_UPDATED_TOAST = true;
+    // TODO: this settings should be 3 way switch: on app start; on addEdit start; off
+    public static final boolean GLOBAL_CLIPBOARD_MONITOR_ON_START = true;
 
     private static final String DEFAULT_SYNC_DIRECTORY = "/.laano_sync";
     private static final boolean DEFAULT_EXPAND_LINKS = false;
-    private static final boolean DEFAULT_EXPAND_NOTES = false;
+    private static final boolean DEFAULT_EXPAND_NOTES = true;
     private static final boolean DEFAULT_CLIPBOARD_LINK_GET_METADATA = true;
     private static final boolean DEFAULT_CLIPBOARD_LINK_FOLLOW = false;
     private static final boolean DEFAULT_CLIPBOARD_FILL_IN_FORMS = true;
@@ -53,6 +55,7 @@ public class Settings {
     private static final String SETTING_SHOW_CONFLICT_RESOLUTION_WARNING =
             "SHOW_CONFLICT_RESOLUTION_WARNING";
     private static final String SETTING_SHOW_FILL_IN_FORM_INFO = "SHOW_FILL_IN_FORM_INFO";
+    private static final String SETTING_NOTES_LAYOUT_MODE_READING = "NOTES_LAYOUT_MODE_READING";
 
     private static final long DEFAULT_LAST_SYNC_TIME = 0;
     private static final int DEFAULT_LAST_SYNC_STATUS = SyncAdapter.LAST_SYNC_STATUS_UNKNOWN;
@@ -63,6 +66,8 @@ public class Settings {
     private static final String DEFAULT_NOTE_FILTER = null;
     private static final boolean DEFAULT_SHOW_CONFLICT_RESOLUTION_WARNING = true;
     private static final boolean DEFAULT_SHOW_FILL_IN_FORM_INFO = true;
+    private static final boolean DEFAULT_NOTES_LAYOUT_MODE_READING = false;
+
     private static final String[] EMPTY_STRING_ARRAY = {};
 
     private final Resources resources;
@@ -299,6 +304,18 @@ public class Settings {
         boolean oldValue = isShowFillInFormInfo();
         if (show != oldValue) {
             putBooleanSetting(SETTING_SHOW_FILL_IN_FORM_INFO, show);
+        }
+    }
+
+    public boolean isNotesLayoutModeReading() {
+        return sharedPreferences.getBoolean(
+                SETTING_NOTES_LAYOUT_MODE_READING, DEFAULT_NOTES_LAYOUT_MODE_READING);
+    }
+
+    public synchronized void setNotesLayoutModeReading(boolean readingMode) {
+        boolean oldValue = isNotesLayoutModeReading();
+        if (readingMode != oldValue) {
+            putBooleanSetting(SETTING_NOTES_LAYOUT_MODE_READING, readingMode);
         }
     }
 

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable name="note" type="com.bytesforge.linkasanote.data.Note" />
+        <variable name="presenter"
+            type="com.bytesforge.linkasanote.laano.notes.NotesContract.Presenter" />
+        <variable name="viewModel"
+            type="com.bytesforge.linkasanote.laano.notes.NotesViewModel" />
+    </data>
+
+    <TextView
+        android:id="@+id/note_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@{note.note}"
+        android:background="@{viewModel.getNoteBackground(note.id, note.conflicted, true, viewModel.selectionChanged)}"
+        android:paddingTop="@dimen/card_text_margin_vertical"
+        android:paddingBottom="@dimen/card_text_margin_vertical"
+        android:paddingStart="@dimen/card_text_margin_horizontal"
+        android:paddingEnd="@dimen/card_text_margin_horizontal"
+        android:onClick="@{() -> presenter.onNoteClick(note.id, note.conflicted)}"
+        style="@style/NotesText.Reading" />
+</layout>

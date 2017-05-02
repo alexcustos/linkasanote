@@ -14,8 +14,10 @@ public interface AboutContract {
         void setViewModel(@NonNull AboutContract.ViewModel viewModel);
         boolean isActive();
 
+        void showGooglePlay();
         void showGplV3TermsAlertDialog();
         void showApacheV2TermsAlertDialog();
+        void showMitTermsAlertDialog();
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -28,7 +30,9 @@ public interface AboutContract {
 
     interface Presenter extends BasePresenter {
 
+        void onLaunchGooglePlay();
         void onLicenseTermsGplV3Click();
         void onLicenseTermsApacheV2Click();
+        void onLicenseTermsMitClick();
     }
 }

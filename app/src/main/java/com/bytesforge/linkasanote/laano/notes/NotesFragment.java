@@ -12,6 +12,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
@@ -45,9 +46,13 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
 
     private NotesContract.Presenter presenter;
     private NotesContract.ViewModel viewModel;
-    private NotesAdapter adapter;
+    private NotesAdapterBase adapter;
+    private NotesAdapterNormal normalAdapter;
+    private NotesAdapterReading readingAdapter;
     private ActionMode actionMode;
+    private RecyclerView rvNotes;
     private LinearLayoutManager rvLayoutManager;
+    private DividerItemDecoration dividerItemDecoration;
 
     public static NotesFragment newInstance() {
         return new NotesFragment();
@@ -96,9 +101,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
         viewModel.setInstanceState(savedInstanceState);
         binding.setViewModel((NotesViewModel) viewModel);
         // RecyclerView
-        if (binding.rvNotes != null) {
-            setupNotesRecyclerView(binding.rvNotes);
-        }
+        setupNotesRecyclerView(binding.rvNotes);
         return binding.getRoot();
     }
 
@@ -106,23 +109,29 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.toolbar_notes, menu);
         MenuItem searchMenuItem = menu.findItem(R.id.toolbar_notes_search);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchMenuItem);
+        setSearchMenuItem(searchMenuItem);
+        MenuItem notesLayoutModeMenuItem = menu.findItem(R.id.toolbar_notes_layout_mode);
+        setNotesLayoutModeMenuItem(notesLayoutModeMenuItem);
+    }
+
+    private void setSearchMenuItem(MenuItem item) {
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
         MenuItemCompat.setOnActionExpandListener(
-                searchMenuItem, new MenuItemCompat.OnActionExpandListener() {
+                item, new MenuItemCompat.OnActionExpandListener() {
 
-            @Override
-            public boolean onMenuItemActionExpand(MenuItem item) {
-                return true;
-            }
+                    @Override
+                    public boolean onMenuItemActionExpand(MenuItem item) {
+                        return true;
+                    }
 
-            @Override
-            public boolean onMenuItemActionCollapse(MenuItem item) {
-                getActivity().supportInvalidateOptionsMenu();
-                viewModel.setSearchText(null);
-                presenter.loadNotes(false);
-                return true;
-            }
-        });
+                    @Override
+                    public boolean onMenuItemActionCollapse(MenuItem item) {
+                        getActivity().supportInvalidateOptionsMenu();
+                        viewModel.setSearchText(null);
+                        presenter.loadNotes(false);
+                        return true;
+                    }
+                });
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
             @Override
@@ -138,18 +147,33 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
             }
         });
         if (viewModel.getSearchText() != null) {
-            searchMenuItem.expandActionView();
+            item.expandActionView();
             searchView.setQuery(viewModel.getSearchText(), false);
+        }
+    }
+
+    private void setNotesLayoutModeMenuItem(MenuItem item) {
+        if (presenter.isNotesLayoutModeReading()) {
+            item.setTitle(R.string.toolbar_notes_item_mode_normal);
+        } else {
+            item.setTitle(R.string.toolbar_notes_item_mode_reading);
         }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        boolean readingMode;
         switch (item.getItemId()) {
             case R.id.toolbar_notes_filter:
                 showFilteringPopupMenu();
                 break;
             case R.id.toolbar_notes_action_mode:
+                readingMode = presenter.isNotesLayoutModeReading();
+                if (readingMode) {
+                    readingMode = presenter.toggleNotesLayoutModeReading();
+                    getActivity().invalidateOptionsMenu();
+                    updateNotesAdapter(readingMode);
+                }
                 enableActionMode();
                 break;
             case R.id.toolbar_notes_expand_all:
@@ -157,6 +181,11 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
                 break;
             case R.id.toolbar_notes_collapse_all:
                 viewModel.collapseAllNotes();
+                break;
+            case R.id.toolbar_notes_layout_mode:
+                readingMode = presenter.toggleNotesLayoutModeReading();
+                getActivity().invalidateOptionsMenu();
+                updateNotesAdapter(readingMode);
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -189,7 +218,6 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     @Override
     public void showNotes(@NonNull List<Note> notes) {
         checkNotNull(notes);
-
         adapter.swapItems(notes);
         viewModel.setNoteListSize(notes.size());
         if (viewModel.isActionMode()) {
@@ -215,12 +243,39 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
         }
     }
 
-    private void setupNotesRecyclerView(RecyclerView rvNotes) {
-        List<Note> notes = new ArrayList<>(0);
-        adapter = new NotesAdapter(notes, presenter, (NotesViewModel) viewModel);
-        rvNotes.setAdapter(adapter);
+    private void setupNotesRecyclerView(final RecyclerView rvNotes) {
+        this.rvNotes = rvNotes;
         rvLayoutManager = new LinearLayoutManager(getContext());
         rvNotes.setLayoutManager(rvLayoutManager);
+        dividerItemDecoration = new DividerItemDecoration(
+                rvNotes.getContext(), rvLayoutManager.getOrientation());
+        boolean readingMode = presenter.isNotesLayoutModeReading();
+        updateNotesAdapter(readingMode);
+    }
+
+    private void updateNotesAdapter(final boolean readingMode) {
+        final List<Note> notes = (adapter == null ? new ArrayList<>(0) : adapter.getNotes());
+        if (readingMode && (adapter == null || adapter instanceof NotesAdapterNormal)) {
+            if (readingAdapter != null) {
+                adapter = readingAdapter;
+                adapter.swapItems(notes);
+            } else {
+                adapter = readingAdapter = new NotesAdapterReading(
+                        notes, presenter, (NotesViewModel) viewModel);
+            }
+            rvNotes.setAdapter(adapter);
+            rvNotes.addItemDecoration(dividerItemDecoration);
+        } else if (!readingMode && (adapter == null || adapter instanceof NotesAdapterReading)) {
+            if (normalAdapter != null) {
+                adapter = normalAdapter;
+                adapter.swapItems(notes);
+            } else {
+                adapter = normalAdapter = new NotesAdapterNormal(
+                        notes, presenter, (NotesViewModel) viewModel);
+            }
+            rvNotes.setAdapter(adapter);
+            rvNotes.removeItemDecoration(dividerItemDecoration);
+        }
     }
 
     private void showFilteringPopupMenu() {
