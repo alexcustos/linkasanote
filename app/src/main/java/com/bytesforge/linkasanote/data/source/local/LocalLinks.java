@@ -172,6 +172,7 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
     public Single<Integer> resetSyncState() {
         return Single.fromCallable(() -> {
             ContentValues values = new ContentValues();
+            values.put(LocalContract.LinkEntry.COLUMN_NAME_ETAG, (String) null);
             values.put(LocalContract.LinkEntry.COLUMN_NAME_SYNCED, false);
             final String selection = LocalContract.LinkEntry.COLUMN_NAME_SYNCED + " = ?";
             final String[] selectionArgs = {"1"};

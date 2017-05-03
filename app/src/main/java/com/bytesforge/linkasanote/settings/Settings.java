@@ -39,9 +39,11 @@ public class Settings {
     // TODO: this settings should be 3 way switch: on app start; on addEdit start; off
     public static final boolean GLOBAL_CLIPBOARD_MONITOR_ON_START = true;
 
-    private static final String DEFAULT_SYNC_DIRECTORY = "/.laano_sync";
     private static final boolean DEFAULT_EXPAND_LINKS = false;
     private static final boolean DEFAULT_EXPAND_NOTES = true;
+    private static final String DEFAULT_SYNC_DIRECTORY = "/.laano_sync";
+    private static final boolean DEFAULT_SYNC_UPLOAD_TO_EMPTY = true;
+    private static final boolean DEFAULT_SYNC_PROTECT_LOCAL = true;
     private static final boolean DEFAULT_CLIPBOARD_LINK_GET_METADATA = true;
     private static final boolean DEFAULT_CLIPBOARD_LINK_FOLLOW = false;
     private static final boolean DEFAULT_CLIPBOARD_FILL_IN_FORMS = true;
@@ -86,6 +88,18 @@ public class Settings {
     public boolean isExpandNotes() {
         return sharedPreferences.getBoolean(
                 resources.getString(R.string.pref_key_expand_notes), DEFAULT_EXPAND_NOTES);
+    }
+
+    public boolean isSyncUploadToEmpty() {
+        return sharedPreferences.getBoolean(
+                resources.getString(R.string.pref_key_sync_upload_to_empty),
+                DEFAULT_SYNC_UPLOAD_TO_EMPTY);
+    }
+
+    public boolean isSyncProtectLocal() {
+        return sharedPreferences.getBoolean(
+                resources.getString(R.string.pref_key_sync_protect_local),
+                DEFAULT_SYNC_PROTECT_LOCAL);
     }
 
     public boolean isClipboardLinkGetMetadata() {

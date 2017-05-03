@@ -91,8 +91,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         // Favorites
         syncNotifications.sendSyncBroadcast(
                 SyncNotifications.ACTION_SYNC_FAVORITES, SyncNotifications.STATUS_SYNC_START);
-        SyncItem<Favorite> syncFavorites = new SyncItem<>(ocClient,
-                localFavorites, cloudFavorites, syncNotifications, SyncNotifications.ACTION_SYNC_FAVORITES);
+        SyncItem<Favorite> syncFavorites = new SyncItem<>(ocClient, localFavorites, cloudFavorites,
+                syncNotifications, SyncNotifications.ACTION_SYNC_FAVORITES,
+                settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal());
         favoritesSyncResult = syncFavorites.sync();
         syncNotifications.sendSyncBroadcast(
                 SyncNotifications.ACTION_SYNC_FAVORITES, SyncNotifications.STATUS_SYNC_STOP);
@@ -102,8 +103,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         if (!fatalError) {
             syncNotifications.sendSyncBroadcast(
                     SyncNotifications.ACTION_SYNC_LINKS, SyncNotifications.STATUS_SYNC_START);
-            SyncItem<Link> syncLinks = new SyncItem<>(ocClient,
-                    localLinks, cloudLinks, syncNotifications, SyncNotifications.ACTION_SYNC_LINKS);
+            SyncItem<Link> syncLinks = new SyncItem<>(ocClient, localLinks, cloudLinks,
+                    syncNotifications, SyncNotifications.ACTION_SYNC_LINKS,
+                    settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal());
             linksSyncResult = syncLinks.sync();
             syncNotifications.sendSyncBroadcast(
                     SyncNotifications.ACTION_SYNC_LINKS, SyncNotifications.STATUS_SYNC_STOP);
@@ -114,8 +116,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         if (!fatalError) {
             syncNotifications.sendSyncBroadcast(
                     SyncNotifications.ACTION_SYNC_NOTES, SyncNotifications.STATUS_SYNC_START);
-            SyncItem<Note> syncNotes = new SyncItem<>(ocClient,
-                    localNotes, cloudNotes, syncNotifications, SyncNotifications.ACTION_SYNC_NOTES);
+            SyncItem<Note> syncNotes = new SyncItem<>(ocClient, localNotes, cloudNotes,
+                    syncNotifications, SyncNotifications.ACTION_SYNC_NOTES,
+                    settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal());
             notesSyncResult = syncNotes.sync();
             syncNotifications.sendSyncBroadcast(
                     SyncNotifications.ACTION_SYNC_NOTES, SyncNotifications.STATUS_SYNC_STOP);
@@ -169,23 +172,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 syncNotifications.notifyFailedSynchronization(
                         resources.getString(R.string.sync_adapter_text_failed) + " " +
                                 Joiner.on(", ").join(failSources));
-            }
-            // Empty
-            List<String> emptySources = new ArrayList<>();
-            if (linksSyncResult.isEmptySource()) {
-                emptySources.add(resources.getString(R.string.laano_tab_links_title));
-            }
-            if (favoritesSyncResult.isEmptySource()) {
-                emptySources.add(resources.getString(R.string.laano_tab_favorites_title));
-            }
-            if (notesSyncResult.isEmptySource()) {
-                emptySources.add(resources.getString(R.string.laano_tab_notes_title));
-            }
-            if (!emptySources.isEmpty()) {
-                syncNotifications.notifyFailedSynchronization(
-                        resources.getString(R.string.sync_adapter_title_empty_storage),
-                        resources.getString(R.string.sync_adapter_text_empty_storage,
-                                Joiner.on(", ").join(emptySources)));
             }
         }
     }

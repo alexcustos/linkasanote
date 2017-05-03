@@ -30,11 +30,14 @@
         <item name="android:textColor">@color/tabs_text</item>
     </style>
 
+    <style name="Laano.SettingsTheme" parent="PreferenceThemeOverlay.v14.Material">
+        <item name="android:divider">@null</item>
+        <item name="android:dividerHeight">0dp</item>
+    </style>
     <style name="Laano.Settings" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
+        <item name="preferenceTheme">@style/Laano.SettingsTheme</item>
         <!-- NOTE: this fix breaks ListPreference since Support Library 25.0.1 -->
         <!--<item name="dialogLayout">@layout/settings_dialog_edittext</item>-->
-
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
         <item name="colorAccent">@color/color_accent</item>
@@ -64,6 +67,10 @@
         <item name="android:textSize">18sp</item>
     </style>
     <style name="ConflictResolution.Link" parent="ConflictResolution.Name">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?android:textColorSecondary</item>
+    </style>
+    <style name="ConflictResolution.Note" parent="ConflictResolution.Name">
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">?android:textColorSecondary</item>
     </style>
@@ -128,7 +135,7 @@
         <item name="android:textSize">18sp</item>
     </style>
     <style name="NotesText.Reading" parent="TextAppearance.AppCompat.Body1">
-        <item name="android:textColor">?android:textColorPrimary</item>
+        <item name="android:textColor">?android:textColorSecondary</item>
     </style>
     <style name="NotesText.LinkName" parent="TextAppearance.AppCompat.Subhead" />
 </resources>

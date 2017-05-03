@@ -33,6 +33,8 @@ import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
 import com.bytesforge.linkasanote.laano.links.LinksViewModel;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteActivity;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteFragment;
+import com.bytesforge.linkasanote.laano.notes.conflictresolution.NotesConflictResolutionDialog;
+import com.bytesforge.linkasanote.settings.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
 
     public static final int REQUEST_ADD_NOTE = 1;
     public static final int REQUEST_EDIT_NOTE = 2;
+    public static final int REQUEST_NOTE_CONFLICT_RESOLUTION = 3;
 
     private NotesContract.Presenter presenter;
     private NotesContract.ViewModel viewModel;
@@ -53,6 +56,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     private RecyclerView rvNotes;
     private LinearLayoutManager rvLayoutManager;
     private DividerItemDecoration dividerItemDecoration;
+    private NotesActionModeCallback notesActionModeCallback;
 
     public static NotesFragment newInstance() {
         return new NotesFragment();
@@ -238,6 +242,16 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
                     adapter.notifyDataSetChanged();
                 }
                 break;
+            case REQUEST_NOTE_CONFLICT_RESOLUTION:
+                adapter.notifyDataSetChanged();
+                presenter.updateTabNormalState();
+                presenter.loadNotes(false);
+                if (resultCode == NotesConflictResolutionDialog.RESULT_OK) {
+                    viewModel.showConflictResolutionSuccessfulSnackbar();
+                } else if (resultCode == NotesConflictResolutionDialog.RESULT_FAILED){
+                    viewModel.showConflictResolutionErrorSnackbar();
+                }
+                break;
             default:
                 throw new IllegalStateException("The result received from the unexpected activity");
         }
@@ -332,10 +346,12 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
             viewModel.enableActionMode();
         }
         if (actionMode == null) {
-            actionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(
-                    new NotesActionModeCallback());
+            notesActionModeCallback = new NotesActionModeCallback();
+            actionMode = ((AppCompatActivity) getActivity())
+                    .startSupportActionMode(notesActionModeCallback);
         }
         updateActionModeTitle();
+        updateActionModeMenu();
     }
 
     @Override
@@ -351,6 +367,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
         }
         if (actionMode != null) {
             actionMode = null;
+            notesActionModeCallback = null;
         }
     }
 
@@ -358,6 +375,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     public void selectionChanged(int position) {
         //adapter.notifyItemChanged(position);
         updateActionModeTitle();
+        updateActionModeMenu();
     }
 
     @Override
@@ -378,14 +396,25 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     }
 
     private void updateActionModeTitle() {
-        if (actionMode != null) {
-            actionMode.setTitle(getContext().getResources().getString(
-                    R.string.laano_notes_action_mode_selected,
-                    viewModel.getSelectedCount(), adapter.getItemCount()));
-            if (adapter.getItemCount() <= 0) {
-                finishActionMode();
-            }
-        } // if
+        if (actionMode == null) return;
+
+        actionMode.setTitle(getContext().getResources().getString(
+                R.string.laano_notes_action_mode_selected,
+                viewModel.getSelectedCount(), adapter.getItemCount()));
+        if (adapter.getItemCount() <= 0) {
+            finishActionMode();
+        }
+    }
+
+    private void updateActionModeMenu() {
+        if (notesActionModeCallback == null) return;
+
+        int selected = viewModel.getSelectedCount();
+        if (selected <= 0) {
+            notesActionModeCallback.setDeleteEnabled(false);
+        } else {
+            notesActionModeCallback.setDeleteEnabled(true);
+        }
     }
 
     @Override
@@ -408,7 +437,19 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
         presenter.deleteNotes(selectedIds);
     }
 
+    @Override
+    public void showConflictResolution(@NonNull String noteId) {
+        checkNotNull(noteId);
+
+        NotesConflictResolutionDialog dialog =
+                NotesConflictResolutionDialog.newInstance(noteId);
+        dialog.setTargetFragment(this, REQUEST_NOTE_CONFLICT_RESOLUTION);
+        dialog.show(getFragmentManager(), NotesConflictResolutionDialog.DIALOG_TAG);
+    }
+
     public class NotesActionModeCallback implements ActionMode.Callback {
+
+        private MenuItem deleteMenuItem;
 
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -418,7 +459,8 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            menu.findItem(R.id.notes_delete).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+            deleteMenuItem = menu.findItem(R.id.notes_delete);
+            deleteMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
             menu.findItem(R.id.notes_select_all).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
             return true;
         }
@@ -432,6 +474,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
                 case R.id.notes_select_all:
                     presenter.onSelectAllClick();
                     updateActionModeTitle();
+                    updateActionModeMenu();
                     break;
                 default:
                     throw new UnsupportedOperationException(
@@ -443,6 +486,17 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             destroyActionMode();
+        }
+
+        public void setDeleteEnabled(boolean enabled) {
+            if (deleteMenuItem == null) return;
+
+            deleteMenuItem.setEnabled(enabled);
+            if (enabled) {
+                deleteMenuItem.getIcon().setAlpha(255);
+            } else {
+                deleteMenuItem.getIcon().setAlpha((int) (255.0 * Settings.GLOBAL_ICON_ALPHA_DISABLED));
+            }
         }
     }
 

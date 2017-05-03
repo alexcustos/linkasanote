@@ -29,18 +29,23 @@ public class SyncItem<T extends Item> {
     private final SyncNotifications syncNotifications;
     private final OwnCloudClient ocClient;
     private final String notificationAction;
+    private final boolean uploadToEmpty;
+    private final boolean protectLocal;
 
     private SyncItemResult syncResult;
 
     public SyncItem(
             @NonNull OwnCloudClient ocClient,
             @NonNull LocalItem<T> localItem, @NonNull CloudItem<T> cloudItem,
-            @NonNull SyncNotifications syncNotifications, @NonNull String notificationAction) {
+            @NonNull SyncNotifications syncNotifications, @NonNull String notificationAction,
+            boolean uploadToEmpty, boolean protectLocal) {
         this.ocClient = checkNotNull(ocClient);
         this.localItem = checkNotNull(localItem);
         this.cloudItem = checkNotNull(cloudItem);
         this.syncNotifications = checkNotNull(syncNotifications);
         this.notificationAction = checkNotNull(notificationAction);
+        this.uploadToEmpty = uploadToEmpty;
+        this.protectLocal = protectLocal;
         syncResult = new SyncItemResult(SyncItemResult.Status.FAILS_COUNT);
     }
 
@@ -68,12 +73,10 @@ public class SyncItem<T extends Item> {
             return;
         }
         final Map<String, String> cloudDataSourceMap = cloudItem.getDataSourceMap(ocClient);
-        // Protection of the local storage
-        if (cloudDataSourceMap.isEmpty()) {
+        if (cloudDataSourceMap.isEmpty() && uploadToEmpty) {
             int numRows = localItem.resetSyncState().blockingGet();
             if (numRows > 0) {
-                syncResult = new SyncItemResult(SyncItemResult.Status.EMPTY_SOURCE);
-                return;
+                Log.d(TAG, "Cloud storage loss is detected, starting to upload [" + numRows + "]");
             }
         }
         // Sync Local
@@ -145,18 +148,25 @@ public class SyncItem<T extends Item> {
             }
         } else if (cloudETag == null) { // Was deleted on cloud
             if (item.isSynced()) {
-                // DELETE local
-                notifyChanged = deleteLocal(itemId);
-                statusChanged = SyncNotifications.STATUS_DELETED;
-            } else {
-                // SET conflicted
-                SyncState state;
-                if (item.isDeleted()) {
-                    state = new SyncState(SyncState.State.CONFLICTED_DELETE);
+                if (protectLocal) {
+                    // SET conflicted (as if it has been changed)
+                    SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
+                    notifyChanged = update(itemId, state);
                 } else {
-                    state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
+                    // DELETE local
+                    notifyChanged = deleteLocal(itemId);
+                    statusChanged = SyncNotifications.STATUS_DELETED;
                 }
-                notifyChanged = update(itemId, state);
+            } else {
+                if (item.isDeleted()) {
+                    // DELETE local
+                    notifyChanged = deleteLocal(itemId);
+                    statusChanged = SyncNotifications.STATUS_DELETED;
+                } else {
+                    // SET conflicted
+                    SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
+                    notifyChanged = update(itemId, state);
+                }
             }
         } else { // Was changed on cloud
             // duplicated && conflicted can be ignored

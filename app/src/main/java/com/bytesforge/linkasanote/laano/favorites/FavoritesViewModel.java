@@ -324,6 +324,8 @@ public class FavoritesViewModel extends BaseObservable implements FavoritesContr
         return ids.stream().mapToInt(i -> i).toArray();
     }
 
+    // Snackbar
+
     @Override
     public void showDatabaseErrorSnackbar() {
         snackbarId = SnackbarId.DATABASE_ERROR;

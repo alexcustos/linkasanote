@@ -155,6 +155,7 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
     public Single<Integer> resetSyncState() {
         return Single.fromCallable(() -> {
             ContentValues values = new ContentValues();
+            values.put(LocalContract.NoteEntry.COLUMN_NAME_ETAG, (String) null);
             values.put(LocalContract.NoteEntry.COLUMN_NAME_SYNCED, false);
             final String selection = LocalContract.NoteEntry.COLUMN_NAME_SYNCED + " = ?";
             final String[] selectionArgs = {"1"};
@@ -196,11 +197,11 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
 
     @Override
     public Single<T> getMain(final String duplicatedKey) {
-        throw new RuntimeException("getMain(): there is no Conflict Resolution implementation available for the Notes");
+        throw new RuntimeException("getMain(): there is not duplicatedKey implementation available for the Notes");
     }
 
     @Override
     public Single<Boolean> autoResolveConflict(String noteId) {
-        throw new RuntimeException("autoResolveConflict(): there is no Conflict Resolution implementation available for the Notes");
+        throw new RuntimeException("autoResolveConflict(): there is no Auto Conflict Resolution implementation available for the Notes");
     }
 }

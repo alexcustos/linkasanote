@@ -39,6 +39,7 @@ import com.bytesforge.linkasanote.laano.links.conflictresolution.LinksConflictRe
 import com.bytesforge.linkasanote.laano.notes.NotesViewModel;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteActivity;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteFragment;
+import com.bytesforge.linkasanote.settings.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +58,7 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     private LinksAdapter adapter;
     private ActionMode actionMode;
     private LinearLayoutManager rvLayoutManager;
+    private LinksActionModeCallback linksActionModeCallback;
 
     public static LinksFragment newInstance() {
         return new LinksFragment();
@@ -307,10 +309,12 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
             viewModel.enableActionMode();
         }
         if (actionMode == null) {
-            actionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(
-                    new LinksActionModeCallback());
+            linksActionModeCallback = new LinksActionModeCallback();
+            actionMode = ((AppCompatActivity) getActivity())
+                    .startSupportActionMode(linksActionModeCallback);
         }
         updateActionModeTitle();
+        updateActionModeMenu();
     }
 
     @Override
@@ -326,6 +330,7 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
         }
         if (actionMode != null) {
             actionMode = null;
+            linksActionModeCallback = null;
         }
     }
 
@@ -333,6 +338,7 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     public void selectionChanged(int position) {
         //adapter.notifyItemChanged(position);
         updateActionModeTitle();
+        updateActionModeMenu();
     }
 
     @Override
@@ -353,13 +359,24 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     }
 
     private void updateActionModeTitle() {
-        if (actionMode != null) {
-            actionMode.setTitle(getContext().getResources().getString(
-                    R.string.laano_links_action_mode_selected,
-                    viewModel.getSelectedCount(), adapter.getItemCount()));
-            if (adapter.getItemCount() <= 0) {
-                finishActionMode();
-            }
+        if (actionMode == null) return;
+
+        actionMode.setTitle(getContext().getResources().getString(
+                R.string.laano_links_action_mode_selected,
+                viewModel.getSelectedCount(), adapter.getItemCount()));
+        if (adapter.getItemCount() <= 0) {
+            finishActionMode();
+        }
+    }
+
+    private void updateActionModeMenu() {
+        if (linksActionModeCallback == null) return;
+
+        int selected = viewModel.getSelectedCount();
+        if (selected <= 0) {
+            linksActionModeCallback.setDeleteEnabled(false);
+        } else {
+            linksActionModeCallback.setDeleteEnabled(true);
         }
     }
 
@@ -414,6 +431,8 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
 
     public class LinksActionModeCallback implements ActionMode.Callback {
 
+        private MenuItem deleteMenuItem;
+
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             mode.getMenuInflater().inflate(R.menu.action_mode_links, menu);
@@ -422,7 +441,8 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            menu.findItem(R.id.links_delete).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+            deleteMenuItem = menu.findItem(R.id.links_delete);
+            deleteMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
             menu.findItem(R.id.links_select_all).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
             return true;
         }
@@ -436,6 +456,7 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
                 case R.id.links_select_all:
                     presenter.onSelectAllClick();
                     updateActionModeTitle();
+                    updateActionModeMenu();
                     break;
                 default:
                     throw new UnsupportedOperationException(
@@ -447,6 +468,17 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             destroyActionMode();
+        }
+
+        public void setDeleteEnabled(boolean enabled) {
+            if (deleteMenuItem == null) return;
+
+            deleteMenuItem.setEnabled(enabled);
+            if (enabled) {
+                deleteMenuItem.getIcon().setAlpha(255);
+            } else {
+                deleteMenuItem.getIcon().setAlpha((int) (255.0 * Settings.GLOBAL_ICON_ALPHA_DISABLED));
+            }
         }
     }
 

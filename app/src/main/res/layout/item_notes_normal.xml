@@ -130,7 +130,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@{note.note}"
-                android:background="@color/note_background"
+                android:background="@{viewModel.getNoteNoteBackground(note.conflicted, false, viewModel.selectionChanged)}"
                 android:paddingTop="@dimen/card_text_margin_vertical"
                 android:paddingBottom="@dimen/card_text_margin_vertical"
                 android:paddingStart="@dimen/card_text_margin_horizontal"

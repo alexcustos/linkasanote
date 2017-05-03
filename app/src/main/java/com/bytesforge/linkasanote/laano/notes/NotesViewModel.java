@@ -50,7 +50,8 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
     private SparseBooleanArray visibleNoteIds;
     private String searchText;
 
-    public enum SnackbarId {DATABASE_ERROR};
+    public enum SnackbarId {
+        DATABASE_ERROR, CONFLICT_RESOLUTION_SUCCESSFUL, CONFLICT_RESOLUTION_ERROR};
 
     @Bindable
     public SnackbarId snackbarId;
@@ -83,6 +84,16 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
                 Snackbar.make(view, R.string.error_database, Snackbar.LENGTH_INDEFINITE)
                         .setAction(R.string.snackbar_button_ok, v -> { /* just inform */ })
                         .show();
+                break;
+            case CONFLICT_RESOLUTION_SUCCESSFUL:
+                Snackbar.make(view,
+                        R.string.dialog_note_conflict_resolved_success,
+                        Snackbar.LENGTH_LONG).show();
+                break;
+            case CONFLICT_RESOLUTION_ERROR:
+                Snackbar.make(view,
+                        R.string.dialog_note_conflict_resolved_error,
+                        Snackbar.LENGTH_LONG).show();
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected snackbar has been requested");
@@ -177,6 +188,13 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
             return resources.getColor(readingMode
                     ? R.color.item_note_reading_mode_selected
                     : R.color.item_note_normal_mode_selected, context.getTheme());
+        }
+        return resources.getColor(android.R.color.transparent, context.getTheme());
+    }
+
+    public int getNoteNoteBackground(boolean conflicted, boolean readingMode, boolean changed) {
+        if (!conflicted) {
+            return resources.getColor(R.color.note_background, context.getTheme());
         }
         return resources.getColor(android.R.color.transparent, context.getTheme());
     }
@@ -356,6 +374,18 @@ public class NotesViewModel extends BaseObservable implements NotesContract.View
     @Override
     public void showDatabaseErrorSnackbar() {
         snackbarId = SnackbarId.DATABASE_ERROR;
+        notifyPropertyChanged(BR.snackbarId);
+    }
+
+    @Override
+    public void showConflictResolutionSuccessfulSnackbar() {
+        snackbarId = SnackbarId.CONFLICT_RESOLUTION_SUCCESSFUL;
+        notifyPropertyChanged(BR.snackbarId);
+    }
+
+    @Override
+    public void showConflictResolutionErrorSnackbar() {
+        snackbarId = SnackbarId.CONFLICT_RESOLUTION_ERROR;
         notifyPropertyChanged(BR.snackbarId);
     }
 

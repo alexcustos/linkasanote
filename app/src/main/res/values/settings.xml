@@ -9,17 +9,20 @@
     <string name="filter_menu_item_postfix">(%s)</string>
     <integer name="tags_autocomplete_threshold">1</integer>
     <integer name="add_edit_note_lines">5</integer>
+    <integer name="dialog_note_lines">5</integer>
     <bool name="multiaccount_support">false</bool>
 
     <string name="pref_sync_interval_manual_mode">0</string>
     <string name="pref_key_expand_links">expand_links</string>
     <string name="pref_key_expand_notes">expand_notes</string>
+    <string name="pref_key_sync_directory">sync_directory</string>
+    <string name="pref_key_sync_interval">sync_interval</string>
+    <string name="pref_key_sync_upload_to_empty">sync_upload_to_empty</string>
+    <string name="pref_key_sync_protect_local">sync_protect_local</string>
     <string name="pref_key_clipboard_link_get_metadata">link_metadata</string>
     <string name="pref_key_clipboard_link_follow">link_follow</string>
     <string name="pref_key_clipboard_fill_in_forms">clipboard_fill_in_forms</string>
     <string name="pref_key_clipboard_parameter_white_list">parameter_white_list</string>
-    <string name="pref_key_sync_directory">sync_directory</string>
-    <string name="pref_key_sync_interval">sync_interval</string>
 
     <string name="libraries_apache_v2">
         <li>Android Open Source Project</li>\n

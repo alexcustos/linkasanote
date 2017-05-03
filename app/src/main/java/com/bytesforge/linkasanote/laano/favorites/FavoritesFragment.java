@@ -31,6 +31,7 @@ import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteActivity;
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteFragment;
 import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionDialog;
+import com.bytesforge.linkasanote.settings.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     private FavoritesAdapter adapter;
     private ActionMode actionMode;
     private LinearLayoutManager rvLayoutManager;
+    private FavoritesActionModeCallback favoritesActionModeCallback;
 
     public static FavoritesFragment newInstance() {
         return new FavoritesFragment();
@@ -265,10 +267,12 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
             viewModel.enableActionMode();
         }
         if (actionMode == null) {
-            actionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(
-                    new FavoritesActionModeCallback());
+            favoritesActionModeCallback = new FavoritesActionModeCallback();
+            actionMode = ((AppCompatActivity) getActivity())
+                    .startSupportActionMode(favoritesActionModeCallback);
         }
         updateActionModeTitle();
+        updateActionModeMenu();
     }
 
     @Override
@@ -284,23 +288,36 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         }
         if (actionMode != null) {
             actionMode = null;
+            favoritesActionModeCallback = null;
         }
     }
 
     @Override
     public void selectionChanged(int position) {
         updateActionModeTitle();
+        updateActionModeMenu();
     }
 
     private void updateActionModeTitle() {
-        if (actionMode != null) {
-            actionMode.setTitle(getContext().getResources().getString(
-                    R.string.laano_favorites_action_mode_selected,
-                    viewModel.getSelectedCount(), adapter.getItemCount()));
-            if (adapter.getItemCount() <= 0) {
-                finishActionMode();
-            }
-        } // if
+        if (actionMode == null) return;
+
+        actionMode.setTitle(getContext().getResources().getString(
+                R.string.laano_favorites_action_mode_selected,
+                viewModel.getSelectedCount(), adapter.getItemCount()));
+        if (adapter.getItemCount() <= 0) {
+            finishActionMode();
+        }
+    }
+
+    private void updateActionModeMenu() {
+        if (favoritesActionModeCallback == null) return;
+
+        int selected = viewModel.getSelectedCount();
+        if (selected <= 0) {
+            favoritesActionModeCallback.setDeleteEnabled(false);
+        } else {
+            favoritesActionModeCallback.setDeleteEnabled(true);
+        }
     }
 
     @Override
@@ -347,6 +364,8 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
 
     public class FavoritesActionModeCallback implements ActionMode.Callback {
 
+        private MenuItem deleteMenuItem;
+
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             mode.getMenuInflater().inflate(R.menu.action_mode_favorites, menu);
@@ -355,7 +374,8 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            menu.findItem(R.id.favorites_delete).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+            deleteMenuItem = menu.findItem(R.id.favorites_delete);
+            deleteMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
             menu.findItem(R.id.favorites_select_all).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
             return true;
         }
@@ -369,6 +389,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
                 case R.id.favorites_select_all:
                     presenter.onSelectAllClick();
                     updateActionModeTitle();
+                    updateActionModeMenu();
                     break;
                 default:
                     throw new UnsupportedOperationException(
@@ -380,6 +401,17 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             destroyActionMode();
+        }
+
+        public void setDeleteEnabled(boolean enabled) {
+            if (deleteMenuItem == null) return;
+
+            deleteMenuItem.setEnabled(enabled);
+            if (enabled) {
+                deleteMenuItem.getIcon().setAlpha(255);
+            } else {
+                deleteMenuItem.getIcon().setAlpha((int) (255.0 * Settings.GLOBAL_ICON_ALPHA_DISABLED));
+            }
         }
     }
 

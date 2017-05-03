@@ -25,6 +25,8 @@ import com.bytesforge.linkasanote.laano.links.conflictresolution.LinksConflictRe
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteComponent;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNotePresenterModule;
+import com.bytesforge.linkasanote.laano.notes.conflictresolution.NotesConflictResolutionComponent;
+import com.bytesforge.linkasanote.laano.notes.conflictresolution.NotesConflictResolutionPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsComponent;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenterModule;
 import com.bytesforge.linkasanote.settings.SettingsFragment;
@@ -67,5 +69,7 @@ public interface ApplicationComponent {
             FavoritesConflictResolutionPresenterModule favoritesConflictResolutionPresenterModule);
     LinksConflictResolutionComponent getLinksConflictResolutionComponent(
             LinksConflictResolutionPresenterModule favoritesConflictResolutionPresenterModule);
+    NotesConflictResolutionComponent getNotesConflictResolutionComponent(
+            NotesConflictResolutionPresenterModule notesConflictResolutionPresenterModule);
     AboutComponent getAboutComponent(AboutPresenterModule module);
 }

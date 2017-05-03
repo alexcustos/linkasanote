@@ -77,6 +77,16 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         boolean expandNotes = settings.isExpandNotes();
         prefExpandNotes.setChecked(expandNotes);
 
+        CheckBoxPreference prefSyncUploadToEmpty = (CheckBoxPreference) findPreference(
+                resources.getString(R.string.pref_key_sync_upload_to_empty));
+        boolean syncUploadToEmpty = settings.isSyncUploadToEmpty();
+        prefSyncUploadToEmpty.setChecked(syncUploadToEmpty);
+
+        CheckBoxPreference prefSyncProtectLocal = (CheckBoxPreference) findPreference(
+                resources.getString(R.string.pref_key_sync_protect_local));
+        boolean syncProtectLocal = settings.isSyncProtectLocal();
+        prefSyncProtectLocal.setChecked(syncProtectLocal);
+
         CheckBoxPreference prefClipboardLinkGetMetadata = (CheckBoxPreference) findPreference(
                 resources.getString(R.string.pref_key_clipboard_link_get_metadata));
         boolean clipboardLinkGetMetadata = settings.isClipboardLinkGetMetadata();

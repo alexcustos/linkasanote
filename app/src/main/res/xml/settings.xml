@@ -7,7 +7,6 @@
             android:key="@string/pref_key_expand_links"
             android:title="@string/pref_title_links_expanding"
             android:summary="@string/pref_summary_links_expanding" />
-
         <CheckBoxPreference
             android:key="@string/pref_key_expand_notes"
             android:title="@string/pref_title_notes_expanding"
@@ -21,7 +20,6 @@
             android:title="@string/pref_title_sync_directory"
             android:summary="@string/placeholder_text"
             android:inputType="text|textNoSuggestions" />
-
         <ListPreference
             android:key="@string/pref_key_sync_interval"
             android:title="@string/pref_title_sync_interval"
@@ -29,6 +27,14 @@
             android:persistent="false"
             android:entries="@array/pref_sync_interval_names"
             android:entryValues="@array/pref_sync_interval_seconds" />
+        <CheckBoxPreference
+            android:key="@string/pref_key_sync_upload_to_empty"
+            android:title="@string/pref_title_sync_upload_to_empty"
+            android:summary="@string/pref_summary_sync_upload_to_empty" />
+        <CheckBoxPreference
+            android:key="@string/pref_key_sync_protect_local"
+            android:title="@string/pref_title_sync_protect_local"
+            android:summary="@string/pref_summary_sync_protect_local" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_title_clipboard">
@@ -37,22 +43,19 @@
             android:key="@string/pref_key_clipboard_link_get_metadata"
             android:title="@string/pref_title_clipboard_link_get_metadata"
             android:summary="@string/pref_summary_clipboard_link_get_metadata" />
-
         <CheckBoxPreference
             android:key="@string/pref_key_clipboard_link_follow"
             android:title="@string/pref_title_clipboard_link_follow"
             android:summary="@string/pref_summary_clipboard_link_follow"
             android:dependency="@string/pref_key_clipboard_link_get_metadata" />
-
-        <CheckBoxPreference
-            android:key="@string/pref_key_clipboard_fill_in_forms"
-            android:title="@string/pref_title_clipboard_fill_in_forms"
-            android:summary="@string/pref_summary_clipboard_fill_in_forms" />
-
         <EditTextPreference
             android:key="@string/pref_key_clipboard_parameter_white_list"
             android:title="@string/pref_title_clipboard_parameter_white_list"
             android:summary="@string/pref_summary_clipboard_parameter_white_list"
             android:inputType="text" />
+        <CheckBoxPreference
+            android:key="@string/pref_key_clipboard_fill_in_forms"
+            android:title="@string/pref_title_clipboard_fill_in_forms"
+            android:summary="@string/pref_summary_clipboard_fill_in_forms" />
     </PreferenceCategory>
 </PreferenceScreen>

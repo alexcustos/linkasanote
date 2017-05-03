@@ -2,7 +2,7 @@ package com.bytesforge.linkasanote.sync;
 
 class SyncItemResult {
 
-    public enum Status {FAILS_COUNT, DB_ACCESS_ERROR, SOURCE_NOT_READY, EMPTY_SOURCE}
+    public enum Status {FAILS_COUNT, DB_ACCESS_ERROR, SOURCE_NOT_READY}
 
     private final Status status;
     private int failsCount;
@@ -18,10 +18,6 @@ class SyncItemResult {
 
     public boolean isSourceNotReady() {
         return status == Status.SOURCE_NOT_READY;
-    }
-
-    public boolean isEmptySource() {
-        return status == Status.EMPTY_SOURCE;
     }
 
     public int getFailsCount() {

@@ -163,6 +163,7 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
     public Single<Integer> resetSyncState() {
         return Single.fromCallable(() -> {
             ContentValues values = new ContentValues();
+            values.put(LocalContract.FavoriteEntry.COLUMN_NAME_ETAG, (String) null);
             values.put(LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED, false);
             final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED + " = ?";
             final String[] selectionArgs = {"1"};

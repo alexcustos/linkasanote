@@ -218,6 +218,9 @@ public final class NotesPresenter implements NotesContract.Presenter {
     public void onNoteClick(String noteId, boolean isConflicted) {
         if (viewModel.isActionMode()) {
             onNoteSelected(noteId);
+        } else if (isConflicted) {
+            // NOTE: Note doesn't have auto conflict resolution option
+            view.showConflictResolution(noteId);
         } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
             int position = getPosition(noteId);
             boolean selected = viewModel.toggleSingleSelection(position);
