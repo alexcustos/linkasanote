@@ -35,7 +35,6 @@ public class CommonUtils {
 
     public static <T> T[] arrayAdd(@NonNull final T[] array, final T element) {
         checkNotNull(array);
-
         final T[] newArray = (T[]) Arrays.copyOf(array, array.length + 1);
         newArray[newArray.length - 1] = element;
 
@@ -58,10 +57,9 @@ public class CommonUtils {
     public static void logStackTrace(@NonNull String tag, @NonNull Throwable throwable) {
         checkNotNull(tag);
         checkNotNull(throwable);
-
         StringWriter sw = new StringWriter();
         throwable.printStackTrace(new PrintWriter(sw));
-        Log.e(tag, throwable.toString());
+        Log.e(tag, sw.toString());
     }
 
     public static int dpToPx(int dp) {

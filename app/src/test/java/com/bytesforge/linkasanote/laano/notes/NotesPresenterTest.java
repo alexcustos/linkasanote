@@ -90,8 +90,8 @@ public class NotesPresenterTest {
 
     @Test
     public void clickOnAddNote_showAddNoteUi() {
-        presenter.addNote();
-        verify(view).showAddNote(eq(null));
+        presenter.showAddNote();
+        verify(view).startAddNoteActivity(eq(null));
     }
 
     @Test

@@ -1,8 +1,13 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.util.Log;
 
+import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.BaseItemPresenter;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
@@ -10,19 +15,29 @@ import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesCo
 import com.bytesforge.linkasanote.laano.links.LinksPresenter;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Strings;
 
+import java.util.ArrayList;
+
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
-public final class FavoritesPresenter implements FavoritesContract.Presenter {
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public final class FavoritesPresenter extends BaseItemPresenter implements
+        FavoritesContract.Presenter, DataSource.Callback {
 
     private static final String TAG = FavoritesPresenter.class.getSimpleName();
+    private static final int TAB = LaanoFragmentPagerAdapter.FAVORITES_TAB;
+
+    public static final String SETTING_FAVORITES_FILTER_TYPE = "FAVORITES_FILTER_TYPE";
 
     private final Repository repository;
     private final FavoritesContract.View view;
@@ -34,6 +49,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     @NonNull
     private final CompositeDisposable compositeDisposable;
 
+    private FilterType filterType;
     private boolean firstLoad = true;
 
     @Inject
@@ -54,17 +70,17 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     void setupView() {
         view.setPresenter(this);
         view.setViewModel(viewModel);
-        viewModel.setPresenter(this);
-        viewModel.setLaanoUiManager(laanoUiManager);
     }
 
     @Override
     public void subscribe() {
+        repository.addFavoritesCallback(this);
     }
 
     @Override
     public void unsubscribe() {
         compositeDisposable.clear();
+        repository.removeFavoritesCallback(this);
     }
 
     @Override
@@ -78,8 +94,8 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     }
 
     @Override
-    public void addFavorite() {
-        view.showAddFavorite();
+    public void showAddFavorite() {
+        view.startAddFavoriteActivity();
     }
 
     @Override
@@ -97,6 +113,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         if (showLoading) {
             viewModel.showProgressOverlay();
         }
+        updateFilter();
         Disposable disposable = repository.getFavorites()
                 .subscribeOn(schedulerProvider.computation())
                 .filter(favorite -> {
@@ -109,7 +126,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
                             return false;
                         }
                     }
-                    switch (viewModel.getFilterType()) {
+                    switch (filterType) {
                         case CONFLICTED:
                             return favorite.isConflicted();
                         case ALL:
@@ -126,6 +143,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
                     if (showLoading) {
                         viewModel.hideProgressOverlay();
                     }
+                    laanoUiManager.updateTitle(TAB);
                 })
                 .subscribe(favorites -> {
                     view.showFavorites(favorites);
@@ -164,8 +182,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
                         }
                     });
         } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
-            int position = getPosition(favoriteId);
-            boolean selected = viewModel.toggleSingleSelection(position);
+            boolean selected = viewModel.toggleSingleSelection(favoriteId);
             // NOTE: filterType will be updated accordingly on the tab
             if (selected) {
                 settings.setFavoriteFilter(favoriteId);
@@ -188,13 +205,8 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     }
 
     private void onFavoriteSelected(String favoriteId) {
-        int position = view.getPosition(favoriteId);
-        if (viewModel.isActionMode()) {
-            viewModel.toggleSelection(position);
-            view.selectionChanged(position);
-        } else {
-            viewModel.toggleSingleSelection(position);
-        }
+        viewModel.toggleSelection(favoriteId);
+        view.selectionChanged(favoriteId);
     }
 
     @Override
@@ -204,8 +216,8 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
         String favoriteFilter = settings.getFavoriteFilter();
         if (favoriteFilter != null) {
             int position = getPosition(favoriteFilter);
-            if (position >= 0) {
-                viewModel.setSingleSelection(position, true);
+            if (position >= 0) { // NOTE: check if there is the filter in the list
+                viewModel.setSingleSelection(favoriteFilter, true);
                 //view.scrollToPosition(position);
             }
         }
@@ -218,8 +230,8 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void onToLinksClick(@NonNull String favoriteId) {
-        int position = getPosition(favoriteId);
-        viewModel.setSingleSelection(position, true);
+        checkNotNull(favoriteId);
+        viewModel.setSingleSelection(favoriteId, true);
         settings.setFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE, FilterType.FAVORITE);
         settings.setFavoriteFilter(favoriteId);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.LINKS_TAB);
@@ -227,8 +239,7 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void onToNotesClick(@NonNull String favoriteId) {
-        int position = getPosition(favoriteId);
-        viewModel.setSingleSelection(position, true);
+        viewModel.setSingleSelection(favoriteId, true);
         settings.setFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE, FilterType.FAVORITE);
         settings.setFavoriteFilter(favoriteId);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.NOTES_TAB);
@@ -236,27 +247,107 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
 
     @Override
     public void onDeleteClick() {
-        int[] selectedIds = viewModel.getSelectedIds();
+        ArrayList<String> selectedIds = viewModel.getSelectedIds();
         view.confirmFavoritesRemoval(selectedIds);
     }
 
     @Override
     public void onSelectAllClick() {
-        viewModel.toggleSelection();
+        String[] ids = view.getIds();
+        int listSize = ids.length;
+        if (listSize <= 0) return;
+
+        int selectedCount = viewModel.getSelectedCount();
+        if (selectedCount > listSize / 2) {
+            viewModel.setSelection(null);
+        } else {
+            viewModel.setSelection(ids);
+        }
     }
 
     @Override
-    public void deleteFavorites(int[] selectedIds) {
-        for (int selectedId : selectedIds) {
-            viewModel.removeSelection(selectedId);
-            String favoriteId = view.removeFavorite(selectedId);
-            try {
-                repository.deleteFavorite(favoriteId);
-                settings.resetFavoriteFilter(favoriteId);
-            } catch (NullPointerException e) {
-                viewModel.showDatabaseErrorSnackbar();
-            }
+    public void syncSavedFavorite(@NonNull final String favoriteId) {
+        repository.syncSavedFavorite(favoriteId)
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .doFinally(this::updateSyncStatus)
+                .subscribe(itemState -> {
+                    Log.d(TAG, "syncSavedFavorite() -> subscribe(): [" + itemState.name() + "]");
+                    switch (itemState) {
+                        case CONFLICTED:
+                            laanoUiManager.showLongToast(R.string.toast_sync_conflict);
+                            break;
+                        case ERROR_CLOUD:
+                            settings.setSyncStatus(SyncAdapter.SYNC_STATUS_ERROR);
+                            laanoUiManager.showLongToast(R.string.toast_sync_error);
+                            break;
+                        case SAVED:
+                            laanoUiManager.showShortToast(R.string.toast_sync_success);
+                            break;
+                    }
+                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+    }
+
+    @Override
+    public void deleteFavorites(ArrayList<String> selectedIds) {
+        Observable.fromIterable(selectedIds)
+                .flatMap(favoriteId -> {
+                    Log.d(TAG, "deleteFavorites(): [" + favoriteId + "]");
+                    return repository.deleteFavorite(favoriteId, settings.isSyncable())
+                            .subscribeOn(schedulerProvider.io())
+                            .observeOn(schedulerProvider.ui())
+                            .doOnNext(itemState -> {
+                                Log.d(TAG, "deleteFavorites() -> doOnNext(): [" + itemState.name() + "]");
+                                if (itemState == DataSource.ItemState.DELETED
+                                        || itemState == DataSource.ItemState.DEFERRED) {
+                                    // NOTE: can be called twice
+                                    view.removeFavorite(favoriteId);
+                                    settings.resetFavoriteFilter(favoriteId);
+                                }
+                            });
+                })
+                .filter(itemState -> itemState == DataSource.ItemState.CONFLICTED
+                        || itemState == DataSource.ItemState.ERROR_LOCAL
+                        || itemState == DataSource.ItemState.ERROR_CLOUD)
+                .toList()
+                .doFinally(this::updateSyncStatus)
+                .subscribe(itemStates -> {
+                    Log.d(TAG, "deleteFavorites(): Completed [" + itemStates.toString() + "]");
+                    if (itemStates.isEmpty()) {
+                        // DELETED or DEFERRED if sync is disabled
+                        //viewModel.showDeleteSuccessSnackbar();
+                        if (settings.isSyncable()) {
+                            laanoUiManager.showShortToast(R.string.toast_sync_success);
+                        }
+                    } else if (itemStates.contains(DataSource.ItemState.CONFLICTED)) {
+                        laanoUiManager.showLongToast(R.string.toast_sync_conflict);
+                    } else if (itemStates.contains(DataSource.ItemState.ERROR_LOCAL)) {
+                        viewModel.showDatabaseErrorSnackbar();
+                    } else if (itemStates.contains(DataSource.ItemState.ERROR_CLOUD)) {
+                        settings.setSyncStatus(SyncAdapter.SYNC_STATUS_ERROR);
+                        laanoUiManager.showLongToast(R.string.toast_sync_error);
+                    }
+                    loadFavorites(false);
+                    updateTabNormalState();
+                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+    }
+
+    @Override
+    public void updateSyncStatus() {
+        if (settings.getSyncStatus() == SyncAdapter.SYNC_STATUS_ERROR) {
+            // NOTE: only SyncAdapter can reset this status
+            return;
         }
+        repository.getSyncStatus()
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(syncStatus -> {
+                    settings.setSyncStatus(syncStatus);
+                    laanoUiManager.updateSyncStatus();
+                }, throwable -> {
+                    CommonUtils.logStackTrace(TAG, throwable);
+                    viewModel.showDatabaseErrorSnackbar();
+                });
     }
 
     @Override
@@ -265,18 +356,62 @@ public final class FavoritesPresenter implements FavoritesContract.Presenter {
     }
 
     @Override
-    public boolean isConflicted() {
-        return repository.isConflictedFavorites().blockingGet();
+    public void setFilterType(@NonNull FilterType filterType) {
+        checkNotNull(filterType);
+        settings.setFilterType(SETTING_FAVORITES_FILTER_TYPE, filterType);
+        if (this.filterType != filterType) {
+            loadFavorites(false);
+        }
     }
 
-    @Override
-    public void setFilterType(@NonNull FilterType filterType) {
-        viewModel.setFilterType(filterType);
-        laanoUiManager.updateTitle(LaanoFragmentPagerAdapter.FAVORITES_TAB);
+    /**
+     * @return Return null if there is no additional data is required
+     */
+    @Nullable
+    private FilterType updateFilter() {
+        FilterType filterType = settings.getFilterType(SETTING_FAVORITES_FILTER_TYPE);
+        switch (filterType) {
+            case ALL:
+            case CONFLICTED:
+                if (this.filterType == filterType) {
+                    return null;
+                }
+                this.filterType = filterType;
+                laanoUiManager.setFilterType(TAB, filterType, null);
+                break;
+            default:
+                setDefaultNotesFilterType();
+        }
+        return null;
+    }
+
+    private void setDefaultNotesFilterType() {
+        filterType = Settings.DEFAULT_FILTER_TYPE;
+        laanoUiManager.setFilterType(TAB, filterType, null);
+        settings.setFilterType(SETTING_FAVORITES_FILTER_TYPE, filterType);
     }
 
     @Override
     public void updateTabNormalState() {
-        laanoUiManager.setTabNormalState(LaanoFragmentPagerAdapter.FAVORITES_TAB, isConflicted());
+        repository.isConflictedFavorites()
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(
+                        conflicted -> laanoUiManager.setTabNormalState(TAB, conflicted),
+                        throwable -> viewModel.showDatabaseErrorSnackbar());
+    }
+
+    @Override
+    public void onRepositoryDelete(@NonNull String id, @NonNull DataSource.ItemState itemState) {
+        if (itemState == DataSource.ItemState.SAVED) {
+            throw new IllegalStateException("SAVED state is not allowed to Delete operation");
+        }
+    }
+
+    @Override
+    public void onRepositorySave(@NonNull String id, @NonNull DataSource.ItemState itemState) {
+        if (itemState == DataSource.ItemState.DELETED) {
+            throw new IllegalStateException("DELETED state is not allowed to Save operation");
+        }
     }
 }

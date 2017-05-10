@@ -1,15 +1,14 @@
 package com.bytesforge.linkasanote.laano.notes;
 
-import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Note;
+import com.bytesforge.linkasanote.laano.BaseItemPresenterInterface;
+import com.bytesforge.linkasanote.laano.BaseItemViewModelInterface;
 import com.bytesforge.linkasanote.laano.FilterType;
-import com.bytesforge.linkasanote.laano.LaanoTabPresenter;
-import com.bytesforge.linkasanote.laano.LaanoUiManager;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public interface NotesContract {
@@ -19,57 +18,41 @@ public interface NotesContract {
         void setViewModel(@NonNull NotesContract.ViewModel viewModel);
         boolean isActive();
 
-        void showAddNote(String noteId);
+        void startAddNoteActivity(String noteId);
         void showEditNote(@NonNull String noteId);
         void showNotes(@NonNull List<Note> notes);
         void enableActionMode();
         void finishActionMode();
-        void selectionChanged(int position);
-        void noteVisibilityChanged(int position);
-        String removeNote(int position);
+        void selectionChanged(@NonNull String id);
+        void visibilityChanged(@NonNull String id);
+        void removeNote(@NonNull String noteId);
         int getPosition(String noteId);
+        String[] getIds();
         void scrollToPosition(int position);
-        void confirmNotesRemoval(int[] selectedIds);
+        void confirmNotesRemoval(ArrayList<String> selectedIds);
         void showConflictResolution(@NonNull String noteId);
-    }
-
-    interface ViewModel extends BaseView<Presenter> {
-
-        void setLaanoUiManager(@NonNull LaanoUiManager laanoUiManager);
-
-        void setInstanceState(@Nullable Bundle savedInstanceState);
-        void saveInstanceState(@NonNull Bundle outState);
-        void applyInstanceState(@NonNull Bundle state);
-
-        void setNoteListSize(int noteListSize);
-        boolean isActionMode();
-        void enableActionMode();
-        void disableActionMode();
-
-        void toggleSelection();
-        void toggleSelection(int position);
-        boolean toggleSingleSelection(int position);
-        void setSingleSelection(int position, boolean selected);
-        void removeSelection();
-        void removeSelection(int position);
-        int getSelectedCount();
-        int[] getSelectedIds();
-        void showDatabaseErrorSnackbar();
-        void showConflictResolutionSuccessfulSnackbar();
-        void showConflictResolutionErrorSnackbar();
-        void showProgressOverlay();
-        void hideProgressOverlay();
-
-        String getSearchText();
-        void setSearchText(String searchText);
-        void toggleNoteVisibility(int position);
         void expandAllNotes();
         void collapseAllNotes();
     }
 
-    interface Presenter extends LaanoTabPresenter {
+    interface ViewModel extends BaseItemViewModelInterface {
 
-        void addNote();
+        void showDatabaseErrorSnackbar();
+        void showConflictResolutionSuccessfulSnackbar();
+        void showConflictResolutionErrorSnackbar();
+        void showConflictedErrorSnackbar();
+        void showCloudErrorSnackbar();
+        void showSaveSuccessSnackbar();
+        void showDeleteSuccessSnackbar();
+
+        boolean isVisible(String id);
+        void toggleVisibility(@NonNull String id);
+        void setVisibility(String[] ids);
+    }
+
+    interface Presenter extends BaseItemPresenterInterface {
+
+        void showAddNote();
         void loadNotes(boolean forceUpdate);
 
         void onNoteClick(String noteId, boolean isConflicted);
@@ -84,7 +67,8 @@ public interface NotesContract {
         void onSelectAllClick();
         int getPosition(String noteId);
         void setFilterType(@NonNull FilterType filtering);
-        void deleteNotes(int[] selectedIds);
+        void syncSavedNote(@NonNull final String noteId);
+        void deleteNotes(ArrayList<String> selectedIds);
         boolean isFavoriteFilter();
         boolean isLinkFilter();
         boolean isExpandNotes();

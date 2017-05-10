@@ -40,7 +40,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     private Context context;
     private AddEditFavoriteContract.Presenter presenter;
 
-    public enum SnackbarId {FAVORITE_EMPTY, FAVORITE_NOT_FOUND};
+    public enum SnackbarId {DATABASE_ERROR, FAVORITE_EMPTY, FAVORITE_NOT_FOUND};
 
     @Bindable
     public SnackbarId snackbarId;
@@ -109,6 +109,11 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         if (snackbarId == null) return;
 
         switch (snackbarId) {
+            case DATABASE_ERROR:
+                Snackbar.make(view, R.string.error_database, Snackbar.LENGTH_INDEFINITE)
+                        .setAction(R.string.snackbar_button_ok, v -> { /* just inform */ })
+                        .show();
+                break;
             case FAVORITE_EMPTY:
                 Snackbar.make(view,
                         R.string.add_edit_favorite_warning_empty,
@@ -173,6 +178,12 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     public boolean isEmpty() {
         return Strings.isNullOrEmpty(favoriteName.get())
                 && favoriteTags.getText().length() <= 0;
+    }
+
+    @Override
+    public void showDatabaseErrorSnackbar() {
+        snackbarId = SnackbarId.DATABASE_ERROR;
+        notifyPropertyChanged(BR.snackbarId);
     }
 
     @Override

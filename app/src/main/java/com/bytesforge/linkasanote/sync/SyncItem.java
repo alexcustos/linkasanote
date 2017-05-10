@@ -90,7 +90,7 @@ public class SyncItem<T extends Item> {
                 });
         if (syncResult.isDbAccessError()) return;
 
-        // OPTIMIZATION: Map can be taken from previous iteration
+        // OPTIMIZATION: Local Map can be taken from previous step
         final Set<String> localIds = new HashSet<>();
         localItem.getIds()
                 .subscribe(
@@ -99,7 +99,10 @@ public class SyncItem<T extends Item> {
         if (syncResult.isDbAccessError()) return;
 
         // New cloud records
-        for (String cloudId : cloudDataSourceMap.keySet()) {
+        // OPTIMIZATION: Cloud Map can be updated in the previous step
+        // TODO: check if the item violates constraint just be dropped with failCount++
+        final Set<String> cloudIds = cloudItem.getDataSourceMap(ocClient).keySet();
+        for (String cloudId : cloudIds) {
             if (localIds.contains(cloudId)) continue;
 
             T cloudItem = download(cloudId);
@@ -218,8 +221,7 @@ public class SyncItem<T extends Item> {
 
         // Primary record
         try {
-            long rowId = localItem.save(item).blockingGet();
-            return rowId > 0;
+            return localItem.save(item).blockingGet();
         } catch (NullPointerException e) {
             syncResult.incFailsCount();
             return false;
@@ -228,8 +230,7 @@ public class SyncItem<T extends Item> {
         }
         // Duplicated record
         try {
-            long rowId = localItem.saveDuplicated(item).blockingGet();
-            return rowId > 0;
+            return localItem.saveDuplicated(item).blockingGet();
         } catch (NullPointerException | SQLiteConstraintException e) {
             syncResult.incFailsCount();
         }
@@ -239,9 +240,7 @@ public class SyncItem<T extends Item> {
     private boolean deleteLocal(@NonNull String itemId) {
         checkNotNull(itemId);
         Log.i(TAG, itemId + ": DELETE local");
-
-        int numRows = localItem.delete(itemId).blockingGet();
-        return numRows == 1;
+        return localItem.delete(itemId).blockingGet();
     }
 
     private boolean deleteCloud(@NonNull String itemId) {
@@ -256,9 +255,7 @@ public class SyncItem<T extends Item> {
         checkNotNull(itemId);
         checkNotNull(state);
         Log.i(TAG, itemId + ": UPDATE");
-
-        int numRows = localItem.update(itemId, state).blockingGet();
-        return numRows == 1;
+        return localItem.update(itemId, state).blockingGet();
     }
 
     private boolean upload(@NonNull final T item) {
@@ -280,8 +277,7 @@ public class SyncItem<T extends Item> {
             localItem.update(itemId, state).blockingGet();
         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
             SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-            int numRows = localItem.update(itemId, state).blockingGet();
-            notifyChanged = (numRows == 1);
+            notifyChanged = localItem.update(itemId, state).blockingGet();
         }
         return notifyChanged;
     }

@@ -6,7 +6,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.ItemFactory;
@@ -14,6 +13,7 @@ import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Provider;
 import com.bytesforge.linkasanote.sync.SyncState;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -127,8 +127,28 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
         }).flatMap(this::buildLink);
     }
 
+    /**
+     * @return Returns true if all tags were successfully saved
+     */
+    private Single<Boolean> saveTags(final long linkRowId, final List<Tag> tags) {
+        if (linkRowId <= 0) {
+            return Single.just(false);
+        } else if (tags == null) {
+            return Single.just(true);
+        }
+        Uri linkTagUri = LocalContract.LinkEntry.buildTagsDirUriWith(linkRowId);
+        return Observable.fromIterable(tags)
+                .flatMap(tag -> localTags.saveTag(tag, linkTagUri).toObservable())
+                .count()
+                .map(count -> count == tags.size())
+                .onErrorReturn(throwable -> {
+                    CommonUtils.logStackTrace(TAG, throwable);
+                    return false;
+                });
+    }
+
     @Override
-    public Single<Long> save(final T link) {
+    public Single<Boolean> save(final T link) {
         return Single.fromCallable(() -> {
             ContentValues values = link.getContentValues();
             Uri linkUri = contentResolver.insert(LINK_URI, values);
@@ -136,20 +156,12 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
                 throw new NullPointerException("Provider must return URI or throw exception");
             }
             String rowId = LocalContract.LinkEntry.getIdFrom(linkUri);
-            Uri linkTagUri = LocalContract.LinkEntry.buildTagsDirUriWith(rowId);
-            List<Tag> tags = link.getTags();
-            if (tags != null) {
-                Observable.zip(
-                        Observable.fromIterable(tags), Observable.just(linkTagUri).repeat(),
-                        (tag, uri) -> localTags.saveTag(tag, uri).blockingGet())
-                        .toList().blockingGet();
-            }
             return Long.parseLong(rowId);
-        });
+        }).flatMap(rowId -> saveTags(rowId, link.getTags()));
     }
 
     @Override
-    public Single<Long> saveDuplicated(final T link) {
+    public Single<Boolean> saveDuplicated(final T link) {
         return getNextDuplicated(link.getDuplicatedKey())
                 .flatMap(duplicated -> {
                     SyncState state = new SyncState(link.getETag(), duplicated);
@@ -158,14 +170,12 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
     }
 
     @Override
-    // TODO: return Boolean for the update & delete like this one
-    public Single<Integer> update(final String linkId, final SyncState state) {
+    public Single<Boolean> update(final String linkId, final SyncState state) {
         return Single.fromCallable(() -> {
             ContentValues values = state.getContentValues();
             Uri uri = LocalContract.LinkEntry.buildUriWith(linkId);
-            // TODO: add check if syncState parts are not equal to the requested state
             return contentResolver.update(uri, values, null, null);
-        });
+        }).map(numRows -> numRows == 1);
     }
 
     @Override
@@ -181,14 +191,15 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
     }
 
     @Override
-    public Single<Integer> delete(final String linkId) {
+    public Single<Boolean> delete(final String linkId) {
         Uri uri = LocalContract.LinkEntry.buildUriWith(linkId);
-        return LocalDataSource.delete(contentResolver, uri);
+        return Single.fromCallable(() -> contentResolver.delete(uri, null, null))
+                .map(numRows -> numRows == 1);
     }
 
     @Override
     public Single<Integer> delete() {
-        return LocalDataSource.delete(contentResolver, LINK_URI);
+        return Single.fromCallable(() -> contentResolver.delete(LINK_URI, null, null));
     }
 
     @Override
@@ -212,6 +223,11 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
         return LocalDataSource.isConflicted(contentResolver, LINK_URI);
     }
 
+    @Override
+    public Single<Boolean> isUnsynced() {
+        return LocalDataSource.isUnsynced(contentResolver, LINK_URI);
+    }
+
     private Single<Integer> getNextDuplicated(final String linkName) {
         final String[] columns = new String[]{
                 "MAX(" + LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + ") + 1"};
@@ -231,10 +247,10 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
     }
 
     @Override
-    public Single<T> getMain(final String duplidatedKey) {
+    public Single<T> getMain(final String duplicatedKey) {
         final String selection = LocalContract.LinkEntry.COLUMN_NAME_LINK + " = ?" +
                 " AND " + LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + " = ?";
-        final String[] selectionArgs = {duplidatedKey, "0"};
+        final String[] selectionArgs = {duplicatedKey, "0"};
 
         return Single.fromCallable(() -> {
             try (Cursor cursor = Provider.rawQuery(context,
@@ -251,12 +267,14 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
         }).flatMap(this::buildLink);
     }
 
+    /**
+     * @return Returns true if conflict has been successfully resolved
+     */
     @Override
     public Single<Boolean> autoResolveConflict(final String linkId) {
         return get(linkId)
                 .map(link -> {
                     if (!link.isDuplicated()) {
-                        Log.e(TAG, "autoResolveConflict() was called on the Link which is not duplicated [" + linkId + "]");
                         return !link.isConflicted();
                     }
                     try {
@@ -264,8 +282,7 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
                         return false;
                     } catch (NoSuchElementException e) {
                         SyncState state = new SyncState(SyncState.State.SYNCED);
-                        int numRows = update(linkId, state).blockingGet();
-                        return numRows == 1;
+                        return update(linkId, state).blockingGet();
                     }
                 });
     }

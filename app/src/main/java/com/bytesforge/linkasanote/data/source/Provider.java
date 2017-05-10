@@ -158,6 +158,9 @@ public class Provider extends ContentProvider {
                 tableName = sqlJoinManyToManyWithTags(linkTable);
                 selection = linkTable + LocalContract.LinkEntry._ID + " = ?";
                 selectionArgs = new String[]{LocalContract.LinkEntry.getIdFrom(uri)};
+                if (sortOrder == null) {
+                    sortOrder = sqlDefaultTagsSortOrder(linkTable);
+                }
                 break;
             case LINK_NOTE:
                 tableName = LocalContract.NoteEntry.TABLE_NAME;
@@ -177,6 +180,9 @@ public class Provider extends ContentProvider {
                 tableName = sqlJoinManyToManyWithTags(favoriteTable);
                 selection = favoriteTable + LocalContract.FavoriteEntry._ID + " = ?";
                 selectionArgs = new String[]{LocalContract.FavoriteEntry.getIdFrom(uri)};
+                if (sortOrder == null) {
+                    sortOrder = sqlDefaultTagsSortOrder(favoriteTable);
+                }
                 break;
             case NOTE:
                 tableName = LocalContract.NoteEntry.TABLE_NAME;
@@ -191,6 +197,9 @@ public class Provider extends ContentProvider {
                 tableName = sqlJoinManyToManyWithTags(noteTable);
                 selection = noteTable + LocalContract.NoteEntry._ID + " = ?";
                 selectionArgs = new String[]{LocalContract.NoteEntry.getIdFrom(uri)};
+                if (sortOrder == null) {
+                    sortOrder = sqlDefaultTagsSortOrder(noteTable);
+                }
                 break;
             case TAG:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
@@ -525,6 +534,12 @@ public class Provider extends ContentProvider {
 
         return refTable + " LEFT OUTER JOIN " + tagTable +
                 " ON " + refTable + "." + TAG_ID + "=" + tagTable + "." + BaseEntry._ID;
+    }
+
+    private static String sqlDefaultTagsSortOrder(final String leftTable) {
+        final String tagTable = LocalContract.TagEntry.TABLE_NAME;
+        final String refTable = leftTable + "_" + tagTable;
+        return refTable + "." + BaseEntry.COLUMN_NAME_CREATED + " ASC";
     }
 
     public static Cursor rawQuery(

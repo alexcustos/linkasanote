@@ -370,6 +370,11 @@ public final class Link implements Comparable<Link>, Item {
         return link.compareTo(objLink);
     }
 
+    @Override
+    public String toString() {
+        return getId() + "->" + getLink();
+    }
+
     public static ItemFactory<Link> getFactory() {
         return new ItemFactory<Link>() {
 

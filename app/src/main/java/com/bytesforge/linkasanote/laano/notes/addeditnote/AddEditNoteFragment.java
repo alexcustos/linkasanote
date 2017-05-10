@@ -49,7 +49,7 @@ public class AddEditNoteFragment extends Fragment implements AddEditNoteContract
 
     public static final String TAG = AddEditNoteFragment.class.getSimpleName();
 
-    public static final String ARGUMENT_EDIT_NOTE_ID = "EDIT_NOTE_ID";
+    public static final String ARGUMENT_NOTE_ID = "NOTE_ID";
     public static final String ARGUMENT_RELATED_LINK_ID = "RELATED_LINK_ID";
 
     private Context context;
@@ -120,7 +120,7 @@ public class AddEditNoteFragment extends Fragment implements AddEditNoteContract
     public void finishActivity(String noteId, String linkId) {
         Intent data = new Intent();
         if (noteId != null) {
-            data.putExtra(ARGUMENT_EDIT_NOTE_ID, noteId);
+            data.putExtra(ARGUMENT_NOTE_ID, noteId);
         }
         if (linkId != null) {
             data.putExtra(ARGUMENT_RELATED_LINK_ID, linkId);

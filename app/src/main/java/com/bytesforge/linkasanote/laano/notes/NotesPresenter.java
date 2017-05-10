@@ -2,20 +2,26 @@ package com.bytesforge.linkasanote.laano.notes;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
+import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.BaseItemPresenter;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.laano.links.LinksPresenter;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Strings;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -28,9 +34,11 @@ import io.reactivex.disposables.Disposable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class NotesPresenter implements NotesContract.Presenter {
+public final class NotesPresenter extends BaseItemPresenter implements
+        NotesContract.Presenter, DataSource.Callback {
 
     private static final String TAG = NotesPresenter.class.getSimpleName();
+    private static final int TAB = LaanoFragmentPagerAdapter.NOTES_TAB;
 
     public static final String SETTING_NOTES_FILTER_TYPE = "NOTES_FILTER_TYPE";
 
@@ -68,17 +76,17 @@ public final class NotesPresenter implements NotesContract.Presenter {
     void setupView() {
         view.setPresenter(this);
         view.setViewModel(viewModel);
-        viewModel.setPresenter(this);
-        viewModel.setLaanoUiManager(laanoUiManager);
     }
 
     @Override
     public void subscribe() {
+        repository.addNotesCallback(this);
     }
 
     @Override
     public void unsubscribe() {
         compositeDisposable.clear();
+        repository.removeNotesCallback(this);
     }
 
     @Override
@@ -92,8 +100,8 @@ public final class NotesPresenter implements NotesContract.Presenter {
     }
 
     @Override
-    public void addNote() {
-        view.showAddNote(filterType == FilterType.LINK ? linkFilter : null);
+    public void showAddNote() {
+        view.startAddNoteActivity(filterType == FilterType.LINK ? linkFilter : null);
     }
 
     @Override
@@ -121,8 +129,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
                         filterType = FilterType.FAVORITE;
                         favoriteFilter = favorite.getId();
                         favoriteFilterTags = favorite.getTags();
-                        laanoUiManager.setFilterType(
-                                LaanoFragmentPagerAdapter.NOTES_TAB, filterType, favorite.getName());
+                        laanoUiManager.setFilterType(TAB, filterType, favorite.getName());
                         return repository.getNotes();
                     }).doOnError(throwable -> {
                         CommonUtils.logStackTrace(TAG, throwable);
@@ -141,8 +148,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
                         filterType = FilterType.LINK;
                         linkFilter = link.getId();
                         String linkName = link.getName() == null ? link.getLink() : link.getName();
-                        laanoUiManager.setFilterType(
-                                LaanoFragmentPagerAdapter.NOTES_TAB, filterType, linkName);
+                        laanoUiManager.setFilterType(TAB, filterType, linkName);
                         return repository.getNotes();
                     }).doOnError(throwable -> {
                         CommonUtils.logStackTrace(TAG, throwable);
@@ -201,7 +207,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
                     if (showLoading) {
                         viewModel.hideProgressOverlay();
                     }
-                    laanoUiManager.updateTitle(LaanoFragmentPagerAdapter.NOTES_TAB);
+                    laanoUiManager.updateTitle(TAB);
                 })
                 .subscribe(notes -> {
                     view.showNotes(notes);
@@ -222,8 +228,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
             // NOTE: Note doesn't have auto conflict resolution option
             view.showConflictResolution(noteId);
         } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
-            int position = getPosition(noteId);
-            boolean selected = viewModel.toggleSingleSelection(position);
+            boolean selected = viewModel.toggleSingleSelection(noteId);
             // NOTE: filterType will be updated accordingly on the tab
             if (selected) {
                 settings.setNoteFilter(noteId);
@@ -246,9 +251,8 @@ public final class NotesPresenter implements NotesContract.Presenter {
     }
 
     private void onNoteSelected(String noteId) {
-        int position = getPosition(noteId);
-        viewModel.toggleSelection(position);
-        view.selectionChanged(position);
+        viewModel.toggleSelection(noteId);
+        view.selectionChanged(noteId);
     }
 
     @Override
@@ -258,8 +262,8 @@ public final class NotesPresenter implements NotesContract.Presenter {
         String noteFilter = settings.getNoteFilter();
         if (noteFilter != null) {
             int position = getPosition(noteFilter);
-            if (position >= 0) {
-                viewModel.setSingleSelection(position, true);
+            if (position >= 0) { // NOTE: check if there is the filter in the list
+                viewModel.setSingleSelection(noteFilter, true);
                 //view.scrollToPosition(position); // TODO: move to settings
             }
         }
@@ -273,9 +277,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
     @Override
     public void onToLinksClick(@NonNull String noteId) {
         checkNotNull(noteId);
-
-        int position = getPosition(noteId);
-        viewModel.setSingleSelection(position, true);
+        viewModel.setSingleSelection(noteId, true);
         settings.setFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE, FilterType.NOTE);
         settings.setNoteFilter(noteId);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.LINKS_TAB);
@@ -284,35 +286,110 @@ public final class NotesPresenter implements NotesContract.Presenter {
     @Override
     public void onToggleClick(@NonNull String noteId) {
         checkNotNull(noteId);
-
-        int position = getPosition(noteId);
-        viewModel.toggleNoteVisibility(position);
-        view.noteVisibilityChanged(position);
+        viewModel.toggleVisibility(noteId);
+        view.visibilityChanged(noteId);
     }
 
     @Override
     public void onDeleteClick() {
-        int[] selectedIds = viewModel.getSelectedIds();
+        ArrayList<String> selectedIds = viewModel.getSelectedIds();
         view.confirmNotesRemoval(selectedIds);
     }
 
     @Override
     public void onSelectAllClick() {
-        viewModel.toggleSelection();
+        String[] ids = view.getIds();
+        int listSize = ids.length;
+        if (listSize <= 0) return;
+
+        int selectedCount = viewModel.getSelectedCount();
+        if (selectedCount > listSize / 2) {
+            viewModel.setSelection(null);
+        } else {
+            viewModel.setSelection(ids);
+        }
     }
 
     @Override
-    public void deleteNotes(int[] selectedIds) {
-        for (int selectedId : selectedIds) {
-            viewModel.removeSelection(selectedId);
-            String noteId = view.removeNote(selectedId);
-            try {
-                repository.deleteNote(noteId);
-                settings.resetNoteFilter(noteId);
-            } catch (NullPointerException e) {
-                viewModel.showDatabaseErrorSnackbar();
-            }
+    public void syncSavedNote(@NonNull final String noteId) {
+        repository.syncSavedNote(noteId)
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .doFinally(this::updateSyncStatus)
+                .subscribe(itemState -> {
+                    Log.d(TAG, "syncSavedNote() -> subscribe(): [" + itemState.name() + "]");
+                    switch (itemState) {
+                        case CONFLICTED:
+                            laanoUiManager.showLongToast(R.string.toast_sync_conflict);
+                            break;
+                        case ERROR_CLOUD:
+                            settings.setSyncStatus(SyncAdapter.SYNC_STATUS_ERROR);
+                            laanoUiManager.showLongToast(R.string.toast_sync_error);
+                            break;
+                        case SAVED:
+                            laanoUiManager.showShortToast(R.string.toast_sync_success);
+                            break;
+                    }
+                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+    }
+
+    @Override
+    public void deleteNotes(ArrayList<String> selectedIds) {
+        Observable.fromIterable(selectedIds)
+                .flatMap(noteId -> {
+                    Log.d(TAG, "deleteNotes(): [" + noteId + "]");
+                    return repository.deleteNote(noteId, settings.isSyncable())
+                            .subscribeOn(schedulerProvider.io())
+                            .observeOn(schedulerProvider.ui())
+                            .doOnNext(itemState -> {
+                                Log.d(TAG, "deleteNotes() -> doOnNext(): [" + itemState.name() + "]");
+                                if (itemState == DataSource.ItemState.DELETED
+                                        || itemState == DataSource.ItemState.DEFERRED) {
+                                    // NOTE: can be called twice
+                                    view.removeNote(noteId);
+                                    settings.resetNoteFilter(noteId);
+                                }
+                            });
+                })
+                .filter(itemState -> itemState == DataSource.ItemState.CONFLICTED
+                        || itemState == DataSource.ItemState.ERROR_LOCAL
+                        || itemState == DataSource.ItemState.ERROR_CLOUD)
+                .toList()
+                .doFinally(this::updateSyncStatus)
+                .subscribe(itemStates -> {
+                    Log.d(TAG, "deleteNotes(): Completed [" + itemStates.toString() + "]");
+                    if (itemStates.isEmpty()) {
+                        // DELETED or DEFERRED if sync is disabled
+                        //viewModel.showDeleteSuccessSnackbar();
+                        if (settings.isSyncable()) {
+                            laanoUiManager.showShortToast(R.string.toast_sync_success);
+                        }
+                    } else if (itemStates.contains(DataSource.ItemState.CONFLICTED)) {
+                        laanoUiManager.showLongToast(R.string.toast_sync_conflict);
+                    } else if (itemStates.contains(DataSource.ItemState.ERROR_LOCAL)) {
+                        viewModel.showDatabaseErrorSnackbar();
+                    } else if (itemStates.contains(DataSource.ItemState.ERROR_CLOUD)) {
+                        settings.setSyncStatus(SyncAdapter.SYNC_STATUS_ERROR);
+                        laanoUiManager.showLongToast(R.string.toast_sync_error);
+                    }
+                    loadNotes(false);
+                    updateTabNormalState();
+                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+    }
+
+    @Override
+    public void updateSyncStatus() {
+        if (settings.getSyncStatus() == SyncAdapter.SYNC_STATUS_ERROR) {
+            // NOTE: only SyncAdapter can reset this status
+            return;
         }
+        repository.getSyncStatus()
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(syncStatus -> {
+                    settings.setSyncStatus(syncStatus);
+                    laanoUiManager.updateSyncStatus();
+                }, throwable -> viewModel.showDatabaseErrorSnackbar());
     }
 
     @Override
@@ -321,12 +398,8 @@ public final class NotesPresenter implements NotesContract.Presenter {
     }
 
     @Override
-    public boolean isConflicted() {
-        return repository.isConflictedNotes().blockingGet();
-    }
-
-    @Override
     public void setFilterType(@NonNull FilterType filterType) {
+        checkNotNull(filterType);
         settings.setFilterType(SETTING_NOTES_FILTER_TYPE, filterType);
         if (this.filterType != filterType) {
             loadNotes(false);
@@ -370,7 +443,7 @@ public final class NotesPresenter implements NotesContract.Presenter {
                     return null;
                 }
                 this.filterType = filterType;
-                laanoUiManager.setFilterType(LaanoFragmentPagerAdapter.NOTES_TAB, filterType, null);
+                laanoUiManager.setFilterType(TAB, filterType, null);
                 break;
             case LINK:
                 if (this.filterType == filterType
@@ -403,9 +476,8 @@ public final class NotesPresenter implements NotesContract.Presenter {
     }
 
     private void setDefaultNotesFilterType() {
-        this.filterType = Settings.DEFAULT_FILTER_TYPE;
-        laanoUiManager.setFilterType(
-                LaanoFragmentPagerAdapter.NOTES_TAB, this.filterType, null);
+        filterType = Settings.DEFAULT_FILTER_TYPE;
+        laanoUiManager.setFilterType(TAB, filterType, null);
         settings.setFilterType(SETTING_NOTES_FILTER_TYPE, filterType);
     }
 
@@ -426,7 +498,12 @@ public final class NotesPresenter implements NotesContract.Presenter {
 
     @Override
     public void updateTabNormalState() {
-        laanoUiManager.setTabNormalState(LaanoFragmentPagerAdapter.NOTES_TAB, isConflicted());
+        repository.isConflictedNotes()
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(
+                        conflicted -> laanoUiManager.setTabNormalState(TAB, conflicted),
+                        throwable -> viewModel.showDatabaseErrorSnackbar());
     }
 
     @Override
@@ -442,5 +519,19 @@ public final class NotesPresenter implements NotesContract.Presenter {
         boolean readingMode = !settings.isNotesLayoutModeReading();
         settings.setNotesLayoutModeReading(readingMode);
         return readingMode;
+    }
+
+    @Override
+    public void onRepositoryDelete(@NonNull String id, @NonNull DataSource.ItemState itemState) {
+        if (itemState == DataSource.ItemState.SAVED) {
+            throw new IllegalStateException("SAVED state is not allowed to Delete operation");
+        }
+    }
+
+    @Override
+    public void onRepositorySave(@NonNull String id, @NonNull DataSource.ItemState itemState) {
+        if (itemState == DataSource.ItemState.DELETED) {
+            throw new IllegalStateException("DELETED state is not allowed to Save operation");
+        }
     }
 }

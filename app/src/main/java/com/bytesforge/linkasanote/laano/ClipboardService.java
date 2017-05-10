@@ -45,6 +45,12 @@ public class ClipboardService extends Service {
     // NOTE: when text is copied from Chrome browser onPrimaryClipChanged is called twice
     private static final long INVALIDATE_CACHE_IN_MILLIS = 200;
 
+    public interface Callback {
+
+        void onClipboardChanged(int clipboardType);
+        void onClipboardLinkExtraReady();
+    }
+
     private final IBinder binder = new ClipboardBinder();
 
     @Inject
@@ -75,12 +81,6 @@ public class ClipboardService extends Service {
     private String linkTitle;
     private String linkDescription;
     private String[] linkKeywords;
-
-    public interface Callback {
-
-        void onClipboardChanged(int clipboardType);
-        void onClipboardLinkExtraReady();
-    }
 
     public class ClipboardBinder extends Binder {
 
@@ -127,12 +127,13 @@ public class ClipboardService extends Service {
         clipboardManager.removePrimaryClipChangedListener(primaryClipChangedListener);
         // NOTE: thread is continue running when service is destroyed
         compositeDisposable.clear();
+        /* NOTE: annoying and not very useful notification
         if (settings.isClipboardLinkGetMetadata()) {
             // NOTE: inform only if internet connection is involved
             String message = resources.getString(
                     R.string.clipboard_service_stopped, resources.getString(R.string.app_name));
             Toast.makeText(ClipboardService.this, message, Toast.LENGTH_SHORT).show();
-        }
+        }*/
         super.onDestroy();
     }
 

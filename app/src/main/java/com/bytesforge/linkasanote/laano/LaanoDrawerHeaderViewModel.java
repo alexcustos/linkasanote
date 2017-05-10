@@ -131,7 +131,7 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
         statusText.set(getString(R.string.drawer_header_status_ready));
     }
 
-    public void showLastSyncStatus(long lastSyncTime, int lastSyncStatus) {
+    public void showSyncStatus(long lastSyncTime, int syncStatus) {
         if (lastSyncTime == 0) {
             lastSyncedText.set(getString(R.string.drawer_header_last_synced_never));
             statusIconTint = getColor(R.color.sync_state_neutral);
@@ -147,16 +147,20 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
             timePart = DateFormat.getTimeFormat(context).format(date);
         }
         lastSyncedText.set(datePart + " " + timePart);
-        switch (lastSyncStatus) {
-            case SyncAdapter.LAST_SYNC_STATUS_SUCCESS:
-                statusText.set(getString(R.string.drawer_header_status_success));
+        switch (syncStatus) {
+            case SyncAdapter.SYNC_STATUS_SYNCED:
+                statusText.set(getString(R.string.drawer_header_status_synced));
                 statusIconTint = getColor(R.color.sync_state_success);
                 break;
-            case SyncAdapter.LAST_SYNC_STATUS_ERROR:
+            case SyncAdapter.SYNC_STATUS_UNSYNCED:
+                statusText.set(getString(R.string.drawer_header_status_unsynced));
+                statusIconTint = getColor(R.color.sync_state_neutral);
+                break;
+            case SyncAdapter.SYNC_STATUS_ERROR:
                 statusText.set(getString(R.string.drawer_header_status_error));
                 statusIconTint = getColor(R.color.sync_state_error);
                 break;
-            case SyncAdapter.LAST_SYNC_STATUS_CONFLICT:
+            case SyncAdapter.SYNC_STATUS_CONFLICT:
                 statusText.set(getString(R.string.drawer_header_status_conflict));
                 statusIconTint = getColor(R.color.sync_state_conflict);
                 break;

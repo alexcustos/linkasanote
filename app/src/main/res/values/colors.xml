@@ -26,6 +26,7 @@
     <color name="sync_state_error">@color/red_400</color>
     <color name="sync_state_conflict">@color/red_400</color>
     <color name="note_background">@color/grey_100</color>
+    <color name="note_conflicted_background">@color/red_50</color>
     <color name="link_background">@color/note_background</color>
     <color name="link_note_divider">@color/grey_300</color>
     <color name="dialog_title_background">@color/grey_100</color>

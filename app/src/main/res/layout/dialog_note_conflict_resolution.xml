@@ -32,78 +32,73 @@
 
                 <!-- Local -->
 
-                <FrameLayout
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/dialog_margin_content"
-                            android:layout_marginBottom="@dimen/dialog_title_spacer"
-                            android:paddingTop="@dimen/dialog_title_vertical_padding"
-                            android:paddingBottom="@dimen/dialog_title_vertical_padding"
-                            android:paddingStart="@dimen/dialog_margin_content"
-                            android:paddingEnd="@dimen/dialog_margin_content"
-                            android:background="@color/dialog_title_background">
-
-                            <TextView
-                                android:id="@+id/local_state_title"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="@dimen/dialog_state_margin_end"
-                                android:layout_alignParentTop="true"
-                                android:layout_alignParentStart="true"
-                                android:text="@string/dialog_note_conflict_title_local"
-                                style="@style/ConflictResolution.TitleSource" />
-                            <TextView
-                                android:id="@+id/local_state"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_alignBaseline="@+id/local_state_title"
-                                android:layout_alignParentEnd="true"
-                                android:layout_toEndOf="@+id/local_state_title"
-                                android:text="@{viewModel.localState}"
-                                style="@style/ConflictResolution.Title" />
-                        </RelativeLayout>
-
-                        <TextView
-                            android:id="@+id/local_note"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/dialog_margin_content"
-                            android:layout_marginEnd="@dimen/dialog_margin_content"
-                            android:lines="@integer/dialog_note_lines"
-                            android:minLines="@integer/dialog_note_lines"
-                            android:maxLines="@integer/dialog_note_lines"
-                            android:scrollbars="vertical"
-                            android:textAppearance="@style/ConflictResolution.Note"
-                            android:text="@{viewModel.localNote}" />
-                        <TextView
-                            android:id="@+id/local_tags"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/dialog_tags_margin_top"
-                            android:layout_marginStart="@dimen/dialog_margin_content"
-                            android:layout_marginEnd="@dimen/dialog_margin_content"
-                            android:text="@{viewModel.localTags}" />
-                    </LinearLayout>
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dialog_margin_content"
+                    android:layout_marginBottom="@dimen/dialog_title_spacer"
+                    android:paddingTop="@dimen/dialog_title_vertical_padding"
+                    android:paddingBottom="@dimen/dialog_title_vertical_padding"
+                    android:paddingStart="@dimen/dialog_margin_content"
+                    android:paddingEnd="@dimen/dialog_margin_content"
+                    android:background="@color/dialog_title_background">
 
                     <TextView
-                        android:id="@+id/local_status"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="@dimen/dialog_margin_content"
-                        android:layout_marginEnd="@dimen/dialog_margin_content"
-                        android:text="@{viewModel.localStatus}"
-                        android:visibility="@{viewModel.localStatus == null ? View.GONE : View.VISIBLE}"
-                        android:gravity="center" />
-                </FrameLayout>
+                        android:id="@+id/local_state_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/dialog_state_margin_end"
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentStart="true"
+                        android:text="@string/dialog_note_conflict_title_local"
+                        style="@style/ConflictResolution.TitleSource" />
+                    <TextView
+                        android:id="@+id/local_state"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_alignBaseline="@+id/local_state_title"
+                        android:layout_alignParentEnd="true"
+                        android:layout_toEndOf="@+id/local_state_title"
+                        android:text="@{viewModel.localState}"
+                        style="@style/ConflictResolution.Title" />
+                </RelativeLayout>
+
+                <TextView
+                    android:id="@+id/local_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/dialog_margin_status_top"
+                    android:layout_marginBottom="@dimen/dialog_margin_status_bottom"
+                    android:layout_marginStart="@dimen/dialog_margin_content"
+                    android:layout_marginEnd="@dimen/dialog_margin_content"
+                    android:text="@{viewModel.localStatus}"
+                    android:visibility="@{viewModel.localStatus == null ? View.GONE : View.VISIBLE}"
+                    android:gravity="center" />
+                <TextView
+                    android:id="@+id/local_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dialog_margin_content"
+                    android:layout_marginEnd="@dimen/dialog_margin_content"
+                    android:maxLines="@integer/dialog_note_lines"
+                    android:scrollbars="vertical"
+                    android:textAppearance="@style/ConflictResolution.Note"
+                    android:text="@string/placeholder_text"
+                    android:visibility="@{viewModel.localNote == null ? View.GONE : View.VISIBLE}"
+                    bind:scrollableText="@{viewModel.localNote}" />
+                <TextView
+                    android:id="@+id/local_tags"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dialog_tags_margin_top"
+                    android:layout_marginStart="@dimen/dialog_margin_content"
+                    android:layout_marginEnd="@dimen/dialog_margin_content"
+                    android:text="@{viewModel.localTags}"
+                    android:visibility="@{viewModel.localTags == null ? View.GONE : View.VISIBLE}" />
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:visibility="@{viewModel.localNote != null || viewModel.localTags != null ? View.GONE : View.VISIBLE}" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -136,80 +131,73 @@
 
                 <!-- Cloud -->
 
-                <FrameLayout
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/dialog_padding"
-                            android:layout_marginBottom="@dimen/dialog_title_spacer"
-                            android:paddingTop="@dimen/dialog_title_vertical_padding"
-                            android:paddingBottom="@dimen/dialog_title_vertical_padding"
-                            android:paddingStart="@dimen/dialog_margin_content"
-                            android:paddingEnd="@dimen/dialog_margin_content"
-                            android:background="@color/dialog_title_background">
-
-                            <TextView
-                                android:id="@+id/cloud_state_title"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="@dimen/dialog_state_margin_end"
-                                android:layout_alignParentTop="true"
-                                android:layout_alignParentStart="true"
-                                android:text="@string/dialog_note_conflict_title_cloud"
-                                style="@style/ConflictResolution.TitleSource" />
-                            <TextView
-                                android:id="@+id/cloud_state"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_alignBaseline="@+id/cloud_state_title"
-                                android:layout_alignParentEnd="true"
-                                android:layout_toEndOf="@+id/cloud_state_title"
-                                android:text="@{viewModel.cloudState}"
-                                style="@style/ConflictResolution.Title" />
-                        </RelativeLayout>
-
-                        <TextView
-                            android:id="@+id/cloud_note"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/dialog_margin_content"
-                            android:layout_marginEnd="@dimen/dialog_margin_content"
-                            android:lines="@integer/dialog_note_lines"
-                            android:minLines="@integer/dialog_note_lines"
-                            android:maxLines="@integer/dialog_note_lines"
-                            android:scrollbars="vertical"
-                            android:textAppearance="@style/ConflictResolution.Note"
-                            android:text="@{viewModel.cloudNote}"
-                            android:visibility="@{viewModel.cloudNote == null ? View.GONE : View.VISIBLE}" />
-                        <TextView
-                            android:id="@+id/cloud_tags"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/dialog_tags_margin_top"
-                            android:layout_marginStart="@dimen/dialog_margin_content"
-                            android:layout_marginEnd="@dimen/dialog_margin_content"
-                            android:text="@{viewModel.cloudTags}"
-                            android:visibility="@{viewModel.cloudTags == null ? View.GONE : View.VISIBLE}" />
-                    </LinearLayout>
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dialog_padding"
+                    android:layout_marginBottom="@dimen/dialog_title_spacer"
+                    android:paddingTop="@dimen/dialog_title_vertical_padding"
+                    android:paddingBottom="@dimen/dialog_title_vertical_padding"
+                    android:paddingStart="@dimen/dialog_margin_content"
+                    android:paddingEnd="@dimen/dialog_margin_content"
+                    android:background="@color/dialog_title_background">
 
                     <TextView
-                        android:id="@+id/cloud_status"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="@dimen/dialog_margin_content"
-                        android:layout_marginEnd="@dimen/dialog_margin_content"
-                        android:text="@{viewModel.cloudStatus}"
-                        android:visibility="@{viewModel.cloudStatus == null ? View.GONE : View.VISIBLE}"
-                        android:gravity="center" />
-                </FrameLayout>
+                        android:id="@+id/cloud_state_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/dialog_state_margin_end"
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentStart="true"
+                        android:text="@string/dialog_note_conflict_title_cloud"
+                        style="@style/ConflictResolution.TitleSource" />
+                    <TextView
+                        android:id="@+id/cloud_state"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_alignBaseline="@+id/cloud_state_title"
+                        android:layout_alignParentEnd="true"
+                        android:layout_toEndOf="@+id/cloud_state_title"
+                        android:text="@{viewModel.cloudState}"
+                        style="@style/ConflictResolution.Title" />
+                </RelativeLayout>
+
+                <TextView
+                    android:id="@+id/cloud_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/dialog_margin_status_top"
+                    android:layout_marginBottom="@dimen/dialog_margin_status_bottom"
+                    android:layout_marginStart="@dimen/dialog_margin_content"
+                    android:layout_marginEnd="@dimen/dialog_margin_content"
+                    android:text="@{viewModel.cloudStatus}"
+                    android:visibility="@{viewModel.cloudStatus == null ? View.GONE : View.VISIBLE}"
+                    android:gravity="center" />
+                <TextView
+                    android:id="@+id/cloud_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dialog_margin_content"
+                    android:layout_marginEnd="@dimen/dialog_margin_content"
+                    android:maxLines="@integer/dialog_note_lines"
+                    android:scrollbars="vertical"
+                    android:textAppearance="@style/ConflictResolution.Note"
+                    android:text="@string/placeholder_text"
+                    android:visibility="@{viewModel.cloudNote == null ? View.GONE : View.VISIBLE}"
+                    bind:scrollableText="@{viewModel.cloudNote}" />
+                <TextView
+                    android:id="@+id/cloud_tags"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dialog_tags_margin_top"
+                    android:layout_marginStart="@dimen/dialog_margin_content"
+                    android:layout_marginEnd="@dimen/dialog_margin_content"
+                    android:text="@{viewModel.cloudTags}"
+                    android:visibility="@{viewModel.cloudTags == null ? View.GONE : View.VISIBLE}" />
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:visibility="@{viewModel.cloudNote != null || viewModel.cloudTags != null ? View.GONE : View.VISIBLE}" />
 
                 <LinearLayout
                     android:layout_width="match_parent"

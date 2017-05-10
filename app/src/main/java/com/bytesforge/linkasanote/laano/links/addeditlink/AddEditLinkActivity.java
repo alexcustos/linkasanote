@@ -27,7 +27,7 @@ public class AddEditLinkActivity extends AppCompatActivity {
         ActivityAddEditLinkBinding binding =
                 DataBindingUtil.setContentView(this, R.layout.activity_add_edit_link);
 
-        String linkId = getIntent().getStringExtra(AddEditLinkFragment.ARGUMENT_EDIT_LINK_ID);
+        String linkId = getIntent().getStringExtra(AddEditLinkFragment.ARGUMENT_LINK_ID);
         // Toolbar
         setSupportActionBar(binding.toolbar);
         ActionBar actionBar = getSupportActionBar();

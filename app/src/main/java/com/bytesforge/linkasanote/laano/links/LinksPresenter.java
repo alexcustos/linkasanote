@@ -3,22 +3,28 @@ package com.bytesforge.linkasanote.laano.links;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
+import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.BaseItemPresenter;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.laano.links.conflictresolution.LinksConflictResolutionDialog;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Strings;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -31,7 +37,8 @@ import io.reactivex.disposables.Disposable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class LinksPresenter implements LinksContract.Presenter {
+public final class LinksPresenter extends BaseItemPresenter implements
+        LinksContract.Presenter, DataSource.Callback {
 
     private static final String TAG = LinksPresenter.class.getSimpleName();
     private static final int TAB = LaanoFragmentPagerAdapter.LINKS_TAB;
@@ -72,17 +79,17 @@ public final class LinksPresenter implements LinksContract.Presenter {
     void setupView() {
         view.setPresenter(this);
         view.setViewModel(viewModel);
-        viewModel.setPresenter(this);
-        viewModel.setLaanoUiManager(laanoUiManager);
     }
 
     @Override
     public void subscribe() {
+        repository.addLinksCallback(this);
     }
 
     @Override
     public void unsubscribe() {
         compositeDisposable.clear();
+        repository.removeLinksCallback(this);
     }
 
     @Override
@@ -96,8 +103,8 @@ public final class LinksPresenter implements LinksContract.Presenter {
     }
 
     @Override
-    public void addLink() {
-        view.showAddLink();
+    public void showAddLink() {
+        view.startAddLinkActivity();
     }
 
     @Override
@@ -253,8 +260,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
                         }
                     });
         } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
-            int position = getPosition(linkId);
-            boolean selected = viewModel.toggleSingleSelection(position);
+            boolean selected = viewModel.toggleSingleSelection(linkId);
             // NOTE: filterType will be updated accordingly on the tab
             if (selected) {
                 settings.setLinkFilter(linkId);
@@ -277,9 +283,8 @@ public final class LinksPresenter implements LinksContract.Presenter {
     }
 
     private void onLinkSelected(String linkId) {
-        int position = view.getPosition(linkId);
-        viewModel.toggleSelection(position);
-        view.selectionChanged(position);
+        viewModel.toggleSelection(linkId);
+        view.selectionChanged(linkId);
     }
 
     @Override
@@ -290,7 +295,7 @@ public final class LinksPresenter implements LinksContract.Presenter {
         if (linkFilter != null) {
             int position = getPosition(linkFilter);
             if (position >= 0) {
-                viewModel.setSingleSelection(position, true);
+                viewModel.setSingleSelection(linkFilter, true);
                 //view.scrollToPosition(position);
             }
         }
@@ -309,14 +314,16 @@ public final class LinksPresenter implements LinksContract.Presenter {
                 .subscribe(link -> {
                     Uri uri = Uri.parse(link.getLink());
                     view.openLink(uri);
-                }, throwable -> viewModel.showOpenLinkErrorSnackbar());
+                }, throwable -> {
+                    CommonUtils.logStackTrace(TAG, throwable);
+                    viewModel.showOpenLinkErrorSnackbar();
+                });
     }
 
     @Override
     public void onToNotesClick(@NonNull String linkId) {
         checkNotNull(linkId);
-        int position = getPosition(linkId);
-        viewModel.setSingleSelection(position, true);
+        viewModel.setSingleSelection(linkId, true);
         settings.setFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE, FilterType.LINK);
         settings.setLinkFilter(linkId);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.NOTES_TAB);
@@ -330,67 +337,124 @@ public final class LinksPresenter implements LinksContract.Presenter {
     @Override
     public void onToggleClick(@NonNull String linkId) {
         checkNotNull(linkId);
-        int position = getPosition(linkId);
-        viewModel.toggleLinkVisibility(position);
-        view.linkVisibilityChanged(position);
+        viewModel.toggleVisibility(linkId);
+        view.visibilityChanged(linkId);
     }
 
     @Override
     public void onDeleteClick() {
-        int[] selectedIds = viewModel.getSelectedIds();
+        ArrayList<String> selectedIds = viewModel.getSelectedIds();
         view.confirmLinksRemoval(selectedIds);
     }
 
     @Override
     public void onSelectAllClick() {
-        viewModel.toggleSelection();
-    }
+        String[] ids = view.getIds();
+        int listSize = ids.length;
+        if (listSize <= 0) return;
 
-    @Override
-    public void deleteLinks(int[] selectedIds, boolean deleteNotes) {
-        for (int selectedId : selectedIds) {
-            viewModel.removeSelection(selectedId);
-            String linkId = view.removeLink(selectedId);
-            deleteLink(linkId, deleteNotes);
+        int selectedCount = viewModel.getSelectedCount();
+        if (selectedCount > listSize / 2) {
+            viewModel.setSelection(null);
+        } else {
+            viewModel.setSelection(ids);
         }
     }
 
-    private void deleteLink(final @NonNull String linkId, final boolean deleteNotes) {
-        checkNotNull(linkId);
-        repository.getLink(linkId)
-                .subscribeOn(schedulerProvider.computation())
-                .map(link -> {
-                    if (deleteNotes) {
-                        List<Note> notes = link.getNotes();
-                        if (notes != null) {
-                            for (Note note : notes) {
-                                repository.deleteNote(note.getId());
-                            }
-                        }
-                    }
-                    return link;
-                })
+    @Override
+    public void syncSavedLink(@NonNull final String linkId) {
+        repository.syncSavedLink(linkId)
+                .subscribeOn(schedulerProvider.io())
                 .observeOn(schedulerProvider.ui())
-                .subscribe(
-                        link -> {
-                            String id = link.getId();
-                            repository.deleteLink(id);
-                            settings.resetLinkFilter(id);
-                        }, throwable -> {
-                            if (throwable instanceof NullPointerException) {
-                                viewModel.showDatabaseErrorSnackbar();
-                            } // TODO: force Notes cleanup by linkId if Link has not been found
-                        });
+                .doFinally(this::updateSyncStatus)
+                .subscribe(itemState -> {
+                    Log.d(TAG, "syncSavedLink() -> subscribe(): [" + itemState.name() + "]");
+                    switch (itemState) {
+                        case CONFLICTED:
+                            laanoUiManager.showLongToast(R.string.toast_sync_conflict);
+                            break;
+                        case ERROR_CLOUD:
+                            settings.setSyncStatus(SyncAdapter.SYNC_STATUS_ERROR);
+                            laanoUiManager.showLongToast(R.string.toast_sync_error);
+                            break;
+                        case SAVED:
+                            laanoUiManager.showShortToast(R.string.toast_sync_success);
+                            break;
+                    }
+                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+    }
+
+    @Override
+    public void deleteLinks(
+            @NonNull final ArrayList<String> selectedIds, final boolean deleteNotes) {
+        checkNotNull(selectedIds);
+        Observable.fromIterable(selectedIds)
+                .flatMap(linkId -> {
+                    Log.d(TAG, "deleteLinks(): [" + linkId + "]");
+                    return repository.deleteLink(linkId, settings.isSyncable(), deleteNotes)
+                            .subscribeOn(schedulerProvider.io())
+                            .observeOn(schedulerProvider.ui())
+                            .doOnNext(itemState -> {
+                                Log.d(TAG, "deleteLink() -> doOnNext(): [" + itemState.name() + "]");
+                                if (itemState == DataSource.ItemState.DELETED
+                                        || itemState == DataSource.ItemState.DEFERRED) {
+                                    // NOTE: can be called twice
+                                    view.removeLink(linkId);
+                                    settings.resetLinkFilter(linkId);
+                                }
+                            });
+                })
+                .filter(itemState -> itemState == DataSource.ItemState.CONFLICTED
+                        || itemState == DataSource.ItemState.ERROR_LOCAL
+                        || itemState == DataSource.ItemState.ERROR_CLOUD
+                        || itemState == DataSource.ItemState.ERROR_EXTRA)
+                .toList()
+                .doFinally(this::updateSyncStatus)
+                .subscribe(itemStates -> {
+                    Log.d(TAG, "deleteLinks(): Completed [" + itemStates.toString() + "]");
+                    if (itemStates.isEmpty()) {
+                        // DELETED or DEFERRED if sync is disabled
+                        //viewModel.showDeleteSuccessSnackbar();
+                        if (settings.isSyncable()) {
+                            laanoUiManager.showShortToast(R.string.toast_sync_success);
+                        }
+                    } else if (itemStates.contains(DataSource.ItemState.CONFLICTED)) {
+                        laanoUiManager.showLongToast(R.string.toast_sync_conflict);
+                    } else if (itemStates.contains(DataSource.ItemState.ERROR_LOCAL)) {
+                        viewModel.showDatabaseErrorSnackbar();
+                    } else if (itemStates.contains(DataSource.ItemState.ERROR_CLOUD)) {
+                        settings.setSyncStatus(SyncAdapter.SYNC_STATUS_ERROR);
+                        laanoUiManager.showLongToast(R.string.toast_sync_error);
+                    } else if (itemStates.contains(DataSource.ItemState.ERROR_EXTRA)) {
+                        // TODO: remove error_extra and treat the extra as a normal Link
+                        laanoUiManager.showLongToast(R.string.toast_error);
+                    }
+                    loadLinks(false);
+                    updateTabNormalState();
+                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+    }
+
+    @Override
+    public void updateSyncStatus() {
+        if (settings.getSyncStatus() == SyncAdapter.SYNC_STATUS_ERROR) {
+            // NOTE: only SyncAdapter can reset this status
+            return;
+        }
+        repository.getSyncStatus()
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(syncStatus -> {
+                    settings.setSyncStatus(syncStatus);
+                    laanoUiManager.updateSyncStatus();
+                }, throwable -> {
+                    CommonUtils.logStackTrace(TAG, throwable);
+                    viewModel.showDatabaseErrorSnackbar();
+                });
     }
 
     @Override
     public int getPosition(String linkId) {
         return view.getPosition(linkId);
-    }
-
-    @Override
-    public boolean isConflicted() {
-        return repository.isConflictedLinks().blockingGet();
     }
 
     @Override
@@ -490,11 +554,33 @@ public final class LinksPresenter implements LinksContract.Presenter {
 
     @Override
     public void updateTabNormalState() {
-        laanoUiManager.setTabNormalState(TAB, isConflicted());
+        repository.isConflictedLinks()
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(
+                        conflicted -> laanoUiManager.setTabNormalState(TAB, conflicted),
+                        throwable -> {
+                            CommonUtils.logStackTrace(TAG, throwable);
+                            viewModel.showDatabaseErrorSnackbar();
+                        });
     }
 
     @Override
     public void setShowConflictResolutionWarning(boolean show) {
         settings.setShowConflictResolutionWarning(show);
+    }
+
+    @Override
+    public void onRepositoryDelete(@NonNull String id, @NonNull DataSource.ItemState itemState) {
+        if (itemState == DataSource.ItemState.SAVED) {
+            throw new IllegalStateException("SAVED state is not allowed to Delete operation");
+        }
+    }
+
+    @Override
+    public void onRepositorySave(@NonNull String id, @NonNull DataSource.ItemState itemState) {
+        if (itemState == DataSource.ItemState.DELETED) {
+            throw new IllegalStateException("DELETED state is not allowed to Save operation");
+        }
     }
 }

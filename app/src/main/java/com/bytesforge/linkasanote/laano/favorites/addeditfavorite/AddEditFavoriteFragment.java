@@ -48,7 +48,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
 
     public static final String TAG = AddEditFavoriteFragment.class.getSimpleName();
 
-    public static final String ARGUMENT_EDIT_FAVORITE_ID = "EDIT_FAVORITE_ID";
+    public static final String ARGUMENT_FAVORITE_ID = "FAVORITE_ID";
 
     private Context context;
     private Resources resources;
@@ -118,7 +118,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
     public void finishActivity(String favoriteId) {
         Intent data = new Intent();
         if (favoriteId != null) {
-            data.putExtra(ARGUMENT_EDIT_FAVORITE_ID, favoriteId);
+            data.putExtra(ARGUMENT_FAVORITE_ID, favoriteId);
         }
         FragmentActivity activity = getActivity();
         activity.setResult(Activity.RESULT_OK, data);

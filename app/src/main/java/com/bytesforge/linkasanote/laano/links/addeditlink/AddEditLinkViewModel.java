@@ -44,7 +44,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
     private Context context;
     private AddEditLinkContract.Presenter presenter;
 
-    public enum SnackbarId {LINK_EMPTY, LINK_NOT_FOUND};
+    public enum SnackbarId {DATABASE_ERROR, LINK_EMPTY, LINK_NOT_FOUND};
 
     @Bindable
     public SnackbarId snackbarId;
@@ -119,6 +119,11 @@ public class AddEditLinkViewModel extends BaseObservable implements
         if (snackbarId == null) return;
 
         switch (snackbarId) {
+            case DATABASE_ERROR:
+                Snackbar.make(view, R.string.error_database, Snackbar.LENGTH_INDEFINITE)
+                        .setAction(R.string.snackbar_button_ok, v -> { /* just inform */ })
+                        .show();
+                break;
             case LINK_EMPTY:
                 Snackbar.make(view,
                         R.string.add_edit_link_warning_empty,
@@ -181,6 +186,12 @@ public class AddEditLinkViewModel extends BaseObservable implements
                 && Strings.isNullOrEmpty(linkName.get())
                 && !linkDisabled.get()
                 && linkTags.getText().length() <= 0;
+    }
+
+    @Override
+    public void showDatabaseErrorSnackbar() {
+        snackbarId = SnackbarId.DATABASE_ERROR;
+        notifyPropertyChanged(BR.snackbarId);
     }
 
     @Override

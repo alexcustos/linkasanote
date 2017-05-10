@@ -34,6 +34,7 @@ public interface AddEditFavoriteContract {
         Bundle getDefaultInstanceState();
 
         void setTagsCompletionView(@NonNull TagsCompletionView completionView);
+        void showDatabaseErrorSnackbar();
         void showEmptyFavoriteSnackbar();
         void showFavoriteNotFoundSnackbar();
         void showDuplicateKeyError();

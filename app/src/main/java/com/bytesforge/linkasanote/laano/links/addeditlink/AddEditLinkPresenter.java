@@ -10,6 +10,7 @@ import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.links.LinkId;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
@@ -153,12 +154,24 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
             viewModel.showEmptyLinkSnackbar();
             return;
         }
-        try {
-            repository.saveLink(link);
-            view.finishActivity(linkId);
-        } catch (SQLiteConstraintException e) {
-            viewModel.showDuplicateKeyError();
-        }
+        final String linkId = link.getId();
+        repository.saveLink(link, false) // sync after save
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(itemState -> {
+                    switch (itemState) {
+                        case DEFERRED:
+                            view.finishActivity(linkId);
+                            break;
+                    }
+                }, throwable -> {
+                    if (throwable instanceof SQLiteConstraintException) {
+                        viewModel.showDuplicateKeyError();
+                    } else {
+                        CommonUtils.logStackTrace(TAG, throwable);
+                        viewModel.showDatabaseErrorSnackbar();
+                    }
+                });
     }
 
     @Override

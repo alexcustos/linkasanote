@@ -29,7 +29,7 @@ public class AddEditNoteActivity extends AppCompatActivity {
                 DataBindingUtil.setContentView(this, R.layout.activity_add_edit_note);
 
         Intent startIntent = getIntent();
-        String noteId = startIntent.getStringExtra(AddEditNoteFragment.ARGUMENT_EDIT_NOTE_ID);
+        String noteId = startIntent.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
         String linkId = startIntent.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
         if (noteId != null && linkId != null) {
             throw new UnsupportedOperationException("Link connection can only be set for the new Note");

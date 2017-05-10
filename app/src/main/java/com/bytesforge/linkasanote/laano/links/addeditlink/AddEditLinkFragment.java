@@ -47,7 +47,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
 
     public static final String TAG = AddEditLinkFragment.class.getSimpleName();
 
-    public static final String ARGUMENT_EDIT_LINK_ID = "EDIT_LINK_ID";
+    public static final String ARGUMENT_LINK_ID = "LINK_ID";
 
     private Context context;
     private AddEditLinkContract.Presenter presenter;
@@ -116,7 +116,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
     public void finishActivity(String linkId) {
         Intent data = new Intent();
         if (linkId != null) {
-            data.putExtra(ARGUMENT_EDIT_LINK_ID, linkId);
+            data.putExtra(ARGUMENT_LINK_ID, linkId);
         }
         FragmentActivity activity = getActivity();
         activity.setResult(Activity.RESULT_OK, data);

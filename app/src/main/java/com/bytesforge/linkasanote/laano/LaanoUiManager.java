@@ -3,11 +3,13 @@ package com.bytesforge.linkasanote.laano;
 import android.accounts.Account;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.ActionBar;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.view.Menu;
+import android.widget.Toast;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
@@ -35,8 +37,7 @@ public class LaanoUiManager {
 
     private SparseIntArray syncUploaded = new SparseIntArray();
     private SparseIntArray syncDownloaded = new SparseIntArray();
-    private boolean isAccount = false;
-    private boolean isSyncState = false;
+    private boolean syncState = false;
 
     public LaanoUiManager(
             @NonNull LaanoActivity laanoActivity,
@@ -163,8 +164,9 @@ public class LaanoUiManager {
     }
 
     public void updateDefaultAccount(Account account) {
-        isAccount = (account != null);
-        if (isAccount) {
+        settings.setSyncable(account != null);
+        if (settings.isSyncable()) {
+            assert account != null;
             AccountItem accountItem = CloudUtils.getAccountItem(account, laanoActivity);
             headerViewModel.showAccount(accountItem);
         } else {
@@ -173,17 +175,25 @@ public class LaanoUiManager {
         updateDrawerMenu();
     }
 
-    public void updateLastSyncStatus() {
+    public void updateSyncStatus() {
         long lastSyncTime = settings.getLastSyncTime();
-        int lastSyncStatus = settings.getLastSyncStatus();
-        headerViewModel.showLastSyncStatus(lastSyncTime, lastSyncStatus);
+        int syncStatus = settings.getSyncStatus();
+        headerViewModel.showSyncStatus(lastSyncTime, syncStatus);
+    }
+
+    public void showShortToast(@StringRes int toastId) {
+        Toast.makeText(laanoActivity, toastId, Toast.LENGTH_SHORT).show();
+    }
+
+    public void showLongToast(@StringRes int toastId) {
+        Toast.makeText(laanoActivity, toastId, Toast.LENGTH_LONG).show();
     }
 
     private void updateDrawerMenu() {
         if (resources.getBoolean(R.bool.multiaccount_support)) {
             drawerMenu.findItem(R.id.add_account_menu_item).setVisible(true);
             drawerMenu.findItem(R.id.manage_accounts_menu_item).setVisible(true);
-        } else if (isAccount) {
+        } else if (settings.isSyncable()) {
             drawerMenu.findItem(R.id.add_account_menu_item).setVisible(false);
             drawerMenu.findItem(R.id.manage_accounts_menu_item).setVisible(true);
         } else {
@@ -194,17 +204,17 @@ public class LaanoUiManager {
     }
 
     public void setSyncDrawerMenu() {
-        if (!isSyncState) {
-            isSyncState = true;
+        if (!syncState) {
+            syncState = true;
             drawerMenu.findItem(R.id.sync_menu_item).setTitle(R.string.drawer_actions_sync_in_progress);
             drawerMenu.findItem(R.id.sync_menu_item).setEnabled(false);
         }
     }
 
     public void setNormalDrawerMenu() {
-        isSyncState = false;
+        syncState = false;
         drawerMenu.findItem(R.id.sync_menu_item).setTitle(R.string.drawer_actions_sync_start);
-        if (isAccount) {
+        if (settings.isSyncable()) {
             drawerMenu.findItem(R.id.sync_menu_item).setEnabled(true);
         } else {
             drawerMenu.findItem(R.id.sync_menu_item).setEnabled(false);

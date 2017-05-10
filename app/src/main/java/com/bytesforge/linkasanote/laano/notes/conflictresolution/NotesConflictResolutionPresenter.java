@@ -90,7 +90,7 @@ public final class NotesConflictResolutionPresenter implements
     private void loadLocalNote() {
         localDisposable.clear();
         Disposable disposable = localNotes.get(noteId)
-                .subscribeOn(schedulerProvider.computation())
+                .subscribeOn(schedulerProvider.computation()) // local
                 .observeOn(schedulerProvider.ui())
                 .subscribe(note -> {
                     if (!note.isConflicted()) {
@@ -123,7 +123,7 @@ public final class NotesConflictResolutionPresenter implements
     private void loadCloudNote() {
         cloudDisposable.clear();
         Disposable disposable = cloudNotes.download(noteId)
-                .subscribeOn(schedulerProvider.computation())
+                .subscribeOn(schedulerProvider.io())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(viewModel::populateCloudNote, throwable -> {
                     if (throwable instanceof NoSuchElementException) {
@@ -147,12 +147,11 @@ public final class NotesConflictResolutionPresenter implements
         checkNotNull(mainNoteId);
         checkNotNull(noteId);
         deleteNoteSingle(mainNoteId)
-                .subscribeOn(schedulerProvider.computation())
+                .subscribeOn(schedulerProvider.io())
                 .map(success -> {
                     if (success) {
                         SyncState state = new SyncState(SyncState.State.SYNCED);
-                        int numRows = localNotes.update(noteId, state).blockingGet();
-                        success = (numRows == 1);
+                        success = localNotes.update(noteId, state).blockingGet();
                     }
                     return success;
                 })
@@ -170,7 +169,7 @@ public final class NotesConflictResolutionPresenter implements
     private void deleteNote(@NonNull final String noteId) {
         checkNotNull(noteId);
         deleteNoteSingle(noteId)
-                .subscribeOn(schedulerProvider.computation())
+                .subscribeOn(schedulerProvider.io())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(success -> {
                     if (success) {
@@ -187,8 +186,7 @@ public final class NotesConflictResolutionPresenter implements
                 .map(result -> {
                     boolean success = false;
                     if (result.isSuccess()) {
-                        int numRows = localNotes.delete(noteId).blockingGet();
-                        success = (numRows == 1);
+                        success = localNotes.delete(noteId).blockingGet();
                     } else {
                         Log.e(TAG, "There was an error while deleting the Note from the cloud storage [" + noteId + "]");
                     }
@@ -221,14 +219,13 @@ public final class NotesConflictResolutionPresenter implements
         viewModel.showProgressOverlay();
         Note note = localNotes.get(noteId).blockingGet();
         cloudNotes.upload(note)
-                .subscribeOn(schedulerProvider.computation())
+                .subscribeOn(schedulerProvider.io())
                 .map(result -> {
                     boolean success = false;
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        int numRows = localNotes.update(note.getId(), state).blockingGet();
-                        success = (numRows == 1);
+                        success = localNotes.update(note.getId(), state).blockingGet();
                     }
                     return success;
                 })
@@ -248,11 +245,8 @@ public final class NotesConflictResolutionPresenter implements
         viewModel.deactivateButtons();
         viewModel.showProgressOverlay();
         cloudNotes.download(noteId)
-                .subscribeOn(schedulerProvider.computation())
-                .map(note -> {
-                    long rowId = localNotes.save(note).blockingGet();
-                    return rowId > 0;
-                })
+                .subscribeOn(schedulerProvider.io())
+                .map(note -> localNotes.save(note).blockingGet())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(success -> {
                     if (success) {

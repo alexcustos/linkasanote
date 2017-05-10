@@ -2,16 +2,15 @@ package com.bytesforge.linkasanote.laano.links;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.laano.BaseItemPresenterInterface;
+import com.bytesforge.linkasanote.laano.BaseItemViewModelInterface;
 import com.bytesforge.linkasanote.laano.FilterType;
-import com.bytesforge.linkasanote.laano.LaanoTabPresenter;
-import com.bytesforge.linkasanote.laano.LaanoUiManager;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public interface LinksContract {
@@ -22,62 +21,46 @@ public interface LinksContract {
         boolean isActive();
         void onActivityResult(int requestCode, int resultCode, Intent data);
 
-        void showAddLink();
+        void startAddLinkActivity();
         void showAddNote(@NonNull String linkId);
         void showEditLink(@NonNull String linkId);
         void showLinks(@NonNull List<Link> links);
         void enableActionMode();
         void finishActionMode();
-        void selectionChanged(int position);
-        void linkVisibilityChanged(int position);
-        String removeLink(int position);
+        void selectionChanged(@NonNull String id);
+        void visibilityChanged(@NonNull String id);
+        void removeLink(@NonNull String id);
         int getPosition(String linkId);
+        String[] getIds();
         void scrollToPosition(int position);
         void openLink(@NonNull Uri uri);
-        void confirmLinksRemoval(int[] selectedIds);
+        void confirmLinksRemoval(ArrayList<String> selectedIds);
         void showConflictResolution(@NonNull String linkId);
         void showConflictResolutionWarning(@NonNull String linkId);
-    }
-
-    interface ViewModel extends BaseView<Presenter> {
-
-        void setLaanoUiManager(@NonNull LaanoUiManager laanoUiManager);
-
-        void setInstanceState(@Nullable Bundle savedInstanceState);
-        void saveInstanceState(@NonNull Bundle outState);
-        void applyInstanceState(@NonNull Bundle state);
-
-        void setLinkListSize(int linkListSize);
-        boolean isActionMode();
-        void enableActionMode();
-        void disableActionMode();
-
-        boolean isSelected(String linkId, boolean changed);
-        void toggleSelection();
-        void toggleSelection(int position);
-        boolean toggleSingleSelection(int position);
-        void setSingleSelection(int position, boolean selected);
-        void removeSelection();
-        void removeSelection(int position);
-        int getSelectedCount();
-        int[] getSelectedIds();
-        void showDatabaseErrorSnackbar();
-        void showConflictResolutionSuccessfulSnackbar();
-        void showConflictResolutionErrorSnackbar();
-        void showOpenLinkErrorSnackbar();
-        void showProgressOverlay();
-        void hideProgressOverlay();
-
-        String getSearchText();
-        void setSearchText(String searchText);
-        void toggleLinkVisibility(int position);
         void expandAllLinks();
         void collapseAllLinks();
     }
 
-    interface Presenter extends LaanoTabPresenter {
+    interface ViewModel extends BaseItemViewModelInterface {
 
-        void addLink();
+        void showDatabaseErrorSnackbar();
+        void showConflictResolutionSuccessfulSnackbar();
+        void showConflictResolutionErrorSnackbar();
+        void showOpenLinkErrorSnackbar();
+        void showConflictedErrorSnackbar();
+        void showCloudErrorSnackbar();
+        void showSaveSuccessSnackbar();
+        void showDeleteExtraErrorSnackbar();
+        void showDeleteSuccessSnackbar();
+
+        boolean isVisible(String id);
+        void toggleVisibility(@NonNull String id);
+        void setVisibility(String[] ids);
+    }
+
+    interface Presenter extends BaseItemPresenterInterface {
+
+        void showAddLink();
         void loadLinks(boolean forceUpdate);
 
         void onLinkClick(String linkId, boolean isConflicted);
@@ -92,11 +75,13 @@ public interface LinksContract {
         void onToggleClick(@NonNull String linkId);
         void onDeleteClick();
         void onSelectAllClick();
+        void updateSyncStatus();
         int getPosition(String linkId);
         void setFilterType(@NonNull FilterType filtering);
+        void syncSavedLink(@NonNull final String linkId);
+        void deleteLinks(@NonNull ArrayList<String> selectedIds, boolean deleteNotes);
         boolean isFavoriteFilter();
         boolean isNoteFilter();
-        void deleteLinks(int[] selectedIds, boolean deleteNotes);
         boolean isExpandLinks();
         void setShowConflictResolutionWarning(boolean show);
     }

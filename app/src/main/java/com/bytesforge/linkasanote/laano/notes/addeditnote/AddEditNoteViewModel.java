@@ -47,7 +47,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
     private Resources resources;
     private AddEditNoteContract.Presenter presenter;
 
-    public enum SnackbarId {NOTE_EMPTY, NOTE_NOT_FOUND};
+    public enum SnackbarId {DATABASE_ERROR, NOTE_EMPTY, NOTE_NOT_FOUND};
 
     @Bindable
     public SnackbarId snackbarId;
@@ -120,6 +120,11 @@ public class AddEditNoteViewModel extends BaseObservable implements
         if (snackbarId == null) return;
 
         switch (snackbarId) {
+            case DATABASE_ERROR:
+                Snackbar.make(view, R.string.error_database, Snackbar.LENGTH_INDEFINITE)
+                        .setAction(R.string.snackbar_button_ok, v -> { /* just inform */ })
+                        .show();
+                break;
             case NOTE_EMPTY:
                 Snackbar.make(view,
                         R.string.add_edit_note_warning_empty,
@@ -180,6 +185,12 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public boolean isEmpty() {
         return Strings.isNullOrEmpty(noteNote.get())
                 && noteTags.getText().length() <= 0;
+    }
+
+    @Override
+    public void showDatabaseErrorSnackbar() {
+        snackbarId = SnackbarId.DATABASE_ERROR;
+        notifyPropertyChanged(BR.snackbarId);
     }
 
     @Override

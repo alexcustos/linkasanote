@@ -4,9 +4,11 @@ import android.databinding.BindingAdapter;
 import android.databinding.BindingConversion;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.ActivityUtils;
@@ -47,5 +49,11 @@ public class LaanoBindingAdapters {
     @BindingAdapter({"app:srcCompat"})
     public static void setSrcCompat(ImageButton view, Drawable drawable) {
         view.setImageDrawable(drawable);
+    }
+
+    @BindingAdapter({"scrollableText"})
+    public static void setScrollableText(TextView view, String text) {
+        view.setText(text);
+        view.setMovementMethod(new ScrollingMovementMethod());
     }
 }

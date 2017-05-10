@@ -92,8 +92,8 @@ public class FavoritesPresenterTest {
 
     @Test
     public void clickOnAddFavorite_showAddFavoriteUi() {
-        presenter.addFavorite();
-        verify(view).showAddFavorite();
+        presenter.showAddFavorite();
+        verify(view).startAddFavoriteActivity();
     }
 
     @Test

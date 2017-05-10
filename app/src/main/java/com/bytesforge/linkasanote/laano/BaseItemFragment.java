@@ -1,9 +1,9 @@
-package com.bytesforge.linkasanote;
+package com.bytesforge.linkasanote.laano;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
-public abstract class BaseFragment extends Fragment {
+public abstract class BaseItemFragment extends Fragment {
 
     public static final String ARGUMENT_TITLE = "ARGUMENT_TITLE";
 

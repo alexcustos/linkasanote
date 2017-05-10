@@ -36,9 +36,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
-import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.about.AboutActivity;
@@ -276,7 +274,7 @@ public class LaanoActivity extends AppCompatActivity implements
             return;
         }
         doubleBackPressed = true;
-        Toast.makeText(this, R.string.laano_double_back_press_toast, Toast.LENGTH_SHORT).show();
+        laanoUiManager.showShortToast(R.string.toast_double_back_press);
         new Handler().postDelayed(
                 () -> doubleBackPressed = false,
                 Settings.GLOBAL_DOUBLE_BACK_TO_EXIT_MILLIS);
@@ -285,7 +283,7 @@ public class LaanoActivity extends AppCompatActivity implements
     private void updateDefaultAccount() {
         Account account = CloudUtils.getDefaultAccount(this, accountManager);
         laanoUiManager.updateDefaultAccount(account);
-        laanoUiManager.updateLastSyncStatus();
+        laanoUiManager.updateSyncStatus();
     }
 
     // Public
@@ -381,7 +379,7 @@ public class LaanoActivity extends AppCompatActivity implements
                         laanoUiManager.setSyncDrawerMenu();
                         break;
                     case SyncNotifications.STATUS_SYNC_STOP:
-                        laanoUiManager.updateLastSyncStatus();
+                        laanoUiManager.updateSyncStatus();
                         laanoUiManager.setNormalDrawerMenu();
                         break;
                 }
@@ -580,13 +578,13 @@ public class LaanoActivity extends AppCompatActivity implements
         fab.setOnClickListener(v -> {
                     switch (activeTab) {
                         case LaanoFragmentPagerAdapter.LINKS_TAB:
-                            linksPresenter.addLink();
+                            linksPresenter.showAddLink();
                             break;
                         case LaanoFragmentPagerAdapter.FAVORITES_TAB:
-                            favoritesPresenter.addFavorite();
+                            favoritesPresenter.showAddFavorite();
                             break;
                         case LaanoFragmentPagerAdapter.NOTES_TAB:
-                            notesPresenter.addNote();
+                            notesPresenter.showAddNote();
                             break;
                         default:
                             throw new IllegalStateException("Unexpected tab was selected");
@@ -635,7 +633,7 @@ public class LaanoActivity extends AppCompatActivity implements
     // Testing
 
     @VisibleForTesting
-    public BaseFragment getCurrentFragment() {
+    public BaseItemFragment getCurrentFragment() {
         ViewPager viewPager = binding.laanoViewPager;
         int position = viewPager.getCurrentItem();
         LaanoFragmentPagerAdapter adapter = (LaanoFragmentPagerAdapter) viewPager.getAdapter();

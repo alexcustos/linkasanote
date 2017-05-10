@@ -5,16 +5,14 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.databinding.ItemLinksBinding;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -26,7 +24,7 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
     private final LinksViewModel viewModel;
 
     private List<Link> links;
-    private Map<String, Integer> positionMap;
+    private List<String> linkIds;
 
     public LinksAdapter(
             @NonNull List<Link> links, @NonNull LinksContract.Presenter presenter,
@@ -34,7 +32,7 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
         this.links = checkNotNull(links);
         this.presenter = checkNotNull(presenter);
         this.viewModel = checkNotNull(viewModel);
-        updatePositionMap();
+        updateIds();
         setHasStableIds(true);
     }
 
@@ -65,7 +63,6 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
         }
     }
 
-
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
@@ -93,30 +90,51 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
     // Items
 
     @NonNull
-    public Link removeItem(int position) {
-        Link link = links.remove(position);
-        positionMap.remove(link.getId());
-        notifyItemRemoved(position);
-        return link;
+    public List<Link> getFavorites() {
+        return links;
+    }
+
+    @NonNull
+    public String[] getIds() {
+        return linkIds.toArray(new String[linkIds.size()]);
     }
 
     public void swapItems(@NonNull List<Link> links) {
         checkNotNull(links);
-
         this.links = links;
-        updatePositionMap();
+        updateIds();
         notifyDataSetChanged();
     }
 
-    public int getPosition(@Nullable String linkId) {
-        if (linkId == null) return -1;
+    @Nullable
+    public synchronized Link removeItem(int position) {
+        Link link;
+        try {
+            link = links.remove(position);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
+        linkIds.remove(position);
+        notifyItemRemoved(position);
+        return link;
+    }
 
-        Integer position = positionMap.get(linkId);
-        if (position == null) {
-            Log.e(TAG, "No position is found for Link [" + linkId + "]");
+    public synchronized int removeItem(@NonNull String id) {
+        checkNotNull(id);
+        int position = getPosition(id);
+        if (position < 0) return -1;
+
+        links.remove(position);
+        linkIds.remove(position);
+        notifyItemRemoved(position);
+        return position;
+    }
+
+    public int getPosition(@Nullable String linkId) {
+        if (linkId == null) {
             return -1;
         }
-        return position;
+        return linkIds.indexOf(linkId);
     }
 
     public void notifyItemChanged(String linkId) {
@@ -126,18 +144,25 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
         notifyItemChanged(position);
     }
 
-    private void updatePositionMap() {
-        if (links == null) return;
+    @Nullable
+    public String getId(int position) {
+        try {
+            return links.get(position).getId();
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
+    }
 
+    private synchronized void updateIds() {
         int size = links.size();
-        if (positionMap == null) {
-            positionMap = new LinkedHashMap<>(size);
+        if (linkIds == null) {
+            linkIds = new ArrayList<>(size);
         } else {
-            positionMap.clear();
+            linkIds.clear();
         }
         for (int i = 0; i < size; i++) {
             Link link = links.get(i);
-            positionMap.put(link.getId(), i);
+            linkIds.add(i, link.getId());
         }
     }
 }

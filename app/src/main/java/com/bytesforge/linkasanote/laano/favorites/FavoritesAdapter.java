@@ -3,16 +3,14 @@ package com.bytesforge.linkasanote.laano.favorites;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.databinding.ItemFavoritesBinding;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -24,7 +22,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     private final FavoritesViewModel viewModel;
 
     private List<Favorite> favorites;
-    private Map<String, Integer> positionMap;
+    private List<String> favoritesIds;
 
     public FavoritesAdapter(
             @NonNull List<Favorite> favorites,
@@ -33,7 +31,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         this.favorites = checkNotNull(favorites);
         this.presenter = checkNotNull(presenter);
         this.viewModel = checkNotNull(viewModel);
-        updatePositionMap();
+        updateIds();
         setHasStableIds(true);
     }
 
@@ -84,44 +82,79 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     // Items
 
     @NonNull
-    public Favorite removeItem(int position) {
-        Favorite favorite = favorites.remove(position);
-        updatePositionMap();
-        notifyItemRemoved(position);
-        return favorite;
+    public List<Favorite> getFavorites() {
+        return favorites;
+    }
+
+    @NonNull
+    public String[] getIds() {
+        return favoritesIds.toArray(new String[favoritesIds.size()]);
     }
 
     public void swapItems(@NonNull List<Favorite> favorites) {
         checkNotNull(favorites);
-
         this.favorites = favorites;
-        updatePositionMap();
+        updateIds();
         notifyDataSetChanged();
     }
 
-    public int getPosition(@Nullable String favoriteId) {
-        if (favoriteId == null) return -1;
-
-        Integer position = positionMap.get(favoriteId);
-        if (position == null) {
-            Log.e(TAG, "No position is found for Favorite [" + favoriteId + "]");
-            return -1;
+    @Nullable
+    public synchronized Favorite removeItem(int position) {
+        Favorite favorite;
+        try {
+            favorite = favorites.remove(position);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
         }
+        favoritesIds.remove(position);
+        notifyItemRemoved(position);
+        return favorite;
+    }
+
+    public synchronized int removeItem(@NonNull String id) {
+        checkNotNull(id);
+        int position = getPosition(id);
+        if (position < 0) return -1;
+
+        favorites.remove(position);
+        favoritesIds.remove(position);
+        notifyItemRemoved(position);
         return position;
     }
 
-    private void updatePositionMap() {
-        if (favorites == null) return;
+    public int getPosition(@Nullable String favoriteId) {
+        if (favoriteId == null) {
+            return -1;
+        }
+        return favoritesIds.indexOf(favoriteId);
+    }
 
+    public void notifyItemChanged(String favoriteId) {
+        int position = getPosition(favoriteId);
+        if (position < 0) return;
+
+        notifyItemChanged(position);
+    }
+
+    @Nullable
+    public String getId(int position) {
+        try {
+            return favorites.get(position).getId();
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
+    }
+
+    private synchronized void updateIds() {
         int size = favorites.size();
-        if (positionMap == null) {
-            positionMap = new LinkedHashMap<>(size);
+        if (favoritesIds == null) {
+            favoritesIds = new ArrayList<>(size);
         } else {
-            positionMap.clear();
+            favoritesIds.clear();
         }
         for (int i = 0; i < size; i++) {
             Favorite favorite = favorites.get(i);
-            positionMap.put(favorite.getId(), i);
+            favoritesIds.add(i, favorite.getId());
         }
-    } // updatePositionMap
+    }
 }

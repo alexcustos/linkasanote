@@ -28,7 +28,7 @@ public class AddEditFavoriteActivity extends AppCompatActivity {
                 DataBindingUtil.setContentView(this, R.layout.activity_add_edit_favorite);
 
         String favoriteId = getIntent().getStringExtra(
-                AddEditFavoriteFragment.ARGUMENT_EDIT_FAVORITE_ID);
+                AddEditFavoriteFragment.ARGUMENT_FAVORITE_ID);
         // Toolbar
         setSupportActionBar(binding.toolbar);
         ActionBar actionBar = getSupportActionBar();

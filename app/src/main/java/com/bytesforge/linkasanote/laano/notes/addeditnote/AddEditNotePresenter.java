@@ -1,6 +1,5 @@
 package com.bytesforge.linkasanote.laano.notes.addeditnote;
 
-import android.database.sqlite.SQLiteConstraintException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -11,6 +10,7 @@ import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.links.LinkId;
 import com.bytesforge.linkasanote.laano.notes.NoteId;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
@@ -197,12 +197,20 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
             viewModel.showEmptyNoteSnackbar();
             return;
         }
-        try {
-            repository.saveNote(note);
-            view.finishActivity(noteId, linkId);
-        } catch (SQLiteConstraintException e) {
-            viewModel.showDuplicateKeyError();
-        }
+        final String noteId = note.getId();
+        repository.saveNote(note, false) // sync after save
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(itemState -> {
+                    switch (itemState) {
+                        case DEFERRED:
+                            view.finishActivity(noteId, linkId);
+                            break;
+                    }
+                }, throwable -> {
+                    CommonUtils.logStackTrace(TAG, throwable);
+                    viewModel.showDatabaseErrorSnackbar();
+                });
     }
 
     @Override

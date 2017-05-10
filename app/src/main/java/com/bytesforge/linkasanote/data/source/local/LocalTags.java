@@ -37,9 +37,8 @@ public class LocalTags {
     }
 
     public Observable<Tag> getTags(final Uri uri) {
-        // TODO: it would be better to sort by [table]_tag.created
-        final String sortOrder = LocalContract.TagEntry.COLUMN_NAME_NAME + " ASC";
-        return getTags(uri, null, null, sortOrder);
+        // NOTE: by default tags are sorted by the time when it was bound to the item
+        return getTags(uri, null, null, null);
     }
 
     public Observable<Tag> getTags(
@@ -87,10 +86,10 @@ public class LocalTags {
 
     public Single<Integer> deleteTag(final String tagName) {
         Uri uri = LocalContract.TagEntry.buildUriWith(tagName);
-        return LocalDataSource.delete(contentResolver, uri);
+        return Single.fromCallable(() -> contentResolver.delete(uri, null, null));
     }
 
     public Single<Integer> deleteTags() {
-        return LocalDataSource.delete(contentResolver, TAG_URI);
+        return Single.fromCallable(() -> contentResolver.delete(TAG_URI, null, null));
     }
 }

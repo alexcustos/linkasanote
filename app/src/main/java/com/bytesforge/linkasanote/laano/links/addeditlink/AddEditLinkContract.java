@@ -34,6 +34,7 @@ public interface AddEditLinkContract {
         Bundle getDefaultInstanceState();
 
         void setTagsCompletionView(@NonNull TagsCompletionView completionView);
+        void showDatabaseErrorSnackbar();
         void showEmptyLinkSnackbar();
         void showLinkNotFoundSnackbar();
         void showDuplicateKeyError();

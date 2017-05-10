@@ -50,7 +50,7 @@ public class Settings {
     private static final String DEFAULT_CLIPBOARD_PARAMETER_WHITE_LIST = "id, page";
 
     private static final String SETTING_LAST_SYNC_TIME = "LAST_SYNC_TIME";
-    private static final String SETTING_LAST_SYNC_STATUS = "LAST_SYNC_STATUS";
+    private static final String SETTING_SYNC_STATUS = "SYNC_STATUS";
     private static final String SETTING_LINK_FILTER = "LINK_FILTER";
     private static final String SETTING_FAVORITE_FILTER = "FAVORITE_FILTER";
     private static final String SETTING_NOTE_FILTER = "NOTE_FILTER";
@@ -60,7 +60,7 @@ public class Settings {
     private static final String SETTING_NOTES_LAYOUT_MODE_READING = "NOTES_LAYOUT_MODE_READING";
 
     private static final long DEFAULT_LAST_SYNC_TIME = 0;
-    private static final int DEFAULT_LAST_SYNC_STATUS = SyncAdapter.LAST_SYNC_STATUS_UNKNOWN;
+    private static final int DEFAULT_SYNC_STATUS = SyncAdapter.SYNC_STATUS_UNKNOWN;
     public static final FilterType DEFAULT_FILTER_TYPE = FilterType.ALL;
     private static final String DEFAULT_LAST_SYNCED_ETAG  = null;
     private static final String DEFAULT_LINK_FILTER = null;
@@ -74,6 +74,20 @@ public class Settings {
 
     private final Resources resources;
     private final SharedPreferences sharedPreferences;
+
+    // Runtime settings
+
+    private boolean syncable;
+
+    public void setSyncable(boolean syncable) {
+        this.syncable = syncable;
+    }
+
+    public boolean isSyncable() {
+        return syncable;
+    }
+
+    // Normal settings
 
     public Settings(Context context, SharedPreferences sharedPreferences) {
         resources = context.getResources();
@@ -180,19 +194,23 @@ public class Settings {
         }
     }
 
-    public int getLastSyncStatus() {
-        return sharedPreferences.getInt(SETTING_LAST_SYNC_STATUS, DEFAULT_LAST_SYNC_STATUS);
+    public int getSyncStatus() {
+        return sharedPreferences.getInt(SETTING_SYNC_STATUS, DEFAULT_SYNC_STATUS);
     }
 
-    public synchronized void setLastSyncStatus(int lastSyncStatus) {
-        putIntSetting(SETTING_LAST_SYNC_STATUS, lastSyncStatus);
+    public synchronized void setSyncStatus(int syncStatus) {
+        if (syncStatus != SyncAdapter.SYNC_STATUS_UNSYNCED
+                && syncStatus != SyncAdapter.SYNC_STATUS_UNKNOWN) {
+            updateLastSyncTime();
+        }
+        putIntSetting(SETTING_SYNC_STATUS, syncStatus);
     }
 
     public long getLastSyncTime() {
         return sharedPreferences.getLong(SETTING_LAST_SYNC_TIME, DEFAULT_LAST_SYNC_TIME);
     }
 
-    public synchronized void updateLastSyncTime() {
+    private synchronized void updateLastSyncTime() {
         putLongSetting(SETTING_LAST_SYNC_TIME, currentTimeMillis());
     }
 
@@ -206,7 +224,6 @@ public class Settings {
 
     public FilterType getFilterType(@NonNull String key) {
         checkNotNull(key);
-
         int ordinal = sharedPreferences.getInt(key, DEFAULT_FILTER_TYPE.ordinal());
         try {
             return FilterType.values()[ordinal];

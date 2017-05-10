@@ -91,8 +91,8 @@ public class LinksPresenterTest {
 
     @Test
     public void clickOnAddLink_showAddLinkUi() {
-        presenter.addLink();
-        verify(view).showAddLink();
+        presenter.showAddLink();
+        verify(view).startAddLinkActivity();
     }
 
     @Test

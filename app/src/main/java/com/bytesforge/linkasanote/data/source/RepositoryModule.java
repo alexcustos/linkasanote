@@ -16,7 +16,6 @@ import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.data.source.local.LocalTags;
 import com.bytesforge.linkasanote.settings.Settings;
-import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Singleton;
 
@@ -25,6 +24,8 @@ import dagger.Provides;
 
 @Module
 public class RepositoryModule {
+
+    Repository repository;
 
     @Provides
     @Singleton
@@ -86,25 +87,19 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
-    @Local
-    public DataSource provideLocalDataSource(
-            ContentResolver contentResolver, LocalLinks<Link> localLinks,
-            LocalFavorites<Favorite> localFavorites, LocalNotes<Note> localNotes,
-            LocalTags localTags) {
-        return new LocalDataSource(contentResolver, localLinks,
-                localFavorites, localNotes, localTags);
+    public LocalDataSource provideLocalDataSource(
+            LocalLinks<Link> localLinks, LocalFavorites<Favorite> localFavorites,
+            LocalNotes<Note> localNotes, LocalTags localTags) {
+        return new LocalDataSource(localLinks, localFavorites, localNotes, localTags);
     }
 
     @Provides
     @Singleton
-    @Cloud
-    public DataSource provideCloudDataSource(
-            Context context, BaseSchedulerProvider schedulerProvider,
+    public CloudDataSource provideCloudDataSource(
             LocalLinks<Link> localLinks, CloudItem<Link> cloudLinks,
             LocalFavorites<Favorite> localFavorites, CloudItem<Favorite> cloudFavorites,
             LocalNotes<Note> localNotes, CloudItem<Note> cloudNotes) {
-        return new CloudDataSource(context, schedulerProvider,
-                localLinks, cloudLinks,
+        return new CloudDataSource(localLinks, cloudLinks,
                 localFavorites, cloudFavorites,
                 localNotes, cloudNotes);
     }
@@ -112,7 +107,10 @@ public class RepositoryModule {
     @Provides
     @Singleton
     public Repository provideRepository(
-            @Local DataSource localDataSource, @Cloud DataSource cloudDataSource) {
-        return new Repository(localDataSource, cloudDataSource);
+            LocalDataSource localDataSource, CloudDataSource cloudDataSource) {
+        if (repository == null) {
+            repository = new Repository(localDataSource, cloudDataSource);
+        }
+        return repository;
     }
 }

@@ -10,6 +10,7 @@ import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.favorites.FavoriteId;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.tokenautocomplete.TokenCompleteTextView;
@@ -153,12 +154,24 @@ public final class AddEditFavoritePresenter implements
             viewModel.showEmptyFavoriteSnackbar();
             return;
         }
-        try {
-            repository.saveFavorite(favorite);
-            view.finishActivity(favoriteId);
-        } catch (SQLiteConstraintException e) {
-            viewModel.showDuplicateKeyError();
-        }
+        final String favoriteId = favorite.getId();
+        repository.saveFavorite(favorite, false) // sync after save
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(itemState -> {
+                    switch (itemState) {
+                        case DEFERRED:
+                            view.finishActivity(favoriteId);
+                            break;
+                    }
+                }, throwable -> {
+                    if (throwable instanceof SQLiteConstraintException) {
+                        viewModel.showDuplicateKeyError();
+                    } else {
+                        CommonUtils.logStackTrace(TAG, throwable);
+                        viewModel.showDatabaseErrorSnackbar();
+                    }
+                });
     }
 
     @Override

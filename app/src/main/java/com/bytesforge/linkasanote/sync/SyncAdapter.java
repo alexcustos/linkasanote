@@ -25,13 +25,16 @@ import com.owncloud.android.lib.common.OwnCloudClient;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Single;
+
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static final String TAG = SyncAdapter.class.getSimpleName();
-    public static final int LAST_SYNC_STATUS_UNKNOWN = 0;
-    public static final int LAST_SYNC_STATUS_SUCCESS = 1;
-    public static final int LAST_SYNC_STATUS_ERROR = 2;
-    public static final int LAST_SYNC_STATUS_CONFLICT = 3;
+    public static final int SYNC_STATUS_UNKNOWN = 0;
+    public static final int SYNC_STATUS_SYNCED = 1;
+    public static final int SYNC_STATUS_UNSYNCED = 2;
+    public static final int SYNC_STATUS_ERROR = 3;
+    public static final int SYNC_STATUS_CONFLICT = 4;
 
     private final Context context;
     private final Settings settings;
@@ -177,20 +180,28 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private void saveLastSyncStatus(boolean success) {
-        int lastSyncStatus;
+        int syncStatus;
         if (success) {
-            boolean isConflictedFavorites = localFavorites.isConflicted().blockingGet();
-            boolean isConflictedLinks = localLinks.isConflicted().blockingGet();
-            boolean isConflictedNotes = localNotes.isConflicted().blockingGet();
-            if (isConflictedFavorites || isConflictedLinks || isConflictedNotes) {
-                lastSyncStatus = LAST_SYNC_STATUS_CONFLICT;
+            boolean conflictedStatus = localLinks.isConflicted()
+                    .flatMap(conflicted -> conflicted ? Single.just(true) : localFavorites.isConflicted())
+                    .flatMap(conflicted -> conflicted ? Single.just(true) : localNotes.isConflicted())
+                    .blockingGet();
+            boolean unsyncedStatus = localLinks.isUnsynced()
+                    .flatMap(unsynced -> unsynced ? Single.just(true) : localFavorites.isUnsynced())
+                    .flatMap(unsynced -> unsynced ? Single.just(true) : localNotes.isUnsynced())
+                    .blockingGet();
+            // TODO: notify the status to UI (toast) if sync is started manually
+            if (conflictedStatus) {
+                syncStatus = SYNC_STATUS_CONFLICT;
+            } else if (unsyncedStatus) {
+                // NOTE: normally it should not be happened, but the chance is not zero
+                syncStatus = SYNC_STATUS_UNSYNCED;
             } else {
-                lastSyncStatus = LAST_SYNC_STATUS_SUCCESS;
+                syncStatus = SYNC_STATUS_SYNCED;
             }
         } else {
-            lastSyncStatus = LAST_SYNC_STATUS_ERROR;
+            syncStatus = SYNC_STATUS_ERROR;
         }
-        settings.updateLastSyncTime();
-        settings.setLastSyncStatus(lastSyncStatus);
+        settings.setSyncStatus(syncStatus);
     }
 }

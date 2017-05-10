@@ -6,11 +6,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.ItemFactory;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.sync.SyncState;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -21,6 +23,8 @@ import io.reactivex.Single;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocalNotes<T extends Item> implements LocalItem<T> {
+
+    private static final String TAG = LocalNotes.class.getSimpleName();
 
     private static final Uri NOTE_URI = LocalContract.NoteEntry.buildUri();
 
@@ -115,40 +119,57 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
         }).flatMap(this::buildNote);
     }
 
+    /**
+     * @return Returns true if all tags were successfully saved
+     */
+    private Single<Boolean> saveTags(final long noteRowId, final List<Tag> tags) {
+        if (noteRowId <= 0) {
+            return Single.just(false);
+        } else if (tags == null) {
+            return Single.just(true);
+        }
+        Uri noteTagUri = LocalContract.NoteEntry.buildTagsDirUriWith(noteRowId);
+        return Observable.fromIterable(tags)
+                .flatMap(tag -> localTags.saveTag(tag, noteTagUri).toObservable())
+                .count()
+                .map(count -> count == tags.size())
+                .onErrorReturn(throwable -> {
+                    CommonUtils.logStackTrace(TAG, throwable);
+                    return false;
+                });
+    }
     @Override
-    public Single<Long> save(final T note) {
+    public Single<Boolean> save(final T note) {
         return Single.fromCallable(() -> {
             ContentValues values = note.getContentValues();
-            Uri noteUri = contentResolver.insert(
-                    LocalContract.NoteEntry.buildUri(), values);
+            Uri noteUri = contentResolver.insert(NOTE_URI, values);
             if (noteUri == null) {
                 throw new NullPointerException("Provider must return URI or throw exception");
             }
             String rowId = LocalContract.NoteEntry.getIdFrom(noteUri);
-            Uri noteTagUri = LocalContract.NoteEntry.buildTagsDirUriWith(rowId);
-            List<Tag> tags = note.getTags();
-            if (tags != null) {
-                Observable.zip(
-                        Observable.fromIterable(tags), Observable.just(noteTagUri).repeat(),
-                        (tag, uri) -> localTags.saveTag(tag, uri).blockingGet())
-                        .toList().blockingGet();
-            }
             return Long.parseLong(rowId);
-        });
+        }).flatMap(rowId -> saveTags(rowId, note.getTags()));
     }
 
     @Override
-    public Single<Long> saveDuplicated(final T note) {
-        throw new RuntimeException("saveDuplicated(): there is no Conflict Resolution implementation available for the Notes");
+    public Single<Boolean> saveDuplicated(final T note) {
+        Log.e(TAG, "saveDuplicated() was called, but it must not be happened");
+        CommonUtils.logStackTrace(TAG, new Throwable());
+        return Single.just(false); // NOTE: just report it is a broken Note
     }
 
     @Override
-    public Single<Integer> update(final String noteId, final SyncState state) {
+    public Single<Boolean> update(final String noteId, final SyncState state) {
         return Single.fromCallable(() -> {
             ContentValues values = state.getContentValues();
+            if (state.isDeleted()) {
+                // NOTE: if the Note is saved from the Cloud storage linkID is restored
+                // TODO: check constrain violation on restore
+                values.put(LocalContract.NoteEntry.COLUMN_NAME_LINK_ID, (String) null);
+            }
             Uri uri = LocalContract.NoteEntry.buildUriWith(noteId);
             return contentResolver.update(uri, values, null, null);
-        });
+        }).map(numRows -> numRows == 1);
     }
 
     @Override
@@ -164,14 +185,15 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
     }
 
     @Override
-    public Single<Integer> delete(final String noteId) {
+    public Single<Boolean> delete(final String noteId) {
         Uri uri = LocalContract.NoteEntry.buildUriWith(noteId);
-        return LocalDataSource.delete(contentResolver, uri);
+        return Single.fromCallable(() -> contentResolver.delete(uri, null, null))
+                .map(numRows -> numRows == 1);
     }
 
     @Override
     public Single<Integer> delete() {
-        return LocalDataSource.delete(contentResolver, NOTE_URI);
+        return Single.fromCallable(() -> contentResolver.delete(NOTE_URI, null, null));
     }
 
     @Override
@@ -193,6 +215,11 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
     @Override
     public Single<Boolean> isConflicted() {
         return LocalDataSource.isConflicted(contentResolver, NOTE_URI);
+    }
+
+    @Override
+    public Single<Boolean> isUnsynced() {
+        return LocalDataSource.isUnsynced(contentResolver, NOTE_URI);
     }
 
     @Override

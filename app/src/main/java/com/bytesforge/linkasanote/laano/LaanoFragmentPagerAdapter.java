@@ -15,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
 import com.bytesforge.linkasanote.laano.links.LinksFragment;
@@ -37,7 +36,7 @@ public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
 
     private final Context context;
     private final LayoutInflater inflater;
-    private SparseArray<BaseFragment> tabFragments = new SparseArray<>();
+    private SparseArray<BaseItemFragment> tabFragments = new SparseArray<>();
     private SparseIntArray tabStates = new SparseIntArray();
 
     public LaanoFragmentPagerAdapter(FragmentManager fm, @NonNull Context context) {
@@ -69,7 +68,7 @@ public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
-        BaseFragment fragment = (BaseFragment) super.instantiateItem(container, position);
+        BaseItemFragment fragment = (BaseItemFragment) super.instantiateItem(container, position);
         tabFragments.put(position, fragment);
         return fragment;
     }
@@ -136,12 +135,12 @@ public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
         tabStates.put(position, state);
     }
 
-    public BaseFragment getFragment(int position) {
+    public BaseItemFragment getFragment(int position) {
         return tabFragments.get(position);
     }
 
     public LinksFragment getLinksFragment() {
-        BaseFragment fragment = getFragment(LINKS_TAB);
+        BaseItemFragment fragment = getFragment(LINKS_TAB);
         if (fragment != null && fragment instanceof LinksFragment) {
             return (LinksFragment) fragment;
         }
@@ -150,7 +149,7 @@ public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
     }
 
     public FavoritesFragment getFavoritesFragment() {
-        BaseFragment fragment = getFragment(FAVORITES_TAB);
+        BaseItemFragment fragment = getFragment(FAVORITES_TAB);
         if (fragment != null && fragment instanceof FavoritesFragment) {
             return (FavoritesFragment) fragment;
         }
@@ -159,7 +158,7 @@ public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
     }
 
     public NotesFragment getNotesFragment() {
-        BaseFragment fragment = getFragment(NOTES_TAB);
+        BaseItemFragment fragment = getFragment(NOTES_TAB);
         if (fragment != null && fragment instanceof NotesFragment) {
             return (NotesFragment) fragment;
         }

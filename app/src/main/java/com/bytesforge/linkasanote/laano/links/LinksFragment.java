@@ -26,11 +26,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 
-import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.databinding.DialogDoNotShowCheckboxBinding;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoLinksBinding;
+import com.bytesforge.linkasanote.laano.BaseItemFragment;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
 import com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkActivity;
@@ -46,7 +46,9 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class LinksFragment extends BaseFragment implements LinksContract.View {
+public class LinksFragment extends BaseItemFragment implements LinksContract.View {
+
+    private static final String TAG = LinksFragment.class.getSimpleName();
 
     public static final int REQUEST_ADD_LINK = 1;
     public static final int REQUEST_EDIT_LINK = 2;
@@ -115,23 +117,27 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.toolbar_links, menu);
         MenuItem searchMenuItem = menu.findItem(R.id.toolbar_links_search);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchMenuItem);
+        setSearchMenuItem(searchMenuItem);
+    }
+
+    private void setSearchMenuItem(MenuItem item) {
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
         MenuItemCompat.setOnActionExpandListener(
-                searchMenuItem, new MenuItemCompat.OnActionExpandListener() {
+                item, new MenuItemCompat.OnActionExpandListener() {
 
-            @Override
-            public boolean onMenuItemActionExpand(MenuItem item) {
-                return true;
-            }
+                    @Override
+                    public boolean onMenuItemActionExpand(MenuItem item) {
+                        return true;
+                    }
 
-            @Override
-            public boolean onMenuItemActionCollapse(MenuItem item) {
-                getActivity().supportInvalidateOptionsMenu();
-                viewModel.setSearchText(null);
-                presenter.loadLinks(false);
-                return true;
-            }
-        });
+                    @Override
+                    public boolean onMenuItemActionCollapse(MenuItem item) {
+                        getActivity().supportInvalidateOptionsMenu();
+                        viewModel.setSearchText(null);
+                        presenter.loadLinks(false);
+                        return true;
+                    }
+                });
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
             @Override
@@ -147,7 +153,7 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
             }
         });
         if (viewModel.getSearchText() != null) {
-            searchMenuItem.expandActionView();
+            item.expandActionView();
             searchView.setQuery(viewModel.getSearchText(), false);
         }
     }
@@ -162,10 +168,10 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
                 enableActionMode();
                 break;
             case R.id.toolbar_links_expand_all:
-                viewModel.expandAllLinks();
+                expandAllLinks();
                 break;
             case R.id.toolbar_links_collapse_all:
-                viewModel.collapseAllLinks();
+                collapseAllLinks();
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -180,7 +186,7 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     }
 
     @Override
-    public void showAddLink() {
+    public void startAddLinkActivity() {
         Intent intent = new Intent(getContext(), AddEditLinkActivity.class);
         startActivityForResult(intent, REQUEST_ADD_LINK);
     }
@@ -195,15 +201,34 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     @Override
     public void showEditLink(@NonNull String linkId) {
         Intent intent = new Intent(getContext(), AddEditLinkActivity.class);
-        intent.putExtra(AddEditLinkFragment.ARGUMENT_EDIT_LINK_ID, linkId);
+        intent.putExtra(AddEditLinkFragment.ARGUMENT_LINK_ID, linkId);
         startActivityForResult(intent, REQUEST_EDIT_LINK);
+    }
+
+    @Override
+    public void expandAllLinks() {
+        String[] ids = getIds();
+        int listSize = ids.length;
+        if (listSize <= 0) return;
+
+        viewModel.setVisibility(ids);
+    }
+
+    @Override
+    public void collapseAllLinks() {
+        viewModel.setVisibility(null);
     }
 
     @Override
     public void showLinks(@NonNull List<Link> links) {
         checkNotNull(links);
         adapter.swapItems(links);
-        viewModel.setLinkListSize(links.size());
+
+        boolean firstLoad = viewModel.setListSize(links.size());
+        if (firstLoad) {
+            if (presenter.isExpandLinks()) expandAllLinks();
+            else collapseAllLinks();
+        }
         if (viewModel.isActionMode()) {
             enableActionMode();
         }
@@ -214,11 +239,17 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
         switch (requestCode) {
             case REQUEST_ADD_LINK:
                 if (resultCode == Activity.RESULT_OK) {
+                    //viewModel.showSaveSuccessSnackbar();
+                    String linkId = data.getStringExtra(AddEditLinkFragment.ARGUMENT_LINK_ID);
+                    presenter.syncSavedLink(linkId);
                     adapter.notifyDataSetChanged();
                 }
                 break;
             case REQUEST_EDIT_LINK:
                 if (resultCode == Activity.RESULT_OK) {
+                    //viewModel.showSaveSuccessSnackbar();
+                    String linkId = data.getStringExtra(AddEditLinkFragment.ARGUMENT_LINK_ID);
+                    presenter.syncSavedLink(linkId);
                     // NOTE: the item position will not be changed, but one can be filtered in or out
                     // OPTIMIZATION: replace the only invalidated items in the cache
                     adapter.notifyDataSetChanged();
@@ -230,7 +261,8 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
                 // NOTE: force reload because of conflict resolution is a dialog
                 presenter.loadLinks(false);
                 if (resultCode == LinksConflictResolutionDialog.RESULT_OK) {
-                    viewModel.showConflictResolutionSuccessfulSnackbar();
+                    presenter.updateSyncStatus();
+                    //viewModel.showConflictResolutionSuccessfulSnackbar();
                 } else if (resultCode == LinksConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
                 }
@@ -327,6 +359,7 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     private void destroyActionMode() {
         if (viewModel.isActionMode()) {
             viewModel.disableActionMode();
+            presenter.selectLinkFilter();
         }
         if (actionMode != null) {
             actionMode = null;
@@ -335,20 +368,27 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     }
 
     @Override
-    public void selectionChanged(int position) {
+    public void selectionChanged(@NonNull String id) {
+        checkNotNull(id);
         //adapter.notifyItemChanged(position);
         updateActionModeTitle();
         updateActionModeMenu();
     }
 
     @Override
-    public void linkVisibilityChanged(int position) {
+    public void visibilityChanged(@NonNull String id) {
+        checkNotNull(id);
         //adapter.notifyItemChanged(position);
     }
 
     @Override
     public int getPosition(String linkId) {
         return adapter.getPosition(linkId);
+    }
+
+    @Override
+    public String[] getIds() {
+        return adapter.getIds();
     }
 
     @Override
@@ -381,11 +421,11 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     }
 
     @Override
-    public String removeLink(int position) {
-        Link link = adapter.removeItem(position);
-        selectionChanged(position);
-        viewModel.setLinkListSize(adapter.getItemCount());
-        return link.getId();
+    public void removeLink(@NonNull String linkId) {
+        viewModel.removeSelection(linkId);
+        int position = adapter.removeItem(linkId);
+        selectionChanged(linkId);
+        viewModel.setListSize(adapter.getItemCount());
     }
 
     @Override
@@ -395,15 +435,16 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
     }
 
     @Override
-    public void confirmLinksRemoval(int[] selectedIds) {
+    public void confirmLinksRemoval(ArrayList<String> selectedIds) {
         LinkRemovalConfirmationDialog dialog =
                 LinkRemovalConfirmationDialog.newInstance(selectedIds);
         dialog.setTargetFragment(this, LinkRemovalConfirmationDialog.DIALOG_REQUEST_CODE);
         dialog.show(getFragmentManager(), LinkRemovalConfirmationDialog.DIALOG_TAG);
     }
 
-    public void deleteLinks(int[] selectedIds, boolean deleteNotes) {
+    public void deleteLinks(ArrayList<String> selectedIds, boolean deleteNotes) {
         presenter.deleteLinks(selectedIds, deleteNotes);
+        finishActionMode();
     }
 
     @Override
@@ -489,11 +530,11 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
         public static final String DIALOG_TAG = "LINK_REMOVAL_CONFIRMATION";
         public static final int DIALOG_REQUEST_CODE = 0;
 
-        private int[] selectedIds;
+        private ArrayList<String> selectedIds;
 
-        public static LinkRemovalConfirmationDialog newInstance(int[] selectedIds) {
+        public static LinkRemovalConfirmationDialog newInstance(ArrayList<String> selectedIds) {
             Bundle args = new Bundle();
-            args.putIntArray(ARGUMENT_SELECTED_IDS, selectedIds);
+            args.putStringArrayList(ARGUMENT_SELECTED_IDS, selectedIds);
             LinkRemovalConfirmationDialog dialog = new LinkRemovalConfirmationDialog();
             dialog.setArguments(args);
             return dialog;
@@ -502,13 +543,13 @@ public class LinksFragment extends BaseFragment implements LinksContract.View {
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            selectedIds = getArguments().getIntArray(ARGUMENT_SELECTED_IDS);
+            selectedIds = getArguments().getStringArrayList(ARGUMENT_SELECTED_IDS);
         }
 
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            int length = selectedIds.length;
+            int length = selectedIds.size();
             return new AlertDialog.Builder(getContext())
                     .setTitle(R.string.links_delete_confirmation_title)
                     .setMessage(getResources().getQuantityString(

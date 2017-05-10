@@ -4,7 +4,7 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.util.Log;
+import android.support.annotation.VisibleForTesting;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
@@ -23,23 +23,20 @@ import io.reactivex.Single;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Singleton
-public class LocalDataSource implements DataSource {
+public class LocalDataSource {
 
     private static final String TAG = LocalDataSource.class.getSimpleName();
 
-    private final ContentResolver contentResolver;
     private final LocalLinks<Link> localLinks;
     private final LocalFavorites<Favorite> localFavorites;
     private final LocalNotes<Note> localNotes;
     private final LocalTags localTags;
 
     public LocalDataSource(
-            @NonNull ContentResolver contentResolver,
             @NonNull LocalLinks<Link> localLinks,
             @NonNull LocalFavorites<Favorite> localFavorites,
             @NonNull LocalNotes<Note> localNotes,
             @NonNull LocalTags localTags) {
-        this.contentResolver = checkNotNull(contentResolver);
         this.localLinks = checkNotNull(localLinks);
         this.localFavorites = checkNotNull(localFavorites);
         this.localNotes = checkNotNull(localNotes);
@@ -48,60 +45,52 @@ public class LocalDataSource implements DataSource {
 
     // Links
 
-    @Override
     public Observable<Link> getLinks() {
         return localLinks.getActive();
     }
 
-    @Override
     public Single<Link> getLink(@NonNull final String linkId) {
         checkNotNull(linkId);
         return localLinks.get(linkId);
     }
 
-    @Override
-    public void saveLink(@NonNull final Link link) {
+    public Single<DataSource.ItemState> saveLink(@NonNull final Link link) {
         checkNotNull(link);
-        long rowId = localLinks.save(link).blockingGet();
-        if (rowId <= 0) {
-            Log.e(TAG, "Link was not saved [" + link.getId() + "]");
-        }
+        return localLinks.save(link)
+                .map(success -> success ? DataSource.ItemState.DEFERRED : null);
     }
 
-    @Override
+    @VisibleForTesting
     public void deleteAllLinks() {
         localLinks.delete().blockingGet();
     }
 
-    @Override
-    public void deleteLink(@NonNull String linkId) {
+    public Single<DataSource.ItemState> deleteLink(@NonNull String linkId) {
         checkNotNull(linkId);
-        SyncState state;
-        try {
-            state = localLinks.getSyncState(linkId).blockingGet();
-        } catch (NoSuchElementException e) {
-            return; // Nothing to delete
-        } // let throw NullPointerException
-        int numRows;
-        if (!state.isSynced() && state.getETag() == null) {
-            // NOTE: if one has never been synced
-            numRows = localLinks.delete(linkId).blockingGet();
-        } else {
-            SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
-            numRows = localLinks.update(linkId, deletedState)
-                    .blockingGet();
-        }
-        if (numRows != 1) {
-            Log.e(TAG, "Unexpected number of rows processed [" + numRows + ", id=" + linkId + "]");
-        }
+        return localLinks.getSyncState(linkId)
+                .flatMap(state -> {
+                    boolean neverSynced = (!state.isSynced() && state.getETag() == null);
+                    if (neverSynced) {
+                        return localLinks.delete(linkId)
+                                .map(success -> success ? DataSource.ItemState.DELETED : null);
+                    } else {
+                        SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
+                        return localLinks.update(linkId, deletedState)
+                                .map(success -> success ? DataSource.ItemState.DEFERRED : null);
+                    }
+                })
+                .onErrorReturn(throwable -> throwable instanceof NoSuchElementException
+                        ? DataSource.ItemState.DELETED : null);
     }
 
-    @Override
     public Single<Boolean> isConflictedLinks() {
         return localLinks.isConflicted();
     }
 
-    @Override
+    public Single<Boolean> isUnsyncedLinks() {
+        return localLinks.isUnsynced();
+    }
+
     public Single<Boolean> autoResolveLinkConflict(@NonNull String linkId) {
         checkNotNull(linkId);
         return localLinks.autoResolveConflict(linkId);
@@ -109,60 +98,52 @@ public class LocalDataSource implements DataSource {
 
     // Favorites
 
-    @Override
     public Observable<Favorite> getFavorites() {
         return localFavorites.getActive();
     }
 
-    @Override
     public Single<Favorite> getFavorite(@NonNull final String favoriteId) {
         checkNotNull(favoriteId);
         return localFavorites.get(favoriteId);
     }
 
-    @Override
-    public void saveFavorite(@NonNull final Favorite favorite) {
+    public Single<DataSource.ItemState> saveFavorite(@NonNull final Favorite favorite) {
         checkNotNull(favorite);
-        long rowId = localFavorites.save(favorite).blockingGet();
-        if (rowId <= 0) {
-            Log.e(TAG, "Favorite was not saved [" + favorite.getId() + "]");
-        }
+        return localFavorites.save(favorite)
+                .map(success -> success ? DataSource.ItemState.DEFERRED : null);
     }
 
-    @Override
+    @VisibleForTesting
     public void deleteAllFavorites() {
         localFavorites.delete().blockingGet();
     }
 
-    @Override
-    public void deleteFavorite(@NonNull String favoriteId) {
+    public Single<DataSource.ItemState> deleteFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-        SyncState state;
-        try {
-            state = localFavorites.getSyncState(favoriteId).blockingGet();
-        } catch (NoSuchElementException e) {
-            return; // Nothing to delete
-        } // let throw NullPointerException
-        int numRows;
-        if (!state.isSynced() && state.getETag() == null) {
-            // NOTE: if one has never been synced
-            numRows = localFavorites.delete(favoriteId).blockingGet();
-        } else {
-            SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
-            numRows = localFavorites.update(favoriteId, deletedState)
-                    .blockingGet();
-        }
-        if (numRows != 1) {
-            Log.e(TAG, "Unexpected number of rows processed [" + numRows + ", id=" + favoriteId + "]");
-        }
+        return localFavorites.getSyncState(favoriteId)
+                .flatMap(state -> {
+                    boolean neverSynced = (!state.isSynced() && state.getETag() == null);
+                    if (neverSynced) {
+                        return localFavorites.delete(favoriteId)
+                                .map(success -> success ? DataSource.ItemState.DELETED : null);
+                    } else {
+                        SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
+                        return localFavorites.update(favoriteId, deletedState)
+                                .map(success -> success ? DataSource.ItemState.DEFERRED : null);
+                    }
+                })
+                .onErrorReturn(throwable -> throwable instanceof NoSuchElementException
+                        ? DataSource.ItemState.DELETED : null);
     }
 
-    @Override
     public Single<Boolean> isConflictedFavorites() {
         return localFavorites.isConflicted();
     }
 
-    @Override
+    public Single<Boolean> isUnsyncedFavorites() {
+        return localFavorites.isUnsynced();
+    }
+
     public Single<Boolean> autoResolveFavoriteConflict(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
         return localFavorites.autoResolveConflict(favoriteId);
@@ -170,86 +151,77 @@ public class LocalDataSource implements DataSource {
 
     // Notes
 
-    @Override
     public Observable<Note> getNotes() {
         return localNotes.getActive();
     }
 
-    @Override
+    public Observable<Note> getNotes(@NonNull final String linkId) {
+        Uri linkNoteUri = LocalContract.LinkEntry.buildNotesDirUriWith(linkId);
+        return localNotes.get(linkNoteUri);
+    }
+
     public Single<Note> getNote(@NonNull final String noteId) {
         checkNotNull(noteId);
         return localNotes.get(noteId);
     }
 
-    @Override
-    public void saveNote(@NonNull final Note note) {
+    public Single<DataSource.ItemState> saveNote(@NonNull final Note note) {
         checkNotNull(note);
-        long rowId = localNotes.save(note).blockingGet();
-        if (rowId <= 0) {
-            Log.e(TAG, "Note was not saved [" + note.getId() + "]");
-        }
+        return localNotes.save(note)
+                .map(success -> success ? DataSource.ItemState.DEFERRED : null);
     }
 
-    @Override
+    @VisibleForTesting
     public void deleteAllNotes() {
         localNotes.delete().blockingGet();
     }
 
-    @Override
-    public void deleteNote(@NonNull String noteId) {
+    public Single<DataSource.ItemState> deleteNote(@NonNull String noteId) {
         checkNotNull(noteId);
-        SyncState state;
-        try {
-            state = localNotes.getSyncState(noteId).blockingGet();
-        } catch (NoSuchElementException e) {
-            return; // Nothing to delete
-        } // let throw NullPointerException
-        int numRows;
-        if (!state.isSynced() && state.getETag() == null) {
-            // NOTE: if one has never been synced
-            numRows = localNotes.delete(noteId).blockingGet();
-        } else {
-            SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
-            numRows = localNotes.update(noteId, deletedState)
-                    .blockingGet();
-        }
-        if (numRows != 1) {
-            Log.e(TAG, "Unexpected number of rows processed [" + numRows + ", id=" + noteId + "]");
-        }
+        return localNotes.getSyncState(noteId)
+                .flatMap(state -> {
+                    boolean neverSynced = (!state.isSynced() && state.getETag() == null);
+                    if (neverSynced) {
+                        return localNotes.delete(noteId)
+                                .map(success -> success ? DataSource.ItemState.DELETED : null);
+                    } else {
+                        SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
+                        return localNotes.update(noteId, deletedState)
+                                .map(success -> success ? DataSource.ItemState.DEFERRED : null);
+                    }
+                })
+                .onErrorReturn(throwable -> throwable instanceof NoSuchElementException
+                        ? DataSource.ItemState.DELETED : null);
     }
 
-    @Override
     public Single<Boolean> isConflictedNotes() {
         return localNotes.isConflicted();
     }
 
+    public Single<Boolean> isUnsyncedNotes() {
+        return localNotes.isUnsynced();
+    }
+
     // Tags
 
-    @Override
     public Observable<Tag> getTags() {
         return localTags.getTags(LocalContract.TagEntry.buildUri());
     }
 
-    @Override
     public Single<Tag> getTag(@NonNull String tagName) {
         return localTags.getTag(checkNotNull(tagName));
     }
 
-    @Override
     public void saveTag(@NonNull Tag tag) {
         localTags.saveTag(checkNotNull(tag), LocalContract.TagEntry.buildUri());
     }
 
-    @Override
+    @VisibleForTesting
     public void deleteAllTags() {
         localTags.deleteTags().blockingGet();
     }
 
     // Statics
-
-    public static Single<Integer> delete(final ContentResolver contentResolver, final Uri uri) {
-        return Single.fromCallable(() -> contentResolver.delete(uri, null, null));
-    }
 
     public static Single<SyncState> getSyncState(
             final ContentResolver contentResolver, final Uri uri) {
@@ -308,12 +280,34 @@ public class LocalDataSource implements DataSource {
         }, Cursor::close);
     }
 
-    // NOTE: won't work with *_ITEM queries
+    /**
+     * @return Returns true if there is at least one conflicted record or
+     *         if the record exists when *_ITEM URI is provided (conflicted status will be ignored)
+     */
     public static Single<Boolean> isConflicted(
             final ContentResolver contentResolver, final Uri uri) {
+        return getCount(contentResolver, uri, BaseEntry.COLUMN_NAME_CONFLICTED, "1")
+                .map(count -> count > 0);
+    }
+
+    /**
+     * @return Returns true if there is at least one unsynced record or
+     *         if the record exists when *_ITEM URI is provided (conflicted status will be ignored)
+     */
+    public static Single<Boolean> isUnsynced(
+            final ContentResolver contentResolver, final Uri uri) {
+        return getCount(contentResolver, uri, BaseEntry.COLUMN_NAME_SYNCED, "0")
+                .map(count -> count > 0);
+    }
+
+    private static Single<Long> getCount(
+            final ContentResolver contentResolver, final Uri uri,
+            @NonNull final String column, @NonNull final String value) {
+        checkNotNull(column);
+        checkNotNull(value);
         final String[] columns = new String[]{"COUNT(" + BaseEntry._ID + ")"};
-        final String selection = BaseEntry.COLUMN_NAME_CONFLICTED + " = ?";
-        final String[] selectionArgs = {"1"};
+        final String selection = column + " = ?";
+        final String[] selectionArgs = {value};
 
         return Single.fromCallable(() -> {
             try (Cursor cursor = contentResolver.query(
@@ -321,7 +315,7 @@ public class LocalDataSource implements DataSource {
                 if (cursor == null) {
                     return null; // NOTE: NullPointerException
                 }
-                return cursor.moveToLast() && cursor.getLong(0) > 0;
+                return cursor.moveToLast() ? cursor.getLong(0) : 0L;
             }
         });
     }

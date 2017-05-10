@@ -1,16 +1,15 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.laano.BaseItemPresenterInterface;
+import com.bytesforge.linkasanote.laano.BaseItemViewModelInterface;
 import com.bytesforge.linkasanote.laano.FilterType;
-import com.bytesforge.linkasanote.laano.LaanoTabPresenter;
-import com.bytesforge.linkasanote.laano.LaanoUiManager;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public interface FavoritesContract {
@@ -21,56 +20,34 @@ public interface FavoritesContract {
         boolean isActive();
         void onActivityResult(int requestCode, int resultCode, Intent data);
 
-        void showAddFavorite();
+        void startAddFavoriteActivity();
         void showEditFavorite(@NonNull String favoriteId);
         void showFavorites(@NonNull List<Favorite> favorites);
         void enableActionMode();
         void finishActionMode();
-        void selectionChanged(int position);
-        String removeFavorite(int position);
+        void selectionChanged(@NonNull String id);
+        void removeFavorite(@NonNull String id);
         int getPosition(String favoriteId);
+        String[] getIds();
         void scrollToPosition(int position);
-        void confirmFavoritesRemoval(int[] selectedIds);
+        void confirmFavoritesRemoval(ArrayList<String> selectedIds);
         void showConflictResolution(@NonNull String favoriteId);
     }
 
-    interface ViewModel extends BaseView<Presenter> {
+    interface ViewModel extends BaseItemViewModelInterface {
 
-        void setLaanoUiManager(@NonNull LaanoUiManager laanoUiManager);
-
-        void setInstanceState(@Nullable Bundle savedInstanceState);
-        void saveInstanceState(@NonNull Bundle outState);
-        void applyInstanceState(@NonNull Bundle state);
-
-        void setFavoriteListSize(int favoriteListSize);
-        boolean isActionMode();
-        void enableActionMode();
-        void disableActionMode();
-
-        boolean isSelected(String favoriteId, boolean changed);
-        void toggleSelection();
-        void toggleSelection(int position);
-        boolean toggleSingleSelection(int position);
-        void setSingleSelection(int position, boolean selected);
-        void removeSelection();
-        void removeSelection(int position);
-        int getSelectedCount();
-        int[] getSelectedIds();
         void showDatabaseErrorSnackbar();
         void showConflictResolutionSuccessfulSnackbar();
         void showConflictResolutionErrorSnackbar();
-        void showProgressOverlay();
-        void hideProgressOverlay();
-
-        FilterType getFilterType();
-        void setFilterType(FilterType filterType);
-        String getSearchText();
-        void setSearchText(String searchText);
+        void showConflictedErrorSnackbar();
+        void showCloudErrorSnackbar();
+        void showSaveSuccessSnackbar();
+        void showDeleteSuccessSnackbar();
     }
 
-    interface Presenter extends LaanoTabPresenter {
+    interface Presenter extends BaseItemPresenterInterface {
 
-        void addFavorite();
+        void showAddFavorite();
         void loadFavorites(boolean forceUpdate);
 
         void onFavoriteClick(String favoriteId, boolean isConflicted);
@@ -85,6 +62,7 @@ public interface FavoritesContract {
         void onSelectAllClick();
         int getPosition(String favoriteId);
         void setFilterType(@NonNull FilterType filtering);
-        void deleteFavorites(int[] selectedIds);
+        void syncSavedFavorite(@NonNull final String favoriteId);
+        void deleteFavorites(ArrayList<String> selectedIds);
     }
 }

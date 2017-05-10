@@ -6,13 +6,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.ItemFactory;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Provider;
 import com.bytesforge.linkasanote.sync.SyncState;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -119,30 +119,41 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
         }).flatMap(this::buildFavorite);
     }
 
+    /**
+     * @return Returns true if all tags were successfully saved
+     */
+    private Single<Boolean> saveTags(final long favoriteRowId, final List<Tag> tags) {
+        if (favoriteRowId <= 0) {
+            return Single.just(false);
+        } else if (tags == null) {
+            return Single.just(true);
+        }
+        Uri favoriteTagUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(favoriteRowId);
+        return Observable.fromIterable(tags)
+                .flatMap(tag -> localTags.saveTag(tag, favoriteTagUri).toObservable())
+                .count()
+                .map(count -> count == tags.size())
+                .onErrorReturn(throwable -> {
+                    CommonUtils.logStackTrace(TAG, throwable);
+                    return false;
+                });
+    }
+
     @Override
-    public Single<Long> save(final T favorite) {
+    public Single<Boolean> save(final T favorite) {
         return Single.fromCallable(() -> {
             ContentValues values = favorite.getContentValues();
-            Uri favoriteUri = contentResolver.insert(
-                    LocalContract.FavoriteEntry.buildUri(), values);
+            Uri favoriteUri = contentResolver.insert(FAVORITE_URI, values);
             if (favoriteUri == null) {
                 throw new NullPointerException("Provider must return URI or throw exception");
             }
             String rowId = LocalContract.FavoriteEntry.getIdFrom(favoriteUri);
-            Uri favoriteTagUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(rowId);
-            List<Tag> tags = favorite.getTags();
-            if (tags != null) {
-                Observable.zip(
-                        Observable.fromIterable(tags), Observable.just(favoriteTagUri).repeat(),
-                        (tag, uri) -> localTags.saveTag(tag, uri).blockingGet())
-                        .toList().blockingGet();
-            }
             return Long.parseLong(rowId);
-        });
+        }).flatMap(rowId -> saveTags(rowId, favorite.getTags()));
     }
 
     @Override
-    public Single<Long> saveDuplicated(final T favorite) {
+    public Single<Boolean> saveDuplicated(final T favorite) {
         return getNextDuplicated(favorite.getDuplicatedKey())
                 .flatMap(duplicated -> {
                     SyncState state = new SyncState(favorite.getETag(), duplicated);
@@ -151,12 +162,12 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
     }
 
     @Override
-    public Single<Integer> update(final String favoriteId, final SyncState state) {
+    public Single<Boolean> update(final String favoriteId, final SyncState state) {
         return Single.fromCallable(() -> {
             ContentValues values = state.getContentValues();
             Uri uri = LocalContract.FavoriteEntry.buildUriWith(favoriteId);
             return contentResolver.update(uri, values, null, null);
-        });
+        }).map(numRows -> numRows == 1);
     }
 
     @Override
@@ -172,14 +183,15 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
     }
 
     @Override
-    public Single<Integer> delete(final String favoriteId) {
+    public Single<Boolean> delete(final String favoriteId) {
         Uri uri = LocalContract.FavoriteEntry.buildUriWith(favoriteId);
-        return LocalDataSource.delete(contentResolver, uri);
+        return Single.fromCallable(() -> contentResolver.delete(uri, null, null))
+                .map(numRows -> numRows == 1);
     }
 
     @Override
     public Single<Integer> delete() {
-        return LocalDataSource.delete(contentResolver, FAVORITE_URI);
+        return Single.fromCallable(() -> contentResolver.delete(FAVORITE_URI, null, null));
     }
 
     @Override
@@ -201,6 +213,11 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
     @Override
     public Single<Boolean> isConflicted() {
         return LocalDataSource.isConflicted(contentResolver, FAVORITE_URI);
+    }
+
+    @Override
+    public Single<Boolean> isUnsynced() {
+        return LocalDataSource.isUnsynced(contentResolver, FAVORITE_URI);
     }
 
     private Single<Integer> getNextDuplicated(final String duplicatedKey) {
@@ -242,12 +259,14 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
         }).flatMap(this::buildFavorite);
     }
 
+    /**
+     * @return Returns true if conflict has been successfully resolved
+     */
     @Override
     public Single<Boolean> autoResolveConflict(final String favoriteId) {
         return get(favoriteId)
                 .map(favorite -> {
                     if (!favorite.isDuplicated()) {
-                        Log.e(TAG, "autoResolveConflict() was called on the Favorite which is not duplicated [" + favoriteId + "]");
                         return !favorite.isConflicted();
                     }
                     try {
@@ -255,8 +274,7 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
                         return false;
                     } catch (NoSuchElementException e) {
                         SyncState state = new SyncState(SyncState.State.SYNCED);
-                        int numRows = update(favoriteId, state).blockingGet();
-                        return numRows == 1;
+                        return update(favoriteId, state).blockingGet();
                     }
                 });
     }

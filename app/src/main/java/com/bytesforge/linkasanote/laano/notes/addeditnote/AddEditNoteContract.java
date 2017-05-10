@@ -37,6 +37,7 @@ public interface AddEditNoteContract {
         Bundle getDefaultInstanceState();
 
         void setTagsCompletionView(@NonNull TagsCompletionView completionView);
+        void showDatabaseErrorSnackbar();
         void showEmptyNoteSnackbar();
         void showNoteNotFoundSnackbar();
         void showDuplicateKeyError();

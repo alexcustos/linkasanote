@@ -203,7 +203,8 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 }
             }
             prefSyncInterval.setValue(seconds[index]);
-            prefSyncInterval.setSummary(names[index]);
+            prefSyncInterval.setSummary(names[index] + " " +
+                    resources.getString(R.string.pref_sync_interval_notice));
         }, throwable -> {
             prefSyncInterval.setEnabled(false);
             prefSyncInterval.setSummary(

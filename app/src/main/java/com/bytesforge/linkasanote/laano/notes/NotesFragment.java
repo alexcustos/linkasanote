@@ -24,10 +24,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoNotesBinding;
+import com.bytesforge.linkasanote.laano.BaseItemFragment;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
 import com.bytesforge.linkasanote.laano.links.LinksViewModel;
@@ -41,7 +41,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class NotesFragment extends BaseFragment implements NotesContract.View {
+public class NotesFragment extends BaseItemFragment implements NotesContract.View {
 
     public static final int REQUEST_ADD_NOTE = 1;
     public static final int REQUEST_EDIT_NOTE = 2;
@@ -181,10 +181,10 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
                 enableActionMode();
                 break;
             case R.id.toolbar_notes_expand_all:
-                viewModel.expandAllNotes();
+                expandAllNotes();
                 break;
             case R.id.toolbar_notes_collapse_all:
-                viewModel.collapseAllNotes();
+                collapseAllNotes();
                 break;
             case R.id.toolbar_notes_layout_mode:
                 readingMode = presenter.toggleNotesLayoutModeReading();
@@ -204,7 +204,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     }
 
     @Override
-    public void showAddNote(String linkId) {
+    public void startAddNoteActivity(String linkId) {
         Intent intent = new Intent(getContext(), AddEditNoteActivity.class);
         if (linkId != null) {
             intent.putExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID, linkId);
@@ -215,15 +215,34 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     @Override
     public void showEditNote(@NonNull String noteId) {
         Intent intent = new Intent(getContext(), AddEditNoteActivity.class);
-        intent.putExtra(AddEditNoteFragment.ARGUMENT_EDIT_NOTE_ID, noteId);
+        intent.putExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID, noteId);
         startActivityForResult(intent, REQUEST_EDIT_NOTE);
+    }
+
+    @Override
+    public void expandAllNotes() {
+        String[] ids = getIds();
+        int listSize = ids.length;
+        if (listSize <= 0) return;
+
+        viewModel.setVisibility(ids);
+    }
+
+    @Override
+    public void collapseAllNotes() {
+        viewModel.setVisibility(null);
     }
 
     @Override
     public void showNotes(@NonNull List<Note> notes) {
         checkNotNull(notes);
         adapter.swapItems(notes);
-        viewModel.setNoteListSize(notes.size());
+
+        boolean firstLoad = viewModel.setListSize(notes.size());
+        if (firstLoad) {
+            if (presenter.isExpandNotes()) expandAllNotes();
+            else collapseAllNotes();
+        }
         if (viewModel.isActionMode()) {
             enableActionMode();
         }
@@ -234,26 +253,38 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
         switch (requestCode) {
             case REQUEST_ADD_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
+                    //viewModel.showSaveSuccessSnackbar();
+                    String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
+                    presenter.syncSavedNote(noteId);
                     adapter.notifyDataSetChanged();
+                    // TODO: invalidate the cached link
+                    //String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
                 }
                 break;
             case REQUEST_EDIT_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
+                    //viewModel.showSaveSuccessSnackbar();
+                    String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
+                    presenter.syncSavedNote(noteId);
                     adapter.notifyDataSetChanged();
+                    // TODO: invalidate the cached link
+                    //String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
                 }
                 break;
             case REQUEST_NOTE_CONFLICT_RESOLUTION:
                 adapter.notifyDataSetChanged();
                 presenter.updateTabNormalState();
+                // NOTE: force reload because of conflict resolution is a dialog
                 presenter.loadNotes(false);
                 if (resultCode == NotesConflictResolutionDialog.RESULT_OK) {
+                    presenter.updateSyncStatus();
                     viewModel.showConflictResolutionSuccessfulSnackbar();
                 } else if (resultCode == NotesConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
                 }
                 break;
             default:
-                throw new IllegalStateException("The result received from the unexpected activity");
+                throw new IllegalStateException("The result is received from the unexpected activity");
         }
     }
 
@@ -364,6 +395,7 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     private void destroyActionMode() {
         if (viewModel.isActionMode()) {
             viewModel.disableActionMode();
+            presenter.selectNoteFilter();
         }
         if (actionMode != null) {
             actionMode = null;
@@ -372,20 +404,27 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     }
 
     @Override
-    public void selectionChanged(int position) {
+    public void selectionChanged(@NonNull String id) {
+        checkNotNull(id);
         //adapter.notifyItemChanged(position);
         updateActionModeTitle();
         updateActionModeMenu();
     }
 
     @Override
-    public void noteVisibilityChanged(int position) {
+    public void visibilityChanged(@NonNull String id) {
+        checkNotNull(id);
         //adapter.notifyItemChanged(position);
     }
 
     @Override
     public int getPosition(String noteId) {
         return adapter.getPosition(noteId);
+    }
+
+    @Override
+    public String[] getIds() {
+        return adapter.getIds();
     }
 
     @Override
@@ -418,29 +457,29 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
     }
 
     @Override
-    public String removeNote(int position) {
-        Note note = adapter.removeItem(position);
-        selectionChanged(position);
-        viewModel.setNoteListSize(adapter.getItemCount());
-        return note.getId();
+    public void removeNote(@NonNull String noteId) {
+        viewModel.removeSelection(noteId);
+        int position = adapter.removeItem(noteId);
+        selectionChanged(noteId);
+        viewModel.setListSize(adapter.getItemCount());
     }
 
     @Override
-    public void confirmNotesRemoval(int[] selectedIds) {
+    public void confirmNotesRemoval(ArrayList<String> selectedIds) {
         NoteRemovalConfirmationDialog dialog =
                 NoteRemovalConfirmationDialog.newInstance(selectedIds);
         dialog.setTargetFragment(this, NoteRemovalConfirmationDialog.DIALOG_REQUEST_CODE);
         dialog.show(getFragmentManager(), NoteRemovalConfirmationDialog.DIALOG_TAG);
     }
 
-    public void removeNotes(int[] selectedIds) {
+    public void removeNotes(ArrayList<String> selectedIds) {
         presenter.deleteNotes(selectedIds);
+        finishActionMode();
     }
 
     @Override
     public void showConflictResolution(@NonNull String noteId) {
         checkNotNull(noteId);
-
         NotesConflictResolutionDialog dialog =
                 NotesConflictResolutionDialog.newInstance(noteId);
         dialog.setTargetFragment(this, REQUEST_NOTE_CONFLICT_RESOLUTION);
@@ -507,11 +546,11 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
         public static final String DIALOG_TAG = "NOTE_REMOVAL_CONFIRMATION";
         public static final int DIALOG_REQUEST_CODE = 0;
 
-        private int[] selectedIds;
+        private ArrayList<String> selectedIds;
 
-        public static NoteRemovalConfirmationDialog newInstance(int[] selectedIds) {
+        public static NoteRemovalConfirmationDialog newInstance(ArrayList<String> selectedIds) {
             Bundle args = new Bundle();
-            args.putIntArray(ARGUMENT_SELECTED_IDS, selectedIds);
+            args.putStringArrayList(ARGUMENT_SELECTED_IDS, selectedIds);
             NoteRemovalConfirmationDialog dialog = new NoteRemovalConfirmationDialog();
             dialog.setArguments(args);
             return dialog;
@@ -520,13 +559,13 @@ public class NotesFragment extends BaseFragment implements NotesContract.View {
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            selectedIds = getArguments().getIntArray(ARGUMENT_SELECTED_IDS);
+            selectedIds = getArguments().getStringArrayList(ARGUMENT_SELECTED_IDS);
         }
 
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            int length = selectedIds.length;
+            int length = selectedIds.size();
             return new AlertDialog.Builder(getContext())
                     .setTitle(R.string.notes_delete_confirmation_title)
                     .setMessage(getResources().getQuantityString(

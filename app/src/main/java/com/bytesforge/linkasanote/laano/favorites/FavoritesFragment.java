@@ -23,10 +23,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.bytesforge.linkasanote.BaseFragment;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoFavoritesBinding;
+import com.bytesforge.linkasanote.laano.BaseItemFragment;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteActivity;
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteFragment;
@@ -38,7 +38,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class FavoritesFragment extends BaseFragment implements FavoritesContract.View {
+public class FavoritesFragment extends BaseItemFragment implements FavoritesContract.View {
 
     public static final int REQUEST_ADD_FAVORITE = 1;
     public static final int REQUEST_EDIT_FAVORITE = 2;
@@ -106,23 +106,27 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.toolbar_favorites, menu);
         MenuItem searchMenuItem = menu.findItem(R.id.toolbar_favorites_search);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchMenuItem);
+        setSearchMenuItem(searchMenuItem);
+    }
+
+    private void setSearchMenuItem(MenuItem item) {
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
         MenuItemCompat.setOnActionExpandListener(
-                searchMenuItem, new MenuItemCompat.OnActionExpandListener() {
+                item, new MenuItemCompat.OnActionExpandListener() {
 
-            @Override
-            public boolean onMenuItemActionExpand(MenuItem item) {
-                return true;
-            }
+                    @Override
+                    public boolean onMenuItemActionExpand(MenuItem item) {
+                        return true;
+                    }
 
-            @Override
-            public boolean onMenuItemActionCollapse(MenuItem item) {
-                getActivity().supportInvalidateOptionsMenu();
-                viewModel.setSearchText(null);
-                presenter.loadFavorites(false);
-                return true;
-            }
-        });
+                    @Override
+                    public boolean onMenuItemActionCollapse(MenuItem item) {
+                        getActivity().supportInvalidateOptionsMenu();
+                        viewModel.setSearchText(null);
+                        presenter.loadFavorites(false);
+                        return true;
+                    }
+                });
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
             @Override
@@ -138,7 +142,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
             }
         });
         if (viewModel.getSearchText() != null) {
-            searchMenuItem.expandActionView();
+            item.expandActionView();
             searchView.setQuery(viewModel.getSearchText(), false);
         }
     }
@@ -165,7 +169,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     }
 
     @Override
-    public void showAddFavorite() {
+    public void startAddFavoriteActivity() {
         Intent intent = new Intent(getContext(), AddEditFavoriteActivity.class);
         startActivityForResult(intent, REQUEST_ADD_FAVORITE);
     }
@@ -173,16 +177,16 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     @Override
     public void showEditFavorite(@NonNull String favoriteId) {
         Intent intent = new Intent(getContext(), AddEditFavoriteActivity.class);
-        intent.putExtra(AddEditFavoriteFragment.ARGUMENT_EDIT_FAVORITE_ID, favoriteId);
+        intent.putExtra(AddEditFavoriteFragment.ARGUMENT_FAVORITE_ID, favoriteId);
         startActivityForResult(intent, REQUEST_EDIT_FAVORITE);
     }
 
     @Override
     public void showFavorites(@NonNull List<Favorite> favorites) {
         checkNotNull(favorites);
-
         adapter.swapItems(favorites);
-        viewModel.setFavoriteListSize(favorites.size());
+
+        viewModel.setListSize(favorites.size());
         if (viewModel.isActionMode()) {
             enableActionMode();
         }
@@ -193,19 +197,27 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         switch (requestCode) {
             case REQUEST_ADD_FAVORITE:
                 if (resultCode == Activity.RESULT_OK) {
+                    //viewModel.showSaveSuccessSnackbar();
+                    String favoriteId = data.getStringExtra(AddEditFavoriteFragment.ARGUMENT_FAVORITE_ID);
+                    presenter.syncSavedFavorite(favoriteId);
                     adapter.notifyDataSetChanged();
                 }
                 break;
             case REQUEST_EDIT_FAVORITE:
                 if (resultCode == Activity.RESULT_OK) {
+                    //viewModel.showSaveSuccessSnackbar();
+                    String favoriteId = data.getStringExtra(AddEditFavoriteFragment.ARGUMENT_FAVORITE_ID);
+                    presenter.syncSavedFavorite(favoriteId);
                     adapter.notifyDataSetChanged();
                 }
                 break;
             case REQUEST_FAVORITE_CONFLICT_RESOLUTION:
                 adapter.notifyDataSetChanged();
                 presenter.updateTabNormalState();
+                // NOTE: force reload because of conflict resolution is a dialog
                 presenter.loadFavorites(false);
                 if (resultCode == FavoritesConflictResolutionDialog.RESULT_OK) {
+                    presenter.updateSyncStatus();
                     viewModel.showConflictResolutionSuccessfulSnackbar();
                 } else if (resultCode == FavoritesConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
@@ -285,6 +297,7 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     private void destroyActionMode() {
         if (viewModel.isActionMode()) {
             viewModel.disableActionMode();
+            presenter.selectFavoriteFilter();
         }
         if (actionMode != null) {
             actionMode = null;
@@ -293,9 +306,27 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     }
 
     @Override
-    public void selectionChanged(int position) {
+    public void selectionChanged(@NonNull String id) {
+        checkNotNull(id);
         updateActionModeTitle();
         updateActionModeMenu();
+    }
+
+    @Override
+    public int getPosition(String favoriteId) {
+        return adapter.getPosition(favoriteId);
+    }
+
+    @Override
+    public String[] getIds() {
+        return adapter.getIds();
+    }
+
+    @Override
+    public void scrollToPosition(int position) {
+        if (rvLayoutManager != null) {
+            rvLayoutManager.scrollToPositionWithOffset(position, 0);
+        }
     }
 
     private void updateActionModeTitle() {
@@ -321,41 +352,29 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
     }
 
     @Override
-    public int getPosition(String favoriteId) {
-        return adapter.getPosition(favoriteId);
+    public void removeFavorite(@NonNull String favoriteId) {
+        viewModel.removeSelection(favoriteId);
+        int position = adapter.removeItem(favoriteId);
+        selectionChanged(favoriteId);
+        viewModel.setListSize(adapter.getItemCount());
     }
 
     @Override
-    public void scrollToPosition(int position) {
-        if (rvLayoutManager != null) {
-            rvLayoutManager.scrollToPositionWithOffset(position, 0);
-        }
-    }
-
-    @Override
-    public String removeFavorite(int position) {
-        Favorite favorite = adapter.removeItem(position);
-        selectionChanged(position);
-        viewModel.setFavoriteListSize(adapter.getItemCount());
-        return favorite.getId();
-    }
-
-    @Override
-    public void confirmFavoritesRemoval(int[] selectedIds) {
+    public void confirmFavoritesRemoval(ArrayList<String> selectedIds) {
         FavoriteRemovalConfirmationDialog dialog =
                 FavoriteRemovalConfirmationDialog.newInstance(selectedIds);
         dialog.setTargetFragment(this, FavoriteRemovalConfirmationDialog.DIALOG_REQUEST_CODE);
         dialog.show(getFragmentManager(), FavoriteRemovalConfirmationDialog.DIALOG_TAG);
     }
 
-    public void removeFavorites(int[] selectedIds) {
+    public void removeFavorites(ArrayList<String> selectedIds) {
         presenter.deleteFavorites(selectedIds);
+        finishActionMode();
     }
 
     @Override
     public void showConflictResolution(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-
         FavoritesConflictResolutionDialog dialog =
                 FavoritesConflictResolutionDialog.newInstance(favoriteId);
         dialog.setTargetFragment(this, REQUEST_FAVORITE_CONFLICT_RESOLUTION);
@@ -422,11 +441,11 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         public static final String DIALOG_TAG = "FAVORITE_REMOVAL_CONFIRMATION";
         public static final int DIALOG_REQUEST_CODE = 0;
 
-        private int[] selectedIds;
+        private ArrayList<String> selectedIds;
 
-        public static FavoriteRemovalConfirmationDialog newInstance(int[] selectedIds) {
+        public static FavoriteRemovalConfirmationDialog newInstance(ArrayList<String> selectedIds) {
             Bundle args = new Bundle();
-            args.putIntArray(ARGUMENT_SELECTED_IDS, selectedIds);
+            args.putStringArrayList(ARGUMENT_SELECTED_IDS, selectedIds);
             FavoriteRemovalConfirmationDialog dialog = new FavoriteRemovalConfirmationDialog();
             dialog.setArguments(args);
             return dialog;
@@ -435,13 +454,13 @@ public class FavoritesFragment extends BaseFragment implements FavoritesContract
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            selectedIds = getArguments().getIntArray(ARGUMENT_SELECTED_IDS);
+            selectedIds = getArguments().getStringArrayList(ARGUMENT_SELECTED_IDS);
         }
 
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            int length = selectedIds.length;
+            int length = selectedIds.size();
             return new AlertDialog.Builder(getContext())
                     .setTitle(R.string.favorites_delete_confirmation_title)
                     .setMessage(getResources().getQuantityString(

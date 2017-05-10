@@ -17,16 +17,17 @@ public interface LocalItem<T> {
             final Uri uri,
             final String selection, final String[] selectionArgs, final String sortOrder);
     Single<T> get(final String itemId);
-    Single<Long> save(final T item);
-    Single<Long> saveDuplicated(final T item);
-    Single<Integer> update(final String itemId, final SyncState state);
+    Single<Boolean> save(final T item);
+    Single<Boolean> saveDuplicated(final T item);
+    Single<Boolean> update(final String itemId, final SyncState state);
     Single<Integer> resetSyncState();
-    Single<Integer> delete(final String itemId);
+    Single<Boolean> delete(final String itemId);
     Single<Integer> delete();
     Single<SyncState> getSyncState(final String itemId);
     Observable<SyncState> getSyncStates();
     Observable<String> getIds();
     Single<Boolean> isConflicted();
+    Single<Boolean> isUnsynced();
     Single<T> getMain(final String duplicatedKey);
     Single<Boolean> autoResolveConflict(final String linkId);
 }

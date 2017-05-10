@@ -30,7 +30,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.LinkEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE + "," +
                     "UNIQUE (" + LocalContract.LinkEntry.COLUMN_NAME_LINK + "," +
                     LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + "," +
-                    LocalContract.LinkEntry.COLUMN_NAME_SYNCED + ") ON CONFLICT ABORT" +
+                    LocalContract.LinkEntry.COLUMN_NAME_DELETED + ") ON CONFLICT ABORT" +
             ");";
     private static final String SQL_CREATE_LINK_ENTRY_ID_INDEX =
             sqlCreateEntryIdIndex(LocalContract.LinkEntry.TABLE_NAME);
@@ -51,7 +51,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED + BOOLEAN_TYPE + "," +
                     "UNIQUE (" + LocalContract.FavoriteEntry.COLUMN_NAME_NAME + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + "," +
-                    LocalContract.FavoriteEntry.COLUMN_NAME_SYNCED + ") ON CONFLICT ABORT" +
+                    LocalContract.FavoriteEntry.COLUMN_NAME_DELETED + ") ON CONFLICT ABORT" +
             ");";
     private static final String SQL_CREATE_FAVORITE_ENTRY_ID_INDEX =
             sqlCreateEntryIdIndex(LocalContract.FavoriteEntry.TABLE_NAME);
