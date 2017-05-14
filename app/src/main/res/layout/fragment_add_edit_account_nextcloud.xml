@@ -138,12 +138,22 @@
                 android:enabled="@{viewModel.loginButton}"
                 android:onClick="@{() -> viewModel.onLoginButtonClick()}" />
 
-            <Button
-                android:id="@+id/about_button"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Button.About"
-                android:text="@string/add_edit_account_nextcloud_about" />
+                android:orientation="horizontal"
+                android:gravity="center_horizontal"
+                style="?android:attr/buttonBarStyle">
+
+                <Button
+                    android:id="@+id/about_nextcloud_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/add_edit_account_nextcloud_about"
+                    android:textColor="@color/about_nextcloud_button"
+                    android:onClick="@{() -> viewModel.onAboutNextcloudClick()}"
+                    style="?android:attr/buttonBarButtonStyle" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </layout>

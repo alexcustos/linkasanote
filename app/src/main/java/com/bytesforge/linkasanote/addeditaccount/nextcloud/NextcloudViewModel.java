@@ -440,4 +440,8 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
             disableLoginButton();
         }
     }
+
+    public void onAboutNextcloudClick() {
+        presenter.onAboutNextcloudClick();
+    }
 }

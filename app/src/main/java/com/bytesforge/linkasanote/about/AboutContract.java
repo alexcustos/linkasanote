@@ -16,7 +16,6 @@ public interface AboutContract {
 
         void showGooglePlay();
         void showLicenseTermsAlertDialog(@NonNull String licenseText);
-        String getLicenseText(@NonNull String assetName);
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -25,8 +24,6 @@ public interface AboutContract {
         void saveInstanceState(Bundle outState);
         void applyInstanceState(@NonNull Bundle state);
         Bundle getDefaultInstanceState();
-        void showProgressOverlay();
-        void hideProgressOverlay();
         void showLaunchGooglePlayErrorSnackbar();
     }
 

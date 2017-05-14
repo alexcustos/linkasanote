@@ -3,7 +3,6 @@ package com.bytesforge.linkasanote.laano.notes.conflictresolution;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
-import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,7 +11,6 @@ import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 
 import com.bytesforge.linkasanote.LaanoApplication;
-import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.databinding.DialogNoteConflictResolutionBinding;
 
 import javax.inject.Inject;
@@ -98,8 +96,8 @@ public class NotesConflictResolutionDialog extends DialogFragment implements
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Context context = getActivity();
         LayoutInflater inflater = LayoutInflater.from(context);
-        DialogNoteConflictResolutionBinding binding = DataBindingUtil.inflate(
-                inflater, R.layout.dialog_note_conflict_resolution, null, false);
+        DialogNoteConflictResolutionBinding binding =
+                DialogNoteConflictResolutionBinding.inflate(inflater, null, false);
         viewModel.setInstanceState(savedInstanceState);
         binding.setPresenter(presenter);
         binding.setViewModel((NotesConflictResolutionViewModel) viewModel);

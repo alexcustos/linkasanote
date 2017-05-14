@@ -568,7 +568,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                     .setMessage(getResources().getQuantityString(
                             R.plurals.notes_delete_confirmation_message, length, length))
                     .setIcon(R.drawable.ic_warning)
-                    .setPositiveButton(R.string.dialog_button_ok, (dialog, which) ->
+                    .setPositiveButton(R.string.dialog_button_delete, (dialog, which) ->
                             ((NotesFragment) getTargetFragment()).removeNotes(selectedIds))
                     .setNegativeButton(R.string.dialog_button_cancel, null)
                     .create();

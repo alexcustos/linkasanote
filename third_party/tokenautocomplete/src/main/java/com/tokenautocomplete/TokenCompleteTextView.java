@@ -660,6 +660,7 @@ public abstract class TokenCompleteTextView<T> extends MultiAutoCompleteTextView
 
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent event) {
+        requestFocus();
         int action = event.getActionMasked();
         Editable text = getText();
         boolean handled = false;

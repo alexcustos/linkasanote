@@ -36,6 +36,7 @@ public interface NextcloudContract {
         boolean sendCheckCredentialsOperation(
                 String username, String password,
                 @Nullable GetServerInfoOperation.ServerInfo serverInfo);
+        void openAboutNextcloudLink();
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -80,5 +81,6 @@ public interface NextcloudContract {
         void setServerInfo(@Nullable GetServerInfoOperation.ServerInfo serverInfo);
         @Nullable GetServerInfoOperation.ServerInfo getServerInfo();
         @Nullable Account getAccount();
+        void onAboutNextcloudClick();
     }
 }

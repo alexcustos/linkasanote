@@ -465,7 +465,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
                     .setMessage(getResources().getQuantityString(
                             R.plurals.favorites_delete_confirmation_message, length, length))
                     .setIcon(R.drawable.ic_warning)
-                    .setPositiveButton(R.string.dialog_button_ok, (dialog, which) ->
+                    .setPositiveButton(R.string.dialog_button_delete, (dialog, which) ->
                             ((FavoritesFragment) getTargetFragment()).removeFavorites(selectedIds))
                     .setNegativeButton(R.string.dialog_button_cancel, null)
                     .create();

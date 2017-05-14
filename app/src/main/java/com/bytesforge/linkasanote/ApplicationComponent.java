@@ -3,6 +3,7 @@ package com.bytesforge.linkasanote;
 import android.support.annotation.VisibleForTesting;
 
 import com.bytesforge.linkasanote.about.AboutComponent;
+import com.bytesforge.linkasanote.about.AboutFragment;
 import com.bytesforge.linkasanote.about.AboutPresenterModule;
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountComponent;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterModule;
@@ -53,6 +54,7 @@ public interface ApplicationComponent {
     void inject(SyncService syncService);
     void inject(ClipboardService clipboardService);
     void inject(SettingsFragment settingsFragment);
+    void inject(AboutFragment.LicenseTermsDialog licenseTermsDialog);
 
     // Subcomponents
     AddEditAccountComponent getAddEditAccountComponent(NextcloudPresenterModule module);

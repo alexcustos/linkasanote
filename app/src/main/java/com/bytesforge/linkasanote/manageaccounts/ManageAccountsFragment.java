@@ -224,7 +224,7 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
                     .setMessage(getResources().getString(
                             R.string.manage_accounts_removal_confirmation_message, account.name))
                     .setIcon(R.drawable.ic_warning)
-                    .setPositiveButton(R.string.dialog_button_ok, (dialog, which) ->
+                    .setPositiveButton(R.string.dialog_button_delete, (dialog, which) ->
                             ((ManageAccountsFragment) getTargetFragment()).removeAccount(account))
                     .setNegativeButton(R.string.dialog_button_cancel, null)
                     .create();

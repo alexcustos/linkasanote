@@ -52,10 +52,6 @@
 
     <!-- Buttons -->
     <style name="Button" parent="Widget.AppCompat.Button" />
-    <style name="Button.About" parent="Button">
-        <item name="android:background">@android:color/transparent</item>
-        <item name="android:textColor">@color/indigo_300</item>
-    </style>
     <style name="Button.RecyclerView" parent="Widget.AppCompat.ImageButton">
         <item name="android:background">@null</item>
     </style>

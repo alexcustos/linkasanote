@@ -30,6 +30,7 @@
     <color name="link_background">@color/note_background</color>
     <color name="link_note_divider">@color/grey_300</color>
     <color name="dialog_title_background">@color/grey_100</color>
+    <color name="about_nextcloud_button">@color/indigo_300</color>
 
     <!-- Misc -->
     <color name="green_500">#4CAF50</color>

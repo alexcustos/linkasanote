@@ -410,6 +410,14 @@ public class NextcloudFragment extends Fragment implements
                 }).show();
     }
 
+    @Override
+    public void openAboutNextcloudLink() {
+        String url = getResources().getString(R.string.about_nextcloud_url);
+        Uri uri = Uri.parse(url);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
+    }
+
     // Service
 
     private ServiceConnection operationsServiceConnection = new ServiceConnection() {

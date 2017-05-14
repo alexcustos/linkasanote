@@ -159,4 +159,9 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
     public boolean isNewAccount() {
         return account == null;
     }
+
+    @Override
+    public void onAboutNextcloudClick() {
+        view.openAboutNextcloudLink();
+    }
 }

@@ -19,11 +19,14 @@ import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.bytesforge.linkasanote.BuildConfig;
+import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.databinding.DialogAboutLicenseTermsBinding;
 import com.bytesforge.linkasanote.databinding.FragmentAboutBinding;
+import com.bytesforge.linkasanote.utils.CommonUtils;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Charsets;
 
 import java.io.BufferedReader;
@@ -31,13 +34,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import javax.inject.Inject;
+
+import io.reactivex.Single;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AboutFragment extends Fragment implements AboutContract.View {
 
     private static final String TAG = AboutFragment.class.getSimpleName();
 
-    private Context context;
     private AboutContract.Presenter presenter;
     private AboutContract.ViewModel viewModel;
 
@@ -75,7 +81,6 @@ public class AboutFragment extends Fragment implements AboutContract.View {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        context = getContext();
         FragmentAboutBinding binding = FragmentAboutBinding.inflate(inflater, container, false);
         viewModel.setInstanceState(savedInstanceState);
         binding.setPresenter(presenter);
@@ -101,45 +106,30 @@ public class AboutFragment extends Fragment implements AboutContract.View {
     }
 
     @Override
-    public void showLicenseTermsAlertDialog(@NonNull String licenseText) {
-        checkNotNull(licenseText);
-        LicenseTermsDialog dialog = LicenseTermsDialog.newInstance(licenseText);
+    public void showLicenseTermsAlertDialog(@NonNull String licenseAsset) {
+        checkNotNull(licenseAsset);
+        LicenseTermsDialog dialog = LicenseTermsDialog.newInstance(licenseAsset);
         dialog.show(getFragmentManager(), LicenseTermsDialog.DIALOG_TAG);
-    }
-
-    @Override
-    public String getLicenseText(@NonNull String assetName) {
-        checkNotNull(assetName);
-        Resources resources = context.getResources();
-        String licenseText;
-        try {
-            String line;
-            StringBuilder builder = new StringBuilder();
-            InputStream stream = resources.getAssets().open(assetName);
-            BufferedReader in = new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
-            while ((line = in.readLine()) != null) {
-                builder.append(line);
-                builder.append('\n');
-            }
-            in.close();
-            licenseText = builder.toString();
-        } catch (IOException e) {
-            licenseText = resources.getString(R.string.about_fragment_error_license, assetName);
-        }
-        return licenseText;
     }
 
     public static class LicenseTermsDialog extends DialogFragment {
 
-        private static final String ARGUMENT_LICENSE_TEXT = "LICENSE_TEXT";
+        private static final String ARGUMENT_LICENSE_ASSET = "LICENSE_ASSET";
 
         public static final String DIALOG_TAG = "LICENSE_TERMS";
 
-        private String licenseText;
+        private Context context;
+        private Resources resources;
+        DialogAboutLicenseTermsBinding binding;
 
-        public static LicenseTermsDialog newInstance(String licenseText) {
+        private String licenseAsset;
+
+        @Inject
+        BaseSchedulerProvider schedulerProvider;
+
+        public static LicenseTermsDialog newInstance(String licenseAsset) {
             Bundle args = new Bundle();
-            args.putString(ARGUMENT_LICENSE_TEXT, licenseText);
+            args.putString(ARGUMENT_LICENSE_ASSET, licenseAsset);
             LicenseTermsDialog dialog = new LicenseTermsDialog();
             dialog.setArguments(args);
             return dialog;
@@ -148,30 +138,65 @@ public class AboutFragment extends Fragment implements AboutContract.View {
         @Override
         public void onStart() {
             super.onStart();
-            ((TextView) getDialog().findViewById(android.R.id.message))
-                    .setMovementMethod(LinkMovementMethod.getInstance());
+            binding.licenseTerms.setMovementMethod(LinkMovementMethod.getInstance());
         }
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            licenseText = getArguments().getString(ARGUMENT_LICENSE_TEXT);
+            licenseAsset = getArguments().getString(ARGUMENT_LICENSE_ASSET);
+            context = getContext();
+            resources = context.getResources();
+            LaanoApplication application = (LaanoApplication) getActivity().getApplication();
+            application.getApplicationComponent().inject(this);
         }
 
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            Resources resources = getContext().getResources();
-            Spanned licenseSpanned;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                licenseSpanned = Html.fromHtml(licenseText, Html.FROM_HTML_MODE_LEGACY);
-            } else {
-                licenseSpanned = Html.fromHtml(licenseText);
-            }
-            return new AlertDialog.Builder(getContext())
-                    .setMessage(licenseSpanned)
+            LayoutInflater inflater = LayoutInflater.from(context);
+            binding = DialogAboutLicenseTermsBinding.inflate(inflater, null, false);
+            Single.fromCallable(() -> getLicenseText(licenseAsset))
+                    .subscribeOn(schedulerProvider.computation())
+                    .map(this::fromHtmlCompat)
+                    .observeOn(schedulerProvider.ui())
+                    .subscribe(
+                            binding.licenseTerms::setText,
+                            throwable -> CommonUtils.logStackTrace(TAG, throwable));
+            return new AlertDialog.Builder(context)
+                    .setView(binding.getRoot())
                     .setPositiveButton(resources.getString(R.string.dialog_button_ok), null)
                     .create();
+        }
+
+        private String getLicenseText(@NonNull String assetName) {
+            checkNotNull(assetName);
+            Resources resources = context.getResources();
+            String licenseText;
+            try {
+                String line;
+                StringBuilder builder = new StringBuilder();
+                InputStream stream = resources.getAssets().open(assetName);
+                BufferedReader in = new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
+                while ((line = in.readLine()) != null) {
+                    builder.append(line);
+                    builder.append('\n');
+                }
+                in.close();
+                licenseText = builder.toString();
+            } catch (IOException e) {
+                licenseText = resources.getString(R.string.about_fragment_error_license, assetName);
+            }
+            return licenseText;
+        }
+
+        private Spanned fromHtmlCompat(@NonNull String source) {
+            checkNotNull(source);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                return Html.fromHtml(source, Html.FROM_HTML_MODE_LEGACY);
+            } else {
+                return Html.fromHtml(source);
+            }
         }
     }
 }
