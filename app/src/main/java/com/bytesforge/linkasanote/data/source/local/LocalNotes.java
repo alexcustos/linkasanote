@@ -2,17 +2,16 @@ package com.bytesforge.linkasanote.data.source.local;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Item;
-import com.bytesforge.linkasanote.data.ItemFactory;
+import com.bytesforge.linkasanote.data.NoteFactory;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
+import com.google.common.collect.ObjectArrays;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -28,15 +27,13 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
 
     private static final Uri NOTE_URI = LocalContract.NoteEntry.buildUri();
 
-    private final Context context;
     private final ContentResolver contentResolver;
     private final LocalTags localTags;
-    private final ItemFactory<T> factory;
+    private final NoteFactory<T> factory;
 
     public LocalNotes(
-            @NonNull Context context, @NonNull ContentResolver contentResolver,
-            @NonNull LocalTags localTags, @NonNull ItemFactory<T> factory) {
-        this.context = checkNotNull(context);
+            @NonNull ContentResolver contentResolver,
+            @NonNull LocalTags localTags, @NonNull NoteFactory<T> factory) {
         this.contentResolver = checkNotNull(contentResolver);
         this.localTags = checkNotNull(localTags);
         this.factory = checkNotNull(factory);
@@ -58,11 +55,22 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
 
     @Override
     public Observable<T> getActive() {
-        final String selection = LocalContract.NoteEntry.COLUMN_NAME_DELETED + " = ?" +
+        return getActive(null);
+    }
+
+    @Override
+    public Observable<T> getActive(final String[] noteIds) {
+        String selection = LocalContract.NoteEntry.COLUMN_NAME_DELETED + " = ?" +
                 " OR " + LocalContract.NoteEntry.COLUMN_NAME_CONFLICTED + " = ?";
-        final String[] selectionArgs = {"0", "1"};
+        String[] selectionArgs = {"0", "1"};
         final String sortOrder = LocalContract.NoteEntry.COLUMN_NAME_CREATED + " DESC";
 
+        int size = noteIds == null ? 0 : noteIds.length;
+        if (size > 0) {
+            selection = " (" + selection + ") AND " + LocalContract.NoteEntry.COLUMN_NAME_ENTRY_ID +
+                    " IN (" + CommonUtils.strRepeat("?", size, ", ") + ")";
+            selectionArgs = ObjectArrays.concat(selectionArgs, noteIds, String.class);
+        }
         return get(NOTE_URI, selection, selectionArgs, sortOrder);
     }
 
@@ -153,9 +161,9 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
 
     @Override
     public Single<Boolean> saveDuplicated(final T note) {
-        Log.e(TAG, "saveDuplicated() was called, but it must not be happened");
-        CommonUtils.logStackTrace(TAG, new Throwable());
-        return Single.just(false); // NOTE: just report it is a broken Note
+        // NOTE: foreign key constraint is violated (orphaned Note)
+        return Single.fromCallable(() -> factory.buildOrphaned(note))
+                .flatMap(this::save);
     }
 
     @Override

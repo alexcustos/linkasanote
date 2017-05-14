@@ -64,7 +64,6 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
     public final ObservableBoolean buttonsActive = new ObservableBoolean();
 
     private final Resources resources;
-    private LinksConflictResolutionContract.Presenter presenter;
 
     public LinksConflictResolutionViewModel(Context context) {
         resources = context.getResources();
@@ -91,7 +90,6 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
     @Override
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
-
         outState.putString(STATE_LOCAL_STATE, localState.get());
         outState.putString(STATE_LOCAL_STATUS, localStatus.get());
         outState.putString(STATE_LOCAL_INFO, localInfo.get());
@@ -118,7 +116,6 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
     @Override
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
-
         localState.set(state.getString(STATE_LOCAL_STATE));
         localStatus.set(state.getString(STATE_LOCAL_STATUS));
         localInfo.set(state.getString(STATE_LOCAL_INFO));
@@ -174,7 +171,6 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
 
     @Override
     public void setPresenter(@NonNull LinksConflictResolutionContract.Presenter presenter) {
-        this.presenter = checkNotNull(presenter);
     }
 
     @Override

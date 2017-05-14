@@ -5,9 +5,11 @@ import android.content.ContentResolver;
 import android.content.Context;
 
 import com.bytesforge.linkasanote.data.Favorite;
-import com.bytesforge.linkasanote.data.ItemFactory;
+import com.bytesforge.linkasanote.data.FavoriteFactory;
 import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.LinkFactory;
 import com.bytesforge.linkasanote.data.Note;
+import com.bytesforge.linkasanote.data.NoteFactory;
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
@@ -38,7 +40,7 @@ public class RepositoryModule {
     public LocalLinks<Link> provideLocalLinks(
             Context context, ContentResolver contentResolver,
             LocalTags localTags, LocalNotes<Note> localNotes) {
-        ItemFactory<Link> linkFactory = Link.getFactory();
+        LinkFactory<Link> linkFactory = Link.getFactory();
         return new LocalLinks<>(context, contentResolver, localTags, localNotes, linkFactory);
     }
 
@@ -46,7 +48,7 @@ public class RepositoryModule {
     @Singleton
     public CloudItem<Link> provideCloudLinks(
             Context context, AccountManager accountManager, Settings settings) {
-        ItemFactory<Link> linkFactory = Link.getFactory();
+        LinkFactory<Link> linkFactory = Link.getFactory();
         return new CloudItem<>(context, accountManager, settings,
                 Link.CLOUD_DIRECTORY_NAME, Link.SETTING_LAST_SYNCED_ETAG, linkFactory);
     }
@@ -55,7 +57,7 @@ public class RepositoryModule {
     @Singleton
     public LocalFavorites<Favorite> provideLocalFavorites(
             Context context, ContentResolver contentResolver, LocalTags localTags) {
-        ItemFactory<Favorite> favoriteFactory = Favorite.getFactory();
+        FavoriteFactory<Favorite> favoriteFactory = Favorite.getFactory();
         return new LocalFavorites<>(context, contentResolver, localTags, favoriteFactory);
     }
 
@@ -63,7 +65,7 @@ public class RepositoryModule {
     @Singleton
     public CloudItem<Favorite> provideCloudFavorites(
             Context context, AccountManager accountManager, Settings settings) {
-        ItemFactory<Favorite> favoriteFactory = Favorite.getFactory();
+        FavoriteFactory<Favorite> favoriteFactory = Favorite.getFactory();
         return new CloudItem<>(context, accountManager, settings,
                 Favorite.CLOUD_DIRECTORY_NAME, Favorite.SETTING_LAST_SYNCED_ETAG, favoriteFactory);
     }
@@ -72,15 +74,15 @@ public class RepositoryModule {
     @Singleton
     public LocalNotes<Note> provideLocalNotes(
             Context context, ContentResolver contentResolver, LocalTags localTags) {
-        ItemFactory<Note> noteFactory = Note.getFactory();
-        return new LocalNotes<>(context, contentResolver, localTags, noteFactory);
+        NoteFactory<Note> noteFactory = Note.getFactory();
+        return new LocalNotes<>(contentResolver, localTags, noteFactory);
     }
 
     @Provides
     @Singleton
     public CloudItem<Note> provideCloudNotes(
             Context context, AccountManager accountManager, Settings settings) {
-        ItemFactory<Note> noteFactory = Note.getFactory();
+        NoteFactory<Note> noteFactory = Note.getFactory();
         return new CloudItem<>(context, accountManager, settings,
                 Note.CLOUD_DIRECTORY_NAME, Note.SETTING_LAST_SYNCED_ETAG, noteFactory);
     }

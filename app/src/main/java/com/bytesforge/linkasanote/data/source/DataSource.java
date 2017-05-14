@@ -21,7 +21,7 @@ public interface DataSource {
         ERROR_LOCAL, // DB error
         ERROR_CLOUD, // Sync error
         ERROR_EXTRA // Any kind of error with additional cleanup operation (Link's Notes)
-    };
+    }
 
     interface Callback {
 
@@ -39,7 +39,9 @@ public interface DataSource {
     Single<Boolean> isConflictedLinks();
     Single<Boolean> isUnsyncedLinks();
     Single<Boolean> autoResolveLinkConflict(@NonNull String linkId);
+    void refreshLinks();
     void refreshLink(@NonNull String linkId);
+    void removeCachedLink(@NonNull String linkId);
 
     void addFavoritesCallback(@NonNull DataSource.Callback callback);
     void removeFavoritesCallback(@NonNull DataSource.Callback callback);
@@ -51,7 +53,9 @@ public interface DataSource {
     Single<Boolean> isConflictedFavorites();
     Single<Boolean> isUnsyncedFavorites();
     Single<Boolean> autoResolveFavoriteConflict(@NonNull String favoriteId);
+    void refreshFavorites();
     void refreshFavorite(@NonNull String favoriteId);
+    void removeCachedFavorite(@NonNull String favoriteId);
 
     void addNotesCallback(@NonNull DataSource.Callback callback);
     void removeNotesCallback(@NonNull DataSource.Callback callback);
@@ -62,7 +66,9 @@ public interface DataSource {
     Observable<ItemState> deleteNote(@NonNull String noteId, boolean syncable);
     Single<Boolean> isConflictedNotes();
     Single<Boolean> isUnsyncedNotes();
+    void refreshNotes();
     void refreshNote(@NonNull String noteId);
+    void removeCachedNote(@NonNull String noteId);
 
     Observable<Tag> getTags();
     Single<Tag> getTag(@NonNull String tagId);

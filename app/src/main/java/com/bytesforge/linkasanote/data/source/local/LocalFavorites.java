@@ -7,12 +7,13 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
+import com.bytesforge.linkasanote.data.FavoriteFactory;
 import com.bytesforge.linkasanote.data.Item;
-import com.bytesforge.linkasanote.data.ItemFactory;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Provider;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
+import com.google.common.collect.ObjectArrays;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -31,11 +32,11 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
     private final Context context;
     private final ContentResolver contentResolver;
     private final LocalTags localTags;
-    private final ItemFactory<T> factory;
+    private final FavoriteFactory<T> factory;
 
     public LocalFavorites(
             @NonNull Context context, @NonNull ContentResolver contentResolver,
-            @NonNull LocalTags localTags, @NonNull ItemFactory<T> factory) {
+            @NonNull LocalTags localTags, @NonNull FavoriteFactory<T> factory) {
         this.context = checkNotNull(context);
         this.contentResolver = checkNotNull(contentResolver);
         this.localTags = checkNotNull(localTags);
@@ -58,11 +59,22 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
 
     @Override
     public Observable<T> getActive() {
-        final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_DELETED + " = ?" +
+        return getActive(null);
+    }
+
+    @Override
+    public Observable<T> getActive(final String[] favoriteIds) {
+        String selection = LocalContract.FavoriteEntry.COLUMN_NAME_DELETED + " = ?" +
                 " OR " + LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED + " = ?";
-        final String[] selectionArgs = {"0", "1"};
+        String[] selectionArgs = {"0", "1"};
         final String sortOrder = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " ASC";
 
+        int size = favoriteIds == null ? 0 : favoriteIds.length;
+        if (size > 0) {
+            selection = " (" + selection + ") AND " + LocalContract.FavoriteEntry.COLUMN_NAME_ENTRY_ID +
+                    " IN (" + CommonUtils.strRepeat("?", size, ", ") + ")";
+            selectionArgs = ObjectArrays.concat(selectionArgs, favoriteIds, String.class);
+        }
         return get(FAVORITE_URI, selection, selectionArgs, sortOrder);
     }
 

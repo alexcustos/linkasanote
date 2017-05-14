@@ -94,7 +94,7 @@
                     android:id="@+id/note_toggle"
                     android:layout_width="48dp"
                     android:layout_height="56dp"
-                    android:contentDescription="@string/item_notes_note_to_notes_button"
+                    android:contentDescription="@{viewModel.getToggleDescription(note.id, viewModel.visibilityChanged)}"
                     android:paddingTop="@dimen/card_button_padding_vertical"
                     android:paddingBottom="@dimen/card_button_padding_vertical"
                     android:paddingStart="@dimen/card_button_padding"

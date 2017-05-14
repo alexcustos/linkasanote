@@ -13,6 +13,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ActivityUtils {
 
+    private static final String TAG = ActivityUtils.class.getSimpleName();
+
     public static void addFragmentToActivity(
             @NonNull FragmentManager fragmentManager,
             @NonNull Fragment fragment,
@@ -79,7 +81,6 @@ public class ActivityUtils {
             @NonNull final View view, final int toVisibility,
             final float toAlpha, final long duration, final long delay) {
         checkNotNull(view);
-
         boolean show = (toVisibility == View.VISIBLE);
         if (show) {
             view.setAlpha(0);
@@ -90,6 +91,7 @@ public class ActivityUtils {
                 .setStartDelay(delay)
                 .alpha(show ? toAlpha : 0)
                 .setListener(new AnimatorListenerAdapter() {
+
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         view.setVisibility(toVisibility);

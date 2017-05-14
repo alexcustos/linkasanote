@@ -27,10 +27,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 import io.reactivex.Single;
 
@@ -59,6 +57,11 @@ public class CloudItem<T extends Item> {
         this.factory = factory;
     }
 
+    private boolean isOnline() {
+        // NOTE: settings.isOnline is set by receiver, this class must not depend on it
+        return CloudUtils.isApplicationConnected(context);
+    }
+
     public Single<RemoteOperationResult> upload(@NonNull final T item) {
         return upload(item, null);
     }
@@ -68,7 +71,7 @@ public class CloudItem<T extends Item> {
         checkNotNull(item);
 
         return Single.fromCallable(() -> {
-            if (!CloudUtils.isApplicationConnected(context)) return null;
+            if (!isOnline()) return null;
 
             OwnCloudClient currentOcClient = ocClient;
             if (currentOcClient == null) {
@@ -109,7 +112,7 @@ public class CloudItem<T extends Item> {
             @NonNull final String itemId, final OwnCloudClient ocClient) {
         checkNotNull(itemId);
         return Single.fromCallable(() -> {
-            if (!CloudUtils.isApplicationConnected(context)) return null;
+            if (!isOnline()) return null;
 
             OwnCloudClient currentOcClient = ocClient;
             if (currentOcClient == null) {
@@ -126,19 +129,17 @@ public class CloudItem<T extends Item> {
             RemoteOperationResult result = operation.execute(currentOcClient);
             if (result.isSuccess()) {
                 File localFile = new File(localPath);
-                List<String> jsonStringList = null;
+                String jsonString = null;
                 try {
-                    jsonStringList = Files.readLines(localFile, Charsets.UTF_8);
+                    jsonString = Files.toString(localFile, Charsets.UTF_8);
                 } catch (IOException e) {
                     Log.e(TAG, "Cannot read the file downloaded [" + localPath + "]");
                 }
                 if (!localFile.delete()) {
                     Log.e(TAG, "Item file was not deleted [" + localFile.getName() + "]");
                 }
-                if (jsonStringList == null) return null;
+                if (jsonString == null) return null;
 
-                String jsonString = jsonStringList.stream().map(Object::toString)
-                        .collect(Collectors.joining());
                 SyncState state = new SyncState(operation.getEtag(), SyncState.State.SYNCED);
                 T item = factory.from(jsonString, state);
                 if (item == null || item.isEmpty() || !itemId.equals(item.getId())) {
@@ -161,7 +162,7 @@ public class CloudItem<T extends Item> {
             @NonNull final String itemId, final OwnCloudClient ocClient) {
         checkNotNull(itemId);
         return Single.fromCallable(() -> {
-            if (!CloudUtils.isApplicationConnected(context)) return null;
+            if (!isOnline()) return null;
 
             OwnCloudClient currentOcClient = ocClient;
             if (currentOcClient == null) {
@@ -189,7 +190,7 @@ public class CloudItem<T extends Item> {
             @NonNull final String itemId, final OwnCloudClient ocClient) {
         checkNotNull(itemId);
         return Single.fromCallable(() -> {
-            if (!CloudUtils.isApplicationConnected(context)) return null;
+            if (!isOnline()) return null;
 
             OwnCloudClient currentOcClient = ocClient;
             if (currentOcClient == null) {

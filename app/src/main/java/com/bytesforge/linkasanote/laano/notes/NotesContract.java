@@ -67,7 +67,7 @@ public interface NotesContract {
         void onSelectAllClick();
         int getPosition(String noteId);
         void setFilterType(@NonNull FilterType filtering);
-        void syncSavedNote(@NonNull final String noteId);
+        void syncSavedNote(final String linkId, @NonNull final String noteId);
         void deleteNotes(ArrayList<String> selectedIds);
         boolean isFavoriteFilter();
         boolean isLinkFilter();

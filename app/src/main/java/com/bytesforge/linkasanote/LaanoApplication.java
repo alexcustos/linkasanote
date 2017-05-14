@@ -1,9 +1,10 @@
 package com.bytesforge.linkasanote;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.VisibleForTesting;
+import android.support.multidex.MultiDexApplication;
+import android.support.v7.app.AppCompatDelegate;
 
 import com.bytesforge.linkasanote.data.source.ProviderModule;
 import com.bytesforge.linkasanote.data.source.RepositoryModule;
@@ -13,7 +14,11 @@ import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
 
 import java.lang.ref.WeakReference;
 
-public class LaanoApplication extends Application {
+public class LaanoApplication extends MultiDexApplication { // Application {
+
+    static {
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+    }
 
     private ApplicationComponent applicationComponent;
     private static WeakReference<Context> context;

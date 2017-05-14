@@ -11,7 +11,6 @@ import com.bytesforge.linkasanote.laano.links.LinkId;
 import com.bytesforge.linkasanote.laano.notes.NoteId;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CommonUtils;
-import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
 import java.util.ArrayList;
@@ -86,8 +85,6 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
 
     @Override
     public void loadTags() {
-        // TODO: get rid of EspressoIdlingResource in favor of schedulerProvider mock
-        EspressoIdlingResource.increment();
         tagsDisposable.clear(); // stop previous requests
 
         Disposable disposable = repository.getTags()
@@ -95,11 +92,6 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .doOnError(throwable -> view.swapTagsCompletionViewItems(new ArrayList<>()))
-                .doFinally(() -> {
-                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
-                        EspressoIdlingResource.decrement();
-                    }
-                })
                 .subscribe((tags, throwable) -> {
                     if (tags != null) view.swapTagsCompletionViewItems(tags);
                 });
@@ -116,17 +108,11 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
         if (noteId == null) {
             throw new RuntimeException("populateNote() was called but noteId is null");
         }
-        EspressoIdlingResource.increment();
         noteDisposable.clear();
 
         Disposable disposable = repository.getNote(noteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .doFinally(() -> {
-                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
-                        EspressoIdlingResource.decrement();
-                    }
-                })
                 .subscribe(note -> {
                     viewModel.populateNote(note);
                     linkId = note.getLinkId();
@@ -144,17 +130,10 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
             return;
         }
         viewModel.showLinkStatusLoading();
-        EspressoIdlingResource.increment();
         linkDisposable.clear();
-
         Disposable disposable = repository.getLink(linkId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .doFinally(() -> {
-                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
-                        EspressoIdlingResource.decrement();
-                    }
-                })
                 .subscribe(link -> {
                     view.setBoundTitle(isNewNote());
                     viewModel.populateLink(link);
@@ -204,6 +183,10 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
                 .subscribe(itemState -> {
                     switch (itemState) {
                         case DEFERRED:
+                            repository.refreshNotes();
+                            if (linkId != null) {
+                                repository.refreshLink(linkId);
+                            }
                             view.finishActivity(noteId, linkId);
                             break;
                     }

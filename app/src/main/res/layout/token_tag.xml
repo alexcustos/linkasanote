@@ -5,7 +5,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="@string/placeholder_title"
-    android:textColor="@drawable/token_text_color"
+    android:textColor="@color/token_text_color"
     android:textSize="@dimen/token_text_size"
     android:maxLines="1"
     android:ellipsize="end"

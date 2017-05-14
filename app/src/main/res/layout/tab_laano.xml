@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- NOTE: otherwise the text is only centered, icon stays to the left -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:gravity="center"
     android:orientation="horizontal">
@@ -11,11 +12,13 @@
         android:id="@android:id/text1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:drawableStart="@drawable/ic_sync_white_18dp"
         android:drawablePadding="8dp"
         android:gravity="center"
         android:text="@string/placeholder_title"
-        android:textColor="@drawable/tab_text_color"
-        android:drawableTint="@drawable/tab_icon_tint"
-        android:textAppearance="@style/Laano.TabTextAppearance" />
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="@color/tab_text_color"
+        android:textAppearance="@style/Laano.TabTextAppearance"
+        android:drawableTint="@color/tab_icon_tint"
+        tools:targetApi="m" />
 </LinearLayout>

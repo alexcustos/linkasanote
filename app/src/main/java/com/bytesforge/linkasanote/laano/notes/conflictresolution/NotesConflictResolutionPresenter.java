@@ -2,15 +2,19 @@ package com.bytesforge.linkasanote.laano.notes.conflictresolution;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.util.Pair;
 
+import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
+import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.laano.notes.NoteId;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
 import java.util.NoSuchElementException;
@@ -32,6 +36,7 @@ public final class NotesConflictResolutionPresenter implements
     private final Settings settings;
     private final LocalNotes<Note> localNotes;
     private final CloudItem<Note> cloudNotes;
+    private final LocalLinks<Link> localLinks;
     private final NotesConflictResolutionContract.View view;
     private final NotesConflictResolutionContract.ViewModel viewModel;
     private final BaseSchedulerProvider schedulerProvider;
@@ -48,13 +53,14 @@ public final class NotesConflictResolutionPresenter implements
     NotesConflictResolutionPresenter(
             Repository repository, Settings settings,
             LocalNotes<Note> localNotes, CloudItem<Note> cloudNotes,
-            NotesConflictResolutionContract.View view,
+            LocalLinks<Link> localLinks, NotesConflictResolutionContract.View view,
             NotesConflictResolutionContract.ViewModel viewModel,
             BaseSchedulerProvider schedulerProvider, @NoteId String noteId) {
         this.repository = repository;
         this.settings = settings;
         this.localNotes = localNotes;
         this.cloudNotes = cloudNotes;
+        this.localLinks = localLinks;
         this.view = view;
         this.viewModel = viewModel;
         this.schedulerProvider = schedulerProvider;
@@ -124,8 +130,30 @@ public final class NotesConflictResolutionPresenter implements
         cloudDisposable.clear();
         Disposable disposable = cloudNotes.download(noteId)
                 .subscribeOn(schedulerProvider.io())
+                .flatMap(note -> {
+                    String linkId = note.getLinkId();
+                    Single<Boolean> orphanedNoteSingle;
+                    if (linkId != null) {
+                        orphanedNoteSingle = localLinks.getSyncState(linkId)
+                                .flatMap(syncState -> Single.just(false))
+                                .onErrorReturn(throwable -> {
+                                    if (throwable instanceof NoSuchElementException) {
+                                        return true;
+                                    } else {
+                                        CommonUtils.logStackTrace(TAG, throwable);
+                                        // NOTE: treat it as normal if it is sill possible
+                                        return false;
+                                    }
+                                });
+                    } else {
+                        orphanedNoteSingle = Single.just(false);
+                    }
+                    return Single.zip(Single.just(note), orphanedNoteSingle, Pair::new);
+                })
                 .observeOn(schedulerProvider.ui())
-                .subscribe(viewModel::populateCloudNote, throwable -> {
+                .subscribe(pair -> {
+                    viewModel.populateCloudNote(pair.first, pair.second);
+                }, throwable -> {
                     if (throwable instanceof NoSuchElementException) {
                         viewModel.showCloudNotFound();
                     } else {
@@ -138,39 +166,16 @@ public final class NotesConflictResolutionPresenter implements
     @Override
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
-        viewModel.showProgressOverlay();
         deleteNote(noteId);
-    }
-
-    private void replaceNote(
-            @NonNull final String mainNoteId, @NonNull final String noteId) {
-        checkNotNull(mainNoteId);
-        checkNotNull(noteId);
-        deleteNoteSingle(mainNoteId)
-                .subscribeOn(schedulerProvider.io())
-                .map(success -> {
-                    if (success) {
-                        SyncState state = new SyncState(SyncState.State.SYNCED);
-                        success = localNotes.update(noteId, state).blockingGet();
-                    }
-                    return success;
-                })
-                .observeOn(schedulerProvider.ui())
-                .subscribe(success -> {
-                    if (success) {
-                        repository.refreshNotes(); // OPTIMIZATION: reload one item
-                        view.finishActivity();
-                    } else {
-                        view.cancelActivity();
-                    }
-                }, throwable -> view.cancelActivity());
     }
 
     private void deleteNote(@NonNull final String noteId) {
         checkNotNull(noteId);
+        viewModel.showProgressOverlay();
         deleteNoteSingle(noteId)
                 .subscribeOn(schedulerProvider.io())
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         view.finishActivity();
@@ -194,7 +199,7 @@ public final class NotesConflictResolutionPresenter implements
                 })
                 .doOnSuccess(success -> {
                     if (success) {
-                        repository.deleteCachedNote(noteId);
+                        repository.removeCachedNote(noteId);
                         settings.resetNoteFilter(noteId);
                     }
                 });
@@ -203,7 +208,6 @@ public final class NotesConflictResolutionPresenter implements
     @Override
     public void onCloudDeleteClick() {
         viewModel.deactivateButtons();
-        viewModel.showProgressOverlay();
         deleteNote(noteId);
     }
 
@@ -230,6 +234,7 @@ public final class NotesConflictResolutionPresenter implements
                     return success;
                 })
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshNotes();
@@ -248,6 +253,7 @@ public final class NotesConflictResolutionPresenter implements
                 .subscribeOn(schedulerProvider.io())
                 .map(note -> localNotes.save(note).blockingGet())
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshNotes();

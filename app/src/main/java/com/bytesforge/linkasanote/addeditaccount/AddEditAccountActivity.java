@@ -7,9 +7,11 @@ import android.accounts.AccountManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -28,6 +30,8 @@ import javax.inject.Inject;
 public class AddEditAccountActivity extends AppCompatActivity implements
         ActivityCompat.OnRequestPermissionsResultCallback {
 
+    private static final String TAG = AddEditAccountActivity.class.getSimpleName();
+
     private static final int REQUEST_PERMISSION_GET_ACCOUNTS = 0;
     private static final String PERMISSION_GET_ACCOUNTS = Manifest.permission.GET_ACCOUNTS;
     private static String[] PERMISSIONS_GET_ACCOUNTS = {PERMISSION_GET_ACCOUNTS};
@@ -39,8 +43,6 @@ public class AddEditAccountActivity extends AppCompatActivity implements
     public static final String HTTP_PROTOCOL = "http://";
     public static final String HTTPS_PROTOCOL = "https://";
     public static final String DEFAULT_PROTOCOL = HTTPS_PROTOCOL;
-
-    private static final String TAG = AddEditAccountActivity.class.getSimpleName();
 
     private AccountAuthenticatorResponse accountAuthenticatorResponse = null;
     private ActivityAddEditAccountBinding binding;
@@ -101,13 +103,19 @@ public class AddEditAccountActivity extends AppCompatActivity implements
     public void checkGetAccountsPermission() {
         if (ActivityCompat.checkSelfPermission(this, PERMISSION_GET_ACCOUNTS)
                 != PackageManager.PERMISSION_GRANTED) {
-            requestGetAccountsPermission();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestGetAccountsPermission();
+            } else {
+                disableActivity();
+                exitWithNotEnoughPermissionsError();
+            }
         } else if (!accountCanBeProcessed()) {
             disableActivity();
             exitWithUnsupportedMultipleAccountsError();
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void requestGetAccountsPermission() {
         disableActivity();
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, PERMISSION_GET_ACCOUNTS)) {
@@ -140,7 +148,6 @@ public class AddEditAccountActivity extends AppCompatActivity implements
 
     private boolean accountCanBeProcessed() {
         Account[] accounts = CloudUtils.getAccountsWithPermissionCheck(this, accountManager);
-
         return !presenter.isNewAccount()
                 || getResources().getBoolean(R.bool.multiaccount_support)
                 || (accounts != null && accounts.length <= 0);

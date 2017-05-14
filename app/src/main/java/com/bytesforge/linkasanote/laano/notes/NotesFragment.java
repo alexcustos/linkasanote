@@ -253,32 +253,29 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         switch (requestCode) {
             case REQUEST_ADD_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
+                    presenter.loadNotes(false);
                     //viewModel.showSaveSuccessSnackbar();
+                    String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
                     String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
-                    presenter.syncSavedNote(noteId);
-                    adapter.notifyDataSetChanged();
-                    // TODO: invalidate the cached link
-                    //String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
+                    presenter.syncSavedNote(linkId, noteId);
                 }
                 break;
             case REQUEST_EDIT_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
+                    presenter.loadNotes(false);
                     //viewModel.showSaveSuccessSnackbar();
+                    String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
                     String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
-                    presenter.syncSavedNote(noteId);
-                    adapter.notifyDataSetChanged();
-                    // TODO: invalidate the cached link
-                    //String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
+                    presenter.syncSavedNote(linkId, noteId);
                 }
                 break;
             case REQUEST_NOTE_CONFLICT_RESOLUTION:
-                adapter.notifyDataSetChanged();
                 presenter.updateTabNormalState();
                 // NOTE: force reload because of conflict resolution is a dialog
                 presenter.loadNotes(false);
                 if (resultCode == NotesConflictResolutionDialog.RESULT_OK) {
                     presenter.updateSyncStatus();
-                    viewModel.showConflictResolutionSuccessfulSnackbar();
+                    //viewModel.showConflictResolutionSuccessfulSnackbar();
                 } else if (resultCode == NotesConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
                 }
@@ -459,7 +456,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     @Override
     public void removeNote(@NonNull String noteId) {
         viewModel.removeSelection(noteId);
-        int position = adapter.removeItem(noteId);
+        adapter.removeItem(noteId);
         selectionChanged(noteId);
         viewModel.setListSize(adapter.getItemCount());
     }

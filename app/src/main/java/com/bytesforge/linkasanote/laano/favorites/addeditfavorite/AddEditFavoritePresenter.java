@@ -11,7 +11,6 @@ import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.favorites.FavoriteId;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CommonUtils;
-import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.tokenautocomplete.TokenCompleteTextView;
 
@@ -80,7 +79,6 @@ public final class AddEditFavoritePresenter implements
 
     @Override
     public void loadTags() {
-        EspressoIdlingResource.increment();
         tagsDisposable.clear(); // stop previous requests
 
         Disposable disposable = repository.getTags()
@@ -88,11 +86,6 @@ public final class AddEditFavoritePresenter implements
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .doOnError(throwable -> view.swapTagsCompletionViewItems(new ArrayList<>()))
-                .doFinally(() -> {
-                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
-                        EspressoIdlingResource.decrement();
-                    }
-                })
                 .subscribe((tags, throwable) -> {
                     if (tags != null) view.swapTagsCompletionViewItems(tags);
                 });
@@ -109,17 +102,11 @@ public final class AddEditFavoritePresenter implements
         if (favoriteId == null) {
             throw new RuntimeException("populateFavorite() was called but favoriteId is null");
         }
-        EspressoIdlingResource.increment();
         favoriteDisposable.clear();
 
         Disposable disposable = repository.getFavorite(favoriteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .doFinally(() -> {
-                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
-                        EspressoIdlingResource.decrement();
-                    }
-                })
                 .subscribe(viewModel::populateFavorite, throwable -> {
                     favoriteId = null;
                     viewModel.showFavoriteNotFoundSnackbar();
@@ -161,6 +148,7 @@ public final class AddEditFavoritePresenter implements
                 .subscribe(itemState -> {
                     switch (itemState) {
                         case DEFERRED:
+                            repository.refreshFavorites();
                             view.finishActivity(favoriteId);
                             break;
                     }

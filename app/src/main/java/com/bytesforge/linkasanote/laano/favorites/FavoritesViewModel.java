@@ -1,12 +1,11 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.databinding.Bindable;
 import android.databinding.BindingAdapter;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
-import android.util.SparseBooleanArray;
+import android.support.v4.content.ContextCompat;
 import android.widget.FrameLayout;
 
 import com.bytesforge.linkasanote.BR;
@@ -23,22 +22,17 @@ public class FavoritesViewModel extends BaseItemViewModel implements FavoritesCo
     public static final String FILTER_PREFIX = "@";
 
     private Context context;
-    private Resources resources;
-
-    private SparseBooleanArray selectedIds;
-    private String searchText;
 
     public enum SnackbarId {
         DATABASE_ERROR,
         CONFLICT_RESOLUTION_SUCCESSFUL, CONFLICT_RESOLUTION_ERROR,
-        CONFLICTED_ERROR, CLOUD_ERROR, SAVE_SUCCESS, DELETE_SUCCESS};
+        CONFLICTED_ERROR, CLOUD_ERROR, SAVE_SUCCESS, DELETE_SUCCESS}
 
     @Bindable
     public SnackbarId snackbarId;
 
     public FavoritesViewModel(@NonNull Context context) {
         this.context = checkNotNull(context);
-        resources = context.getResources();
     }
 
     @BindingAdapter({"snackbarId"})
@@ -98,12 +92,12 @@ public class FavoritesViewModel extends BaseItemViewModel implements FavoritesCo
 
     public int getFavoriteBackground(String favoriteId, boolean conflicted, boolean changed) {
         if (conflicted) {
-            return resources.getColor(R.color.item_conflicted, context.getTheme());
+            return ContextCompat.getColor(context, R.color.item_conflicted);
         }
         if (isSelected(favoriteId) && !isActionMode()) {
-            return resources.getColor(R.color.item_favorite_selected, context.getTheme());
+            return ContextCompat.getColor(context, R.color.item_favorite_selected);
         }
-        return resources.getColor(android.R.color.transparent, context.getTheme());
+        return ContextCompat.getColor(context, android.R.color.transparent);
     }
 
     // Snackbar

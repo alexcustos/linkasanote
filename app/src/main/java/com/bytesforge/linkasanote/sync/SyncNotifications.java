@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.ContextCompat;
 
 import com.bytesforge.linkasanote.BuildConfig;
 import com.bytesforge.linkasanote.R;
@@ -54,7 +55,6 @@ public class SyncNotifications {
 
     public void sendSyncBroadcast(String action, int status, String id) {
         checkNotNull(accountName);
-
         Intent intent = new Intent(action);
         intent.putExtra(EXTRA_ACCOUNT_NAME, accountName);
         if (status >= 0) intent.putExtra(EXTRA_STATUS, status);
@@ -70,15 +70,15 @@ public class SyncNotifications {
 
     public void notifyFailedSynchronization(String title, @NonNull String text) {
         checkNotNull(text);
-
         //notificationManager.cancel(NOTIFICATION_SYNC);
         String defaultTitle = context.getString(R.string.sync_adapter_title_failed_default);
         String notificationTitle = title == null ? defaultTitle : defaultTitle + ": " + title;
 
+        int color = ContextCompat.getColor(context, R.color.color_primary);
         Notification notification = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.ic_error_white)
                 .setLargeIcon(getLauncherBitmap())
-                .setColor(context.getResources().getColor(R.color.color_primary, context.getTheme()))
+                .setColor(color)
                 .setTicker(notificationTitle)
                 .setContentTitle(notificationTitle)
                 .setContentText(text)
@@ -87,7 +87,7 @@ public class SyncNotifications {
     }
 
     private Bitmap getLauncherBitmap() {
-        Drawable logo = context.getDrawable(R.mipmap.ic_launcher);
+        Drawable logo = ContextCompat.getDrawable(context, R.mipmap.ic_launcher);
         if (logo instanceof BitmapDrawable) {
             return ((BitmapDrawable) logo).getBitmap();
         }

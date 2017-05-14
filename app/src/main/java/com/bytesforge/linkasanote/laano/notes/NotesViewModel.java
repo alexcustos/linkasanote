@@ -7,6 +7,7 @@ import android.databinding.BindingAdapter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.widget.FrameLayout;
 
 import com.bytesforge.linkasanote.BR;
@@ -41,7 +42,7 @@ public class NotesViewModel extends BaseItemViewModel implements NotesContract.V
     public enum SnackbarId {
         DATABASE_ERROR,
         CONFLICT_RESOLUTION_SUCCESSFUL, CONFLICT_RESOLUTION_ERROR,
-        CONFLICTED_ERROR, CLOUD_ERROR, SAVE_SUCCESS, DELETE_SUCCESS};
+        CONFLICTED_ERROR, CLOUD_ERROR, SAVE_SUCCESS, DELETE_SUCCESS}
 
     public NotesViewModel(@NonNull Context context) {
         this.context = checkNotNull(context);
@@ -122,24 +123,32 @@ public class NotesViewModel extends BaseItemViewModel implements NotesContract.V
         return FILTER_PREFIX;
     }
 
+    public String getToggleDescription(String noteId, boolean changed) {
+        if (isVisible(noteId)) {
+            return resources.getString(R.string.card_button_collapse_note_description);
+        } else {
+            return resources.getString(R.string.card_button_expand_note_description);
+        }
+    }
+
     public int getNoteBackground(
             String noteId, boolean conflicted, boolean readingMode, boolean changed) {
         if (conflicted) {
-            return resources.getColor(R.color.item_conflicted, context.getTheme());
+            return ContextCompat.getColor(context, R.color.item_conflicted);
         }
         if (isSelected(noteId) && !isActionMode()) {
-            return resources.getColor(readingMode
+            return ContextCompat.getColor(context, readingMode
                     ? R.color.item_note_reading_mode_selected
-                    : R.color.item_note_normal_mode_selected, context.getTheme());
+                    : R.color.item_note_normal_mode_selected);
         }
-        return resources.getColor(android.R.color.transparent, context.getTheme());
+        return ContextCompat.getColor(context, android.R.color.transparent);
     }
 
     public int getNoteNoteBackground(boolean conflicted, boolean changed) {
         if (conflicted) {
-            return resources.getColor(R.color.note_conflicted_background, context.getTheme());
+            return ContextCompat.getColor(context, R.color.note_conflicted_background);
         }
-        return resources.getColor(R.color.note_background, context.getTheme());
+        return ContextCompat.getColor(context, R.color.note_background);
     }
 
     // Visibility

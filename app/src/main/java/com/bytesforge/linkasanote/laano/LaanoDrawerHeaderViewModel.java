@@ -6,10 +6,10 @@ import android.databinding.Bindable;
 import android.databinding.ObservableBoolean;
 import android.databinding.ObservableField;
 import android.os.Bundle;
-import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+import android.support.v4.content.ContextCompat;
 import android.text.format.DateFormat;
 
 import com.bytesforge.linkasanote.BR;
@@ -44,7 +44,7 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
     private final Context context;
 
     @Bindable
-    public int statusIconTint = 0;
+    public int statusIconTint;
 
     public LaanoDrawerHeaderViewModel(Context context) {
         this.context = checkNotNull(context);
@@ -60,7 +60,6 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
 
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
-
         outState.putInt(STATE_STATUS_ICON_TINT, statusIconTint);
         outState.putString(STATE_LAST_SYNCED_TEXT, lastSyncedText.get());
         outState.putString(STATE_STATUS_TEXT, statusText.get());
@@ -73,7 +72,6 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
 
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
-
         statusIconTint = state.getInt(STATE_STATUS_ICON_TINT);
         lastSyncedText.set(state.getString(STATE_LAST_SYNCED_TEXT));
         statusText.set(state.getString(STATE_STATUS_TEXT));
@@ -89,7 +87,8 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
     public Bundle getDefaultInstanceState() {
         Bundle defaultState = new Bundle();
 
-        defaultState.putInt(STATE_STATUS_ICON_TINT, getColor(R.color.sync_state_neutral));
+        defaultState.putInt(STATE_STATUS_ICON_TINT,
+                ContextCompat.getColor(context, R.color.sync_state_neutral));
         defaultState.putString(STATE_LAST_SYNCED_TEXT, null);
         defaultState.putString(STATE_STATUS_TEXT, null);
         defaultState.putString(STATE_USERNAME_TEXT, null);
@@ -99,10 +98,6 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
         defaultState.putBoolean(STATE_ACCOUNT_NAME, false);
 
         return defaultState;
-    }
-
-    private int getColor(@ColorRes int color) {
-        return context.getResources().getColor(color, context.getTheme());
     }
 
     private String getString(@StringRes int string) {
@@ -122,7 +117,6 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
 
     public void showAccount(@NonNull AccountItem accountItem) {
         checkNotNull(accountItem);
-
         usernameText.set(accountItem.getDisplayName());
         accountNameText.set(accountItem.getAccountName());
         appName.set(false);
@@ -134,7 +128,7 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
     public void showSyncStatus(long lastSyncTime, int syncStatus) {
         if (lastSyncTime == 0) {
             lastSyncedText.set(getString(R.string.drawer_header_last_synced_never));
-            statusIconTint = getColor(R.color.sync_state_neutral);
+            statusIconTint = ContextCompat.getColor(context, R.color.sync_state_neutral);
             notifyPropertyChanged(BR.statusIconTint);
             return;
         }
@@ -150,23 +144,23 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
         switch (syncStatus) {
             case SyncAdapter.SYNC_STATUS_SYNCED:
                 statusText.set(getString(R.string.drawer_header_status_synced));
-                statusIconTint = getColor(R.color.sync_state_success);
+                statusIconTint = ContextCompat.getColor(context, R.color.sync_state_success);
                 break;
             case SyncAdapter.SYNC_STATUS_UNSYNCED:
                 statusText.set(getString(R.string.drawer_header_status_unsynced));
-                statusIconTint = getColor(R.color.sync_state_neutral);
+                statusIconTint = ContextCompat.getColor(context, R.color.sync_state_neutral);
                 break;
             case SyncAdapter.SYNC_STATUS_ERROR:
                 statusText.set(getString(R.string.drawer_header_status_error));
-                statusIconTint = getColor(R.color.sync_state_error);
+                statusIconTint = ContextCompat.getColor(context, R.color.sync_state_error);
                 break;
             case SyncAdapter.SYNC_STATUS_CONFLICT:
                 statusText.set(getString(R.string.drawer_header_status_conflict));
-                statusIconTint = getColor(R.color.sync_state_conflict);
+                statusIconTint = ContextCompat.getColor(context, R.color.sync_state_conflict);
                 break;
             default:
                 statusText.set(getString(R.string.drawer_header_status_unknown));
-                statusIconTint = getColor(R.color.sync_state_neutral);
+                statusIconTint = ContextCompat.getColor(context, R.color.sync_state_neutral);
         }
         notifyPropertyChanged(BR.statusIconTint);
     }

@@ -13,9 +13,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
+import android.net.ConnectivityManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.AppBarLayout;
@@ -23,7 +26,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
-import android.support.test.espresso.IdlingResource;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
@@ -54,7 +56,6 @@ import com.bytesforge.linkasanote.settings.SettingsActivity;
 import com.bytesforge.linkasanote.sync.SyncNotifications;
 import com.bytesforge.linkasanote.utils.AppBarLayoutOnStateChangeListener;
 import com.bytesforge.linkasanote.utils.CloudUtils;
-import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 
 import java.io.IOException;
 
@@ -96,13 +97,16 @@ public class LaanoActivity extends AppCompatActivity implements
 
     private boolean doubleBackPressed = false;
     private int activeTab;
+    private IntentFilter connectivityIntentFilter;
+    private ConnectivityBroadcastReceiver connectivityBroadcastReceiver;
+    private IntentFilter syncIntentFilter;
     private SyncBroadcastReceiver syncBroadcastReceiver;
     private ActivityLaanoBinding binding;
     private LaanoViewModel viewModel;
 
     @Override
     protected void onStart() {
-        Log.i(TAG, "onStart()");
+
         if (Settings.GLOBAL_CLIPBOARD_MONITOR_ON_START) {
             // NOTE: application context
             startClipboardService();
@@ -112,34 +116,23 @@ public class LaanoActivity extends AppCompatActivity implements
 
     @Override
     protected void onResume() {
-        Log.i(TAG, "onResume()");
         super.onResume();
 
         notifyTabSelected(activeTab);
         laanoUiManager.updateTitle(activeTab);
-
-        IntentFilter syncIntentFilter = new IntentFilter();
-        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC);
-        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_LINKS);
-        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_FAVORITES);
-        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_NOTES);
-        syncBroadcastReceiver = new SyncBroadcastReceiver();
+        registerReceiver(connectivityBroadcastReceiver, connectivityIntentFilter);
         registerReceiver(syncBroadcastReceiver, syncIntentFilter);
     }
 
     @Override
     protected void onPause() {
-        Log.i(TAG, "onPause()");
-        if (syncBroadcastReceiver != null) {
-            unregisterReceiver(syncBroadcastReceiver);
-            syncBroadcastReceiver = null;
-        }
+        unregisterReceiver(syncBroadcastReceiver);
+        unregisterReceiver(connectivityBroadcastReceiver);
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
-        Log.i(TAG, "onDestroy()");
         if (!isChangingConfigurations()) {
             stopClipboardService();
         }
@@ -148,7 +141,6 @@ public class LaanoActivity extends AppCompatActivity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
         if (savedInstanceState == null) {
             applyInstanceState(getDefaultInstanceState());
@@ -199,6 +191,17 @@ public class LaanoActivity extends AppCompatActivity implements
         favoritesPresenter.updateTabNormalState();
         notesPresenter.updateTabNormalState();
         updateDefaultAccount();
+        // Connectivity receiver
+        connectivityIntentFilter = new IntentFilter();
+        connectivityIntentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        connectivityBroadcastReceiver = new ConnectivityBroadcastReceiver();
+        // Sync receiver
+        syncIntentFilter = new IntentFilter();
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_LINKS);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_FAVORITES);
+        syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_NOTES);
+        syncBroadcastReceiver = new SyncBroadcastReceiver();
     }
 
     private void startClipboardService() {
@@ -298,12 +301,17 @@ public class LaanoActivity extends AppCompatActivity implements
     public void checkGetAccountsPermissionAndLaunchActivity() {
         if (ActivityCompat.checkSelfPermission(this, PERMISSION_GET_ACCOUNTS)
                 != PackageManager.PERMISSION_GRANTED) {
-            requestGetAccountsPermission();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestGetAccountsPermission();
+            } else {
+                showPermissionDeniedSnackbar();
+            }
         } else {
             startManageAccountsActivity();
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void requestGetAccountsPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, PERMISSION_GET_ACCOUNTS)) {
             Snackbar.make(binding.laanoViewPager,
@@ -363,7 +371,15 @@ public class LaanoActivity extends AppCompatActivity implements
         }
     }
 
-    // Broadcast Receiver
+    // Broadcast Receivers
+
+    private class ConnectivityBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            settings.setOnline(CloudUtils.isApplicationConnected(context));
+        }
+    }
 
     private class SyncBroadcastReceiver extends BroadcastReceiver {
 
@@ -371,7 +387,7 @@ public class LaanoActivity extends AppCompatActivity implements
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             int status = intent.getIntExtra(SyncNotifications.EXTRA_STATUS, -1);
-            String id = intent.getStringExtra(SyncNotifications.EXTRA_ID);
+            //String id = intent.getStringExtra(SyncNotifications.EXTRA_ID);
 
             if (action.equals(SyncNotifications.ACTION_SYNC)) {
                 switch (status) {
@@ -533,7 +549,7 @@ public class LaanoActivity extends AppCompatActivity implements
                             checkGetAccountsPermissionAndLaunchActivity();
                             break;
                         case R.id.sync_menu_item:
-                            if (!CloudUtils.isApplicationConnected(this)) {
+                            if (!settings.isOnline()) {
                                 showApplicationOfflineSnackbar();
                             } else {
                                 triggerSync();
@@ -639,10 +655,5 @@ public class LaanoActivity extends AppCompatActivity implements
         LaanoFragmentPagerAdapter adapter = (LaanoFragmentPagerAdapter) viewPager.getAdapter();
 
         return adapter.getFragment(position);
-    }
-
-    @VisibleForTesting
-    public IdlingResource getCountingIdlingResource() {
-        return EspressoIdlingResource.getIdlingResource();
     }
 }

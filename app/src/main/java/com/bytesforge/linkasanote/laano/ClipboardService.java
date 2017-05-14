@@ -6,7 +6,6 @@ import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
@@ -59,7 +58,6 @@ public class ClipboardService extends Service {
     @Inject
     BaseSchedulerProvider schedulerProvider;
 
-    private Resources resources;
     private ClipboardService.Callback callback;
     private CompositeDisposable compositeDisposable;
     private ClipboardManager clipboardManager;
@@ -107,7 +105,6 @@ public class ClipboardService extends Service {
 
         LaanoApplication application = (LaanoApplication) getApplication();
         application.getApplicationComponent().inject(this);
-        resources = getResources();
         compositeDisposable = new CompositeDisposable();
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         clipboardManager.addPrimaryClipChangedListener(primaryClipChangedListener);

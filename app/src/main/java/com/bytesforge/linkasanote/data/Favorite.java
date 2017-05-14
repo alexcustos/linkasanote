@@ -316,13 +316,13 @@ public final class Favorite implements Comparable<Favorite>, Item {
         return name.compareTo(objName);
     }
 
-    public static ItemFactory<Favorite> getFactory() {
-        return new ItemFactory<Favorite>() {
+    @Override
+    public String toString() {
+        return getId();
+    }
 
-            @Override
-            public Favorite build(Favorite item, List<Tag> tags, List<Note> notes) {
-                throw new RuntimeException("Favorite factory has no implementation of this method");
-            }
+    public static FavoriteFactory<Favorite> getFactory() {
+        return new FavoriteFactory<Favorite>() {
 
             @Override
             public Favorite build(Favorite item, List<Tag> tags) {

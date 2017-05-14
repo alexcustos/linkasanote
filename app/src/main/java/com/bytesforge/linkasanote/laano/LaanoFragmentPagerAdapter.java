@@ -1,13 +1,19 @@
 package com.bytesforge.linkasanote.laano;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -35,6 +41,7 @@ public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
     public static final int STATE_PROBLEM = 2;
 
     private final Context context;
+    private final Resources resources;
     private final LayoutInflater inflater;
     private SparseArray<BaseItemFragment> tabFragments = new SparseArray<>();
     private SparseIntArray tabStates = new SparseIntArray();
@@ -43,6 +50,7 @@ public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
         super(fm);
         this.context = checkNotNull(context);
         inflater = LayoutInflater.from(context);
+        resources = context.getResources();
     }
 
     @Override
@@ -86,7 +94,6 @@ public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int position) {
-        Resources resources = context.getResources();
         switch (position) {
             case LINKS_TAB:
                 return resources.getString(R.string.laano_tab_links_title);
@@ -123,15 +130,30 @@ public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
     }
 
     public synchronized void updateTab(@NonNull TabLayout.Tab tab, int position, int state) {
+        checkNotNull(tab);
         View tabView = tab.getCustomView();
         if (tabStates.get(position) == state && tabView != null) return;
 
+        TextView tabTitle;
         if (tabView == null) {
             tabView = inflater.inflate(R.layout.tab_laano, (ViewGroup) null);
             tab.setCustomView(tabView);
         }
-        TextView tabTitle = (TextView) tabView.findViewById(android.R.id.text1);
-        tabTitle.setCompoundDrawablesWithIntrinsicBounds(getPageIcon(position, state), 0, 0, 0);
+        tabTitle = (TextView) tabView.findViewById(android.R.id.text1);
+        @DrawableRes int pageIconId = getPageIcon(position, state);
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            tabTitle.setCompoundDrawablesWithIntrinsicBounds(pageIconId, 0, 0, 0);
+        } else {
+            ColorStateList colors = ContextCompat.getColorStateList(
+                    context, R.color.tab_icon_tint);
+            Drawable drawable = VectorDrawableCompat.create(
+                    resources, pageIconId, context.getTheme());
+            if (drawable != null) {
+                Drawable drawableCompat = DrawableCompat.wrap(drawable);
+                DrawableCompat.setTintList(drawableCompat, colors);
+                tabTitle.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
+            }
+        }
         tabStates.put(position, state);
     }
 

@@ -11,6 +11,7 @@ public interface LocalItem<T> {
 
     Observable<T> getAll();
     Observable<T> getActive();
+    Observable<T> getActive(String[] linkIds);
     Observable<T> getUnsynced();
     Observable<T> get(final Uri uri);
     Observable<T> get(

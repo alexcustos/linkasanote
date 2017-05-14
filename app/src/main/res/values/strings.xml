@@ -14,7 +14,6 @@
     <string name="toast_sync_conflict">Sync conflict</string>
     <string name="toast_sync_success">Synced</string>
     <string name="toast_sync_unsynced">Still not synced</string>
-    <string name="drawer_header_title">LaaNo</string>
     <string name="drawer_actions_settings">Settings</string>
     <string name="drawer_actions_about">About</string>
     <string name="drawer_actions_add_account">Add account</string>
@@ -120,7 +119,7 @@
     <string name="add_edit_favorite_tags_validation_error">Only alphanumeric and space is allowed here, comma is used as the separator</string>
     <string name="add_edit_favorite_new_button_title">Create</string>
     <string name="add_edit_favorite_edit_button_title">Update</string>
-    <string name="add_edit_favorite_warning_empty">The favorite\'s Name and least one Tag must be specified</string>
+    <string name="add_edit_favorite_warning_empty">The favorite\'s Name and at least one Tag must be specified</string>
     <string name="add_edit_favorite_warning_not_existed">Requested Favorite has not already existed</string>
     <string name="add_edit_favorite_error_name_duplicated">Favorite with the same name already exists</string>
     <string name="action_bar_title_manage_accounts">Manage accounts</string>
@@ -143,7 +142,6 @@
     <string name="sync_adapter_title_failed_cloud">check cloud</string>
     <string name="sync_adapter_text_failed_cloud">Cannot access to cloud storage, please check if it works</string>
     <string name="sync_adapter_text_failed">Problem on the cloud storage with:</string>
-    <string name="tab_laano_icon_description_sync">Synchronization is in progress</string>
     <string name="laano_actionbar_manager_sync_title">Up: %1$d / dl: %2$d</string>
     <string name="toolbar_favorites_item_filter">Favorite filter</string>
     <string name="toolbar_favorites_search">Search</string>
@@ -164,7 +162,7 @@
     <string name="dialog_favorite_cloud_error">There was an error while synchronizing</string>
     <string name="dialog_favorite_save_success">Favorite has been saved</string>
     <string name="dialog_favorite_delete_success">Selected Favorite have been deleted</string>
-    <string name="drawer_header_status_icon_description">The status of the last synchronization</string>
+    <string name="drawer_header_status_icon_description">Status of the last synchronization</string>
     <string name="drawer_header_last_synced_label">Last synced:</string>
     <string name="drawer_header_last_synced_never">never</string>
     <string name="drawer_header_status_synced">Synced</string>
@@ -210,8 +208,8 @@
     <string name="action_mode_links_select_all">Check/Uncheck all Links</string>
     <string name="laano_links_action_mode_selected">%1$d of %2$d selected</string>
     <string name="toolbar_links_item_action_mode">Switch to edit mode</string>
-    <string name="toolbar_links_item_expand_all">Show all Notes</string>
-    <string name="toolbar_links_item_collapse_all">Hide all Notes</string>
+    <string name="toolbar_links_item_expand_all">Expand all Notes</string>
+    <string name="toolbar_links_item_collapse_all">Collapse all Notes</string>
     <string name="toolbar_links_item_filter">Link filter</string>
     <string name="toolbar_links_search">Search</string>
     <string name="toolbar_link_item_paste">Fill in form</string>
@@ -235,7 +233,9 @@
     <string name="dialog_link_open_error">Unable to open Link</string>
     <string name="card_button_add_note">Add Note</string>
     <string name="card_button_expand_notes_description">Expand Notes</string>
-    <string name="card_button_collapse_notes_description">Expand Notes</string>
+    <string name="card_button_collapse_notes_description">Collapse Notes</string>
+    <string name="card_button_expand_note_description">Expand Note</string>
+    <string name="card_button_collapse_note_description">Collapse Note</string>
 
     <string name="actionbar_title_new_note">New Note (%s)</string>
     <string name="actionbar_title_edit_note">Edit Note (%s)</string>
@@ -261,8 +261,8 @@
     <string name="action_mode_notes_select_all">Check/Uncheck all Notes</string>
     <string name="laano_notes_action_mode_selected">%1$d of %2$d selected</string>
     <string name="toolbar_notes_item_mode_action">Switch to Edit mode</string>
-    <string name="toolbar_notes_item_expand_all">Show all Notes</string>
-    <string name="toolbar_notes_item_collapse_all">Hide all Notes</string>
+    <string name="toolbar_notes_item_expand_all">Expand all Notes</string>
+    <string name="toolbar_notes_item_collapse_all">Collapse all Notes</string>
     <string name="toolbar_notes_item_filter">Note filter</string>
     <string name="toolbar_notes_item_mode_normal">Switch to Normal mode</string>
     <string name="toolbar_notes_item_mode_reading">Switch to Reading mode</string>
@@ -274,11 +274,15 @@
     <string name="dialog_note_conflict_state_no_conflict">no conflict</string>
     <string name="dialog_note_conflict_state_deleted">deleted</string>
     <string name="dialog_note_conflict_state_updated">updated</string>
+    <string name="dialog_note_conflict_state_orphaned">orphaned</string>
     <string name="dialog_note_conflict_state_not_found">not found</string>
     <string name="dialog_note_conflict_state_error">error</string>
     <string name="dialog_note_conflict_status_error_download">There was an error while downloading.</string>
     <string name="dialog_note_conflict_resolved_error">There was an error while trying to resolve the conflict</string>
     <string name="dialog_note_conflict_resolved_success">Conflict is successfully resolved</string>
+    <string name="dialog_note_conflict_info_unbound">Unbound</string>
+    <string name="dialog_note_conflict_info_bound">Bound: %s</string>
+    <string name="dialog_note_conflict_info_orphaned">ID: %s</string>
     <string name="dialog_note_conflicted_error">Conflict has been found while synchronizing</string>
     <string name="dialog_note_cloud_error">There was an error while synchronizing</string>
     <string name="dialog_note_save_success">Note has been saved</string>

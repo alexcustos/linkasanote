@@ -6,7 +6,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.res.Resources;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -51,7 +50,6 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
     public static final String ARGUMENT_FAVORITE_ID = "FAVORITE_ID";
 
     private Context context;
-    private Resources resources;
     private AddEditFavoriteContract.Presenter presenter;
     private AddEditFavoriteContract.ViewModel viewModel;
     private FragmentAddEditFavoriteBinding binding;
@@ -129,7 +127,6 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = getActivity();
-        resources = context.getResources();
         setHasOptionsMenu(true);
     }
 
@@ -280,8 +277,8 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
                 StringBuilder filteredStringBuilder = new StringBuilder();
                 for (int i = start; i < end; i++) {
                     char currentChar = source.charAt(i);
-                    boolean isSpaceChar = Character.isSpaceChar(currentChar);
-                    if (Character.isLetterOrDigit(currentChar) || isSpaceChar) {
+                    boolean spaceChar = Character.isSpaceChar(currentChar);
+                    if (Character.isLetterOrDigit(currentChar) || spaceChar) {
                         filteredStringBuilder.append(currentChar);
                         binding.favoriteTagsLayout.setError(null);
                     } else {

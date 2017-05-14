@@ -40,7 +40,9 @@
                     android:id="@+id/tab_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    style="@style/Laano.TabLayout" />
+                    style="@style/Laano.TabLayout"
+                    app:tabMode="fixed"
+                    app:tabGravity="fill" />
             </android.support.design.widget.AppBarLayout>
 
             <android.support.v4.widget.NestedScrollView
@@ -61,7 +63,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/fab_margin"
                 android:layout_gravity="end|bottom"
-                android:src="@drawable/ic_add"
+                app:srcCompat="@drawable/ic_add"
                 app:fabSize="normal" />
         </android.support.design.widget.CoordinatorLayout>
 

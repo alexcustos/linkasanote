@@ -163,11 +163,12 @@ public final class FavoritesConflictResolutionPresenter implements
     @Override
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
-        viewModel.showProgressOverlay();
         if (viewModel.isStateDuplicated()) {
+            viewModel.showProgressOverlay();
             localFavorites.getMain(viewModel.getLocalName())
                     .subscribeOn(schedulerProvider.computation()) // local
                     .observeOn(schedulerProvider.ui())
+                    .doFinally(viewModel::hideProgressOverlay)
                     .subscribe(
                             favorite -> replaceFavorite(favorite.getId(), favoriteId),
                             throwable -> view.cancelActivity());
@@ -202,9 +203,11 @@ public final class FavoritesConflictResolutionPresenter implements
 
     private void deleteFavorite(@NonNull final String favoriteId) {
         checkNotNull(favoriteId);
+        viewModel.showProgressOverlay();
         deleteFavoriteSingle(favoriteId)
                 .subscribeOn(schedulerProvider.io())
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         view.finishActivity();
@@ -228,7 +231,7 @@ public final class FavoritesConflictResolutionPresenter implements
                 })
                 .doOnSuccess(success -> {
                     if (success) {
-                        repository.deleteCachedFavorite(favoriteId);
+                        repository.removeCachedFavorite(favoriteId);
                         settings.resetFavoriteFilter(favoriteId);
                     }
                 });
@@ -237,7 +240,6 @@ public final class FavoritesConflictResolutionPresenter implements
     @Override
     public void onCloudDeleteClick() {
         viewModel.deactivateButtons();
-        viewModel.showProgressOverlay();
         deleteFavorite(favoriteId);
     }
 
@@ -264,6 +266,7 @@ public final class FavoritesConflictResolutionPresenter implements
                     return success;
                 })
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshFavorites();
@@ -282,6 +285,7 @@ public final class FavoritesConflictResolutionPresenter implements
                 .subscribeOn(schedulerProvider.io())
                 .map(favorite -> localFavorites.save(favorite).blockingGet())
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshFavorites();

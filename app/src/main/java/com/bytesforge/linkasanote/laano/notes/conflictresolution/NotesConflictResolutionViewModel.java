@@ -24,6 +24,7 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
 
     private static final String STATE_LOCAL_STATE = "LOCAL_STATE";
     private static final String STATE_LOCAL_STATUS = "LOCAL_STATUS";
+    private static final String STATE_LOCAL_INFO = "LOCAL_INFO";
     private static final String STATE_LOCAL_NOTE = "LOCAL_NOTE";
     private static final String STATE_LOCAL_TAGS = "LOCAL_TAGS";
     private static final String STATE_LOCAL_DELETE_BUTTON = "LOCAL_DELETE_BUTTON";
@@ -31,6 +32,7 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
 
     private static final String STATE_CLOUD_STATE = "CLOUD_STATE";
     private static final String STATE_CLOUD_STATUS = "CLOUD_STATUS";
+    private static final String STATE_CLOUD_INFO = "CLOUD_INFO";
     private static final String STATE_CLOUD_NOTE = "CLOUD_NOTE";
     private static final String STATE_CLOUD_TAGS = "CLOUD_TAGS";
     private static final String STATE_CLOUD_DELETE_BUTTON = "CLOUD_DELETE_BUTTON";
@@ -42,12 +44,14 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
 
     public final ObservableField<String> localState = new ObservableField<>();
     public final ObservableField<String> localStatus = new ObservableField<>();
+    public final ObservableField<String> localInfo = new ObservableField<>();
     public final ObservableField<String> localNote = new ObservableField<>();
     public final ObservableBoolean localDeleteButton = new ObservableBoolean();
     public final ObservableBoolean localUploadButton = new ObservableBoolean();
 
     public final ObservableField<String> cloudState = new ObservableField<>();
     public final ObservableField<String> cloudStatus = new ObservableField<>();
+    public final ObservableField<String> cloudInfo = new ObservableField<>();
     public final ObservableField<String> cloudNote = new ObservableField<>();
     public final ObservableBoolean cloudDeleteButton = new ObservableBoolean();
     public final ObservableBoolean cloudDownloadButton = new ObservableBoolean();
@@ -56,7 +60,6 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
     public final ObservableBoolean buttonsActive = new ObservableBoolean();
 
     private final Resources resources;
-    private NotesConflictResolutionContract.Presenter presenter;
 
     public NotesConflictResolutionViewModel(Context context) {
         resources = context.getResources();
@@ -83,9 +86,9 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
     @Override
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
-
         outState.putString(STATE_LOCAL_STATE, localState.get());
         outState.putString(STATE_LOCAL_STATUS, localStatus.get());
+        outState.putString(STATE_LOCAL_INFO, localInfo.get());
         outState.putString(STATE_LOCAL_NOTE, localNote.get());
         outState.putParcelableArrayList(STATE_LOCAL_TAGS, localTags);
         outState.putBoolean(STATE_LOCAL_DELETE_BUTTON, localDeleteButton.get());
@@ -93,6 +96,7 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
 
         outState.putString(STATE_CLOUD_STATE, cloudState.get());
         outState.putString(STATE_CLOUD_STATUS, cloudStatus.get());
+        outState.putString(STATE_CLOUD_INFO, cloudInfo.get());
         outState.putString(STATE_CLOUD_NOTE, cloudNote.get());
         outState.putParcelableArrayList(STATE_CLOUD_TAGS, cloudTags);
         outState.putBoolean(STATE_CLOUD_DELETE_BUTTON, cloudDeleteButton.get());
@@ -106,9 +110,9 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
     @Override
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
-
         localState.set(state.getString(STATE_LOCAL_STATE));
         localStatus.set(state.getString(STATE_LOCAL_STATUS));
+        localInfo.set(state.getString(STATE_LOCAL_INFO));
         localNote.set(state.getString(STATE_LOCAL_NOTE));
         localTags = state.getParcelableArrayList(STATE_LOCAL_TAGS);
         localDeleteButton.set(state.getBoolean(STATE_LOCAL_DELETE_BUTTON));
@@ -116,6 +120,7 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
 
         cloudState.set(state.getString(STATE_CLOUD_STATE));
         cloudStatus.set(state.getString(STATE_CLOUD_STATUS));
+        cloudInfo.set(state.getString(STATE_CLOUD_INFO));
         cloudNote.set(state.getString(STATE_CLOUD_NOTE));
         cloudTags = state.getParcelableArrayList(STATE_CLOUD_TAGS);
         cloudDeleteButton.set(state.getBoolean(STATE_CLOUD_DELETE_BUTTON));
@@ -133,6 +138,7 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
 
         defaultState.putString(STATE_LOCAL_STATE, null);
         defaultState.putString(STATE_LOCAL_STATUS, resources.getString(R.string.status_loading));
+        defaultState.putString(STATE_LOCAL_INFO, null);
         defaultState.putString(STATE_LOCAL_NOTE, null);
         defaultState.putParcelableArrayList(STATE_LOCAL_TAGS, null);
         defaultState.putBoolean(STATE_LOCAL_DELETE_BUTTON, false);
@@ -140,6 +146,7 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
 
         defaultState.putString(STATE_CLOUD_STATE, null);
         defaultState.putString(STATE_CLOUD_STATUS, resources.getString(R.string.status_loading));
+        defaultState.putString(STATE_CLOUD_INFO, null);
         defaultState.putString(STATE_CLOUD_NOTE, null);
         defaultState.putParcelableArrayList(STATE_CLOUD_TAGS, null);
         defaultState.putBoolean(STATE_CLOUD_DELETE_BUTTON, false);
@@ -154,7 +161,6 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
 
     @Override
     public void setPresenter(@NonNull NotesConflictResolutionContract.Presenter presenter) {
-        this.presenter = checkNotNull(presenter);
     }
 
     @Override
@@ -176,6 +182,12 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
             localState.set(resources.getString(R.string.dialog_note_conflict_state_no_conflict));
             localDeleteButton.set(true);
         }
+        String linkId = note.getLinkId();
+        if (linkId == null) {
+            localInfo.set(resources.getString(R.string.dialog_note_conflict_info_unbound));
+        } else {
+            localInfo.set(resources.getString(R.string.dialog_note_conflict_info_bound, linkId));
+        }
         localNote.set(note.getNote());
         localTags = (ArrayList<Tag>) note.getTags();
         localStatus.set(null);
@@ -188,15 +200,27 @@ public class NotesConflictResolutionViewModel extends BaseObservable implements
     }
 
     @Override
-    public void populateCloudNote(@NonNull Note note) {
+    public void populateCloudNote(@NonNull Note note, boolean orphaned) {
         checkNotNull(note);
         cloudRetryButton.set(false);
         cloudDeleteButton.set(false);
         cloudDownloadButton.set(false);
         activateButtons();
 
-        cloudState.set(resources.getString(R.string.dialog_note_conflict_state_updated));
-        cloudDownloadButton.set(true);
+        String linkId = note.getLinkId();
+        if (orphaned) {
+            cloudState.set(resources.getString(R.string.dialog_note_conflict_state_orphaned));
+            cloudInfo.set(resources.getString(R.string.dialog_note_conflict_info_orphaned, linkId));
+            cloudDeleteButton.set(true);
+        } else {
+            cloudState.set(resources.getString(R.string.dialog_note_conflict_state_updated));
+            if (linkId == null) {
+                cloudInfo.set(resources.getString(R.string.dialog_note_conflict_info_unbound));
+            } else {
+                cloudInfo.set(resources.getString(R.string.dialog_note_conflict_info_bound, linkId));
+            }
+            cloudDownloadButton.set(true);
+        }
         cloudNote.set(note.getNote());
         cloudTags = (ArrayList<Tag>) note.getTags();
         cloudStatus.set(null);

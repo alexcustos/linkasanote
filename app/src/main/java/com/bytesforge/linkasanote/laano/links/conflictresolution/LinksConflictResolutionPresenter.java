@@ -110,8 +110,9 @@ public final class LinksConflictResolutionPresenter implements
                     }
                 }, throwable -> {
                     if (throwable instanceof NoSuchElementException) {
-                        repository.refreshLinks(); // NOTE: maybe there is a problem with cache
-                        view.finishActivity(); // NOTE: no item, no problem
+                        // NOTE: maybe there is a problem with cache
+                        repository.refreshLinks();
+                        view.finishActivity(); // no item, no problem
                     } else {
                         viewModel.showDatabaseError();
                         loadCloudLink();
@@ -171,11 +172,12 @@ public final class LinksConflictResolutionPresenter implements
     @Override
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
-        viewModel.showProgressOverlay();
         if (viewModel.isStateDuplicated()) {
+            viewModel.showProgressOverlay();
             localLinks.getMain(viewModel.getLocalLink())
                     .subscribeOn(schedulerProvider.computation()) // local
                     .observeOn(schedulerProvider.ui())
+                    .doFinally(viewModel::hideProgressOverlay)
                     .subscribe(
                             link -> replaceLink(link.getId(), linkId),
                             throwable -> view.cancelActivity());
@@ -209,9 +211,12 @@ public final class LinksConflictResolutionPresenter implements
     }
 
     private void deleteLink(@NonNull final String linkId) {
+        checkNotNull(linkId);
+        viewModel.showProgressOverlay();
         deleteLinkSingle(checkNotNull(linkId))
                 .subscribeOn(schedulerProvider.io())
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         view.finishActivity();
@@ -250,7 +255,7 @@ public final class LinksConflictResolutionPresenter implements
                 })
                 .doOnSuccess(success -> {
                     if (success) {
-                        repository.deleteCachedLink(linkId);
+                        repository.removeCachedLink(linkId);
                         settings.resetLinkFilter(linkId);
                     }
                 });
@@ -271,7 +276,7 @@ public final class LinksConflictResolutionPresenter implements
                 })
                 .doOnSuccess(success -> {
                     if (success) {
-                        repository.deleteCachedNote(noteId);
+                        repository.removeCachedNote(noteId);
                         settings.resetNoteFilter(noteId);
                     }
                 });
@@ -280,7 +285,6 @@ public final class LinksConflictResolutionPresenter implements
     @Override
     public void onCloudDeleteClick() {
         viewModel.deactivateButtons();
-        viewModel.showProgressOverlay();
         deleteLink(linkId);
     }
 
@@ -307,6 +311,7 @@ public final class LinksConflictResolutionPresenter implements
                     return success;
                 })
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshLinks();
@@ -325,6 +330,7 @@ public final class LinksConflictResolutionPresenter implements
                 .subscribeOn(schedulerProvider.io())
                 .map(link -> localLinks.save(link).blockingGet())
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshLinks();

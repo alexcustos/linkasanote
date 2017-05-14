@@ -197,28 +197,27 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         switch (requestCode) {
             case REQUEST_ADD_FAVORITE:
                 if (resultCode == Activity.RESULT_OK) {
+                    presenter.loadFavorites(false);
                     //viewModel.showSaveSuccessSnackbar();
                     String favoriteId = data.getStringExtra(AddEditFavoriteFragment.ARGUMENT_FAVORITE_ID);
                     presenter.syncSavedFavorite(favoriteId);
-                    adapter.notifyDataSetChanged();
                 }
                 break;
             case REQUEST_EDIT_FAVORITE:
                 if (resultCode == Activity.RESULT_OK) {
+                    presenter.loadFavorites(false);
                     //viewModel.showSaveSuccessSnackbar();
                     String favoriteId = data.getStringExtra(AddEditFavoriteFragment.ARGUMENT_FAVORITE_ID);
                     presenter.syncSavedFavorite(favoriteId);
-                    adapter.notifyDataSetChanged();
                 }
                 break;
             case REQUEST_FAVORITE_CONFLICT_RESOLUTION:
-                adapter.notifyDataSetChanged();
                 presenter.updateTabNormalState();
                 // NOTE: force reload because of conflict resolution is a dialog
                 presenter.loadFavorites(false);
                 if (resultCode == FavoritesConflictResolutionDialog.RESULT_OK) {
                     presenter.updateSyncStatus();
-                    viewModel.showConflictResolutionSuccessfulSnackbar();
+                    //viewModel.showConflictResolutionSuccessfulSnackbar();
                 } else if (resultCode == FavoritesConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
                 }
@@ -354,7 +353,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     @Override
     public void removeFavorite(@NonNull String favoriteId) {
         viewModel.removeSelection(favoriteId);
-        int position = adapter.removeItem(favoriteId);
+        adapter.removeItem(favoriteId);
         selectionChanged(favoriteId);
         viewModel.setListSize(adapter.getItemCount());
     }

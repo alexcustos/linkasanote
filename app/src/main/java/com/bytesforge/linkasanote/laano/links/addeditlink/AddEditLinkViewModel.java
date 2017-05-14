@@ -44,7 +44,8 @@ public class AddEditLinkViewModel extends BaseObservable implements
     private Context context;
     private AddEditLinkContract.Presenter presenter;
 
-    public enum SnackbarId {DATABASE_ERROR, LINK_EMPTY, LINK_NOT_FOUND};
+    public enum SnackbarId {
+        DATABASE_ERROR, LINK_EMPTY, LINK_NOT_FOUND}
 
     @Bindable
     public SnackbarId snackbarId;

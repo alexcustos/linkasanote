@@ -7,6 +7,7 @@ import android.databinding.BindingAdapter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.widget.FrameLayout;
 
 import com.bytesforge.linkasanote.BR;
@@ -42,7 +43,7 @@ public class LinksViewModel extends BaseItemViewModel implements LinksContract.V
         DATABASE_ERROR,
         CONFLICT_RESOLUTION_SUCCESSFUL, CONFLICT_RESOLUTION_ERROR,
         OPEN_LINK_ERROR,
-        CONFLICTED_ERROR, CLOUD_ERROR, SAVE_SUCCESS, DELETE_EXTRA_ERROR, DELETE_SUCCESS};
+        CONFLICTED_ERROR, CLOUD_ERROR, SAVE_SUCCESS, DELETE_EXTRA_ERROR, DELETE_SUCCESS}
 
     public LinksViewModel(@NonNull Context context) {
         this.context = checkNotNull(context);
@@ -137,14 +138,22 @@ public class LinksViewModel extends BaseItemViewModel implements LinksContract.V
         return "(" + counter + ")";
     }
 
+    public String getToggleDescription(String linkId, boolean changed) {
+        if (isVisible(linkId)) {
+            return resources.getString(R.string.card_button_collapse_notes_description);
+        } else {
+            return resources.getString(R.string.card_button_expand_notes_description);
+        }
+    }
+
     public int getLinkBackground(String linkId, boolean conflicted, boolean changed) {
         if (conflicted) {
-            return resources.getColor(R.color.item_conflicted, context.getTheme());
+            return ContextCompat.getColor(context, R.color.item_conflicted);
         }
         if (isSelected(linkId) && !isActionMode()) {
-            return resources.getColor(R.color.item_link_selected, context.getTheme());
+            return ContextCompat.getColor(context, R.color.item_link_selected);
         }
-        return resources.getColor(android.R.color.transparent, context.getTheme());
+        return ContextCompat.getColor(context, android.R.color.transparent);
     }
 
     // Link Visibility

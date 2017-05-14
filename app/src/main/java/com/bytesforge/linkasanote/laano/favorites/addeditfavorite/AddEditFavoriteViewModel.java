@@ -40,7 +40,8 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     private Context context;
     private AddEditFavoriteContract.Presenter presenter;
 
-    public enum SnackbarId {DATABASE_ERROR, FAVORITE_EMPTY, FAVORITE_NOT_FOUND};
+    public enum SnackbarId {
+        DATABASE_ERROR, FAVORITE_EMPTY, FAVORITE_NOT_FOUND}
 
     @Bindable
     public SnackbarId snackbarId;

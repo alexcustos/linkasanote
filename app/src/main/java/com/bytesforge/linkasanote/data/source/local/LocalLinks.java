@@ -8,12 +8,13 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Item;
-import com.bytesforge.linkasanote.data.ItemFactory;
+import com.bytesforge.linkasanote.data.LinkFactory;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.Provider;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
+import com.google.common.collect.ObjectArrays;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -33,12 +34,12 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
     private final ContentResolver contentResolver;
     private final LocalTags localTags;
     private final LocalNotes<Note> localNotes;
-    private final ItemFactory<T> factory;
+    private final LinkFactory<T> factory;
 
     public LocalLinks(
             @NonNull Context context, @NonNull ContentResolver contentResolver,
             @NonNull LocalTags localTags, @NonNull LocalNotes<Note> localNotes,
-            @NonNull ItemFactory<T> factory) {
+            @NonNull LinkFactory<T> factory) {
         this.context = checkNotNull(context);
         this.contentResolver = checkNotNull(contentResolver);
         this.localTags = checkNotNull(localTags);
@@ -66,11 +67,22 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
 
     @Override
     public Observable<T> getActive() {
-        final String selection = LocalContract.LinkEntry.COLUMN_NAME_DELETED + " = ?" +
+        return getActive(null);
+    }
+
+    @Override
+    public Observable<T> getActive(final String[] linkIds) {
+        String selection = LocalContract.LinkEntry.COLUMN_NAME_DELETED + " = ?" +
                 " OR " + LocalContract.LinkEntry.COLUMN_NAME_CONFLICTED + " = ?";
-        final String[] selectionArgs = {"0", "1"};
+        String[] selectionArgs = {"0", "1"};
         final String sortOrder = LocalContract.LinkEntry.COLUMN_NAME_CREATED + " DESC";
 
+        int size = linkIds == null ? 0 : linkIds.length;
+        if (size > 0) {
+            selection = " (" + selection + ") AND " + LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID +
+                    " IN (" + CommonUtils.strRepeat("?", size, ", ") + ")";
+            selectionArgs = ObjectArrays.concat(selectionArgs, linkIds, String.class);
+        }
         return get(LINK_URI, selection, selectionArgs, sortOrder);
     }
 

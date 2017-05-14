@@ -12,8 +12,8 @@
         <item name="windowActionModeOverlay">true</item>
         <item name="android:actionModeBackground">@color/color_primary</item>
 
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- v21 : <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>-->
     </style>
 
     <style name="Laano.NavHeader" parent="ThemeOverlay.AppCompat.Dark" />
@@ -30,11 +30,17 @@
         <item name="android:textColor">@color/tabs_text</item>
     </style>
 
+    <style name="Laano.Settings.CategoryTextAppearance">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/color_accent</item>
+        <item name="android:textStyle">normal</item>
+    </style>
     <style name="Laano.SettingsTheme" parent="PreferenceThemeOverlay.v14.Material">
         <item name="android:divider">@null</item>
         <item name="android:dividerHeight">0dp</item>
     </style>
-    <style name="Laano.Settings" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="Base.Laano.Settings" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="preferenceTheme">@style/Laano.SettingsTheme</item>
         <!-- NOTE: this fix breaks ListPreference since Support Library 25.0.1 -->
         <!--<item name="dialogLayout">@layout/settings_dialog_edittext</item>-->
@@ -42,6 +48,7 @@
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
         <item name="colorAccent">@color/color_accent</item>
     </style>
+    <style name="Laano.Settings" parent="Base.Laano.Settings" />
 
     <!-- Buttons -->
     <style name="Button" parent="Widget.AppCompat.Button" />

@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
-import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Inject;
@@ -49,17 +48,11 @@ public final class ManageAccountsPresenter implements ManageAccountsContract.Pre
     @Override
     public void loadAccountItems(final boolean showLoading) {
         // TODO: implement showLoading
-        EspressoIdlingResource.increment();
         disposable.clear();
 
         Disposable disposable = view.loadAccountItems()
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .doFinally(() -> {
-                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
-                        EspressoIdlingResource.decrement();
-                    }
-                })
                 .subscribe(
                         view::swapItems,
                         // NullPointerException

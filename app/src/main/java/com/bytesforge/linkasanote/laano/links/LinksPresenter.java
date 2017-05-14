@@ -20,7 +20,6 @@ import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CommonUtils;
-import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Strings;
 
@@ -114,7 +113,6 @@ public final class LinksPresenter extends BaseItemPresenter implements
     }
 
     private void loadLinks(boolean forceUpdate, final boolean showLoading) {
-        EspressoIdlingResource.increment();
         compositeDisposable.clear();
         if (forceUpdate) {
             repository.refreshLinks();
@@ -135,15 +133,20 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         laanoUiManager.setFilterType(TAB, filterType, favorite.getName());
                         return repository.getLinks();
                     }).doOnError(throwable -> {
-                        CommonUtils.logStackTrace(TAG, throwable);
                         if (throwable instanceof NoSuchElementException) {
                             setDefaultLinksFilterType();
                             favoriteFilter = null;
                             settings.setFavoriteFilter(null);
                         } else {
-                            viewModel.showDatabaseErrorSnackbar();
+                            CommonUtils.logStackTrace(TAG, throwable);
                         }
-                    }).onErrorResumeNext(repository.getLinks());
+                    }).onErrorResumeNext(throwable -> {
+                        if (throwable instanceof NoSuchElementException) {
+                            return repository.getLinks();
+                        } else {
+                            return Observable.empty();
+                        }
+                    });
         } else if (extendedFilter == FilterType.NOTE) {
             loadLinks = repository.getNote(noteFilter)
                     .toObservable()
@@ -153,15 +156,20 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         laanoUiManager.setFilterType(TAB, filterType, note.getNote());
                         return repository.getLinks();
                     }).doOnError(throwable -> {
-                        CommonUtils.logStackTrace(TAG, throwable);
                         if (throwable instanceof NoSuchElementException) {
                             setDefaultLinksFilterType();
                             noteFilter = null;
                             settings.setNoteFilter(null);
                         } else {
-                            viewModel.showDatabaseErrorSnackbar();
+                            CommonUtils.logStackTrace(TAG, throwable);
                         }
-                    }).onErrorResumeNext(repository.getLinks());
+                    }).onErrorResumeNext(throwable -> {
+                        if (throwable instanceof NoSuchElementException) {
+                            return repository.getLinks();
+                        } else {
+                            return Observable.empty();
+                        }
+                    });
         }
         if (loadLinks == null) {
             loadLinks = repository.getLinks();
@@ -212,9 +220,6 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 .toList()
                 .observeOn(schedulerProvider.ui())
                 .doFinally(() -> {
-                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
-                        EspressoIdlingResource.decrement();
-                    }
                     if (showLoading) {
                         viewModel.hideProgressOverlay();
                     }
@@ -363,6 +368,15 @@ public final class LinksPresenter extends BaseItemPresenter implements
 
     @Override
     public void syncSavedLink(@NonNull final String linkId) {
+        checkNotNull(linkId);
+        boolean sync = settings.isSyncable() && settings.isOnline();
+        if (!sync) {
+            if (settings.isSyncable()) {
+                settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
+                laanoUiManager.updateSyncStatus();
+            }
+            return;
+        }
         repository.syncSavedLink(linkId)
                 .subscribeOn(schedulerProvider.io())
                 .observeOn(schedulerProvider.ui())
@@ -371,6 +385,8 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     Log.d(TAG, "syncSavedLink() -> subscribe(): [" + itemState.name() + "]");
                     switch (itemState) {
                         case CONFLICTED:
+                            updateTabNormalState();
+                            loadLinks(false);
                             laanoUiManager.showLongToast(R.string.toast_sync_conflict);
                             break;
                         case ERROR_CLOUD:
@@ -378,6 +394,50 @@ public final class LinksPresenter extends BaseItemPresenter implements
                             laanoUiManager.showLongToast(R.string.toast_sync_error);
                             break;
                         case SAVED:
+                            updateTabNormalState();
+                            loadLinks(false);
+                            laanoUiManager.showShortToast(R.string.toast_sync_success);
+                            break;
+                    }
+                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+    }
+
+    @Override
+    public void syncSavedNote(@NonNull final String linkId, @NonNull final String noteId) {
+        checkNotNull(linkId);
+        checkNotNull(noteId);
+        // NOTE: repository do not control other Item's cache
+        repository.refreshLink(linkId); // saved
+        boolean sync = settings.isSyncable() && settings.isOnline();
+        if (!sync) {
+            if (settings.isSyncable()) {
+                settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
+                laanoUiManager.updateSyncStatus();
+            }
+            return;
+        }
+        repository.syncSavedNote(noteId)
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .doFinally(this::updateSyncStatus)
+                .subscribe(itemState -> {
+                    Log.d(TAG, "syncSavedNote() -> subscribe(): [" + itemState.name() + "]");
+                    switch (itemState) {
+                        case CONFLICTED:
+                            updateNotesTabNormalState();
+                            repository.refreshLink(linkId); // synced
+                            // NOTE: it is needless to force loadNotes, because conflicted state is practically impossible (UUID constraint)
+                            loadLinks(false);
+                            laanoUiManager.showLongToast(R.string.toast_sync_conflict);
+                            break;
+                        case ERROR_CLOUD:
+                            settings.setSyncStatus(SyncAdapter.SYNC_STATUS_ERROR);
+                            laanoUiManager.showLongToast(R.string.toast_sync_error);
+                            break;
+                        case SAVED:
+                            updateNotesTabNormalState();
+                            repository.refreshLink(linkId); // synced
+                            loadLinks(false);
                             laanoUiManager.showShortToast(R.string.toast_sync_success);
                             break;
                     }
@@ -388,10 +448,11 @@ public final class LinksPresenter extends BaseItemPresenter implements
     public void deleteLinks(
             @NonNull final ArrayList<String> selectedIds, final boolean deleteNotes) {
         checkNotNull(selectedIds);
+        boolean sync = settings.isSyncable() && settings.isOnline();
         Observable.fromIterable(selectedIds)
                 .flatMap(linkId -> {
                     Log.d(TAG, "deleteLinks(): [" + linkId + "]");
-                    return repository.deleteLink(linkId, settings.isSyncable(), deleteNotes)
+                    return repository.deleteLink(linkId, sync, deleteNotes)
                             .subscribeOn(schedulerProvider.io())
                             .observeOn(schedulerProvider.ui())
                             .doOnNext(itemState -> {
@@ -409,13 +470,20 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         || itemState == DataSource.ItemState.ERROR_CLOUD
                         || itemState == DataSource.ItemState.ERROR_EXTRA)
                 .toList()
-                .doFinally(this::updateSyncStatus)
+                .doFinally(() -> {
+                    if (sync) {
+                        this.updateSyncStatus();
+                    } else if (settings.isSyncable()) {
+                        settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
+                        laanoUiManager.updateSyncStatus();
+                    }
+                })
                 .subscribe(itemStates -> {
                     Log.d(TAG, "deleteLinks(): Completed [" + itemStates.toString() + "]");
                     if (itemStates.isEmpty()) {
                         // DELETED or DEFERRED if sync is disabled
                         //viewModel.showDeleteSuccessSnackbar();
-                        if (settings.isSyncable()) {
+                        if (sync) {
                             laanoUiManager.showShortToast(R.string.toast_sync_success);
                         }
                     } else if (itemStates.contains(DataSource.ItemState.CONFLICTED)) {
@@ -436,8 +504,11 @@ public final class LinksPresenter extends BaseItemPresenter implements
 
     @Override
     public void updateSyncStatus() {
-        if (settings.getSyncStatus() == SyncAdapter.SYNC_STATUS_ERROR) {
-            // NOTE: only SyncAdapter can reset this status
+        int status = settings.getSyncStatus();
+        if (status == SyncAdapter.SYNC_STATUS_ERROR
+                || status == SyncAdapter.SYNC_STATUS_UNSYNCED) {
+            // NOTE: only SyncAdapter can reset these statuses
+            laanoUiManager.updateSyncStatus();
             return;
         }
         repository.getSyncStatus()
@@ -474,25 +545,8 @@ public final class LinksPresenter extends BaseItemPresenter implements
         FilterType filterType = settings.getFilterType(SETTING_LINKS_FILTER_TYPE);
         String prevFavoriteFilter = this.favoriteFilter;
         this.favoriteFilter = settings.getFavoriteFilter();
-        // NOTE: there may be some concurrency who actually will reset the filter, but it OK
-        if (this.favoriteFilter != null) {
-            repository.getFavorite(this.favoriteFilter)
-                    .subscribeOn(schedulerProvider.computation())
-                    .subscribe(favorite -> { /* OK */ }, throwable -> {
-                        this.favoriteFilter = null;
-                        settings.setFavoriteFilter(null);
-                    });
-        }
         String prevNoteFilter = this.noteFilter;
         this.noteFilter = settings.getNoteFilter();
-        if (this.noteFilter != null) {
-            repository.getNote(this.noteFilter)
-                    .subscribeOn(schedulerProvider.computation())
-                    .subscribe(favorite -> { /* OK */ }, throwable -> {
-                        this.noteFilter = null;
-                        settings.setNoteFilter(null);
-                    });
-        }
         switch (filterType) {
             case ALL:
             case CONFLICTED:
@@ -559,6 +613,19 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 .observeOn(schedulerProvider.ui())
                 .subscribe(
                         conflicted -> laanoUiManager.setTabNormalState(TAB, conflicted),
+                        throwable -> {
+                            CommonUtils.logStackTrace(TAG, throwable);
+                            viewModel.showDatabaseErrorSnackbar();
+                        });
+    }
+
+    private void updateNotesTabNormalState() {
+        repository.isConflictedNotes()
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribe(
+                        conflicted -> laanoUiManager.setTabNormalState(
+                                LaanoFragmentPagerAdapter.NOTES_TAB, conflicted),
                         throwable -> {
                             CommonUtils.logStackTrace(TAG, throwable);
                             viewModel.showDatabaseErrorSnackbar();

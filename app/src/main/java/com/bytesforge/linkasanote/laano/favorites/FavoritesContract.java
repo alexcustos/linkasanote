@@ -63,6 +63,6 @@ public interface FavoritesContract {
         int getPosition(String favoriteId);
         void setFilterType(@NonNull FilterType filtering);
         void syncSavedFavorite(@NonNull final String favoriteId);
-        void deleteFavorites(ArrayList<String> selectedIds);
+        void deleteFavorites(@NonNull ArrayList<String> selectedIds);
     }
 }

@@ -48,7 +48,8 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     private final Context context;
     private NextcloudContract.Presenter presenter;
 
-    public enum SnackbarId {NORMALIZED_URL, SOMETHING_WRONG};
+    public enum SnackbarId {
+        NORMALIZED_URL, SOMETHING_WRONG}
 
     @Bindable
     public int serverStatusIcon = 0;
@@ -80,7 +81,6 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     @Override
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
-
         outState.putBoolean(STATE_SERVER_URL, serverUrl.get());
         outState.putString(STATE_SERVER_URL_TEXT, serverUrlText.get());
         outState.putBoolean(STATE_ACCOUNT_USERNAME, accountUsername.get());
@@ -97,7 +97,6 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     @Override
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
-
         serverUrl.set(state.getBoolean(STATE_SERVER_URL));
         serverUrlText.set(state.getString(STATE_SERVER_URL_TEXT));
         accountUsername.set(state.getBoolean(STATE_ACCOUNT_USERNAME));

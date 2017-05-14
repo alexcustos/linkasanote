@@ -25,6 +25,8 @@ import static java.lang.System.currentTimeMillis;
 
 public class Settings {
 
+    private static final String TAG = Settings.class.getSimpleName();
+
     public static final float GLOBAL_ICON_ALPHA_DISABLED = 0.4f;
     public static final float GLOBAL_PROGRESS_OVERLAY_ALPHA = 0.4f;
     public static final long GLOBAL_PROGRESS_OVERLAY_DURATION = 200; // ms
@@ -78,6 +80,7 @@ public class Settings {
     // Runtime settings
 
     private boolean syncable;
+    private boolean online;
 
     public void setSyncable(boolean syncable) {
         this.syncable = syncable;
@@ -85,6 +88,14 @@ public class Settings {
 
     public boolean isSyncable() {
         return syncable;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
+    }
+
+    public boolean isOnline() {
+        return online;
     }
 
     // Normal settings

@@ -55,7 +55,6 @@ public class LaanoViewModel extends BaseObservable {
     }
 
     public Bundle getDefaultInstanceState() {
-        Bundle defaultState = new Bundle();
-        return defaultState;
+        return new Bundle();
     }
 }

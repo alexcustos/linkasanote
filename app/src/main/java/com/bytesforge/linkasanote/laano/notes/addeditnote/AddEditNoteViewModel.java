@@ -47,7 +47,8 @@ public class AddEditNoteViewModel extends BaseObservable implements
     private Resources resources;
     private AddEditNoteContract.Presenter presenter;
 
-    public enum SnackbarId {DATABASE_ERROR, NOTE_EMPTY, NOTE_NOT_FOUND};
+    public enum SnackbarId {
+        DATABASE_ERROR, NOTE_EMPTY, NOTE_NOT_FOUND}
 
     @Bindable
     public SnackbarId snackbarId;
@@ -88,6 +89,8 @@ public class AddEditNoteViewModel extends BaseObservable implements
         linkStatus.set(null);
         linkName.set(null);
         linkLink.set(null);
+
+        notifyChange();
     }
 
     @Override

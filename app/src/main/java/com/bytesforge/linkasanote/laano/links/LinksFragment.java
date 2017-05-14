@@ -239,24 +239,21 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         switch (requestCode) {
             case REQUEST_ADD_LINK:
                 if (resultCode == Activity.RESULT_OK) {
+                    presenter.loadLinks(false);
                     //viewModel.showSaveSuccessSnackbar();
                     String linkId = data.getStringExtra(AddEditLinkFragment.ARGUMENT_LINK_ID);
                     presenter.syncSavedLink(linkId);
-                    adapter.notifyDataSetChanged();
                 }
                 break;
             case REQUEST_EDIT_LINK:
                 if (resultCode == Activity.RESULT_OK) {
+                    presenter.loadLinks(false);
                     //viewModel.showSaveSuccessSnackbar();
                     String linkId = data.getStringExtra(AddEditLinkFragment.ARGUMENT_LINK_ID);
                     presenter.syncSavedLink(linkId);
-                    // NOTE: the item position will not be changed, but one can be filtered in or out
-                    // OPTIMIZATION: replace the only invalidated items in the cache
-                    adapter.notifyDataSetChanged();
                 }
                 break;
             case REQUEST_LINK_CONFLICT_RESOLUTION:
-                adapter.notifyDataSetChanged();
                 presenter.updateTabNormalState();
                 // NOTE: force reload because of conflict resolution is a dialog
                 presenter.loadLinks(false);
@@ -269,9 +266,10 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
                 break;
             case REQUEST_ADD_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
+                    presenter.loadLinks(false);
                     String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
-                    adapter.notifyItemChanged(linkId);
-                    presenter.loadLinks(true);
+                    String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
+                    presenter.syncSavedNote(linkId, noteId);
                 }
                 break;
             default:
@@ -423,7 +421,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     @Override
     public void removeLink(@NonNull String linkId) {
         viewModel.removeSelection(linkId);
-        int position = adapter.removeItem(linkId);
+        adapter.removeItem(linkId);
         selectionChanged(linkId);
         viewModel.setListSize(adapter.getItemCount());
     }

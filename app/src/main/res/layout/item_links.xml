@@ -191,7 +191,7 @@
                     android:id="@+id/notes_toggle"
                     android:layout_width="48dp"
                     android:layout_height="56dp"
-                    android:contentDescription="@string/card_button_expand_notes_description"
+                    android:contentDescription="@{viewModel.getToggleDescription(link.id, viewModel.visibilityChanged)}"
                     android:paddingStart="@dimen/card_button_padding"
                     android:paddingEnd="@dimen/card_right_button_padding_end"
                     android:paddingTop="@dimen/card_button_padding_vertical"

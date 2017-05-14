@@ -372,20 +372,15 @@ public final class Link implements Comparable<Link>, Item {
 
     @Override
     public String toString() {
-        return getId() + "->" + getLink();
+        return getId();
     }
 
-    public static ItemFactory<Link> getFactory() {
-        return new ItemFactory<Link>() {
+    public static LinkFactory<Link> getFactory() {
+        return new LinkFactory<Link>() {
 
             @Override
             public Link build(Link item, List<Tag> tags, List<Note> notes) {
                 return new Link(item, tags, notes);
-            }
-
-            @Override
-            public Link build(Link item, List<Tag> tags) {
-                throw new RuntimeException("Link factory has no implementation of this method");
             }
 
             @Override

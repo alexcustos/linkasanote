@@ -17,7 +17,6 @@ import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CommonUtils;
-import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Strings;
 
@@ -105,7 +104,6 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     }
 
     private void loadFavorites(boolean forceUpdate, final boolean showLoading) {
-        EspressoIdlingResource.increment();
         compositeDisposable.clear();
         if (forceUpdate) {
             repository.refreshFavorites();
@@ -137,9 +135,6 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                 .toList()
                 .observeOn(schedulerProvider.ui())
                 .doFinally(() -> {
-                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
-                        EspressoIdlingResource.decrement();
-                    }
                     if (showLoading) {
                         viewModel.hideProgressOverlay();
                     }
@@ -267,6 +262,14 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
 
     @Override
     public void syncSavedFavorite(@NonNull final String favoriteId) {
+        boolean sync = settings.isSyncable() && settings.isOnline();
+        if (!sync) {
+            if (settings.isSyncable()) {
+                settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
+                laanoUiManager.updateSyncStatus();
+            }
+            return;
+        }
         repository.syncSavedFavorite(favoriteId)
                 .subscribeOn(schedulerProvider.io())
                 .observeOn(schedulerProvider.ui())
@@ -275,6 +278,8 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     Log.d(TAG, "syncSavedFavorite() -> subscribe(): [" + itemState.name() + "]");
                     switch (itemState) {
                         case CONFLICTED:
+                            updateTabNormalState();
+                            loadFavorites(false);
                             laanoUiManager.showLongToast(R.string.toast_sync_conflict);
                             break;
                         case ERROR_CLOUD:
@@ -282,6 +287,8 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                             laanoUiManager.showLongToast(R.string.toast_sync_error);
                             break;
                         case SAVED:
+                            updateTabNormalState();
+                            loadFavorites(false);
                             laanoUiManager.showShortToast(R.string.toast_sync_success);
                             break;
                     }
@@ -289,11 +296,13 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     }
 
     @Override
-    public void deleteFavorites(ArrayList<String> selectedIds) {
+    public void deleteFavorites(@NonNull ArrayList<String> selectedIds) {
+        checkNotNull(selectedIds);
+        boolean sync = settings.isSyncable() && settings.isOnline();
         Observable.fromIterable(selectedIds)
                 .flatMap(favoriteId -> {
                     Log.d(TAG, "deleteFavorites(): [" + favoriteId + "]");
-                    return repository.deleteFavorite(favoriteId, settings.isSyncable())
+                    return repository.deleteFavorite(favoriteId, sync)
                             .subscribeOn(schedulerProvider.io())
                             .observeOn(schedulerProvider.ui())
                             .doOnNext(itemState -> {
@@ -310,13 +319,20 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                         || itemState == DataSource.ItemState.ERROR_LOCAL
                         || itemState == DataSource.ItemState.ERROR_CLOUD)
                 .toList()
-                .doFinally(this::updateSyncStatus)
+                .doFinally(() -> {
+                    if (sync) {
+                        this.updateSyncStatus();
+                    } else if (settings.isSyncable()) {
+                        settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
+                        laanoUiManager.updateSyncStatus();
+                    }
+                })
                 .subscribe(itemStates -> {
                     Log.d(TAG, "deleteFavorites(): Completed [" + itemStates.toString() + "]");
                     if (itemStates.isEmpty()) {
                         // DELETED or DEFERRED if sync is disabled
                         //viewModel.showDeleteSuccessSnackbar();
-                        if (settings.isSyncable()) {
+                        if (sync) {
                             laanoUiManager.showShortToast(R.string.toast_sync_success);
                         }
                     } else if (itemStates.contains(DataSource.ItemState.CONFLICTED)) {
@@ -334,8 +350,11 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
 
     @Override
     public void updateSyncStatus() {
-        if (settings.getSyncStatus() == SyncAdapter.SYNC_STATUS_ERROR) {
-            // NOTE: only SyncAdapter can reset this status
+        int status = settings.getSyncStatus();
+        if (status == SyncAdapter.SYNC_STATUS_ERROR
+                || status == SyncAdapter.SYNC_STATUS_UNSYNCED) {
+            // NOTE: only SyncAdapter can reset these statuses
+            laanoUiManager.updateSyncStatus();
             return;
         }
         repository.getSyncStatus()

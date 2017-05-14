@@ -5,6 +5,8 @@ import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.common.base.Strings;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.IDN;
@@ -35,7 +37,7 @@ public class CommonUtils {
 
     public static <T> T[] arrayAdd(@NonNull final T[] array, final T element) {
         checkNotNull(array);
-        final T[] newArray = (T[]) Arrays.copyOf(array, array.length + 1);
+        final T[] newArray = Arrays.copyOf(array, array.length + 1);
         newArray[newArray.length - 1] = element;
 
         return newArray;
@@ -48,6 +50,16 @@ public class CommonUtils {
         Arrays.fill(buffer, ch);
 
         return new String(buffer);
+    }
+
+    public static String strRepeat(final String str, final int repeat, final String delimiter) {
+        if (repeat <= 0 || Strings.isNullOrEmpty(str)) return "";
+
+        if (Strings.isNullOrEmpty(delimiter)) {
+            return new String(new char[repeat]).replace("\0", str);
+        } else {
+            return new String(new char[repeat - 1]).replace("\0", str + delimiter) + str;
+        }
     }
 
     public static String getTempDir(@NonNull Context context) {

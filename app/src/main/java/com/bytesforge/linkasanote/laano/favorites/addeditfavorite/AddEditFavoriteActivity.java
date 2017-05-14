@@ -3,8 +3,6 @@ package com.bytesforge.linkasanote.laano.favorites.addeditfavorite;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.test.espresso.IdlingResource;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 
@@ -12,7 +10,6 @@ import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.databinding.ActivityAddEditFavoriteBinding;
 import com.bytesforge.linkasanote.utils.ActivityUtils;
-import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 
 import javax.inject.Inject;
 
@@ -62,10 +59,5 @@ public class AddEditFavoriteActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
-    }
-
-    @VisibleForTesting
-    public IdlingResource getCountingIdlingResource() {
-        return EspressoIdlingResource.getIdlingResource();
     }
 }

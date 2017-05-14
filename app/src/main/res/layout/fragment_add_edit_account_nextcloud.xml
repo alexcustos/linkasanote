@@ -67,11 +67,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical|end"
-                    android:src="@drawable/ic_refresh"
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/add_edit_account_nextcloud_url_refresh_description"
                     android:visibility="@{viewModel.refreshButton ? View.VISIBLE : View.GONE}"
-                    android:onClick="@{() -> viewModel.onRefreshButtonClick()}" />
+                    android:onClick="@{() -> viewModel.onRefreshButtonClick()}"
+                    app:srcCompat="@drawable/ic_refresh" />
             </FrameLayout>
 
             <TextView
@@ -84,7 +84,7 @@
                 android:minHeight="@dimen/add_edit_account_status_min_height"
                 android:layout_marginBottom="@dimen/add_edit_account_url_form_space"
                 android:drawablePadding="@dimen/add_edit_account_status_icon_padding"
-                android:visibility="@{viewModel.serverStatus ? View.VISIBLE : View.INVISIBLE}" />
+                android:visibility="@{viewModel.serverStatus ? View.VISIBLE : View.GONE}" />
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
@@ -125,7 +125,7 @@
                 android:text="@{viewModel.authStatusText}"
                 android:minHeight="@dimen/add_edit_account_status_min_height"
                 android:drawablePadding="@dimen/add_edit_account_status_icon_padding"
-                android:visibility="@{viewModel.authStatus ? View.VISIBLE : View.INVISIBLE}" />
+                android:visibility="@{viewModel.authStatus ? View.VISIBLE : View.GONE}" />
 
             <android.support.v7.widget.AppCompatButton
                 android:id="@+id/login_button"

@@ -12,6 +12,7 @@
 
     <!-- On Android M and above, use of these permissions is only requested at run time -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
 
     <application
         android:allowBackup="true"

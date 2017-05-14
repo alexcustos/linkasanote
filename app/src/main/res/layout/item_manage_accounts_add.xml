@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:bind="http://schemas.android.com/tools">
 
     <data>
 
@@ -11,7 +12,6 @@
         android:id="@+id/add_account_view"
         android:layout_width="match_parent"
         android:layout_height="@dimen/item_manage_accounts_layout_height"
-        android:drawableStart="@drawable/ic_person_add"
         android:drawablePadding="32dp"
         android:gravity="center_vertical"
         android:text="@string/item_manage_accounts_add"
@@ -19,5 +19,6 @@
         android:paddingEnd="@dimen/recycler_view_text_margin_horizontal"
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:onClick="@{() -> presenter.onAddClick()}"
-        android:background="?android:attr/selectableItemBackground" />
+        android:background="?android:attr/selectableItemBackground"
+        bind:drawableStartCompat="@{@drawable/ic_person_add}" />
 </layout>

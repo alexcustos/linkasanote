@@ -11,7 +11,7 @@
 
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.bytesforge.linkasanote.mock"
+            android:targetPackage="com.bytesforge.linkasanote"
             android:targetClass="com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkActivity" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>
@@ -24,7 +24,7 @@
 
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.bytesforge.linkasanote.mock"
+            android:targetPackage="com.bytesforge.linkasanote"
             android:targetClass="com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteActivity" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>
@@ -37,7 +37,7 @@
 
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.bytesforge.linkasanote.mock"
+            android:targetPackage="com.bytesforge.linkasanote"
             android:targetClass="com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteActivity" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>

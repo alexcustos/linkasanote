@@ -15,9 +15,8 @@ public interface AboutContract {
         boolean isActive();
 
         void showGooglePlay();
-        void showGplV3TermsAlertDialog();
-        void showApacheV2TermsAlertDialog();
-        void showMitTermsAlertDialog();
+        void showLicenseTermsAlertDialog(@NonNull String licenseText);
+        String getLicenseText(@NonNull String assetName);
     }
 
     interface ViewModel extends BaseView<Presenter> {
@@ -26,6 +25,9 @@ public interface AboutContract {
         void saveInstanceState(Bundle outState);
         void applyInstanceState(@NonNull Bundle state);
         Bundle getDefaultInstanceState();
+        void showProgressOverlay();
+        void hideProgressOverlay();
+        void showLaunchGooglePlayErrorSnackbar();
     }
 
     interface Presenter extends BasePresenter {

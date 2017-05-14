@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:bind="http://schemas.android.com/tools">
 
     <data>
 
@@ -9,153 +10,178 @@
             type="com.bytesforge.linkasanote.about.AboutViewModel" />
     </data>
 
-    <ScrollView
+    <FrameLayout
+        android:id="@+id/snackbar_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        bind:snackbarId="@{viewModel.snackbarId}">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/screen_edge_padding">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/about_margin_vertical"
-                android:text="@string/app_name"
-                android:textAppearance="@style/AboutText.Title" />
-            <TextView
-                android:id="@+id/app_version"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/about_margin_vertical"
-                android:text="@{viewModel.appVersionText}" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/about_margin_vertical"
-                android:text="@string/app_url"
-                android:autoLink="web" />
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginTop="@dimen/dialog_padding_button_bar_vertical"
-                android:layout_marginBottom="@dimen/dialog_padding_button_bar_vertical"
-                style="?android:attr/buttonBarStyle">
+                android:orientation="vertical"
+                android:padding="@dimen/screen_edge_padding">
 
-                <Button
-                    android:id="@+id/launch_google_play"
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/about_button_launch_google_play"
-                    android:onClick="@{() -> presenter.onLaunchGooglePlay()}"
-                    style="?android:attr/buttonBarButtonStyle" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/app_copyright"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@{viewModel.appCopyrightText}"
-                android:textAppearance="@style/AboutText.Copyright" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/about_margin_vertical_text"
-                android:text="@string/about_license_info_version" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/about_margin_vertical_text"
-                android:text="@string/about_info_warranty" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:layout_marginTop="@dimen/dialog_padding_button_bar_vertical"
-                android:layout_marginBottom="@dimen/dialog_padding_button_bar_vertical"
-                style="?android:attr/buttonBarStyle">
-
-                <Button
-                    android:id="@+id/license_terms_gpl_v3"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/about_margin_vertical"
+                    android:text="@string/app_name"
+                    android:textAppearance="@style/AboutText.Title" />
+                <TextView
+                    android:id="@+id/app_version"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/about_button_license_terms"
-                    android:onClick="@{() -> presenter.onLicenseTermsGplV3Click()}"
-                    style="?android:attr/buttonBarButtonStyle" />
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:text="@string/about_notices_title"
-                android:textAppearance="@style/AboutText.Notices" />
-
-            <!-- Apache 2.0 -->
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/about_margin_vertical_text"
-                android:text="@string/libraries_apache_v2" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/about_margin_vertical_text"
-                android:text="@string/about_notices_license_apache_v2"/>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:layout_marginTop="@dimen/dialog_padding_button_bar_vertical"
-                android:layout_marginBottom="@dimen/dialog_padding_button_bar_vertical"
-                style="?android:attr/buttonBarStyle">
-
-                <Button
-                    android:id="@+id/license_terms_apache_v2"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/about_margin_vertical"
+                    android:text="@{viewModel.appVersionText}" />
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/about_button_license_terms"
-                    android:onClick="@{() -> presenter.onLicenseTermsApacheV2Click()}"
-                    style="?android:attr/buttonBarButtonStyle" />
-            </LinearLayout>
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/about_margin_vertical"
+                    android:text="@string/app_url"
+                    android:autoLink="web" />
 
-            <!-- MIT -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:layout_marginTop="@dimen/dialog_padding_button_bar_vertical"
+                    android:layout_marginBottom="@dimen/dialog_padding_button_bar_vertical"
+                    style="?android:attr/buttonBarStyle">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/libraries_mit" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/about_margin_vertical_text"
-                android:text="@string/about_notices_license_mit"/>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:layout_marginTop="@dimen/dialog_padding_button_bar_vertical"
-                style="?android:attr/buttonBarStyle">
+                    <Button
+                        android:id="@+id/launch_google_play"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/about_button_launch_google_play"
+                        android:onClick="@{() -> presenter.onLaunchGooglePlay()}"
+                        style="?android:attr/buttonBarButtonStyle" />
+                </LinearLayout>
 
-                <Button
-                    android:id="@+id/license_terms_mit"
+                <TextView
+                    android:id="@+id/app_copyright"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/about_button_license_terms"
-                    android:onClick="@{() -> presenter.onLicenseTermsMitClick()}"
-                    style="?android:attr/buttonBarButtonStyle" />
+                    android:text="@{viewModel.appCopyrightText}"
+                    android:textAppearance="@style/AboutText.Copyright" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/about_margin_vertical_text"
+                    android:text="@string/about_license_info_version" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/about_margin_vertical_text"
+                    android:text="@string/about_info_warranty" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:layout_marginTop="@dimen/dialog_padding_button_bar_vertical"
+                    android:layout_marginBottom="@dimen/dialog_padding_button_bar_vertical"
+                    style="?android:attr/buttonBarStyle">
+
+                    <Button
+                        android:id="@+id/license_terms_gpl_v3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/about_button_license_terms"
+                        android:onClick="@{() -> presenter.onLicenseTermsGplV3Click()}"
+                        style="?android:attr/buttonBarButtonStyle" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="@string/about_notices_title"
+                    android:textAppearance="@style/AboutText.Notices" />
+
+                <!-- Apache 2.0 -->
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/about_margin_vertical_text"
+                    android:text="@string/libraries_apache_v2" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/about_margin_vertical_text"
+                    android:text="@string/about_notices_license_apache_v2"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:layout_marginTop="@dimen/dialog_padding_button_bar_vertical"
+                    android:layout_marginBottom="@dimen/dialog_padding_button_bar_vertical"
+                    style="?android:attr/buttonBarStyle">
+
+                    <Button
+                        android:id="@+id/license_terms_apache_v2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/about_button_license_terms"
+                        android:onClick="@{() -> presenter.onLicenseTermsApacheV2Click()}"
+                        style="?android:attr/buttonBarButtonStyle" />
+                </LinearLayout>
+
+                <!-- MIT -->
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/libraries_mit" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/about_margin_vertical_text"
+                    android:text="@string/about_notices_license_mit"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:layout_marginTop="@dimen/dialog_padding_button_bar_vertical"
+                    style="?android:attr/buttonBarStyle">
+
+                    <Button
+                        android:id="@+id/license_terms_mit"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/about_button_license_terms"
+                        android:onClick="@{() -> presenter.onLicenseTermsMitClick()}"
+                        style="?android:attr/buttonBarButtonStyle" />
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
-    </ScrollView>
+        </ScrollView>
+
+        <FrameLayout
+            android:id="@+id/progress_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            android:background="@android:color/black"
+            android:clickable="true"
+            android:alpha="0"
+            android:visibility="gone"
+            bind:progressOverlay="@{viewModel.progressOverlay}">
+
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminate="true" />
+        </FrameLayout>
+    </FrameLayout>
 </layout>

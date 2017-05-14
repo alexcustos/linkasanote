@@ -284,8 +284,8 @@ public class AddEditNoteFragment extends Fragment implements AddEditNoteContract
                 StringBuilder filteredStringBuilder = new StringBuilder();
                 for (int i = start; i < end; i++) {
                     char currentChar = source.charAt(i);
-                    boolean isSpaceChar = Character.isSpaceChar(currentChar);
-                    if (Character.isLetterOrDigit(currentChar) || isSpaceChar) {
+                    boolean spaceChar = Character.isSpaceChar(currentChar);
+                    if (Character.isLetterOrDigit(currentChar) || spaceChar) {
                         filteredStringBuilder.append(currentChar);
                         binding.noteTagsLayout.setError(null);
                     } else {

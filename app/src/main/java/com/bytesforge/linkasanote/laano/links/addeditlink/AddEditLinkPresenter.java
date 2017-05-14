@@ -11,7 +11,6 @@ import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.links.LinkId;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CommonUtils;
-import com.bytesforge.linkasanote.utils.EspressoIdlingResource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
 import java.util.ArrayList;
@@ -77,7 +76,6 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
 
     @Override
     public void loadTags() {
-        EspressoIdlingResource.increment();
         tagsDisposable.clear(); // stop previous requests
 
         Disposable disposable = repository.getTags()
@@ -85,11 +83,6 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .doOnError(throwable -> view.swapTagsCompletionViewItems(new ArrayList<>()))
-                .doFinally(() -> {
-                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
-                        EspressoIdlingResource.decrement();
-                    }
-                })
                 .subscribe((tags, throwable) -> {
                     if (tags != null) view.swapTagsCompletionViewItems(tags);
                 });
@@ -106,17 +99,11 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
         if (linkId == null) {
             throw new RuntimeException("populateLink() was called but linkId is null");
         }
-        EspressoIdlingResource.increment();
         linkDisposable.clear();
 
         Disposable disposable = repository.getLink(linkId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
-                .doFinally(() -> {
-                    if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
-                        EspressoIdlingResource.decrement();
-                    }
-                })
                 .subscribe(viewModel::populateLink, throwable -> {
                     linkId = null;
                     viewModel.showLinkNotFoundSnackbar();
@@ -161,6 +148,7 @@ public final class AddEditLinkPresenter implements AddEditLinkContract.Presenter
                 .subscribe(itemState -> {
                     switch (itemState) {
                         case DEFERRED:
+                            repository.refreshLinks();
                             view.finishActivity(linkId);
                             break;
                     }

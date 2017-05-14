@@ -74,7 +74,6 @@ public class FavoritesConflictResolutionDialog extends DialogFragment implements
 
     public static FavoritesConflictResolutionDialog newInstance(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-
         Bundle args = new Bundle();
         args.putString(ARGUMENT_FAVORITE_ID, favoriteId);
         FavoritesConflictResolutionDialog dialog = new FavoritesConflictResolutionDialog();

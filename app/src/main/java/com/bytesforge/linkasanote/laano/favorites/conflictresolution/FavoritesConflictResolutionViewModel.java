@@ -56,7 +56,6 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
     public final ObservableBoolean buttonsActive = new ObservableBoolean();
 
     private final Resources resources;
-    private FavoritesConflictResolutionContract.Presenter presenter;
 
     public FavoritesConflictResolutionViewModel(Context context) {
         resources = context.getResources();
@@ -83,7 +82,6 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
     @Override
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
-
         outState.putString(STATE_LOCAL_STATE, localState.get());
         outState.putString(STATE_LOCAL_STATUS, localStatus.get());
         outState.putString(STATE_LOCAL_NAME, localName.get());
@@ -106,7 +104,6 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
     @Override
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
-
         localState.set(state.getString(STATE_LOCAL_STATE));
         localStatus.set(state.getString(STATE_LOCAL_STATUS));
         localName.set(state.getString(STATE_LOCAL_NAME));
@@ -154,7 +151,6 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
     @Override
     public void setPresenter(@NonNull FavoritesConflictResolutionContract.Presenter presenter) {
-        this.presenter = checkNotNull(presenter);
     }
 
     @Override

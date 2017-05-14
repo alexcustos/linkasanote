@@ -79,6 +79,7 @@ public interface LinksContract {
         int getPosition(String linkId);
         void setFilterType(@NonNull FilterType filtering);
         void syncSavedLink(@NonNull final String linkId);
+        void syncSavedNote(@NonNull final String linkId, @NonNull final String noteId);
         void deleteLinks(@NonNull ArrayList<String> selectedIds, boolean deleteNotes);
         boolean isFavoriteFilter();
         boolean isNoteFilter();

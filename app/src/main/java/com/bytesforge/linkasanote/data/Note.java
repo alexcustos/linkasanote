@@ -326,22 +326,25 @@ public final class Note implements Comparable<Note>, Item {
         return note.compareTo(objNote);
     }
 
-    public static ItemFactory<Note> getFactory() {
-        return new ItemFactory<Note>() {
+    @Override
+    public String toString() {
+        return getId();
+    }
+
+    public static NoteFactory<Note> getFactory() {
+        return new NoteFactory<Note>() {
 
             @Override
-            public Note build(Note item, List<Tag> tags, List<Note> notes) {
-                throw new RuntimeException("Note factory has no implementation of this method");
+            public Note build(Note note, List<Tag> tags) {
+                return new Note(note, tags);
             }
 
             @Override
-            public Note build(Note item, List<Tag> tags) {
-                return new Note(item, tags);
-            }
-
-            @Override
-            public Note build(Note item, @NonNull SyncState state) {
-                return new Note(item, state);
+            public Note buildOrphaned(Note note) {
+                SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
+                return new Note(
+                        note.getId(), note.getCreated(), note.getUpdated(),
+                        note.getNote(), null, note.getTags(), state);
             }
 
             @Override

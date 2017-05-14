@@ -8,6 +8,7 @@ import android.accounts.OperationCanceledException;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -183,7 +184,11 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
     }
 
     public void removeAccount(Account account) {
-        accountManager.removeAccount(account, getActivity(), removeAccountCallback, handler);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            accountManager.removeAccount(account, getActivity(), removeAccountCallback, handler);
+        } else {
+            accountManager.removeAccount(account, removeAccountCallbackCompat, handler);
+        }
     }
 
     public static class AccountRemovalConfirmationDialog extends DialogFragment {
@@ -227,6 +232,13 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
     }
 
     private AccountManagerCallback<Bundle> removeAccountCallback = future -> {
+        if (future != null && future.isDone()) {
+            // TODO: disable sync with removed account
+            presenter.loadAccountItems(true);
+        }
+    };
+
+    private AccountManagerCallback<Boolean> removeAccountCallbackCompat = future -> {
         if (future != null && future.isDone()) {
             // TODO: disable sync with removed account
             presenter.loadAccountItems(true);

@@ -111,7 +111,7 @@ public final class CloudUtils {
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isConnected();
+        return networkInfo != null && networkInfo.isConnectedOrConnecting();
     }
 
     @Nullable

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:bind="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:bind="http://schemas.android.com/tools">
 
     <data>
 
@@ -28,7 +27,8 @@
                 android:orientation="vertical"
                 android:layout_marginTop="@dimen/screen_edge_padding">
 
-                <android.support.constraint.ConstraintLayout
+                <!-- NOTE: problem with ConstraintLayout: random vertical gaps when width=0dp & align to start/end=parent -->
+                <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/screen_edge_padding"
@@ -36,44 +36,38 @@
                     android:padding="@dimen/screen_edge_padding"
                     android:visibility="@{viewModel.linkStatus != null || viewModel.linkName != null || viewModel.linkLink != null ? View.VISIBLE : View.GONE}">
 
-                    <TextView
-                        android:id="@+id/link_name"
-                        android:layout_width="0dp"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@{viewModel.linkName}"
-                        android:maxLines="2"
-                        android:ellipsize="end"
-                        android:textAppearance="@style/NotesText.LinkName"
-                        android:visibility="@{viewModel.linkName == null ? View.GONE : View.VISIBLE}"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toTopOf="@+id/link_link"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
-                    <TextView
-                        android:id="@+id/link_link"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@{viewModel.linkLink}"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        android:visibility="@{viewModel.linkLink == null ? View.GONE : View.VISIBLE}"
-                        app:layout_constraintTop_toBottomOf="@+id/link_name"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/link_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@{viewModel.linkName}"
+                            android:maxLines="2"
+                            android:ellipsize="end"
+                            android:textAppearance="@style/NotesText.LinkName"
+                            android:visibility="@{viewModel.linkName == null ? View.GONE : View.VISIBLE}" />
+                        <TextView
+                            android:id="@+id/link_link"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@{viewModel.linkLink}"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:visibility="@{viewModel.linkLink == null ? View.GONE : View.VISIBLE}" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/link_status"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@{viewModel.linkStatus}"
                         android:gravity="center"
-                        android:visibility="@{viewModel.linkStatus == null ? View.GONE : View.VISIBLE}"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
-                </android.support.constraint.ConstraintLayout>
+                        android:visibility="@{viewModel.linkStatus == null ? View.GONE : View.VISIBLE}" />
+                </FrameLayout>
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"

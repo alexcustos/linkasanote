@@ -513,7 +513,7 @@ public abstract class TokenCompleteTextView<T> extends MultiAutoCompleteTextView
         int start = getCorrectedTokenBeginning(end);
 
         //Some keyboards add extra spaces when doing corrections, so
-        return TextUtils.substring(editable, start, end);
+        return TextUtils.substring(editable, start, end).trim();
     }
 
     protected float maxTextWidth() {

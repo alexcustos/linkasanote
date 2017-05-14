@@ -26,7 +26,7 @@ public interface NotesConflictResolutionContract {
 
         void populateLocalNote(@NonNull Note note);
         boolean isLocalPopulated();
-        void populateCloudNote(@NonNull Note note);
+        void populateCloudNote(@NonNull Note note, boolean orphaned);
         boolean isCloudPopulated();
         void showCloudNotFound();
         void showCloudDownloadError();

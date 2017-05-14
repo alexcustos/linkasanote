@@ -7,18 +7,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.text.Html;
+import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bytesforge.linkasanote.BuildConfig;
 import com.bytesforge.linkasanote.R;
@@ -33,6 +34,8 @@ import java.io.InputStreamReader;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AboutFragment extends Fragment implements AboutContract.View {
+
+    private static final String TAG = AboutFragment.class.getSimpleName();
 
     private Context context;
     private AboutContract.Presenter presenter;
@@ -93,40 +96,50 @@ public class AboutFragment extends Fragment implements AboutContract.View {
         try {
             startActivity(intent);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(context,
-                    R.string.about_launch_google_play_error, Toast.LENGTH_LONG).show();
+            viewModel.showLaunchGooglePlayErrorSnackbar();
         }
     }
 
     @Override
-    public void showGplV3TermsAlertDialog() {
-        LicenseTermsDialog dialog = LicenseTermsDialog.newInstance("gpl-3.0.en.html");
+    public void showLicenseTermsAlertDialog(@NonNull String licenseText) {
+        checkNotNull(licenseText);
+        LicenseTermsDialog dialog = LicenseTermsDialog.newInstance(licenseText);
         dialog.show(getFragmentManager(), LicenseTermsDialog.DIALOG_TAG);
     }
 
     @Override
-    public void showApacheV2TermsAlertDialog() {
-        LicenseTermsDialog dialog = LicenseTermsDialog.newInstance("LICENSE-2.0.html");
-        dialog.show(getFragmentManager(), LicenseTermsDialog.DIALOG_TAG);
-    }
-
-    @Override
-    public void showMitTermsAlertDialog() {
-        LicenseTermsDialog dialog = LicenseTermsDialog.newInstance("MIT.html");
-        dialog.show(getFragmentManager(), LicenseTermsDialog.DIALOG_TAG);
+    public String getLicenseText(@NonNull String assetName) {
+        checkNotNull(assetName);
+        Resources resources = context.getResources();
+        String licenseText;
+        try {
+            String line;
+            StringBuilder builder = new StringBuilder();
+            InputStream stream = resources.getAssets().open(assetName);
+            BufferedReader in = new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
+            while ((line = in.readLine()) != null) {
+                builder.append(line);
+                builder.append('\n');
+            }
+            in.close();
+            licenseText = builder.toString();
+        } catch (IOException e) {
+            licenseText = resources.getString(R.string.about_fragment_error_license, assetName);
+        }
+        return licenseText;
     }
 
     public static class LicenseTermsDialog extends DialogFragment {
 
-        private static final String ARGUMENT_LICENSE_NAME = "LICENSE_NAME";
+        private static final String ARGUMENT_LICENSE_TEXT = "LICENSE_TEXT";
 
         public static final String DIALOG_TAG = "LICENSE_TERMS";
 
-        private String licenseName;
+        private String licenseText;
 
-        public static LicenseTermsDialog newInstance(String licenseName) {
+        public static LicenseTermsDialog newInstance(String licenseText) {
             Bundle args = new Bundle();
-            args.putString(ARGUMENT_LICENSE_NAME, licenseName);
+            args.putString(ARGUMENT_LICENSE_TEXT, licenseText);
             LicenseTermsDialog dialog = new LicenseTermsDialog();
             dialog.setArguments(args);
             return dialog;
@@ -142,31 +155,21 @@ public class AboutFragment extends Fragment implements AboutContract.View {
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            licenseName = getArguments().getString(ARGUMENT_LICENSE_NAME);
+            licenseText = getArguments().getString(ARGUMENT_LICENSE_TEXT);
         }
 
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            String licenseText;
             Resources resources = getContext().getResources();
-            try {
-                String line;
-                StringBuilder builder = new StringBuilder();
-                InputStream stream = getContext().getResources().getAssets().open(licenseName);
-                BufferedReader in = new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
-                while ((line = in.readLine()) != null) {
-                    builder.append(line);
-                    builder.append('\n');
-                }
-                in.close();
-                licenseText = builder.toString();
-            } catch (IOException e) {
-                licenseText = resources.getString(
-                        R.string.about_fragment_error_license, licenseName);
+            Spanned licenseSpanned;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                licenseSpanned = Html.fromHtml(licenseText, Html.FROM_HTML_MODE_LEGACY);
+            } else {
+                licenseSpanned = Html.fromHtml(licenseText);
             }
             return new AlertDialog.Builder(getContext())
-                    .setMessage(Html.fromHtml(licenseText, Html.FROM_HTML_MODE_LEGACY))
+                    .setMessage(licenseSpanned)
                     .setPositiveButton(resources.getString(R.string.dialog_button_ok), null)
                     .create();
         }

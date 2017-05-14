@@ -49,6 +49,10 @@ public class LocalDataSource {
         return localLinks.getActive();
     }
 
+    public Observable<Link> getLinks(String[] linkIds) {
+        return localLinks.getActive(linkIds);
+    }
+
     public Single<Link> getLink(@NonNull final String linkId) {
         checkNotNull(linkId);
         return localLinks.get(linkId);
@@ -102,6 +106,10 @@ public class LocalDataSource {
         return localFavorites.getActive();
     }
 
+    public Observable<Favorite> getFavorites(String[] favoriteIds) {
+        return localFavorites.getActive(favoriteIds);
+    }
+
     public Single<Favorite> getFavorite(@NonNull final String favoriteId) {
         checkNotNull(favoriteId);
         return localFavorites.get(favoriteId);
@@ -153,6 +161,10 @@ public class LocalDataSource {
 
     public Observable<Note> getNotes() {
         return localNotes.getActive();
+    }
+
+    public Observable<Note> getNotes(String[] noteIds) {
+        return localNotes.getActive(noteIds);
     }
 
     public Observable<Note> getNotes(@NonNull final String linkId) {

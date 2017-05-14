@@ -74,7 +74,6 @@ public class NotesConflictResolutionDialog extends DialogFragment implements
 
     public static NotesConflictResolutionDialog newInstance(@NonNull String noteId) {
         checkNotNull(noteId);
-
         Bundle args = new Bundle();
         args.putString(ARGUMENT_NOTE_ID, noteId);
         NotesConflictResolutionDialog dialog = new NotesConflictResolutionDialog();
