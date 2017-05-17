@@ -28,7 +28,7 @@ public interface FavoritesContract {
         void selectionChanged(@NonNull String id);
         void removeFavorite(@NonNull String id);
         int getPosition(String favoriteId);
-        String[] getIds();
+        @NonNull String[] getIds();
         void scrollToPosition(int position);
         void confirmFavoritesRemoval(ArrayList<String> selectedIds);
         void showConflictResolution(@NonNull String favoriteId);
@@ -62,6 +62,7 @@ public interface FavoritesContract {
         void onSelectAllClick();
         int getPosition(String favoriteId);
         void setFilterType(@NonNull FilterType filtering);
+        @NonNull FilterType getFilterType();
         void syncSavedFavorite(@NonNull final String favoriteId);
         void deleteFavorites(@NonNull ArrayList<String> selectedIds);
     }

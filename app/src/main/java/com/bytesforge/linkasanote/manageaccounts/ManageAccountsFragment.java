@@ -30,6 +30,7 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment;
 import com.bytesforge.linkasanote.databinding.FragmentManageAccountsBinding;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 
 import java.io.IOException;
@@ -132,7 +133,7 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
                 AccountItem accountItem = CloudUtils.getAccountItem(account, getContext());
                 accountItems.add(accountItem);
             }
-            if (getResources().getBoolean(R.bool.multiaccount_support) || accounts.length <= 0) {
+            if (Settings.GLOBAL_MULTIACCOUNT_SUPPORT || accounts.length <= 0) {
                 accountItems.add(new AccountItem());
             }
             return accountItems;

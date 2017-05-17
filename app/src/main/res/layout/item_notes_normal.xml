@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@{viewModel.getNoteBackground(note.id, note.conflicted, false, viewModel.selectionChanged)}">
+            android:background="@{viewModel.getNoteBackground(note.conflicted)}">
 
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
@@ -37,12 +37,15 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/item_notes_note_to_links_button"
-                    android:paddingTop="@dimen/card_button_padding_vertical"
-                    android:paddingBottom="@dimen/card_button_padding_vertical"
+                    android:layout_marginTop="@dimen/card_filter_button_margin_vertical"
+                    android:layout_marginBottom="@dimen/card_filter_button_margin_vertical"
+                    android:paddingTop="@dimen/card_filter_button_padding_vertical"
+                    android:paddingBottom="@dimen/card_filter_button_padding_vertical"
                     android:paddingStart="@dimen/card_left_button_padding_start"
                     android:paddingEnd="@dimen/card_button_padding"
                     android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
                     android:onClick="@{() -> presenter.onToLinksClick(note.id)}"
+                    android:background="@{viewModel.getFilterBackground(note.id, note.conflicted, viewModel.filterId)}"
                     style="@style/Button.RecyclerView"
                     bind:imageButtonEnabled="@{!(note.conflicted || note.linkId == null)}"
                     app:srcCompat="@drawable/ic_chevron_left"
@@ -101,6 +104,7 @@
                     android:paddingEnd="@dimen/card_right_button_padding_end"
                     android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
                     android:onClick="@{() -> presenter.onToggleClick(note.id)}"
+                    android:background="?attr/selectableItemBackgroundBorderless"
                     style="@style/Button.RecyclerView"
                     app:srcCompat="@{viewModel.isVisible(note.id, viewModel.visibilityChanged) ? @drawable/ic_expand_less : @drawable/ic_expand_more}"
                     app:layout_constraintTop_toTopOf="parent"
@@ -134,7 +138,7 @@
                 android:paddingStart="@dimen/card_text_margin_horizontal"
                 android:paddingEnd="@dimen/card_text_margin_horizontal"
                 android:text="@{note.note}"
-                android:background="@{viewModel.getNoteNoteBackground(note.conflicted, viewModel.selectionChanged)}"
+                android:background="@{viewModel.getNoteNoteBackground(note.conflicted)}"
                 android:visibility="@{viewModel.isVisible(note.id, viewModel.visibilityChanged) ? View.VISIBLE : View.GONE}" />
 
             <Space

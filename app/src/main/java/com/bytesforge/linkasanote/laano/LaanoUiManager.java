@@ -190,7 +190,7 @@ public class LaanoUiManager {
     }
 
     private void updateDrawerMenu() {
-        if (resources.getBoolean(R.bool.multiaccount_support)) {
+        if (Settings.GLOBAL_MULTIACCOUNT_SUPPORT) {
             drawerMenu.findItem(R.id.add_account_menu_item).setVisible(true);
             drawerMenu.findItem(R.id.manage_accounts_menu_item).setVisible(true);
         } else if (settings.isSyncable()) {

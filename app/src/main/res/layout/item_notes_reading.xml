@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@{note.note}"
-        android:background="@{viewModel.getNoteBackground(note.id, note.conflicted, true, viewModel.selectionChanged)}"
+        android:background="@{viewModel.getNoteReadingModeBackground(note.id, note.conflicted, viewModel.filterId)}"
         android:paddingTop="@dimen/card_text_margin_vertical"
         android:paddingBottom="@dimen/card_text_margin_vertical"
         android:paddingStart="@dimen/card_text_margin_horizontal"

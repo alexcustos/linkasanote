@@ -3,7 +3,6 @@ package com.bytesforge.linkasanote.laano;
 import android.content.Context;
 import android.content.res.Resources;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.Espresso;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
@@ -16,12 +15,11 @@ import com.bytesforge.linkasanote.DaggerApplicationComponent;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Note;
-import com.bytesforge.linkasanote.data.source.Cloud;
-import com.bytesforge.linkasanote.data.source.DataSource;
-import com.bytesforge.linkasanote.data.source.Local;
 import com.bytesforge.linkasanote.data.source.ProviderModule;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.data.source.RepositoryModule;
+import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
+import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.laano.notes.NotesFragment;
 import com.bytesforge.linkasanote.settings.SettingsModule;
 import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
@@ -56,6 +54,7 @@ import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
 import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.Matchers.allOf;
 import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
@@ -86,13 +85,11 @@ public class NotesTabTest {
                 protected void afterActivityLaunched() {
                     super.afterActivityLaunched();
                     setupTab();
-                    registerIdlingResource();
                 }
 
                 @Override
                 protected void afterActivityFinished() {
                     super.afterActivityFinished();
-                    unregisterIdlingResource();
                     restoreApplicationComponent(applicationComponent);
                 }
             };
@@ -113,8 +110,7 @@ public class NotesTabTest {
 
                     @Override
                     public Repository provideRepository(
-                            @Local DataSource localDataSource,
-                            @Cloud DataSource cloudDataSource) {
+                            LocalDataSource localDataSource, CloudDataSource cloudDataSource) {
                         return repository;
                     }
                 })
@@ -147,34 +143,25 @@ public class NotesTabTest {
         assertThat(laanoActivity.getCurrentFragment(), instanceOf(NotesFragment.class));
     }
 
-    private void registerIdlingResource() { // @Before
-        Espresso.registerIdlingResources(
-                laanoActivityTestRule.getActivity().getCountingIdlingResource());
-    }
-
-    private void unregisterIdlingResource() { // @After
-        Espresso.unregisterIdlingResources(
-                laanoActivityTestRule.getActivity().getCountingIdlingResource());
-    }
-
     @Test
     public void addNotesToNotesRecyclerView_CheckIfPersistOnOrientationChange() {
+        List<Note> notes = NOTES.subList(0, 2);
         when(mockRepository.getLinks()).thenReturn(Observable.fromIterable(Collections.emptyList()));
         when(mockRepository.getFavorites()).thenReturn(Observable.fromIterable(Collections.emptyList()));
-        when(mockRepository.getNotes()).thenReturn(Observable.fromIterable(NOTES));
+        when(mockRepository.getNotes()).thenReturn(Observable.fromIterable(notes));
         when(mockRepository.isConflictedLinks()).thenReturn(Single.fromCallable(() -> false));
         when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
         when(mockRepository.isConflictedNotes()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
 
-        AndroidTestUtils.sleep(250); // TODO: remove
-
-        for (Note note : NOTES) {
-            onView(withItemTextRv(note.getNote())).check(matches(isDisplayed()));
+        for (Note note : notes) {
+            onView(allOf(withId(R.id.note_note), withItemTextRv(note.getNote())))
+                    .check(matches(isDisplayed()));
         }
         AndroidTestUtils.rotateOrientation(laanoActivityTestRule);
-        for (Note note : NOTES) {
-            onView(withItemTextRv(note.getNote())).check(matches(isDisplayed()));
+        for (Note note : notes) {
+            onView(allOf(withId(R.id.note_note), withItemTextRv(note.getNote())))
+                    .check(matches(isDisplayed()));
         }
     }
 

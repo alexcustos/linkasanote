@@ -5,6 +5,7 @@ import android.util.Log;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
@@ -21,13 +22,13 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import io.reactivex.Observable;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,7 +69,8 @@ public class NotesPresenterTest {
         PowerMockito.mockStatic(Log.class);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
         when(view.isActive()).thenReturn(true);
-
+        when(settings.getFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE))
+                .thenReturn(FilterType.ALL);
         presenter = new NotesPresenter(
                 repository, view, viewModel, schedulerProvider, laanoUiManager, settings);
     }
@@ -89,7 +91,7 @@ public class NotesPresenterTest {
     }
 
     @Test
-    public void clickOnAddNote_showAddNoteUi() {
+    public void clickOnAddNote_showAddNoteUiForUnboundNote() {
         presenter.showAddNote();
         verify(view).startAddNoteActivity(eq(null));
     }
@@ -103,10 +105,11 @@ public class NotesPresenterTest {
 
     @Test
     public void clickOnDeleteNote_showsConfirmNotesRemoval() {
-        int[] selectedIds = new int[]{0, 5, 10};
-        String noteId = TestUtils.KEY_PREFIX + 'A';
+        ArrayList<String> selectedIds = new ArrayList<String>() {{
+            add(NOTES.get(0).getId());
+            add(NOTES.get(2).getId());
+        }};
         when(viewModel.getSelectedIds()).thenReturn(selectedIds);
-        when(view.removeNote(anyInt())).thenReturn(noteId);
         presenter.onDeleteClick();
         verify(view).confirmNotesRemoval(eq(selectedIds));
     }

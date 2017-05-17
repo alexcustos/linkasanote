@@ -265,7 +265,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         }
                     });
         } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
-            boolean selected = viewModel.toggleSingleSelection(linkId);
+            boolean selected = viewModel.toggleFilterId(linkId);
             // NOTE: filterType will be updated accordingly on the tab
             if (selected) {
                 settings.setLinkFilter(linkId);
@@ -300,19 +300,20 @@ public final class LinksPresenter extends BaseItemPresenter implements
         if (linkFilter != null) {
             int position = getPosition(linkFilter);
             if (position >= 0) {
-                viewModel.setSingleSelection(linkFilter, true);
-                //view.scrollToPosition(position);
+                viewModel.setFilterId(linkFilter);
             }
         }
     }
 
     @Override
     public void onEditClick(@NonNull String linkId) {
+        checkNotNull(linkId);
         view.showEditLink(linkId);
     }
 
     @Override
     public void onLinkOpenClick(@NonNull String linkId) {
+        checkNotNull(linkId);
         repository.getLink(checkNotNull(linkId))
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
@@ -328,7 +329,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
     @Override
     public void onToNotesClick(@NonNull String linkId) {
         checkNotNull(linkId);
-        viewModel.setSingleSelection(linkId, true);
+        viewModel.setFilterId(linkId);
         settings.setFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE, FilterType.LINK);
         settings.setLinkFilter(linkId);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.NOTES_TAB);
@@ -537,12 +538,18 @@ public final class LinksPresenter extends BaseItemPresenter implements
         }
     }
 
+    @NonNull
+    @Override
+    public FilterType getFilterType() {
+        return settings.getFilterType(SETTING_LINKS_FILTER_TYPE);
+    }
+
     /**
      * @return Return null if there is no additional data is required
      */
     @Nullable
     private FilterType updateFilter() {
-        FilterType filterType = settings.getFilterType(SETTING_LINKS_FILTER_TYPE);
+        FilterType filterType = getFilterType();
         String prevFavoriteFilter = this.favoriteFilter;
         this.favoriteFilter = settings.getFavoriteFilter();
         String prevNoteFilter = this.noteFilter;

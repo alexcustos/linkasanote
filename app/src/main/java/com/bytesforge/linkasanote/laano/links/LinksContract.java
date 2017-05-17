@@ -31,7 +31,7 @@ public interface LinksContract {
         void visibilityChanged(@NonNull String id);
         void removeLink(@NonNull String id);
         int getPosition(String linkId);
-        String[] getIds();
+        @NonNull String[] getIds();
         void scrollToPosition(int position);
         void openLink(@NonNull Uri uri);
         void confirmLinksRemoval(ArrayList<String> selectedIds);
@@ -53,9 +53,10 @@ public interface LinksContract {
         void showDeleteExtraErrorSnackbar();
         void showDeleteSuccessSnackbar();
 
+        void setExpandByDefault(boolean expandByDefault);
         boolean isVisible(String id);
         void toggleVisibility(@NonNull String id);
-        void setVisibility(String[] ids);
+        void setVisibility(@NonNull String[] ids, boolean expand);
     }
 
     interface Presenter extends BaseItemPresenterInterface {
@@ -78,6 +79,7 @@ public interface LinksContract {
         void updateSyncStatus();
         int getPosition(String linkId);
         void setFilterType(@NonNull FilterType filtering);
+        @NonNull FilterType getFilterType();
         void syncSavedLink(@NonNull final String linkId);
         void syncSavedNote(@NonNull final String linkId, @NonNull final String noteId);
         void deleteLinks(@NonNull ArrayList<String> selectedIds, boolean deleteNotes);

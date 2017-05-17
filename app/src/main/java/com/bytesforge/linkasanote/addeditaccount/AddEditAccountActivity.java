@@ -22,6 +22,7 @@ import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenter;
 import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudPresenterModule;
 import com.bytesforge.linkasanote.databinding.ActivityAddEditAccountBinding;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.ActivityUtils;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 
@@ -148,9 +149,9 @@ public class AddEditAccountActivity extends AppCompatActivity implements
 
     private boolean accountCanBeProcessed() {
         Account[] accounts = CloudUtils.getAccountsWithPermissionCheck(this, accountManager);
-        return !presenter.isNewAccount()
-                || getResources().getBoolean(R.bool.multiaccount_support)
-                || (accounts != null && accounts.length <= 0);
+        return !presenter.isNewAccount() // edit
+                || (accounts != null && accounts.length <= 0) // first
+                || Settings.GLOBAL_MULTIACCOUNT_SUPPORT;
     }
 
     private void disableActivity() {

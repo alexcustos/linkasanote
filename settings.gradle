@@ -1,8 +1,8 @@
 include ':app'
 include ':tokenautocomplete'
-include ':base64'
+include ':androidutils'
 //include ':nextcloud'
 
 project(':tokenautocomplete').projectDir = new File(settingsDir, 'third_party/tokenautocomplete')
-project(':base64').projectDir = new File(settingsDir, 'third_party/base64')
+project(':androidutils').projectDir = new File(settingsDir, 'third_party/androidutils')
 //project(':nextcloud').projectDir = new File(settingsDir, 'third_party/nextcloud')

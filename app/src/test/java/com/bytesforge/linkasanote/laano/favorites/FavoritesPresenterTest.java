@@ -22,13 +22,13 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import io.reactivex.Observable;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -69,7 +69,8 @@ public class FavoritesPresenterTest {
         PowerMockito.mockStatic(Log.class);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
         when(view.isActive()).thenReturn(true);
-
+        when(settings.getFilterType(FavoritesPresenter.SETTING_FAVORITES_FILTER_TYPE))
+                .thenReturn(FilterType.ALL);
         presenter = new FavoritesPresenter(
                 repository, view, viewModel, schedulerProvider, laanoUiManager, settings);
     }
@@ -77,7 +78,7 @@ public class FavoritesPresenterTest {
     @Test
     public void loadAllFavoritesFromRepository_loadsItIntoView() {
         when(repository.getFavorites()).thenReturn(Observable.fromIterable(FAVORITES));
-        when(viewModel.getFilterType()).thenReturn(FilterType.ALL);
+        when(presenter.getFilterType()).thenReturn(FilterType.ALL);
         presenter.loadFavorites(true);
         verify(view).showFavorites(FAVORITES);
     }
@@ -105,10 +106,11 @@ public class FavoritesPresenterTest {
 
     @Test
     public void clickOnDeleteFavorite_showsConfirmFavoritesRemoval() {
-        int[] selectedIds = new int[]{0, 5, 10};
-        String favoriteId = TestUtils.KEY_PREFIX + 'A';
+        ArrayList<String> selectedIds = new ArrayList<String>() {{
+            add(FAVORITES.get(0).getId());
+            add(FAVORITES.get(2).getId());
+        }};
         when(viewModel.getSelectedIds()).thenReturn(selectedIds);
-        when(view.removeFavorite(anyInt())).thenReturn(favoriteId);
         presenter.onDeleteClick();
         verify(view).confirmFavoritesRemoval(eq(selectedIds));
     }

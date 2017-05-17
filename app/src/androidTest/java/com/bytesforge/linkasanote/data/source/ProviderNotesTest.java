@@ -60,7 +60,7 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
     @Test
     public void provider_insertNoteEntry() {
         final String noteId = ENTRY_KEYS[0];
-        final Note note = new Note(noteId, NOTE_NAMES[0], NOTE_TAGS);
+        final Note note = new Note(noteId, NOTE_NAMES[0], null, NOTE_TAGS);
 
         insertNoteOnly(note);
         Note savedNote = queryNoteOnly(noteId, NOTE_TAGS);
@@ -70,7 +70,7 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
     @Test
     public void provider_insertNoteEntryWithTags() {
         final String noteId = ENTRY_KEYS[0];
-        final Note note = new Note(noteId, NOTE_NAMES[0], NOTE_TAGS);
+        final Note note = new Note(noteId, NOTE_NAMES[0], null, NOTE_TAGS);
 
         insertNoteWithTags(note);
         Note savedNote = queryNoteWithTags(noteId);
@@ -80,7 +80,7 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
     @Test
     public void provider_deleteNoteButLeaveTags() {
         final String noteId = ENTRY_KEYS[0];
-        final Note note = new Note(noteId, NOTE_NAMES[0], NOTE_TAGS);
+        final Note note = new Note(noteId, NOTE_NAMES[0], null, NOTE_TAGS);
 
         insertNoteWithTags(note);
         List<Tag> tags = queryAllTags();
@@ -96,11 +96,11 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
     @Test
     public void provider_updateNoteEntry() {
         final String noteId = ENTRY_KEYS[0];
-        final Note note = new Note(noteId, NOTE_NAMES[0], NOTE_TAGS);
+        final Note note = new Note(noteId, NOTE_NAMES[0], null, NOTE_TAGS);
         insertNoteWithTags(note);
 
         NOTE_TAGS.add(new Tag("four"));
-        final Note updatedNote = new Note(noteId, NOTE_NAMES[1], NOTE_TAGS);
+        final Note updatedNote = new Note(noteId, NOTE_NAMES[1], null, NOTE_TAGS);
         insertNoteWithTags(updatedNote);
 
         Note savedNote = queryNoteWithTags(noteId);

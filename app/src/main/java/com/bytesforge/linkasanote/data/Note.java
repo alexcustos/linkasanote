@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.sync.SyncState;
+import com.bytesforge.linkasanote.utils.UuidUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -153,16 +154,20 @@ public final class Note implements Comparable<Note>, Item {
         try {
             JSONObject jsonNote = jsonContainer.getJSONObject(JSON_CONTAINER_NOTE);
             String id = jsonNote.getString(JSON_PROPERTY_ID);
-            long created = jsonNote.getLong(JSON_PROPERTY_CREATED);
-            long updated = jsonNote.getLong(JSON_PROPERTY_UPDATED);
-            String note = jsonNote.getString(JSON_PROPERTY_NOTE);
-            String linkId = jsonNote.getString(JSON_PROPERTY_LINK_ID);
-            JSONArray jsonTags = jsonNote.getJSONArray(JSON_PROPERTY_TAGS);
-            List<Tag> tags = new ArrayList<>();
-            for (int i = 0; i < jsonTags.length(); i++) {
-                tags.add(Tag.from(jsonTags.getJSONObject(i)));
+            if (UuidUtils.isKeyValidUuid(id)) {
+                long created = jsonNote.getLong(JSON_PROPERTY_CREATED);
+                long updated = jsonNote.getLong(JSON_PROPERTY_UPDATED);
+                String note = jsonNote.getString(JSON_PROPERTY_NOTE);
+                String linkId = jsonNote.getString(JSON_PROPERTY_LINK_ID);
+                JSONArray jsonTags = jsonNote.getJSONArray(JSON_PROPERTY_TAGS);
+                List<Tag> tags = new ArrayList<>();
+                for (int i = 0; i < jsonTags.length(); i++) {
+                    tags.add(Tag.from(jsonTags.getJSONObject(i)));
+                }
+                return new Note(id, created, updated, note, linkId, tags, state);
+            } else {
+                return null;
             }
-            return new Note(id, created, updated, note, linkId, tags, state);
         } catch (JSONException e) {
             Log.v(TAG, "Exception while processing Note JSON object");
             return null;

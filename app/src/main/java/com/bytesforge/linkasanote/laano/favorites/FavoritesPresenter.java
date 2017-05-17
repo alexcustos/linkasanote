@@ -177,7 +177,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                         }
                     });
         } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
-            boolean selected = viewModel.toggleSingleSelection(favoriteId);
+            boolean selected = viewModel.toggleFilterId(favoriteId);
             // NOTE: filterType will be updated accordingly on the tab
             if (selected) {
                 settings.setFavoriteFilter(favoriteId);
@@ -212,21 +212,21 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         if (favoriteFilter != null) {
             int position = getPosition(favoriteFilter);
             if (position >= 0) { // NOTE: check if there is the filter in the list
-                viewModel.setSingleSelection(favoriteFilter, true);
-                //view.scrollToPosition(position);
+                viewModel.setFilterId(favoriteFilter);
             }
         }
     }
 
     @Override
     public void onEditClick(@NonNull String favoriteId) {
+        checkNotNull(favoriteId);
         view.showEditFavorite(favoriteId);
     }
 
     @Override
     public void onToLinksClick(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
-        viewModel.setSingleSelection(favoriteId, true);
+        viewModel.setFilterId(favoriteId);
         settings.setFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE, FilterType.FAVORITE);
         settings.setFavoriteFilter(favoriteId);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.LINKS_TAB);
@@ -234,7 +234,8 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
 
     @Override
     public void onToNotesClick(@NonNull String favoriteId) {
-        viewModel.setSingleSelection(favoriteId, true);
+        checkNotNull(favoriteId);
+        viewModel.setFilterId(favoriteId);
         settings.setFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE, FilterType.FAVORITE);
         settings.setFavoriteFilter(favoriteId);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.NOTES_TAB);
@@ -383,12 +384,18 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         }
     }
 
+    @Override
+    @NonNull
+    public FilterType getFilterType() {
+        return settings.getFilterType(SETTING_FAVORITES_FILTER_TYPE);
+    }
+
     /**
      * @return Return null if there is no additional data is required
      */
     @Nullable
     private FilterType updateFilter() {
-        FilterType filterType = settings.getFilterType(SETTING_FAVORITES_FILTER_TYPE);
+        FilterType filterType = getFilterType();
         switch (filterType) {
             case ALL:
             case CONFLICTED:

@@ -20,7 +20,7 @@
             android:id="@+id/snackbar_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
             android:padding="@dimen/screen_edge_padding"
             bind:snackbarId="@{viewModel.snackbarId}">

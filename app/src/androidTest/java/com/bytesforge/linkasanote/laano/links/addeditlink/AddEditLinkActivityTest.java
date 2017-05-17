@@ -1,21 +1,16 @@
 package com.bytesforge.linkasanote.laano.links.addeditlink;
 
-import android.support.test.espresso.Espresso;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.R;
+import com.google.common.base.Joiner;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
@@ -41,22 +36,11 @@ public class AddEditLinkActivityTest {
     public ActivityTestRule<AddEditLinkActivity> addEditLinkActivityTestRule =
             new ActivityTestRule<>(AddEditLinkActivity.class);
 
-    @Before
-    public void registerIdlingResource() {
-        Espresso.registerIdlingResources(
-                addEditLinkActivityTestRule.getActivity().getCountingIdlingResource());
-    }
-
-    @After
-    public void unregisterIdlingResource() {
-        Espresso.unregisterIdlingResources(
-                addEditLinkActivityTestRule.getActivity().getCountingIdlingResource());
-    }
-
     @Test
     public void orientationChange_editTextFieldsPersists() throws InterruptedException {
         // NOTE: last tag is incomplete if there is no a space at the end
-        String tags = Arrays.stream(LINK_TAGS).collect(Collectors.joining(","));
+        Joiner joiner = Joiner.on(",");
+        String tags = joiner.join(LINK_TAGS);
         fillLinkFields(LINK_LINK, LINK_NAME, LINK_DISABLED, tags);
 
         AndroidTestUtils.rotateOrientation(addEditLinkActivityTestRule);

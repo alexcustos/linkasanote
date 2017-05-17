@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.sync.SyncState;
+import com.bytesforge.linkasanote.utils.UuidUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -144,15 +145,19 @@ public final class Favorite implements Comparable<Favorite>, Item {
         try {
             JSONObject jsonFavorite = jsonContainer.getJSONObject(JSON_CONTAINER_FAVORITE);
             String id = jsonFavorite.getString(JSON_PROPERTY_ID);
-            long created = jsonFavorite.getLong(JSON_PROPERTY_CREATED);
-            long updated = jsonFavorite.getLong(JSON_PROPERTY_UPDATED);
-            String name = jsonFavorite.getString(JSON_PROPERTY_NAME);
-            JSONArray jsonTags = jsonFavorite.getJSONArray(JSON_PROPERTY_TAGS);
-            List<Tag> tags = new ArrayList<>();
-            for (int i = 0; i < jsonTags.length(); i++) {
-                tags.add(Tag.from(jsonTags.getJSONObject(i)));
+            if (UuidUtils.isKeyValidUuid(id)) {
+                long created = jsonFavorite.getLong(JSON_PROPERTY_CREATED);
+                long updated = jsonFavorite.getLong(JSON_PROPERTY_UPDATED);
+                String name = jsonFavorite.getString(JSON_PROPERTY_NAME);
+                JSONArray jsonTags = jsonFavorite.getJSONArray(JSON_PROPERTY_TAGS);
+                List<Tag> tags = new ArrayList<>();
+                for (int i = 0; i < jsonTags.length(); i++) {
+                    tags.add(Tag.from(jsonTags.getJSONObject(i)));
+                }
+                return new Favorite(id, created, updated, name, tags, state);
+            } else {
+                return null;
             }
-            return new Favorite(id, created, updated, name, tags, state);
         } catch (JSONException e) {
             Log.v(TAG, "Exception while processing Favorite JSON object");
             return null;

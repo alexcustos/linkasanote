@@ -5,7 +5,9 @@ import android.database.sqlite.SQLiteConstraintException;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
@@ -28,7 +30,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,6 +45,9 @@ public class AddEditLinkPresenterTest {
 
     @Mock
     private AddEditLinkContract.ViewModel viewModel;
+
+    @Mock
+    private Settings settings;
 
     private BaseSchedulerProvider schedulerProvider;
     private AddEditLinkPresenter presenter;
@@ -65,16 +69,16 @@ public class AddEditLinkPresenterTest {
         schedulerProvider = new ImmediateSchedulerProvider();
         when(view.isActive()).thenReturn(true);
         presenter = new AddEditLinkPresenter(
-                repository, view, viewModel, schedulerProvider, null);
+                repository, view, viewModel, schedulerProvider, settings, null);
     }
 
     @Test
     public void loadAllTagsFromRepository_loadsItIntoView() {
-        List<Tag> tags = LINKS.get(LINKS.size() - 1).getTags();
+        List<Tag> tags = defaultLink.getTags();
         assertNotNull(tags);
         when(repository.getTags()).thenReturn(Observable.fromIterable(tags));
         presenter.loadTags();
-        verify(view).swapTagsCompletionViewItems(tags);
+        verify(view).swapTagsCompletionViewItems(eq(tags));
     }
 
     @Test
@@ -87,10 +91,16 @@ public class AddEditLinkPresenterTest {
 
     @Test
     public void saveNewLinkToRepository_finishesActivity() {
-        presenter.saveLink(defaultLink.getLink(), defaultLink.getName(),
-                defaultLink.isDisabled(), defaultLink.getTags());
-        verify(repository).saveLink(any(Link.class));
-        verify(view).finishActivity(eq(defaultLink.getId()));
+        String linkLink = defaultLink.getLink();
+        String linkName = defaultLink.getName();
+        boolean linkDisabled = defaultLink.isDisabled();
+        List<Tag> linkTags = defaultLink.getTags();
+        when(repository.saveLink(any(Link.class), eq(false)))
+                .thenReturn(Observable.just(DataSource.ItemState.DEFERRED));
+
+        presenter.saveLink(linkLink, linkName, linkDisabled, linkTags);
+        verify(repository).refreshLinks();
+        verify(view).finishActivity(any(String.class));
     }
 
     @Test
@@ -102,19 +112,33 @@ public class AddEditLinkPresenterTest {
 
     @Test
     public void saveExistingLink_finishesActivity() {
+        String linkId = defaultLink.getId();
+        String linkLink = defaultLink.getLink();
+        String linkName = defaultLink.getName();
+        boolean linkDisabled = defaultLink.isDisabled();
+        List<Tag> linkTags = defaultLink.getTags();
+        when(repository.saveLink(any(Link.class), eq(false)))
+                .thenReturn(Observable.just(DataSource.ItemState.DEFERRED));
         // Edit Link Presenter
         AddEditLinkPresenter presenter = new AddEditLinkPresenter(
-                repository, view, viewModel, schedulerProvider, defaultLink.getId());
-        presenter.saveLink(defaultLink.getLink(), defaultLink.getName(), false, defaultLink.getTags());
-        verify(repository).saveLink(any(Link.class));
-        verify(view).finishActivity(eq(defaultLink.getId()));
+                repository, view, viewModel, schedulerProvider, settings, linkId);
+        presenter.saveLink(linkLink, linkName, linkDisabled, linkTags);
+        verify(repository).refreshLinks();
+        verify(view).finishActivity(eq(linkId));
     }
 
     @Test
     public void saveLinkWithExistedName_showsDuplicateError() {
-        doThrow(new SQLiteConstraintException()).when(repository).saveLink(any(Link.class));
-        presenter.saveLink(defaultLink.getLink(), defaultLink.getName(), false, defaultLink.getTags());
-        verify(view, never()).finishActivity(eq(defaultLink.getId()));
+        String linkId = defaultLink.getId();
+        String linkLink = defaultLink.getLink();
+        String linkName = defaultLink.getName();
+        boolean linkDisabled = defaultLink.isDisabled();
+        List<Tag> linkTags = defaultLink.getTags();
+        when(repository.saveLink(any(Link.class), eq(false)))
+                .thenReturn(Observable.error(new SQLiteConstraintException()));
+
+        presenter.saveLink(linkLink, linkName, linkDisabled, linkTags);
+        verify(view, never()).finishActivity(eq(linkId));
         verify(viewModel).showDuplicateKeyError();
     }
 
@@ -124,7 +148,7 @@ public class AddEditLinkPresenterTest {
         when(repository.getLink(linkId)).thenReturn(Single.just(defaultLink));
         // Edit Link Presenter
         AddEditLinkPresenter presenter = new AddEditLinkPresenter(
-                repository, view, viewModel, schedulerProvider, linkId);
+                repository, view, viewModel, schedulerProvider, settings, linkId);
         presenter.populateLink();
         verify(repository).getLink(linkId);
         verify(viewModel).populateLink(any(Link.class));
@@ -136,7 +160,7 @@ public class AddEditLinkPresenterTest {
         when(repository.getLink(linkId)).thenReturn(Single.error(new NoSuchElementException()));
         // Edit Link Presenter
         AddEditLinkPresenter presenter = new AddEditLinkPresenter(
-                repository, view, viewModel, schedulerProvider, linkId);
+                repository, view, viewModel, schedulerProvider, settings, linkId);
         presenter.populateLink();
         verify(repository).getLink(linkId);
         verify(viewModel, never()).populateLink(any(Link.class));

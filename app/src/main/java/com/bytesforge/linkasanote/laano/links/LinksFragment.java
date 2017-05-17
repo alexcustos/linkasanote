@@ -208,15 +208,17 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     @Override
     public void expandAllLinks() {
         String[] ids = getIds();
-        int listSize = ids.length;
-        if (listSize <= 0) return;
-
-        viewModel.setVisibility(ids);
+        if (ids.length > 0) {
+            viewModel.setVisibility(ids, true);
+        }
     }
 
     @Override
     public void collapseAllLinks() {
-        viewModel.setVisibility(null);
+        String[] ids = getIds();
+        if (ids.length > 0) {
+            viewModel.setVisibility(ids, false);
+        }
     }
 
     @Override
@@ -226,8 +228,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
 
         boolean firstLoad = viewModel.setListSize(links.size());
         if (firstLoad) {
-            if (presenter.isExpandLinks()) expandAllLinks();
-            else collapseAllLinks();
+            viewModel.setExpandByDefault(presenter.isExpandLinks());
         }
         if (viewModel.isActionMode()) {
             enableActionMode();
@@ -385,6 +386,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     }
 
     @Override
+    @NonNull
     public String[] getIds() {
         return adapter.getIds();
     }

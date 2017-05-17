@@ -28,8 +28,8 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
 
     private static final String TAG = LocalLinks.class.getSimpleName();
 
-    private static final Uri LINK_URI = LocalContract.LinkEntry.buildUri();
-
+    // NOTE: static fails Mockito to mock this class
+    private final Uri LINK_URI;
     private final Context context;
     private final ContentResolver contentResolver;
     private final LocalTags localTags;
@@ -45,6 +45,7 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
         this.localTags = checkNotNull(localTags);
         this.localNotes = checkNotNull(localNotes);
         this.factory = checkNotNull(factory);
+        LINK_URI = LocalContract.LinkEntry.buildUri();
     }
 
     private Single<T> buildLink(final T link) {

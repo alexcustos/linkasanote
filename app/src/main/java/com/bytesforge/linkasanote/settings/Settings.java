@@ -34,6 +34,8 @@ public class Settings {
     public static final boolean GLOBAL_ITEM_CLICK_SELECT_FILTER = false;
     public static final String GLOBAL_PARAMETER_WHITE_LIST_DELIMITER = ", ";
     public static final long GLOBAL_DOUBLE_BACK_TO_EXIT_MILLIS = 2000;
+    public static final boolean GLOBAL_MULTIACCOUNT_SUPPORT = false;
+    public static final int GLOBAL_TAGS_AUTOCOMPLETE_THRESHOLD = 1;
 
     public static final int GLOBAL_LINK_MAX_KEYWORDS = 5;
     public static final int GLOBAL_LINK_MAX_BODY_SIZE_BYTES = 10 * 1024;
@@ -233,6 +235,7 @@ public class Settings {
         putStringSetting(checkNotNull(key), lastSyncedETag);
     }
 
+    @NonNull
     public FilterType getFilterType(@NonNull String key) {
         checkNotNull(key);
         int ordinal = sharedPreferences.getInt(key, DEFAULT_FILTER_TYPE.ordinal());

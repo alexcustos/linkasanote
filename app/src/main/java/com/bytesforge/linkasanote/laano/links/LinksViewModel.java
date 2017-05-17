@@ -26,9 +26,11 @@ public class LinksViewModel extends BaseItemViewModel implements LinksContract.V
 
     public static final String FILTER_PREFIX = "#";
 
-    private static final String STATE_VISIBLE_IDS = "VISIBLE_IDS";
+    private static final String STATE_EXPAND_BY_DEFAULT = "EXPAND_BY_DEFAULT";
+    private static final String STATE_TOGGLED_IDS = "TOGGLED_IDS";
 
-    private ArrayList<String> visibleIds;
+    private boolean expandByDefault;
+    private ArrayList<String> toggledIds;
 
     private Context context;
     private Resources resources;
@@ -52,20 +54,23 @@ public class LinksViewModel extends BaseItemViewModel implements LinksContract.V
 
     @Override
     public void saveInstanceState(@NonNull Bundle outState) {
-        outState.putStringArrayList(STATE_VISIBLE_IDS, visibleIds);
+        outState.putBoolean(STATE_EXPAND_BY_DEFAULT, expandByDefault);
+        outState.putStringArrayList(STATE_TOGGLED_IDS, toggledIds);
         super.saveInstanceState(outState);
     }
 
     @Override
     public void applyInstanceState(@NonNull Bundle state) {
-        visibleIds = state.getStringArrayList(STATE_VISIBLE_IDS);
+        expandByDefault = state.getBoolean(STATE_EXPAND_BY_DEFAULT);
+        toggledIds = state.getStringArrayList(STATE_TOGGLED_IDS);
         super.applyInstanceState(state); // notifyChange
     }
 
     @Override
     protected Bundle getDefaultInstanceState() {
         Bundle defaultState = super.getDefaultInstanceState();
-        defaultState.putStringArrayList(STATE_VISIBLE_IDS, new ArrayList<>(0));
+        defaultState.putBoolean(STATE_EXPAND_BY_DEFAULT, false);
+        defaultState.putStringArrayList(STATE_TOGGLED_IDS, new ArrayList<>(0));
         return defaultState;
     }
 
@@ -146,17 +151,30 @@ public class LinksViewModel extends BaseItemViewModel implements LinksContract.V
         }
     }
 
-    public int getLinkBackground(String linkId, boolean conflicted, boolean changed) {
+    public int getLinkBackground(boolean conflicted) {
         if (conflicted) {
             return ContextCompat.getColor(context, R.color.item_conflicted);
         }
-        if (isSelected(linkId) && !isActionMode()) {
-            return ContextCompat.getColor(context, R.color.item_link_selected);
+        return ContextCompat.getColor(context, android.R.color.transparent);
+    }
+
+    public int getFilterBackground(@NonNull String linkId, boolean conflicted, String filterId) {
+        checkNotNull(linkId);
+        if (!conflicted && !isActionMode() && linkId.equals(filterId)) {
+            return ContextCompat.getColor(context, R.color.item_filter);
         }
         return ContextCompat.getColor(context, android.R.color.transparent);
     }
 
     // Link Visibility
+
+    @Override
+    public void setExpandByDefault(boolean expandByDefault) {
+        if (this.expandByDefault != expandByDefault) {
+            this.expandByDefault = expandByDefault;
+            toggledIds.clear();
+        }
+    }
 
     public boolean isVisible(String id, boolean changed) {
         return isVisible(id);
@@ -164,25 +182,26 @@ public class LinksViewModel extends BaseItemViewModel implements LinksContract.V
 
     @Override
     public boolean isVisible(String id) {
-        return visibleIds.contains(id);
+        return expandByDefault != toggledIds.contains(id);
     }
 
     @Override
     public void toggleVisibility(@NonNull String id) {
         checkNotNull(id);
-        if (isVisible(id)) {
-            visibleIds.remove(id);
-        } else {
-            visibleIds.add(id);
+        if (!toggledIds.remove(id)) {
+            toggledIds.add(id);
         }
         notifyPropertyChanged(BR.visibilityChanged);
     }
 
     @Override
-    public void setVisibility(String[] ids) {
-        visibleIds.clear();
-        if (ids != null) {
-            visibleIds.addAll(Arrays.asList(ids));
+    public void setVisibility(@NonNull String[] ids, boolean expand) {
+        checkNotNull(ids);
+        toggledIds.clear();
+        if (expand && !expandByDefault) {
+            toggledIds.addAll(Arrays.asList(ids));
+        } else if (!expand && expandByDefault) {
+            toggledIds.addAll(Arrays.asList(ids));
         }
         notifyChange();
     }

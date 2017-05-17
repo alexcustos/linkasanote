@@ -5,7 +5,9 @@ import android.database.sqlite.SQLiteConstraintException;
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.data.source.Repository;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
@@ -28,7 +30,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -45,6 +46,9 @@ public class AddEditFavoritePresenterTest {
     @Mock
     private AddEditFavoriteContract.ViewModel viewModel;
 
+    @Mock
+    private Settings settings;
+
     private BaseSchedulerProvider schedulerProvider;
     private AddEditFavoritePresenter presenter;
 
@@ -60,21 +64,21 @@ public class AddEditFavoritePresenterTest {
     }
 
     @Before
-    public void setLinksPresenter() throws Exception {
+    public void setFavoritePresenter() throws Exception {
         MockitoAnnotations.initMocks(this);
         schedulerProvider = new ImmediateSchedulerProvider();
         when(view.isActive()).thenReturn(true);
         presenter = new AddEditFavoritePresenter(
-                repository, view, viewModel, schedulerProvider, null);
+                repository, view, viewModel, schedulerProvider, settings, null);
     }
 
     @Test
     public void loadAllTagsFromRepository_loadsItIntoView() {
-        List<Tag> tags = FAVORITES.get(FAVORITES.size() - 1).getTags();
+        List<Tag> tags = defaultFavorite.getTags();
         assertNotNull(tags);
         when(repository.getTags()).thenReturn(Observable.fromIterable(tags));
         presenter.loadTags();
-        verify(view).swapTagsCompletionViewItems(tags);
+        verify(view).swapTagsCompletionViewItems(eq(tags));
     }
 
     @Test
@@ -87,9 +91,14 @@ public class AddEditFavoritePresenterTest {
 
     @Test
     public void saveNewFavoriteToRepository_finishesActivity() {
-        presenter.saveFavorite(defaultFavorite.getName(), defaultFavorite.getTags());
-        verify(repository).saveFavorite(any(Favorite.class));
-        verify(view).finishActivity(eq(defaultFavorite.getId()));
+        String favoriteName = defaultFavorite.getName();
+        List<Tag> favoriteTags = defaultFavorite.getTags();
+        when(repository.saveFavorite(any(Favorite.class), eq(false)))
+                .thenReturn(Observable.just(DataSource.ItemState.DEFERRED));
+
+        presenter.saveFavorite(favoriteName, favoriteTags);
+        verify(repository).refreshFavorites();
+        verify(view).finishActivity(any(String.class));
     }
 
     @Test
@@ -102,19 +111,29 @@ public class AddEditFavoritePresenterTest {
 
     @Test
     public void saveExistingFavorite_finishesActivity() {
+        String favoriteId = defaultFavorite.getId();
+        String favoriteName = defaultFavorite.getName();
+        List<Tag> favoriteTags = defaultFavorite.getTags();
+        when(repository.saveFavorite(any(Favorite.class), eq(false)))
+                .thenReturn(Observable.just(DataSource.ItemState.DEFERRED));
         // Edit Favorite Presenter
         AddEditFavoritePresenter presenter = new AddEditFavoritePresenter(
-                repository, view, viewModel, schedulerProvider, defaultFavorite.getId());
-        presenter.saveFavorite(defaultFavorite.getName(), defaultFavorite.getTags());
-        verify(repository).saveFavorite(any(Favorite.class));
-        verify(view).finishActivity(eq(defaultFavorite.getId()));
+                repository, view, viewModel, schedulerProvider, settings, favoriteId);
+        presenter.saveFavorite(favoriteName, favoriteTags);
+        verify(repository).refreshFavorites();
+        verify(view).finishActivity(eq(favoriteId));
     }
 
     @Test
     public void saveFavoriteWithExistedName_showsDuplicateError() {
-        doThrow(new SQLiteConstraintException()).when(repository).saveFavorite(any(Favorite.class));
-        presenter.saveFavorite(defaultFavorite.getName(), defaultFavorite.getTags());
-        verify(view, never()).finishActivity(eq(defaultFavorite.getId()));
+        String favoriteId = defaultFavorite.getId();
+        String favoriteName = defaultFavorite.getName();
+        List<Tag> favoriteTags = defaultFavorite.getTags();
+        when(repository.saveFavorite(any(Favorite.class), eq(false)))
+                .thenReturn(Observable.error(new SQLiteConstraintException()));
+
+        presenter.saveFavorite(favoriteName, favoriteTags);
+        verify(view, never()).finishActivity(eq(favoriteId));
         verify(viewModel).showDuplicateKeyError();
     }
 
@@ -124,7 +143,7 @@ public class AddEditFavoritePresenterTest {
         when(repository.getFavorite(favoriteId)).thenReturn(Single.just(defaultFavorite));
         // Edit Favorite Presenter
         AddEditFavoritePresenter presenter = new AddEditFavoritePresenter(
-                repository, view, viewModel, schedulerProvider, favoriteId);
+                repository, view, viewModel, schedulerProvider, settings, favoriteId);
         presenter.populateFavorite();
         verify(repository).getFavorite(favoriteId);
         verify(viewModel).populateFavorite(any(Favorite.class));
@@ -136,7 +155,7 @@ public class AddEditFavoritePresenterTest {
         when(repository.getFavorite(favoriteId)).thenReturn(Single.error(new NoSuchElementException()));
         // Edit Favorite Presenter
         AddEditFavoritePresenter presenter = new AddEditFavoritePresenter(
-                repository, view, viewModel, schedulerProvider, favoriteId);
+                repository, view, viewModel, schedulerProvider, settings, favoriteId);
         presenter.populateFavorite();
         verify(repository).getFavorite(favoriteId);
         verify(viewModel, never()).populateFavorite(any(Favorite.class));

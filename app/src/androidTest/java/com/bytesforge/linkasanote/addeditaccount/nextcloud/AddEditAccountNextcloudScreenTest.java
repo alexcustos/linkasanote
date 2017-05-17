@@ -91,11 +91,11 @@ public class AddEditAccountNextcloudScreenTest {
         onView(withId(R.id.account_password)).perform(clearText());
 
         onView(withId(R.id.server_status)).check(
-                matches(withEffectiveVisibility(ViewMatchers.Visibility.INVISIBLE)));
+                matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
         onView(withId(R.id.host_url_refresh_button)).check(
                 matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
         onView(withId(R.id.auth_status)).check(
-                matches(withEffectiveVisibility(ViewMatchers.Visibility.INVISIBLE)));
+                matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
         onView(withId(R.id.login_button)).check(matches(not(isEnabled())));
     }
 
@@ -103,7 +103,7 @@ public class AddEditAccountNextcloudScreenTest {
     public void lostFocusOnEmptyUrlField_showsEmptyUrlWarning() {
         onView(withId(R.id.server_url)).perform(clearText());
         onView(withId(R.id.server_status)).check(
-                matches(withEffectiveVisibility(ViewMatchers.Visibility.INVISIBLE)));
+                matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
 
         onView(withId(R.id.account_username)).perform(click());
         onView(withId(R.id.server_status)).check(

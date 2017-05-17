@@ -16,6 +16,8 @@
     <color name="token_stroke_selected">@color/indigo_300</color>
     <!-- android:color/background_material_light -->
     <color name="token_text_selected">@color/grey_50</color>
+    <color name="item_filter">@color/indigo_100</color>
+    <color name="item_reading_mode_filter">@color/indigo_50</color>
     <color name="item_conflicted">@color/red_100</color>
     <color name="item_link_selected">@color/grey_50</color>
     <color name="item_favorite_selected">@color/grey_100</color>

@@ -259,7 +259,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
         completionView.setSplitChar(splitChars);
         completionView.allowDuplicates(false);
         completionView.performBestGuess(false);
-        int threshold = getContext().getResources().getInteger(R.integer.tags_autocomplete_threshold);
+        int threshold = Settings.GLOBAL_TAGS_AUTOCOMPLETE_THRESHOLD;
         completionView.setThreshold(threshold);
         // Adapter
         tags = new ArrayList<>();

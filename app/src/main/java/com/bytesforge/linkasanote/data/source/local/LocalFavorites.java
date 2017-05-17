@@ -27,8 +27,8 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
 
     private static final String TAG = LocalFavorites.class.getSimpleName();
 
-    private static final Uri FAVORITE_URI = LocalContract.FavoriteEntry.buildUri();
-
+    // NOTE: static fails Mockito to mock this class
+    private final Uri FAVORITE_URI;
     private final Context context;
     private final ContentResolver contentResolver;
     private final LocalTags localTags;
@@ -41,6 +41,7 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
         this.contentResolver = checkNotNull(contentResolver);
         this.localTags = checkNotNull(localTags);
         this.factory = checkNotNull(factory);
+        FAVORITE_URI = LocalContract.FavoriteEntry.buildUri();
     }
 
     private Single<T> buildFavorite(final T favorite) {

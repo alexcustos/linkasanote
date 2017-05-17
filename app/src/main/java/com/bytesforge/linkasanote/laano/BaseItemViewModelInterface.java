@@ -26,6 +26,8 @@ public interface BaseItemViewModelInterface {
     void removeSelection(@NonNull String id);
     int getSelectedCount();
     ArrayList<String> getSelectedIds();
+    boolean toggleFilterId(@NonNull String filterId);
+    void setFilterId(String filterId);
 
     String getSearchText();
     void setSearchText(String searchText);

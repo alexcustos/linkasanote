@@ -27,7 +27,7 @@ import dagger.Provides;
 @Module
 public class RepositoryModule {
 
-    Repository repository;
+    private Repository repository;
 
     @Provides
     @Singleton

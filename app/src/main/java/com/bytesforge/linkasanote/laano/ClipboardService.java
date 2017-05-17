@@ -223,10 +223,10 @@ public class ClipboardService extends Service {
                         }
                     }
                     notifySubscriber();
-                    Log.i(TAG, "URL [" + normalizedClipboard + "]");
-                    Log.i(TAG, "Title [" + linkTitle + "]");
-                    Log.i(TAG, "Description [" + linkDescription + "]");
-                    Log.i(TAG, "Keywords [" + Arrays.toString(linkKeywords) + "]");
+                    Log.d(TAG, "URL [" + normalizedClipboard + "]");
+                    Log.d(TAG, "Title [" + linkTitle + "]");
+                    Log.d(TAG, "Description [" + linkDescription + "]");
+                    Log.d(TAG, "Keywords [" + Arrays.toString(linkKeywords) + "]");
                     if (Settings.GLOBAL_CLIPBOARD_LINK_UPDATED_TOAST) {
                         @StringRes int messageId;
                         if (isLinkExtra()) {
@@ -258,10 +258,10 @@ public class ClipboardService extends Service {
         checkNotNull(metaName);
         Element metaElement = document.select("meta[name=" + metaName + "]").first();
         String metaValue = metaElement == null ? null : metaElement.attr("content");
-        if (Strings.isNullOrEmpty(metaValue)) {
-            return null;
-        }
-        return metaValue.trim();
+        if (metaValue == null) return null;
+
+        metaValue = metaValue.trim();
+        return metaValue.isEmpty() ? null : metaValue;
     }
 
     private void clipboardCheck() {
@@ -281,9 +281,10 @@ public class ClipboardService extends Service {
                 }
             }
         }
-        notifySubscriber();
         if (settings.isClipboardLinkGetMetadata() && clipboardType == CLIPBOARD_LINK) {
             loadLinkExtra(normalizedClipboard);
+        } else {
+            notifySubscriber();
         }
     }
 

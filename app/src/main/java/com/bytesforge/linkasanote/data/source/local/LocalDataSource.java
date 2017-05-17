@@ -168,6 +168,7 @@ public class LocalDataSource {
     }
 
     public Observable<Note> getNotes(@NonNull final String linkId) {
+        checkNotNull(linkId);
         Uri linkNoteUri = LocalContract.LinkEntry.buildNotesDirUriWith(linkId);
         return localNotes.get(linkNoteUri);
     }

@@ -25,8 +25,8 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
 
     private static final String TAG = LocalNotes.class.getSimpleName();
 
-    private static final Uri NOTE_URI = LocalContract.NoteEntry.buildUri();
-
+    // NOTE: static fails Mockito to mock this class
+    private final Uri NOTE_URI;
     private final ContentResolver contentResolver;
     private final LocalTags localTags;
     private final NoteFactory<T> factory;
@@ -37,6 +37,7 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
         this.contentResolver = checkNotNull(contentResolver);
         this.localTags = checkNotNull(localTags);
         this.factory = checkNotNull(factory);
+        NOTE_URI = LocalContract.NoteEntry.buildUri();
     }
 
     private Single<T> buildNote(final T note) {

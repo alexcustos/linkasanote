@@ -3,7 +3,6 @@ package com.bytesforge.linkasanote.laano;
 import android.content.Context;
 import android.content.res.Resources;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.Espresso;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.espresso.core.deps.guava.collect.Lists;
 import android.support.test.filters.LargeTest;
@@ -21,16 +20,14 @@ import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
 import com.bytesforge.linkasanote.laano.links.LinksFragment;
 import com.bytesforge.linkasanote.laano.notes.NotesFragment;
+import com.google.common.base.Joiner;
 
 import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
@@ -46,7 +43,8 @@ import static com.bytesforge.linkasanote.EspressoMatchers.clickChildViewWithId;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
 import static junit.framework.Assert.assertNotNull;
-import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.instanceOf;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -84,18 +82,6 @@ public class LaanoActivityTest {
         repository.deleteAllFavorites();
         repository.deleteAllNotes();
         repository.deleteAllTags();
-    }
-
-    @Before
-    public void registerIdlingResource() {
-        Espresso.registerIdlingResources(
-                laanoActivityTestRule.getActivity().getCountingIdlingResource());
-    }
-
-    @After
-    public void unregisterIdlingResource() {
-        Espresso.unregisterIdlingResources(
-                laanoActivityTestRule.getActivity().getCountingIdlingResource());
     }
 
     @Test
@@ -151,7 +137,8 @@ public class LaanoActivityTest {
                 createNote(note);
                 setupNotesTab();
             }
-            onView(withItemTextRv(note.getNote())).check(matches(isDisplayed()));
+            onView(allOf(withId(R.id.note_note_caption), withItemTextRv(note.getNote())))
+                    .check(matches(isDisplayed()));
         }
     }
 
@@ -182,10 +169,11 @@ public class LaanoActivityTest {
         String linkName = link.getName();
         if (linkName == null) linkName = "";
         boolean linkDisabled = link.isDisabled();
-        // NOTE: last tag complete if there is a comma at the end
         String tagLine = "";
         if (tags != null) {
-            tagLine = tags.stream().map(Tag::getName).collect(Collectors.joining(",")) + ",";
+            // NOTE: last tag complete if there is a comma at the end
+            Joiner joiner = Joiner.on(",");
+            tagLine = joiner.join(tags) + ",";
         }
         onView(withId(R.id.fab_add)).perform(click());
         onView(withId(R.id.link_link)).check(matches(isDisplayed()));
@@ -226,8 +214,8 @@ public class LaanoActivityTest {
         String name = favorite.getName();
         assertNotNull(name);
         // NOTE: last tag complete if there is a comma at the end
-        String tagLine = tags.stream().map(Tag::getName).collect(Collectors.joining(",")) + ",";
-        //String tagLine = Arrays.stream(tags).collect(Collectors.joining(",")) + ",";
+        Joiner joiner = Joiner.on(",");
+        String tagLine = joiner.join(tags) + ",";
         onView(withId(R.id.fab_add)).perform(click());
         onView(withId(R.id.favorite_name)).check(matches(isDisplayed()));
         onView(withId(R.id.favorite_name)).perform(typeText(name), closeSoftKeyboard());
@@ -261,7 +249,8 @@ public class LaanoActivityTest {
         String noteNote = note.getNote();
         assertNotNull(noteNote);
         // NOTE: last tag complete if there is a comma at the end
-        String tagLine = tags.stream().map(Tag::getName).collect(Collectors.joining(",")) + ",";
+        Joiner joiner = Joiner.on(",");
+        String tagLine = joiner.join(tags) + ",";
         //String tagLine = Arrays.stream(tags).collect(Collectors.joining(",")) + ",";
         onView(withId(R.id.note_note)).check(matches(isDisplayed()));
         onView(withId(R.id.note_note)).perform(typeText(noteNote), closeSoftKeyboard());

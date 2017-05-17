@@ -98,7 +98,7 @@ public class OperationsService extends Service {
             if (hasListener()) {
                 handler.post(() -> listener.onRemoteOperationFinish(operation, result));
             }
-        } // dispatchResult
+        }
     }
 
     @Override
@@ -173,11 +173,10 @@ public class OperationsService extends Service {
                 result = operation.execute(client);
             } catch (AccountsException | IOException e) {
                 result = new RemoteOperationResult(e);
-                // TODO: check if the item should be placed back to the queue for some reason
             }
             return result;
-        } // executePendingOperation
-    } // Handler
+        }
+    }
 
     public long queueOperation(Intent intent, OnRemoteOperationListener listener, Handler handler) {
         Log.d(TAG, "Queuing message with id " + operationId);

@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.sync.SyncState;
+import com.bytesforge.linkasanote.utils.UuidUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -170,17 +171,21 @@ public final class Link implements Comparable<Link>, Item {
         try {
             JSONObject jsonLink = jsonContainer.getJSONObject(JSON_CONTAINER_LINK);
             String id = jsonLink.getString(JSON_PROPERTY_ID);
-            long created = jsonLink.getLong(JSON_PROPERTY_CREATED);
-            long updated = jsonLink.getLong(JSON_PROPERTY_UPDATED);
-            String link = jsonLink.getString(JSON_PROPERTY_LINK);
-            String name = jsonLink.getString(JSON_PROPERTY_NAME);
-            boolean disabled = jsonLink.getBoolean(JSON_PROPERTY_DISABLED);
-            JSONArray jsonTags = jsonLink.getJSONArray(JSON_PROPERTY_TAGS);
-            List<Tag> tags = new ArrayList<>();
-            for (int i = 0; i < jsonTags.length(); i++) {
-                tags.add(Tag.from(jsonTags.getJSONObject(i)));
+            if (UuidUtils.isKeyValidUuid(id)) {
+                long created = jsonLink.getLong(JSON_PROPERTY_CREATED);
+                long updated = jsonLink.getLong(JSON_PROPERTY_UPDATED);
+                String link = jsonLink.getString(JSON_PROPERTY_LINK);
+                String name = jsonLink.getString(JSON_PROPERTY_NAME);
+                boolean disabled = jsonLink.getBoolean(JSON_PROPERTY_DISABLED);
+                JSONArray jsonTags = jsonLink.getJSONArray(JSON_PROPERTY_TAGS);
+                List<Tag> tags = new ArrayList<>();
+                for (int i = 0; i < jsonTags.length(); i++) {
+                    tags.add(Tag.from(jsonTags.getJSONObject(i)));
+                }
+                return new Link(id, created, updated, link, name, disabled, tags, null, state);
+            } else {
+                return null;
             }
-            return new Link(id, created, updated, link, name, disabled, tags, null, state);
         } catch (JSONException e) {
             Log.v(TAG, "Exception while processing Link JSON object");
             return null;

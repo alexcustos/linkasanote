@@ -3,7 +3,6 @@ package com.bytesforge.linkasanote.laano;
 import android.content.Context;
 import android.content.res.Resources;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.Espresso;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
@@ -16,12 +15,11 @@ import com.bytesforge.linkasanote.DaggerApplicationComponent;
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Link;
-import com.bytesforge.linkasanote.data.source.Cloud;
-import com.bytesforge.linkasanote.data.source.DataSource;
-import com.bytesforge.linkasanote.data.source.Local;
 import com.bytesforge.linkasanote.data.source.ProviderModule;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.data.source.RepositoryModule;
+import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
+import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.laano.links.LinksFragment;
 import com.bytesforge.linkasanote.settings.SettingsModule;
 import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
@@ -86,13 +84,11 @@ public class LinksTabTest {
                 protected void afterActivityLaunched() {
                     super.afterActivityLaunched();
                     setupTab();
-                    registerIdlingResource();
                 }
 
                 @Override
                 protected void afterActivityFinished() {
                     super.afterActivityFinished();
-                    unregisterIdlingResource();
                     restoreApplicationComponent(applicationComponent);
                 }
             };
@@ -113,8 +109,7 @@ public class LinksTabTest {
 
                     @Override
                     public Repository provideRepository(
-                            @Local DataSource localDataSource,
-                            @Cloud DataSource cloudDataSource) {
+                            LocalDataSource localDataSource, CloudDataSource cloudDataSource) {
                         return repository;
                     }
                 })
@@ -145,16 +140,6 @@ public class LinksTabTest {
                 .check(matches(isDisplayed()));
         assertThat((laanoActivity.getCurrentFragment()).getTitle(), Matchers.equalTo(LINKS_TITLE));
         assertThat(laanoActivity.getCurrentFragment(), instanceOf(LinksFragment.class));
-    }
-
-    private void registerIdlingResource() { // @Before
-        Espresso.registerIdlingResources(
-                laanoActivityTestRule.getActivity().getCountingIdlingResource());
-    }
-
-    private void unregisterIdlingResource() { // @After
-        Espresso.unregisterIdlingResources(
-                laanoActivityTestRule.getActivity().getCountingIdlingResource());
     }
 
     @Test

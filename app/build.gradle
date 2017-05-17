@@ -67,12 +67,22 @@ android {
     dataBinding {
         enabled = true
     }
+
+    sourceSets {
+        String sharedTestDir = 'src/sharedTest/java'
+        test {
+            java.srcDir sharedTestDir
+        }
+        androidTest {
+            java.srcDir sharedTestDir
+        }
+    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':tokenautocomplete')
-    compile project(':base64')
+    compile project(':androidutils')
     //compile project(':nextcloud')
 
     compile "com.android.support:multidex:${multidexVersion}"
@@ -100,7 +110,6 @@ dependencies {
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
     testCompile "org.powermock:powermock-module-junit4:${powermockVersion}"
     testCompile "org.powermock:powermock-api-mockito2:${powermockVersion}"
-    //testCompile "com.github.fabioCollini:DaggerMock:${daggerMockVersion}"
 
     // Espresso Testing
     androidTestCompile "com.android.support.test.espresso:espresso-core:${espressoVersion}"
@@ -108,7 +117,6 @@ dependencies {
     androidTestCompile "org.mockito:mockito-core:${mockitoVersion}"
     androidTestCompile "com.linkedin.dexmaker:dexmaker-mockito:${dexmakerVersion}"
     androidTestCompile "com.android.support.test.uiautomator:uiautomator-v18:${uiAutomatorVersion}"
-    //androidTestCompile "com.github.fabioCollini:DaggerMock:${daggerMockVersion}"
 
     // Resolve conflicts
     androidTestCompile "com.android.support:recyclerview-v7:${supportLibraryVersion}"

@@ -1,7 +1,9 @@
 package com.bytesforge.linkasanote;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.TextView;
 
@@ -32,10 +34,13 @@ public class DrawableMatcher extends TypeSafeMatcher<View> {
             return true;
         }
 
-        Resources resources = target.getContext().getResources();
-        Drawable expectedDrawable = resources.getDrawable(expectedId, null);
+        Context context = target.getContext();
+        Resources resources = context.getResources();
+        Drawable expectedDrawable = ContextCompat.getDrawable(context, expectedId);
         for (Drawable item : drawables) {
-            if (item.getConstantState().equals(expectedDrawable.getConstantState())) {
+            Drawable.ConstantState itemConstantState = item.getConstantState();
+            if (itemConstantState != null
+                    && itemConstantState.equals(expectedDrawable.getConstantState())) {
                 resourceName = resources.getResourceEntryName(expectedId);
                 return true;
             }

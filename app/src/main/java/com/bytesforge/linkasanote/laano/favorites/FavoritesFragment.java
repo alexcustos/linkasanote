@@ -317,6 +317,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     }
 
     @Override
+    @NonNull
     public String[] getIds() {
         return adapter.getIds();
     }

@@ -22,7 +22,6 @@ ext {
     rxandroidVersion = '2.0.1'
     nextcloudLibraryVersion = '1.0.15'
     uiAutomatorVersion = '2.1.2'
-    //daggerMockVersion = '0.6.4'
     jsoupVersion = '1.10.2'
 }
 

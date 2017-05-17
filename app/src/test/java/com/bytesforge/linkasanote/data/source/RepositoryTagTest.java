@@ -1,6 +1,8 @@
 package com.bytesforge.linkasanote.data.source;
 
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
+import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,10 +32,10 @@ public class RepositoryTagTest {
     private Repository repository;
 
     @Mock
-    private DataSource localDataSource;
+    private LocalDataSource localDataSource;
 
     @Mock
-    private DataSource cloudDataSource;
+    private CloudDataSource cloudDataSource;
 
     public RepositoryTagTest() {
         TAGS = new ArrayList<Tag>() {{
@@ -52,8 +54,6 @@ public class RepositoryTagTest {
     @Test
     public void getTags_requestsAllTagsFromLocalSource() {
         setTagsAvailable(localDataSource, TAGS);
-        setTagsNotAvailable(cloudDataSource);
-
 
         TestObserver<List<Tag>> testTagsObserver = repository.getTags().toList().test();
 
@@ -99,19 +99,23 @@ public class RepositoryTagTest {
 
     // Data setup
 
-    private void setTagsAvailable(DataSource dataSource, List<Tag> tags) {
-        when(dataSource.getTags()).thenReturn(Observable.fromIterable(tags));
+    private void setTagsAvailable(LocalDataSource localDataSource, List<Tag> tags) {
+        when(localDataSource.getTags()).thenReturn(Observable.fromIterable(tags));
     }
 
-    private void setTagsNotAvailable(DataSource dataSource) {
-        when(dataSource.getTags()).thenReturn(Observable.fromIterable(Collections.emptyList()));
+    private void setTagsNotAvailable(LocalDataSource localDataSource) {
+        when(localDataSource.getTags()).thenReturn(
+                Observable.fromIterable(Collections.emptyList()));
     }
 
-    private void setTagAvailable(DataSource dataSource, Tag tag) {
-        when(dataSource.getTag(eq(tag.getName()))).thenReturn(Single.just(tag));
+    private void setTagAvailable(LocalDataSource localDataSource, Tag tag) {
+        String tagName = tag.getName();
+        assert tagName != null;
+        when(localDataSource.getTag(eq(tagName))).thenReturn(Single.just(tag));
     }
 
-    private void setTagNotAvailable(DataSource dataSource, String tagName) {
-        when(dataSource.getTag(eq(tagName))).thenReturn(Single.error(new NoSuchElementException()));
+    private void setTagNotAvailable(LocalDataSource localDataSource, String tagName) {
+        when(localDataSource.getTag(eq(tagName))).thenReturn(
+                Single.error(new NoSuchElementException()));
     }
 }

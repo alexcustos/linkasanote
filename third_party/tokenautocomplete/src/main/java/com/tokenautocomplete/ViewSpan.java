@@ -22,21 +22,31 @@ import android.view.ViewGroup;
 public class ViewSpan extends ReplacementSpan {
     protected View view;
     private int maxWidth;
+    private boolean prepared;
 
-    public ViewSpan(View v, int maxWidth) {
+    public ViewSpan(View view, int maxWidth) {
         super();
         this.maxWidth = maxWidth;
-        view = v;
-        view.setLayoutParams(new ViewGroup.LayoutParams(
+        this.view = view;
+        this.view.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        prepared = false;
     }
 
     private void prepView() {
-        int widthSpec = View.MeasureSpec.makeMeasureSpec(maxWidth, View.MeasureSpec.AT_MOST);
-        int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        if (!prepared) {
+            int widthSpec = View.MeasureSpec.makeMeasureSpec(maxWidth, View.MeasureSpec.AT_MOST);
+            int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
 
-        view.measure(widthSpec, heightSpec);
-        view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
+            view.measure(widthSpec, heightSpec);
+            view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
+            prepared = true;
+        }
+    }
+
+    public int getHeight() {
+        prepView();
+        return view.getHeight();
     }
 
     @Override
@@ -45,7 +55,6 @@ public class ViewSpan extends ReplacementSpan {
             @IntRange(from = 0) int start, @IntRange(from = 0) int end,
             float x, int top, int y, int bottom, @NonNull Paint paint) {
         prepView();
-
         canvas.save();
         canvas.translate(x, top);
         view.draw(canvas);
@@ -65,7 +74,8 @@ public class ViewSpan extends ReplacementSpan {
                 int top_patch = top_need / 2;
                 fm.top -= top_patch;
                 fm.bottom += top_need - top_patch;
-                // NOTE: only the first line has 1dp margin which have to be compensated with this gap
+                // NOTE: only the first line has ~2dp "padding", adding the same gap to the other lines;
+                // NOTE: one line string can be trimmed when the layout is inflated
                 int ascent_need = height - (fm.descent - fm.ascent) + dpToPx(2);
                 if (ascent_need > 0) {
                     int ascent_patch = ascent_need / 2;

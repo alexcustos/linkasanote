@@ -90,12 +90,17 @@ public class FavoritesViewModel extends BaseItemViewModel implements FavoritesCo
         return FILTER_PREFIX;
     }
 
-    public int getFavoriteBackground(String favoriteId, boolean conflicted, boolean changed) {
+    public int getFavoriteBackground(boolean conflicted) {
         if (conflicted) {
             return ContextCompat.getColor(context, R.color.item_conflicted);
         }
-        if (isSelected(favoriteId) && !isActionMode()) {
-            return ContextCompat.getColor(context, R.color.item_favorite_selected);
+        return ContextCompat.getColor(context, android.R.color.transparent);
+    }
+
+    public int getFilterBackground(@NonNull String favoriteId, boolean conflicted, String filterId) {
+        checkNotNull(favoriteId);
+        if (!conflicted && !isActionMode() && favoriteId.equals(filterId)) {
+            return ContextCompat.getColor(context, R.color.item_filter);
         }
         return ContextCompat.getColor(context, android.R.color.transparent);
     }

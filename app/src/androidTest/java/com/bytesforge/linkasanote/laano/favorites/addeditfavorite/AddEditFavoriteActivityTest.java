@@ -1,21 +1,16 @@
 package com.bytesforge.linkasanote.laano.favorites.addeditfavorite;
 
-import android.support.test.espresso.Espresso;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.R;
+import com.google.common.base.Joiner;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
@@ -36,22 +31,11 @@ public class AddEditFavoriteActivityTest {
     public ActivityTestRule<AddEditFavoriteActivity> addEditFavoriteActivityTestRule =
             new ActivityTestRule<>(AddEditFavoriteActivity.class);
 
-    @Before
-    public void registerIdlingResource() {
-        Espresso.registerIdlingResources(
-                addEditFavoriteActivityTestRule.getActivity().getCountingIdlingResource());
-    }
-
-    @After
-    public void unregisterIdlingResource() {
-        Espresso.unregisterIdlingResources(
-                addEditFavoriteActivityTestRule.getActivity().getCountingIdlingResource());
-    }
-
     @Test
     public void orientationChange_editTextFieldsPersists() throws InterruptedException {
         // NOTE: last tag is incomplete if there is no a space at the end
-        String tags = Arrays.stream(FAVORITE_TAGS).collect(Collectors.joining(","));
+        Joiner joiner = Joiner.on(",");
+        String tags = joiner.join(FAVORITE_TAGS);
         fillFavoriteFields(FAVORITE_NAME, tags);
 
         AndroidTestUtils.rotateOrientation(addEditFavoriteActivityTestRule);

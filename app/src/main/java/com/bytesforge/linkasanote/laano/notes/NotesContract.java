@@ -27,7 +27,7 @@ public interface NotesContract {
         void visibilityChanged(@NonNull String id);
         void removeNote(@NonNull String noteId);
         int getPosition(String noteId);
-        String[] getIds();
+        @NonNull String[] getIds();
         void scrollToPosition(int position);
         void confirmNotesRemoval(ArrayList<String> selectedIds);
         void showConflictResolution(@NonNull String noteId);
@@ -45,9 +45,10 @@ public interface NotesContract {
         void showSaveSuccessSnackbar();
         void showDeleteSuccessSnackbar();
 
+        void setExpandByDefault(boolean expandByDefault);
         boolean isVisible(String id);
         void toggleVisibility(@NonNull String id);
-        void setVisibility(String[] ids);
+        void setVisibility(@NonNull String[] ids, boolean expand);
     }
 
     interface Presenter extends BaseItemPresenterInterface {
@@ -67,6 +68,7 @@ public interface NotesContract {
         void onSelectAllClick();
         int getPosition(String noteId);
         void setFilterType(@NonNull FilterType filtering);
+        @NonNull FilterType getFilterType();
         void syncSavedNote(final String linkId, @NonNull final String noteId);
         void deleteNotes(ArrayList<String> selectedIds);
         boolean isFavoriteFilter();

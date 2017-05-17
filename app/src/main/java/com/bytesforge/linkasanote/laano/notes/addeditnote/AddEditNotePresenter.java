@@ -88,12 +88,12 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
         tagsDisposable.clear(); // stop previous requests
 
         Disposable disposable = repository.getTags()
-                .toList()
                 .subscribeOn(schedulerProvider.computation())
+                .toList()
                 .observeOn(schedulerProvider.ui())
-                .doOnError(throwable -> view.swapTagsCompletionViewItems(new ArrayList<>()))
-                .subscribe((tags, throwable) -> {
-                    if (tags != null) view.swapTagsCompletionViewItems(tags);
+                .subscribe(view::swapTagsCompletionViewItems, throwable -> {
+                    CommonUtils.logStackTrace(TAG, throwable);
+                    view.swapTagsCompletionViewItems(new ArrayList<>());
                 });
         tagsDisposable.add(disposable);
     }

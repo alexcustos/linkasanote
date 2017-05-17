@@ -20,15 +20,17 @@
     <dimen name="item_manage_accounts_layout_height">72dp</dimen>
     <dimen name="recycler_view_left_icon_margin_start">16dp</dimen>
     <dimen name="recycler_view_text_margin_horizontal">16dp</dimen>
-    <dimen name="recycler_view_left_checkbox_margin_start">12dp</dimen>
+    <dimen name="recycler_view_left_checkbox_margin_start">8dp</dimen>
     <dimen name="recycler_view_text_to_button_margin_start">24dp</dimen>
     <dimen name="recycler_view_prefix_to_text_margin_end">4dp</dimen>
     <dimen name="recycler_view_nearby_button_margin_end">8dp</dimen>
     <dimen name="recycler_view_button_padding_vertical">16dp</dimen>
+    <dimen name="recycler_view_filter_button_padding_vertical">8dp</dimen>
+    <dimen name="recycler_view_filter_button_margin_vertical">8dp</dimen>
     <dimen name="recycler_view_button_padding">8dp</dimen>
     <dimen name="recycler_view_right_button_padding_end">16dp</dimen>
     <dimen name="recycler_view_left_button_padding_start">16dp</dimen>
-    <dimen name="recycler_view_tags_margin_bottom">16dp</dimen>
+    <dimen name="recycler_view_tags_margin_bottom">24dp</dimen>
     <dimen name="dialog_padding">8dp</dimen>
     <dimen name="dialog_margin_content">24dp</dimen>
     <dimen name="dialog_title_vertical_padding">8dp</dimen>
@@ -50,11 +52,15 @@
     <dimen name="card_nearby_button_margin_end">8dp</dimen>
     <dimen name="card_button_padding">8dp</dimen>
     <dimen name="card_button_padding_vertical">16dp</dimen>
-    <dimen name="card_button_padding_start">16dp</dimen>
+    <dimen name="card_filter_button_padding_vertical">8dp</dimen>
+    <dimen name="card_filter_button_margin_vertical">8dp</dimen>
+    <dimen name="card_button_padding_horizontal">12dp</dimen>
     <dimen name="card_right_button_padding_end">16dp</dimen>
     <dimen name="card_left_button_padding_start">16dp</dimen>
     <dimen name="card_note_bottom_spacer_height">24dp</dimen>
     <dimen name="card_note_spacer_height">16dp</dimen>
     <dimen name="card_link_spacer_height">8dp</dimen>
     <dimen name="card_link_notes_bottom_spacer_height">8dp</dimen>
+    <dimen name="card_link_add_note_margin_start">4dp</dimen>
+    <dimen name="card_notes_count_margin_horizontal">4dp</dimen>
 </resources>

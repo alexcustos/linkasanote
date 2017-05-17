@@ -1,18 +1,25 @@
 package com.bytesforge.linkasanote.laano.favorites.conflictresolution;
 
+import android.util.Log;
+
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.NoSuchElementException;
 
@@ -23,22 +30,27 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({Log.class})
 public class FavoritesConflictResolutionPresenterTest {
 
     @Mock
-    Repository repository;
+    private Repository repository;
 
     @Mock
-    LocalFavorites<Favorite> localFavorites;
+    private LocalFavorites<Favorite> localFavorites;
 
     @Mock
-    CloudItem<Favorite> cloudFavorites;
+    private CloudItem<Favorite> cloudFavorites;
 
     @Mock
-    FavoritesConflictResolutionContract.View view;
+    private FavoritesConflictResolutionContract.View view;
 
     @Mock
-    FavoritesConflictResolutionContract.ViewModel viewModel;
+    private FavoritesConflictResolutionContract.ViewModel viewModel;
+
+    @Mock
+    private Settings settings;
 
     private static final String E_TAGL = "abcdefghigklmnopqrstuvwxwz";
     private static final String E_TAGC = "zwxwvutsrqponmlkgihgfedcba";
@@ -51,11 +63,12 @@ public class FavoritesConflictResolutionPresenterTest {
     @Before
     public void setupFavoritesConflictResolutionPresenter() {
         MockitoAnnotations.initMocks(this);
+        PowerMockito.mockStatic(Log.class);
         schedulerProvider = new ImmediateSchedulerProvider();
         favoriteId = TestUtils.KEY_PREFIX + 'A';
         defaultFavorite = new Favorite(favoriteId, "Favorite", TestUtils.TAGS);
         presenter = new FavoritesConflictResolutionPresenter(
-                repository, localFavorites, cloudFavorites,
+                repository, settings, localFavorites, cloudFavorites,
                 view, viewModel, schedulerProvider, defaultFavorite.getId());
     }
 
@@ -64,7 +77,7 @@ public class FavoritesConflictResolutionPresenterTest {
         SyncState state = new SyncState(SyncState.State.SYNCED);
         Favorite favorite = new Favorite(defaultFavorite, state);
         when(localFavorites.get(eq(favoriteId)))
-                .thenReturn(Single.fromCallable(() -> favorite));
+                .thenReturn(Single.just(favorite));
         presenter.subscribe();
         verify(repository).refreshFavorites();
         verify(view).finishActivity();
@@ -84,7 +97,7 @@ public class FavoritesConflictResolutionPresenterTest {
         when(localFavorites.get(eq(favoriteId)))
                 .thenReturn(Single.error(new NullPointerException()));
         when(cloudFavorites.download(eq(favoriteId)))
-                .thenReturn(Single.fromCallable(() -> defaultFavorite));
+                .thenReturn(Single.just(defaultFavorite));
         presenter.subscribe();
         verify(viewModel).showDatabaseError();
         verify(viewModel).populateCloudFavorite(eq(defaultFavorite));
@@ -97,9 +110,9 @@ public class FavoritesConflictResolutionPresenterTest {
         Favorite mainFavorite = new Favorite(
                 TestUtils.KEY_PREFIX + 'B', "Favorite", TestUtils.TAGS);
         when(localFavorites.get(eq(favoriteId)))
-                .thenReturn(Single.fromCallable(() -> favorite));
-        when(localFavorites.getMain(eq(favorite.getName())))
-                .thenReturn(Single.fromCallable(() -> mainFavorite));
+                .thenReturn(Single.just(favorite));
+        when(localFavorites.getMain(eq(favorite.getDuplicatedKey())))
+                .thenReturn(Single.just(mainFavorite));
         when(viewModel.isCloudPopulated()).thenReturn(true);
         presenter.subscribe();
         verify(viewModel).populateCloudFavorite(eq(favorite));
@@ -110,13 +123,12 @@ public class FavoritesConflictResolutionPresenterTest {
     public void duplicatedFavoriteWithNoMainRecord_resolvesConflictAutomatically() {
         SyncState state = new SyncState(E_TAGL, 1); // duplicated
         Favorite favorite = new Favorite(defaultFavorite, state);
-        when(localFavorites.get(eq(favoriteId)))
-                .thenReturn(Single.fromCallable(() -> favorite));
-        when(localFavorites.getMain(eq(favorite.getName())))
+        when(localFavorites.get(eq(favoriteId))).thenReturn(Single.just(favorite));
+        when(localFavorites.getMain(eq(favorite.getDuplicatedKey())))
                 .thenReturn(Single.error(new NoSuchElementException()));
         when(viewModel.isCloudPopulated()).thenReturn(true);
         when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
-                .thenReturn(Single.fromCallable(() -> 1));
+                .thenReturn(Single.just(true));
         presenter.subscribe();
         verify(viewModel).populateCloudFavorite(eq(favorite));
         verify(repository).refreshFavorites();

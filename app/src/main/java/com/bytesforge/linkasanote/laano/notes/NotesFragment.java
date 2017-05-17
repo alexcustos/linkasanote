@@ -222,15 +222,17 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     @Override
     public void expandAllNotes() {
         String[] ids = getIds();
-        int listSize = ids.length;
-        if (listSize <= 0) return;
-
-        viewModel.setVisibility(ids);
+        if (ids.length > 0) {
+            viewModel.setVisibility(ids, true);
+        }
     }
 
     @Override
     public void collapseAllNotes() {
-        viewModel.setVisibility(null);
+        String[] ids = getIds();
+        if (ids.length > 0) {
+            viewModel.setVisibility(ids, false);
+        }
     }
 
     @Override
@@ -240,8 +242,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
         boolean firstLoad = viewModel.setListSize(notes.size());
         if (firstLoad) {
-            if (presenter.isExpandNotes()) expandAllNotes();
-            else collapseAllNotes();
+            viewModel.setExpandByDefault(presenter.isExpandNotes());
         }
         if (viewModel.isActionMode()) {
             enableActionMode();
@@ -420,6 +421,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     }
 
     @Override
+    @NonNull
     public String[] getIds() {
         return adapter.getIds();
     }

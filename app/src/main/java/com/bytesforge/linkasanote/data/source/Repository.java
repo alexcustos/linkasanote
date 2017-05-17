@@ -151,7 +151,7 @@ public class Repository implements DataSource {
             dirtyLinks = new HashSet<>();
         }
         dirtyLinks.clear();
-        return localDataSource.getLinks((String[]) null)
+        return localDataSource.getLinks(null)
                 .doOnComplete(() -> linkCacheIsDirty = false)
                 .doOnNext(link -> {
                     String linkId = link.getId();
@@ -547,7 +547,7 @@ public class Repository implements DataSource {
             dirtyFavorites = new HashSet<>();
         }
         dirtyFavorites.clear();
-        return localDataSource.getFavorites((String[]) null)
+        return localDataSource.getFavorites(null)
                 .doOnComplete(() -> favoriteCacheIsDirty = false)
                 .doOnNext(favorite -> {
                     String favoriteId = favorite.getId();

@@ -3,6 +3,7 @@ package com.bytesforge.linkasanote.laano;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.databinding.ObservableBoolean;
+import android.databinding.ObservableField;
 import android.databinding.ObservableInt;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -23,11 +24,13 @@ public abstract class BaseItemViewModel extends BaseObservable implements
     private static final String STATE_ACTION_MODE = "ACTION_MODE";
     private static final String STATE_LIST_SIZE = "LIST_SIZE";
     private static final String STATE_SELECTED_IDS = "SELECTED_IDS";
+    private static final String STATE_FILTER_ID = "FILTER_ID";
     private static final String STATE_SEARCH_TEXT = "SEARCH_TEXT";
     private static final String STATE_PROGRESS_OVERLAY = "PROGRESS_OVERLAY";
 
     public final ObservableBoolean actionMode = new ObservableBoolean();
     public final ObservableInt listSize = new ObservableInt();
+    public final ObservableField<String> filterId = new ObservableField<>();
 
     private ArrayList<String> selectedIds;
     private String searchText;
@@ -55,10 +58,10 @@ public abstract class BaseItemViewModel extends BaseObservable implements
     @Override
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
-
         outState.putBoolean(STATE_ACTION_MODE, actionMode.get());
         outState.putInt(STATE_LIST_SIZE, listSize.get());
         outState.putStringArrayList(STATE_SELECTED_IDS, selectedIds);
+        outState.putString(STATE_FILTER_ID, filterId.get());
         outState.putString(STATE_SEARCH_TEXT, searchText);
         outState.putBoolean(STATE_PROGRESS_OVERLAY, progressOverlay);
     }
@@ -66,10 +69,10 @@ public abstract class BaseItemViewModel extends BaseObservable implements
     @Override
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
-
         actionMode.set(state.getBoolean(STATE_ACTION_MODE));
         listSize.set(state.getInt(STATE_LIST_SIZE));
         selectedIds = state.getStringArrayList(STATE_SELECTED_IDS);
+        filterId.set(state.getString(STATE_FILTER_ID));
         searchText = state.getString(STATE_SEARCH_TEXT);
         progressOverlay = state.getBoolean(STATE_PROGRESS_OVERLAY);
 
@@ -83,6 +86,7 @@ public abstract class BaseItemViewModel extends BaseObservable implements
         // NOTE: do not show empty list warning if empty state is not confirmed
         defaultState.putInt(STATE_LIST_SIZE, Integer.MAX_VALUE);
         defaultState.putStringArrayList(STATE_SELECTED_IDS, new ArrayList<>(0));
+        defaultState.putString(STATE_FILTER_ID, null);
         defaultState.putString(STATE_SEARCH_TEXT, null);
         defaultState.putBoolean(STATE_PROGRESS_OVERLAY, false);
 
@@ -117,6 +121,26 @@ public abstract class BaseItemViewModel extends BaseObservable implements
         selectedIds.clear();
         actionMode.set(false);
         notifyChange();
+    }
+
+    /**
+     * @return Return true if the filter has been set
+     */
+    @Override
+    public boolean toggleFilterId(@NonNull String filterId) {
+        checkNotNull(filterId);
+        if (filterId.equals(this.filterId.get())) {
+            this.filterId.set(null);
+            return false;
+        } else {
+            this.filterId.set(filterId);
+            return true;
+        }
+    }
+
+    @Override
+    public void setFilterId(String filterId) {
+        this.filterId.set(filterId);
     }
 
     @Override

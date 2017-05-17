@@ -233,7 +233,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
             // NOTE: Note doesn't have AUTO conflict resolution option
             view.showConflictResolution(noteId);
         } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
-            boolean selected = viewModel.toggleSingleSelection(noteId);
+            boolean selected = viewModel.toggleFilterId(noteId);
             // NOTE: filterType will be updated accordingly on the tab
             if (selected) {
                 settings.setNoteFilter(noteId);
@@ -268,21 +268,21 @@ public final class NotesPresenter extends BaseItemPresenter implements
         if (noteFilter != null) {
             int position = getPosition(noteFilter);
             if (position >= 0) { // NOTE: check if there is the filter in the list
-                viewModel.setSingleSelection(noteFilter, true);
-                //view.scrollToPosition(position); // TODO: move to settings
+                viewModel.setFilterId(noteFilter);
             }
         }
     }
 
     @Override
     public void onEditClick(@NonNull String noteId) {
+        checkNotNull(noteId);
         view.showEditNote(noteId);
     }
 
     @Override
     public void onToLinksClick(@NonNull String noteId) {
         checkNotNull(noteId);
-        viewModel.setSingleSelection(noteId, true);
+        viewModel.setFilterId(noteId);
         settings.setFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE, FilterType.NOTE);
         settings.setNoteFilter(noteId);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.LINKS_TAB);
@@ -445,12 +445,18 @@ public final class NotesPresenter extends BaseItemPresenter implements
         }
     }
 
+    @Override
+    @NonNull
+    public FilterType getFilterType() {
+        return settings.getFilterType(SETTING_NOTES_FILTER_TYPE);
+    }
+
     /**
      * @return Return null if there is no additional data is required
      */
     @Nullable
     private FilterType updateFilter() {
-        FilterType filterType = settings.getFilterType(SETTING_NOTES_FILTER_TYPE);
+        FilterType filterType = getFilterType();
         String prevLinkFilter = this.linkFilter;
         this.linkFilter = settings.getLinkFilter();
         // NOTE: there may be some concurrency who actually will reset the filter, but it OK

@@ -6,10 +6,10 @@ import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.Espresso;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -22,6 +22,7 @@ import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.source.ProviderModule;
 import com.bytesforge.linkasanote.data.source.RepositoryModule;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.settings.SettingsModule;
 import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
 
@@ -78,13 +79,6 @@ public class ManageAccountsActivityTest {
                 protected void afterActivityLaunched() {
                     super.afterActivityLaunched();
                     setupManageAccountsActivity();
-                    registerIdlingResource();
-                }
-
-                @Override
-                protected void afterActivityFinished() {
-                    super.afterActivityFinished();
-                    unregisterIdlingResource();
                 }
             };
 
@@ -123,16 +117,6 @@ public class ManageAccountsActivityTest {
         AndroidTestUtils.allowPermissionIfNeeded(Manifest.permission.GET_ACCOUNTS);
     }
 
-    private void registerIdlingResource() { // @Before
-        Espresso.registerIdlingResources(
-                manageAccountsActivityTestRule.getActivity().getCountingIdlingResource());
-    }
-
-    private void unregisterIdlingResource() { // @After
-        Espresso.unregisterIdlingResources(
-                manageAccountsActivityTestRule.getActivity().getCountingIdlingResource());
-    }
-
     @Test
     public void checkInitialState() {
         when(mockAccountManager.getAccountsByType(anyString())).thenReturn(new Account[0]);
@@ -147,7 +131,7 @@ public class ManageAccountsActivityTest {
         when(mockAccountManager.getAccountsByType(anyString())).thenReturn(ACCOUNTS);
         manageAccountsActivityTestRule.launchActivity(null);
 
-        if (context.getResources().getBoolean(R.bool.multiaccount_support)) {
+        if (Settings.GLOBAL_MULTIACCOUNT_SUPPORT) {
             onView(withId(R.id.add_account_view)).check(
                     matches(withText(R.string.item_manage_accounts_add)));
         }
@@ -181,9 +165,14 @@ public class ManageAccountsActivityTest {
         manageAccountsActivityTestRule.launchActivity(null);
 
         onView(withId(R.id.account_delete_button)).perform(click());
-        onView(withText(R.string.dialog_button_ok)).inRoot(isDialog()).check(matches(isDisplayed()));
-        onView(withText(R.string.dialog_button_ok)).inRoot(isDialog()).perform(click());
-        verify(mockAccountManager).removeAccount(any(Account.class), any(Activity.class),
-                ArgumentMatchers.<AccountManagerCallback<Bundle>>any(), any(Handler.class));
+        onView(withText(R.string.dialog_button_delete)).inRoot(isDialog()).check(matches(isDisplayed()));
+        onView(withText(R.string.dialog_button_delete)).inRoot(isDialog()).perform(click());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            verify(mockAccountManager).removeAccount(any(Account.class), any(Activity.class),
+                    ArgumentMatchers.<AccountManagerCallback<Bundle>>any(), any(Handler.class));
+        } else {
+            verify(mockAccountManager).removeAccount(any(Account.class),
+                    ArgumentMatchers.<AccountManagerCallback<Boolean>>any(), any(Handler.class));
+        }
     }
 }
