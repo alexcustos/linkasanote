@@ -39,13 +39,15 @@
                 android:paddingBottom="@dimen/add_edit_account_description_padding"
                 android:text="@string/add_edit_account_nextcloud_description" />
 
-            <FrameLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
                 <android.support.design.widget.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
 
                     <EditText
                         android:id="@+id/server_url"
@@ -55,7 +57,7 @@
                         android:inputType="textUri"
                         android:text="@={viewModel.serverUrlText}"
                         android:enabled="@{viewModel.serverUrl}"
-                        android:afterTextChanged="@{viewModel::afterServerUrlChanged}"
+                        android:afterTextChanged="@{() -> viewModel.afterServerUrlChanged(serverUrl)}"
                         android:onFocusChange="@{viewModel::onServerUrlFocusChange}">
 
                         <requestFocus />
@@ -66,13 +68,14 @@
                     android:id="@+id/host_url_refresh_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical|end"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginBottom="@dimen/add_edit_account_refresh_margin_bottom"
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/add_edit_account_nextcloud_url_refresh_description"
                     android:visibility="@{viewModel.refreshButton ? View.VISIBLE : View.GONE}"
                     android:onClick="@{() -> viewModel.onRefreshButtonClick()}"
                     app:srcCompat="@drawable/ic_refresh" />
-            </FrameLayout>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/server_status"
@@ -98,7 +101,7 @@
                     android:inputType="textNoSuggestions"
                     android:text="@={viewModel.accountUsernameText}"
                     android:enabled="@{viewModel.accountUsername}"
-                    android:afterTextChanged="@{viewModel::afterAccountCredentialsChanged}" />
+                    android:afterTextChanged="@{() -> viewModel.afterAccountCredentialsChanged()}" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -113,7 +116,7 @@
                     android:hint="@string/add_edit_account_nextcloud_password_hint"
                     android:inputType="textPassword"
                     android:text="@={viewModel.accountPasswordText}"
-                    android:afterTextChanged="@{viewModel::afterAccountCredentialsChanged}" />
+                    android:afterTextChanged="@{() -> viewModel.afterAccountCredentialsChanged()}" />
             </android.support.design.widget.TextInputLayout>
 
             <TextView

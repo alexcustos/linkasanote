@@ -47,10 +47,8 @@ import static org.mockito.Mockito.verify;
 @LargeTest
 public class AddEditAccountNextcloudScreenTest {
 
-    private ArgumentCaptor<NextcloudFragment> viewCaptor;
-
     private final String MALFORMED_URL = "demo.nextcloud.com:port";
-    private final String UNFORMATTED_URL = "Demo.Nextcloud.com:80/index.php/apps/files/";
+    private final String UNFORMATTED_URL = "Demo.Nextcloud.com:443/index.php/apps/files/";
     private final String SERVER_URL = "https://demo.nextcloud.com";
     private final String USERNAME = "demo";
     private final String PASSWORD = "password";
@@ -62,6 +60,8 @@ public class AddEditAccountNextcloudScreenTest {
 
     @Mock
     private OperationsService serviceMock;
+
+    private ArgumentCaptor<NextcloudFragment> viewCaptor;
 
     @Before
     public void setupAddEditAccountActivityNextcloud() {
@@ -151,14 +151,7 @@ public class AddEditAccountNextcloudScreenTest {
 
     @Test
     public void allFieldsAreFilledAndServerUrlIsValid_enablesLoginButton() {
-        // Init
-        onView(withId(R.id.login_button)).check(matches(not(isEnabled())));
-        // Server URL
-        onView(withId(R.id.server_url)).perform(typeText(SERVER_URL));
-        onView(withId(R.id.account_username)).perform(click());
-        verify(serviceMock).queueOperation(
-                any(Intent.class), viewCaptor.capture(), any(Handler.class));
-        // Mock OK_SSL Status
+        // Mock result
         RemoteOperationResult result =
                 new RemoteOperationResult(RemoteOperationResult.ResultCode.OK_SSL);
         GetServerInfoOperation.ServerInfo serverInfo = new GetServerInfoOperation.ServerInfo();
@@ -168,6 +161,14 @@ public class AddEditAccountNextcloudScreenTest {
         ArrayList<Object> data = new ArrayList<>();
         data.add(serverInfo);
         result.setData(data);
+        // Init
+        onView(withId(R.id.login_button)).check(matches(not(isEnabled())));
+        // Server URL
+        onView(withId(R.id.server_url)).perform(typeText(SERVER_URL));
+        onView(withId(R.id.account_username)).perform(click());
+        verify(serviceMock).queueOperation(
+                any(Intent.class), viewCaptor.capture(), any(Handler.class));
+        // Mock OK_SSL Status
         viewCaptor.getValue().onRemoteOperationFinish(
                 new GetServerInfoOperation(SERVER_URL, serviceMock), result);
         onView(withId(R.id.server_url)).perform(click());
@@ -177,14 +178,14 @@ public class AddEditAccountNextcloudScreenTest {
         onView(withId(R.id.login_button)).check(matches(not(isEnabled())));
         onView(withId(R.id.account_password)).perform(typeText(PASSWORD));
         onView(withId(R.id.login_button)).check(matches(isEnabled()));
-        // Orientation change
-        AndroidTestUtils.rotateOrientation(addEditAccountActivityTestRule);
+        //AndroidTestUtils.rotateOrientation(addEditAccountActivityTestRule);
+        // Check
         onView(withId(R.id.server_url)).check(matches(withText(SERVER_URL)));
         onView(withId(R.id.host_url_refresh_button)).check(matches(not(isDisplayed())));
         onView(withId(R.id.server_status)).check(matches(withText(R.string.add_edit_account_nextcloud_connection_secure)));
         onView(withId(R.id.account_username)).check(matches(withText(USERNAME)));
         onView(withId(R.id.account_password)).check(matches(withText(PASSWORD)));
-        onView(withId(R.id.auth_status)).check(matches(withText("")));
+        onView(withId(R.id.auth_status)).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
         onView(withId(R.id.login_button)).check(matches(isEnabled()));
     }
 }

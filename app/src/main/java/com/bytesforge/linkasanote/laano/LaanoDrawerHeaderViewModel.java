@@ -110,9 +110,7 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
         appName.set(true);
         username.set(false);
         accountName.set(false);
-        if (statusText.get() == null) {
-            statusText.set(getString(R.string.drawer_header_status_no_account));
-        }
+        statusText.set(getString(R.string.drawer_header_status_no_account));
     }
 
     public void showAccount(@NonNull AccountItem accountItem) {

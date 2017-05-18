@@ -31,7 +31,6 @@ public interface NextcloudContract {
         void finishActivity(@NonNull Account account, @NonNull String password, @NonNull Bundle data);
         void cancelActivity();
         void setupAccountState(@NonNull Account account);
-        void requestFocusOnAccountPassword();
         boolean sendGetServerInfoOperation(String url);
         boolean sendCheckCredentialsOperation(
                 String username, String password,
@@ -45,9 +44,10 @@ public interface NextcloudContract {
         void saveInstanceState(@NonNull Bundle outState);
         void applyInstanceState(@NonNull Bundle state);
         Bundle getDefaultInstanceState();
+        void populateAccount(String serverUrlText, String accountUsernameText);
 
-        void validateServer();
-
+        boolean isServerStatus();
+        void replaceServerUrlText(String serverUrlText);
         void showRefreshButton();
         void hideRefreshButton();
         void enableLoginButton();
@@ -63,6 +63,7 @@ public interface NextcloudContract {
         void showConnectionResultStatus(RemoteOperationResult.ResultCode result);
         void showAuthResultStatus(RemoteOperationResult.ResultCode result);
         void showGetAccountsPermissionDeniedWarning();
+        void showNormalizedUrlSnackbar();
         void showSomethingWrongSnackbar();
     }
 
@@ -82,5 +83,6 @@ public interface NextcloudContract {
         @Nullable GetServerInfoOperation.ServerInfo getServerInfo();
         @Nullable Account getAccount();
         void onAboutNextcloudClick();
+        void validateServerUrlText(final String serverUrlText);
     }
 }

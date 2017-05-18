@@ -1,13 +1,17 @@
 package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
 import android.accounts.Account;
+import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Patterns;
 
-import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation;
+import com.bytesforge.linkasanote.utils.CommonUtils;
+import com.google.common.base.Strings;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -23,6 +27,9 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
     @Nullable
     private Account account;
 
+    @Nullable
+    private AccountAuthenticatorResponse accountAuthenticatorResponse;
+
     private GetServerInfoOperation.ServerInfo serverInfo;
 
     private final NextcloudContract.View view;
@@ -32,11 +39,13 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
     @Inject
     NextcloudPresenter(
             NextcloudContract.View view, NextcloudContract.ViewModel viewModel,
-            AccountManager accountManager, @Nullable @NextcloudAccount Account account) {
+            AccountManager accountManager, @Nullable @NextcloudAccount Account account,
+            @Nullable AccountAuthenticatorResponse accountAuthenticatorResponse) {
         this.view = view;
         this.viewModel = viewModel;
         this.accountManager = accountManager;
         this.account = account;
+        this.accountAuthenticatorResponse = accountAuthenticatorResponse;
         serverInfo = null;
     }
 
@@ -45,6 +54,7 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
         view.setPresenter(this);
         view.setViewModel(viewModel);
         view.setAccountManager(accountManager);
+        view.setAccountAuthenticatorResponse(accountAuthenticatorResponse);
         viewModel.setPresenter(this);
     }
 
@@ -53,16 +63,15 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
     }
 
     @Override
+    public void unsubscribe() {
+    }
+
+    @Override
     public void populateAccount() {
         if (account == null) {
             throw new RuntimeException("populateAccount() was called but account is null");
         }
         view.setupAccountState(account);
-        viewModel.validateServer();
-    }
-
-    @Override
-    public void unsubscribe() {
     }
 
     @Override
@@ -79,34 +88,38 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
     public String normalizeUrl(final String serverUrl) {
         String normalizedUrl = "";
         // Empty
-        if (serverUrl == null || serverUrl.length() <= 0) {
+        if (Strings.isNullOrEmpty(serverUrl)) {
             viewModel.showEmptyUrlWarning();
-            return normalizedUrl;
+            return null;
         }
         // Protocol
-        normalizedUrl = serverUrl.toLowerCase().replaceAll("\\s+", "");
-        if (!normalizedUrl.startsWith(AddEditAccountActivity.HTTP_PROTOCOL) &&
-                !normalizedUrl.startsWith(AddEditAccountActivity.HTTPS_PROTOCOL)) {
-            normalizedUrl = AddEditAccountActivity.DEFAULT_PROTOCOL + normalizedUrl;
-        }
+        normalizedUrl = serverUrl.trim().toLowerCase().replaceAll("\\s+", "");
         // Parsing
+        if (!Patterns.WEB_URL.matcher(normalizedUrl).matches()) {
+            viewModel.showMalformedUrlWarning();
+            return null;
+        }
+        normalizedUrl = CommonUtils.normalizeUrlProtocol(normalizedUrl);
         URL url;
         try {
             url = new URL(normalizedUrl);
         } catch (MalformedURLException e) {
             viewModel.showMalformedUrlWarning();
-            return normalizedUrl;
+            return null;
         }
-        // Instance URL
-        int port = url.getPort();
+        // Rebuild URL
         String path = url.getPath();
         if (path.contains(NEXTCLOUD_INDEX)) {
             path = path.substring(0, path.indexOf(NEXTCLOUD_INDEX));
         }
-        if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
-        normalizedUrl = url.getProtocol() + "://" +
-                url.getHost() + ((port == -1 || port == 80) ? "" : ":" + port) + path;
-        return normalizedUrl;
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        Uri.Builder uriBuilder = new Uri.Builder()
+                .scheme(url.getProtocol())
+                .encodedAuthority(url.getAuthority())
+                .encodedPath(path);
+        return uriBuilder.build().toString();
     }
 
     @Override
@@ -163,5 +176,20 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
     @Override
     public void onAboutNextcloudClick() {
         view.openAboutNextcloudLink();
+    }
+
+    @Override
+    public void validateServerUrlText(final String serverUrlText) {
+        String normalizedUrl = normalizeUrl(serverUrlText);
+        if (normalizedUrl == null) return; // NOTE: a warning has already been shown
+
+        if (!normalizedUrl.equals(serverUrlText)) {
+            viewModel.replaceServerUrlText(normalizedUrl);
+            viewModel.showNormalizedUrlSnackbar();
+        }
+        if (!normalizedUrl.isEmpty()
+                && (serverInfo == null || !serverInfo.isSet())) {
+            checkUrl(normalizedUrl);
+        }
     }
 }

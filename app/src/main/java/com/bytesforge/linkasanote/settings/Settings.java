@@ -36,7 +36,6 @@ public class Settings {
     public static final long GLOBAL_DOUBLE_BACK_TO_EXIT_MILLIS = 2000;
     public static final boolean GLOBAL_MULTIACCOUNT_SUPPORT = false;
     public static final int GLOBAL_TAGS_AUTOCOMPLETE_THRESHOLD = 1;
-
     public static final int GLOBAL_LINK_MAX_KEYWORDS = 5;
     public static final int GLOBAL_LINK_MAX_BODY_SIZE_BYTES = 10 * 1024;
     public static final boolean GLOBAL_CLIPBOARD_LINK_UPDATED_TOAST = true;

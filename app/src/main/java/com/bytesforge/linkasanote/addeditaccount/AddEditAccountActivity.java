@@ -41,10 +41,6 @@ public class AddEditAccountActivity extends AppCompatActivity implements
     public static final int REQUEST_ADD_NEXTCLOUD_ACCOUNT = 0;
     public static final int REQUEST_UPDATE_NEXTCLOUD_ACCOUNT = 1;
 
-    public static final String HTTP_PROTOCOL = "http://";
-    public static final String HTTPS_PROTOCOL = "https://";
-    public static final String DEFAULT_PROTOCOL = HTTPS_PROTOCOL;
-
     private AccountAuthenticatorResponse accountAuthenticatorResponse = null;
     private ActivityAddEditAccountBinding binding;
     private Bundle currentViewModelSate;
@@ -64,19 +60,19 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         Account account = null;
         int requestCode = startIntent.getIntExtra(ARGUMENT_REQUEST_CODE, -1);
         if (REQUEST_UPDATE_NEXTCLOUD_ACCOUNT == requestCode) {
-            account = startIntent.getParcelableExtra(NextcloudFragment.ARGUMENT_EDIT_ACCOUNT_ACCOUNT);
+            account = startIntent.getParcelableExtra(
+                    NextcloudFragment.ARGUMENT_EDIT_ACCOUNT_ACCOUNT);
         }
         accountAuthenticatorResponse = startIntent.getParcelableExtra(
                 AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE);
-        if (accountAuthenticatorResponse != null) {
-            accountAuthenticatorResponse.onRequestContinued();
-        }
         // Fragment (View)
         NextcloudFragment nextcloudFragment = (NextcloudFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.content_frame);
         if (nextcloudFragment == null) {
+            if (accountAuthenticatorResponse != null) {
+                accountAuthenticatorResponse.onRequestContinued();
+            }
             nextcloudFragment = NextcloudFragment.newInstance();
-            nextcloudFragment.setAccountAuthenticatorResponse(accountAuthenticatorResponse);
             ActivityUtils.addFragmentToActivity(
                     getSupportFragmentManager(), nextcloudFragment, R.id.content_frame);
         }
@@ -84,7 +80,8 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         LaanoApplication application = (LaanoApplication) getApplication();
         application.getApplicationComponent()
                 .getAddEditAccountComponent(
-                        new NextcloudPresenterModule(nextcloudFragment, account))
+                        new NextcloudPresenterModule(
+                                nextcloudFragment, account, accountAuthenticatorResponse))
                 .inject(this);
     }
 

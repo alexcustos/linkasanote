@@ -372,7 +372,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
         checkNotNull(linkId);
         boolean sync = settings.isSyncable() && settings.isOnline();
         if (!sync) {
-            if (settings.isSyncable()) {
+            if (settings.isSyncable() || settings.getLastSyncTime() > 0) {
                 settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
                 laanoUiManager.updateSyncStatus();
             }

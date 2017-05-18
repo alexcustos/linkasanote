@@ -70,8 +70,8 @@ public class OperationsService extends Service {
             if (obj == null || getClass() != obj.getClass()) return false;
 
             Target target = (Target) obj;
-            return Objects.equal(account, target.account) &&
-                    Objects.equal(serverUrl, target.serverUrl);
+            return Objects.equal(account, target.account)
+                    && Objects.equal(serverUrl, target.serverUrl);
         }
     }
 
@@ -104,8 +104,6 @@ public class OperationsService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "Creating service");
-
         HandlerThread thread = new HandlerThread(
                 "Operations thread", Process.THREAD_PRIORITY_BACKGROUND);
         thread.start();
@@ -132,7 +130,6 @@ public class OperationsService extends Service {
 
         public OperationsHandler(Looper looper, @NonNull OperationsService service) {
             super(looper);
-
             this.service = checkNotNull(service);
             lastTarget = null;
         }
@@ -140,7 +137,6 @@ public class OperationsService extends Service {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-
             OperationItem operationItem;
             synchronized (pendingOperations) {
                 operationItem = pendingOperations.poll();
@@ -154,11 +150,9 @@ public class OperationsService extends Service {
 
         private RemoteOperationResult executeOperationItem(OperationItem item) {
             RemoteOperationResult result;
-
             try {
                 RemoteOperation operation = item.operation;
                 OwnCloudAccount account;
-
                 if (lastTarget == null || !lastTarget.equals(item.target)) {
                     lastTarget = item.target;
                     if (lastTarget.account != null) {
@@ -166,8 +160,7 @@ public class OperationsService extends Service {
                     } else {
                         account = new OwnCloudAccount(lastTarget.serverUrl, null);
                     }
-                    client = OwnCloudClientManagerFactory
-                            .getDefaultSingleton()
+                    client = OwnCloudClientManagerFactory.getDefaultSingleton()
                             .getClientFor(account, service);
                 }
                 result = operation.execute(client);
@@ -206,16 +199,18 @@ public class OperationsService extends Service {
                 account, (serverUrl == null) ? null : Uri.parse(serverUrl));
 
         String action = intent.getAction();
-        if (action.equals(ACTION_GET_SERVER_INFO)) {
-            operation = new GetServerInfoOperation(serverUrl, OperationsService.this);
-        } else if (action.equals(ACTION_CHECK_CREDENTIALS)) {
-            Bundle credentials = intent.getBundleExtra(EXTRA_CREDENTIALS);
-            OwnCloudVersion serverVersion = new OwnCloudVersion(
-                    intent.getStringExtra(EXTRA_SERVER_VERSION));
-            operation = new CheckCredentialsOperation(credentials, serverVersion);
-        }
-        if (operation == null) {
-            throw new UnsupportedOperationException("OperationItem not supported: " + action);
+        switch (action) {
+            case ACTION_GET_SERVER_INFO:
+                operation = new GetServerInfoOperation(serverUrl, OperationsService.this);
+                break;
+            case ACTION_CHECK_CREDENTIALS:
+                Bundle credentials = intent.getBundleExtra(EXTRA_CREDENTIALS);
+                OwnCloudVersion serverVersion = new OwnCloudVersion(
+                        intent.getStringExtra(EXTRA_SERVER_VERSION));
+                operation = new CheckCredentialsOperation(credentials, serverVersion);
+                break;
+            default:
+                throw new UnsupportedOperationException("OperationItem not supported: " + action);
         }
         return new OperationItem(target, operation, listener, handler);
     }

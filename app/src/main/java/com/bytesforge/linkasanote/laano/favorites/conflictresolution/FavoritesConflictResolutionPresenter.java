@@ -164,36 +164,32 @@ public final class FavoritesConflictResolutionPresenter implements
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
         if (viewModel.isStateDuplicated()) {
-            viewModel.showProgressOverlay();
-            localFavorites.getMain(viewModel.getLocalName())
-                    .subscribeOn(schedulerProvider.computation()) // local
-                    .observeOn(schedulerProvider.ui())
-                    .doFinally(viewModel::hideProgressOverlay)
-                    .subscribe(
-                            favorite -> replaceFavorite(favorite.getId(), favoriteId),
-                            throwable -> view.cancelActivity());
+            replaceFavorite(viewModel.getLocalName(), favoriteId);
         } else {
             deleteFavorite(favoriteId);
         }
     }
 
     private void replaceFavorite(
-            @NonNull final String mainFavoriteId, @NonNull final String favoriteId) {
-        checkNotNull(mainFavoriteId);
+            @NonNull String duplicatedKey, @NonNull final String favoriteId) {
+        checkNotNull(duplicatedKey);
         checkNotNull(favoriteId);
-        deleteFavoriteSingle(mainFavoriteId)
+        viewModel.showProgressOverlay();
+        localFavorites.getMain(viewModel.getLocalName())
                 .subscribeOn(schedulerProvider.io())
+                .flatMap(favorite -> deleteFavoriteSingle(favorite.getId()))
                 .map(success -> {
                     if (success) {
                         SyncState state = new SyncState(SyncState.State.SYNCED);
                         success = localFavorites.update(favoriteId, state).blockingGet();
+                        repository.refreshFavorite(favoriteId);
                     }
                     return success;
                 })
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
-                        repository.refreshFavorites(); // OPTIMIZATION: reload one item
                         view.finishActivity();
                     } else {
                         view.cancelActivity();

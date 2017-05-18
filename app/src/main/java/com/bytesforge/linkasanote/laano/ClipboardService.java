@@ -171,17 +171,26 @@ public class ClipboardService extends Service {
         if (clipboard.isEmpty()) return;
 
         if (Patterns.WEB_URL.matcher(clipboard).matches()) {
+            clipboard = CommonUtils.normalizeUrlProtocol(clipboard);
             if (!settings.isClipboardLinkFollow()) {
-                clipboard = normalizeUrl(clipboard);
-            } // NOTE: else URL will be normalized in loadLinkExtra()
-            clipboardType = CLIPBOARD_LINK;
+                String normalizedUrl = normalizeUrl(clipboard);
+                if (normalizedUrl != null) {
+                    clipboard = normalizedUrl;
+                    clipboardType = CLIPBOARD_LINK;
+                } else {
+                    clipboardType = CLIPBOARD_TEXT;
+                }
+            }  else { // NOTE: URL will be normalized in loadLinkExtra()
+                clipboardType = CLIPBOARD_LINK;
+            }
         } else {
             clipboardType = CLIPBOARD_TEXT;
         }
         normalizedClipboard = clipboard;
     }
 
-    private String normalizeUrl(@NonNull final String url) {
+    private String normalizeUrl(@NonNull String url) {
+        checkNotNull(url);
         Uri uri = Uri.parse(url);
         // NOTE: fragment part is omitted
         Uri.Builder uriBuilder = new Uri.Builder()
@@ -189,9 +198,13 @@ public class ClipboardService extends Service {
                 .authority(uri.getAuthority())
                 .path(uri.getPath());
         for (String parameterName : settings.getClipboardParameterWhiteListArray()) {
-            String parameterValue = uri.getQueryParameter(parameterName);
-            if (parameterValue != null) {
-                uriBuilder.appendQueryParameter(parameterName, parameterValue);
+            try {
+                String parameterValue = uri.getQueryParameter(parameterName);
+                if (parameterValue != null) {
+                    uriBuilder.appendQueryParameter(parameterName, parameterValue);
+                }
+            } catch (UnsupportedOperationException e) {
+                return null;
             }
         }
         return uriBuilder.build().toString();

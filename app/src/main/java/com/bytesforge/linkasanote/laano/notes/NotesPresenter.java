@@ -324,7 +324,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
         }
         boolean sync = settings.isSyncable() && settings.isOnline();
         if (!sync) {
-            if (settings.isSyncable()) {
+            if (settings.isSyncable() || settings.getLastSyncTime() > 0) {
                 settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
                 laanoUiManager.updateSyncStatus();
             }

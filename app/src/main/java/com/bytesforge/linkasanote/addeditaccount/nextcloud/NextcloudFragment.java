@@ -52,6 +52,7 @@ public class NextcloudFragment extends Fragment implements
         NextcloudContract.View, OnRemoteOperationListener {
 
     private static final String TAG = NextcloudFragment.class.getSimpleName();
+
     private static final int ACCOUNT_VERSION = 1;
     public static final String ARGUMENT_EDIT_ACCOUNT_ACCOUNT = "EDIT_ACCOUNT_ACCOUNT";
 
@@ -71,6 +72,13 @@ public class NextcloudFragment extends Fragment implements
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Intent intent = new Intent(getContext(), OperationsService.class);
+        getActivity().bindService(intent, operationsServiceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         presenter.subscribe();
@@ -78,16 +86,16 @@ public class NextcloudFragment extends Fragment implements
 
     @Override
     public void onPause() {
-        super.onPause();
         presenter.unsubscribe();
+        super.onPause();
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         if (operationsService != null) {
             getActivity().unbindService(operationsServiceConnection);
         }
+        super.onDestroy();
     }
 
     @Override
@@ -121,14 +129,10 @@ public class NextcloudFragment extends Fragment implements
     public View onCreateView(
             LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
-        // Service
-        Intent intent = new Intent(getContext(), OperationsService.class);
-        getActivity().bindService(intent, operationsServiceConnection, Context.BIND_AUTO_CREATE);
-        // Bind
         binding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_add_edit_account_nextcloud, container, false);
-        viewModel.setInstanceState(savedInstanceState);
         binding.setViewModel((NextcloudViewModel) viewModel);
+        viewModel.setInstanceState(savedInstanceState);
         if (savedInstanceState == null && !presenter.isNewAccount()) {
             // NOTE: here because populated account must stay intact on orientation change
             presenter.populateAccount();
@@ -145,7 +149,6 @@ public class NextcloudFragment extends Fragment implements
     private void finishActivity(@NonNull Intent result) {
         checkNotNull(result);
         FragmentActivity activity = getActivity();
-
         if (accountAuthenticatorResponse != null) {
             accountAuthenticatorResponse.onResult(result.getExtras());
             accountAuthenticatorResponse = null;
@@ -160,7 +163,6 @@ public class NextcloudFragment extends Fragment implements
         checkNotNull(account);
         checkNotNull(password);
         checkNotNull(data);
-
         final Intent intent = new Intent();
         intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, account.type);
         intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, account.name);
@@ -173,7 +175,6 @@ public class NextcloudFragment extends Fragment implements
     @Override
     public void cancelActivity() {
         FragmentActivity activity = getActivity();
-
         if (accountAuthenticatorResponse != null) {
             accountAuthenticatorResponse.onError(
                     AccountManager.ERROR_CODE_CANCELED,
@@ -190,9 +191,11 @@ public class NextcloudFragment extends Fragment implements
             // GetServerInfoOperation
             viewModel.showConnectionResultStatus(result.getCode());
             if (result.isSuccess()) {
-                presenter.setServerInfo((GetServerInfoOperation.ServerInfo) result.getData().get(0));
+                presenter.setServerInfo(
+                        (GetServerInfoOperation.ServerInfo) result.getData().get(0));
                 viewModel.checkLoginButton();
             } else {
+                presenter.setServerInfo(null);
                 viewModel.showRefreshButton();
             }
         } else if (operation instanceof CheckCredentialsOperation) {
@@ -218,7 +221,7 @@ public class NextcloudFragment extends Fragment implements
                 viewModel.showAuthResultStatus(result.getCode());
                 viewModel.enableLoginButton();
             }
-        } // operation instanceof ...
+        }
     }
 
     @Override
@@ -227,7 +230,6 @@ public class NextcloudFragment extends Fragment implements
             @NonNull GetServerInfoOperation.ServerInfo serverInfo) {
         checkNotNull(result);
         checkNotNull(serverInfo);
-
         UserInfo userInfo = null;
         OwnCloudCredentials credentials = null;
         for (Object object : result.getData()) {
@@ -324,26 +326,37 @@ public class NextcloudFragment extends Fragment implements
     @Override
     public void setupAccountState(@NonNull Account account) {
         checkNotNull(account);
-
-        Bundle state = getAccountState(account);
-        viewModel.applyInstanceState(state);
-        requestFocusOnAccountPassword();
+        String serverUrlText = accountManager.getUserData(
+                account, AccountUtils.Constants.KEY_OC_BASE_URL);
+        String accountUsernameText = getAccountUsername(account.name);
+        viewModel.populateAccount(serverUrlText, accountUsernameText);
+        binding.accountPassword.requestFocus();
+        presenter.validateServerUrlText(serverUrlText);
     }
 
-    private Bundle getAccountState(@NonNull Account account) {
-        checkNotNull(account);
+    private boolean queueOperation(@NonNull Intent operationIntent) {
+        checkNotNull(operationIntent);
+        synchronized (operationsLock) {
+            if (operationsService == null) {
+                operationsQueue.add(operationIntent);
+                return false;
+            } else {
+                operationsService.queueOperation(operationIntent, this, handler);
+                return true;
+            }
+        }
+    }
 
-        Bundle state = viewModel.getDefaultInstanceState();
-        state.putBoolean(NextcloudViewModel.STATE_SERVER_URL, false);
-        state.putString(NextcloudViewModel.STATE_SERVER_URL_TEXT,
-                accountManager.getUserData(account, AccountUtils.Constants.KEY_OC_BASE_URL));
-        state.putBoolean(NextcloudViewModel.STATE_ACCOUNT_USERNAME, false);
-        state.putString(NextcloudViewModel.STATE_ACCOUNT_USERNAME_TEXT,
-                getAccountUsername(account.name));
-        // NOTE: security hole, non-authorized user can view the password
-        state.putString(NextcloudViewModel.STATE_ACCOUNT_PASSWORD_TEXT, null); // accountManager.getPassword(account)
-
-        return state;
+    @VisibleForTesting
+    public void setOperationsService(@NonNull OperationsService service) {
+        checkNotNull(service);
+        synchronized (operationsLock) {
+            operationsService = service;
+            for (Intent intent : operationsQueue) {
+                operationsService.queueOperation(intent, this, handler);
+            }
+            operationsQueue.clear();
+        }
     }
 
     @Override
@@ -351,15 +364,7 @@ public class NextcloudFragment extends Fragment implements
         Intent getServerInfoIntent = new Intent();
         getServerInfoIntent.setAction(OperationsService.ACTION_GET_SERVER_INFO);
         getServerInfoIntent.putExtra(OperationsService.EXTRA_SERVER_URL, convertIdn(url, true));
-        synchronized (operationsLock) {
-            if (operationsService == null) {
-                operationsQueue.add(getServerInfoIntent);
-                return false;
-            } else {
-                operationsService.queueOperation(getServerInfoIntent, this, handler);
-                return true;
-            }
-        } // synchronized
+        return queueOperation(getServerInfoIntent);
     }
 
     @Override
@@ -380,21 +385,7 @@ public class NextcloudFragment extends Fragment implements
         checkCredentialsIntent.putExtra(
                 OperationsService.EXTRA_SERVER_VERSION, serverInfo.version.getVersion());
         checkCredentialsIntent.putExtra(OperationsService.EXTRA_CREDENTIALS, credentials);
-
-        synchronized (operationsLock) {
-            if (operationsService == null) {
-                operationsQueue.add(checkCredentialsIntent);
-                return false;
-            } else {
-                operationsService.queueOperation(checkCredentialsIntent, this, handler);
-                return true;
-            }
-        } // synchronized
-    }
-
-    @Override
-    public void requestFocusOnAccountPassword() {
-        binding.accountPassword.requestFocus();
+        return queueOperation(checkCredentialsIntent);
     }
 
     private void showAccountDoesNotExistSnackbar() {
@@ -437,17 +428,6 @@ public class NextcloudFragment extends Fragment implements
             operationsService = null;
         }
     };
-
-    @VisibleForTesting
-    public void setOperationsService(OperationsService service) {
-        synchronized (operationsLock) {
-            operationsService = service;
-            for (Intent intent : operationsQueue) {
-                operationsService.queueOperation(intent, this, handler);
-            }
-            operationsQueue.clear();
-        }
-    }
 
     @VisibleForTesting
     NextcloudContract.Presenter getPresenter() {

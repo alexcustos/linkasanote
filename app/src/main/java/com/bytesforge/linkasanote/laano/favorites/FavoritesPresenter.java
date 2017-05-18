@@ -265,7 +265,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     public void syncSavedFavorite(@NonNull final String favoriteId) {
         boolean sync = settings.isSyncable() && settings.isOnline();
         if (!sync) {
-            if (settings.isSyncable()) {
+            if (settings.isSyncable() || settings.getLastSyncTime() > 0) {
                 settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
                 laanoUiManager.updateSyncStatus();
             }

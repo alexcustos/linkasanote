@@ -10,6 +10,7 @@
     <dimen name="add_edit_account_description_padding">24dp</dimen>
     <dimen name="add_edit_account_status_min_height">32dp</dimen>
     <dimen name="add_edit_account_status_icon_padding">8dp</dimen>
+    <dimen name="add_edit_account_refresh_margin_bottom">12dp</dimen>
     <dimen name="main_button_margin_top">16dp</dimen>
     <dimen name="main_button_padding">16dp</dimen>
     <dimen name="token_corners_radius">6dp</dimen>
@@ -30,7 +31,7 @@
     <dimen name="recycler_view_button_padding">8dp</dimen>
     <dimen name="recycler_view_right_button_padding_end">16dp</dimen>
     <dimen name="recycler_view_left_button_padding_start">16dp</dimen>
-    <dimen name="recycler_view_tags_margin_bottom">24dp</dimen>
+    <dimen name="recycler_view_tags_margin_bottom">16dp</dimen>
     <dimen name="dialog_padding">8dp</dimen>
     <dimen name="dialog_margin_content">24dp</dimen>
     <dimen name="dialog_title_vertical_padding">8dp</dimen>

@@ -173,36 +173,31 @@ public final class LinksConflictResolutionPresenter implements
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
         if (viewModel.isStateDuplicated()) {
-            viewModel.showProgressOverlay();
-            localLinks.getMain(viewModel.getLocalLink())
-                    .subscribeOn(schedulerProvider.computation()) // local
-                    .observeOn(schedulerProvider.ui())
-                    .doFinally(viewModel::hideProgressOverlay)
-                    .subscribe(
-                            link -> replaceLink(link.getId(), linkId),
-                            throwable -> view.cancelActivity());
+            replaceLink(viewModel.getLocalLink(), linkId);
         } else {
             deleteLink(linkId);
         }
     }
 
-    private void replaceLink(
-            @NonNull final String mainLinkId, @NonNull final String linkId) {
-        checkNotNull(mainLinkId);
+    private void replaceLink(@NonNull String duplicatedKey, @NonNull final String linkId) {
+        checkNotNull(duplicatedKey);
         checkNotNull(linkId);
-        deleteLinkSingle(mainLinkId)
+        viewModel.showProgressOverlay();
+        localLinks.getMain(duplicatedKey)
                 .subscribeOn(schedulerProvider.io())
+                .flatMap(link -> deleteLinkSingle(link.getId()))
                 .map(success -> {
                     if (success) {
                         SyncState state = new SyncState(SyncState.State.SYNCED);
                         success = localLinks.update(linkId, state).blockingGet();
+                        repository.refreshLink(linkId);
                     }
                     return success;
                 })
                 .observeOn(schedulerProvider.ui())
+                .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
-                        repository.refreshLinks();
                         view.finishActivity();
                     } else {
                         view.cancelActivity();

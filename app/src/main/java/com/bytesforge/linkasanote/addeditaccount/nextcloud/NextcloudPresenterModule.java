@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
 import android.accounts.Account;
+import android.accounts.AccountAuthenticatorResponse;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
@@ -15,9 +16,15 @@ public class NextcloudPresenterModule {
     @Nullable
     private final Account account;
 
-    public NextcloudPresenterModule(NextcloudContract.View view, @Nullable Account account) {
+    @Nullable
+    private final AccountAuthenticatorResponse accountAuthenticatorResponse;
+
+    public NextcloudPresenterModule(
+            NextcloudContract.View view, @Nullable Account account,
+            @Nullable AccountAuthenticatorResponse accountAuthenticatorResponse) {
         this.view = view;
         this.account = account;
+        this.accountAuthenticatorResponse = accountAuthenticatorResponse;
     }
 
     @Provides
@@ -35,5 +42,11 @@ public class NextcloudPresenterModule {
     @NextcloudAccount
     public Account provideAccount() {
         return account;
+    }
+
+    @Provides
+    @Nullable
+    public AccountAuthenticatorResponse provideAccountAuthenticatorResponse() {
+        return accountAuthenticatorResponse;
     }
 }

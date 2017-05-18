@@ -2,6 +2,7 @@ package com.bytesforge.linkasanote.utils;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -18,6 +19,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CommonUtils {
 
+    public static final String HTTP_PROTOCOL = "http://";
+    public static final int HTTP_DEFAULT_PORT = 80;
+    public static final String HTTPS_PROTOCOL = "https://";
+    public static final int HTTPS_DEFAULT_PORT = 443;
+    public static final String DEFAULT_PROTOCOL = HTTPS_PROTOCOL;
+
     public static String convertIdn(@NonNull final String serverUrl, boolean toAscii) {
         URL url;
         try {
@@ -33,6 +40,38 @@ public class CommonUtils {
                 (toAscii ? IDN.toASCII(host) : IDN.toUnicode(host)) +
                 ((port == -1 || port == 80) ? "" : ":" + port) +
                 url.getPath();
+    }
+
+    @NonNull
+    public static String normalizeUrlProtocol(@NonNull String url) {
+        checkNotNull(url);
+        boolean protocolIsEmpty = false;
+        if (!url.startsWith(HTTP_PROTOCOL) && !url.startsWith(HTTPS_PROTOCOL)) {
+            url = DEFAULT_PROTOCOL + url;
+            protocolIsEmpty = true;
+        }
+        if (protocolIsEmpty) {
+            Uri uri = Uri.parse(url);
+            int port = uri.getPort();
+            String scheme = uri.getScheme();
+            if (port == HTTPS_DEFAULT_PORT) {
+                scheme = HTTPS_PROTOCOL.substring(0, HTTPS_PROTOCOL.length() - 3);
+                port = -1;
+            }
+            if (port == HTTP_DEFAULT_PORT) {
+                scheme = HTTP_PROTOCOL.substring(0, HTTP_PROTOCOL.length() - 3);
+                port = -1;
+            }
+            String authority = uri.getHost() + (port < 0 ? "" : ":" + port);
+            Uri.Builder uriBuilder = new Uri.Builder()
+                    .scheme(scheme)
+                    .encodedAuthority(authority)
+                    .encodedPath(uri.getPath())
+                    .encodedQuery(uri.getQuery())
+                    .encodedFragment(uri.getFragment());
+            return uriBuilder.build().toString();
+        }
+        return url;
     }
 
     public static <T> T[] arrayAdd(@NonNull final T[] array, final T element) {
