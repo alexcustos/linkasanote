@@ -237,10 +237,17 @@ public final class LinksPresenter extends BaseItemPresenter implements
     }
 
     @Override
-    public void onLinkClick(String linkId, boolean isConflicted) {
+    public void onLinkClick(String linkId, boolean isConflicted, int numNotes) {
         if (viewModel.isActionMode()) {
             onLinkSelected(linkId);
         } else if (isConflicted) {
+            if (!settings.isSyncable()) {
+                laanoUiManager.showApplicationNotSyncableSnackbar();
+                return;
+            } else if (!settings.isOnline()) {
+                laanoUiManager.showApplicationOfflineSnackbar();
+                return;
+            }
             repository.autoResolveLinkConflict(linkId)
                     .subscribeOn(schedulerProvider.computation())
                     .observeOn(schedulerProvider.ui())
@@ -264,13 +271,17 @@ public final class LinksPresenter extends BaseItemPresenter implements
                             view.showConflictResolution(linkId);
                         }
                     });
-        } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
-            boolean selected = viewModel.toggleFilterId(linkId);
-            // NOTE: filterType will be updated accordingly on the tab
-            if (selected) {
-                settings.setLinkFilter(linkId);
-            } else {
-                settings.setLinkFilter(null);
+        } else {
+            if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
+                boolean selected = viewModel.toggleFilterId(linkId);
+                // NOTE: filterType will be updated accordingly on the tab
+                if (selected) {
+                    settings.setLinkFilter(linkId);
+                } else {
+                    settings.setLinkFilter(null);
+                }
+            } else if (numNotes > 0){
+                onToggleClick(linkId);
             }
         }
     }

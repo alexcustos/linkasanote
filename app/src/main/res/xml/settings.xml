@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<android.support.v7.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
         android:layout="@layout/settings_dialog_category"
@@ -13,11 +14,18 @@
             android:key="@string/pref_key_expand_notes"
             android:title="@string/pref_title_notes_expanding"
             android:summary="@string/pref_summary_notes_expanding" />
+        <Preference
+            android:key="@string/pref_key_backup"
+            android:title="@string/pref_title_backup" />
+        <ListPreference
+            android:key="@string/pref_key_restore"
+            android:title="@string/pref_title_restore"
+            android:persistent="false" />
     </PreferenceCategory>
 
     <PreferenceCategory
         android:layout="@layout/settings_dialog_category"
-        android:title="@string/pref_title_synchronization">
+        android:title="@string/pref_category_synchronization">
 
         <EditTextPreference
             android:key="@string/pref_key_sync_directory"
@@ -43,7 +51,7 @@
 
     <PreferenceCategory
         android:layout="@layout/settings_dialog_category"
-        android:title="@string/pref_title_clipboard">
+        android:title="@string/pref_category_clipboard">
 
         <CheckBoxPreference
             android:key="@string/pref_key_clipboard_link_get_metadata"
@@ -63,5 +71,8 @@
             android:key="@string/pref_key_clipboard_fill_in_forms"
             android:title="@string/pref_title_clipboard_fill_in_forms"
             android:summary="@string/pref_summary_clipboard_fill_in_forms" />
+        <Preference
+            android:key="@string/pref_key_clipboard_clear_clipboard"
+            android:title="@string/pref_title_clipboard_clear_clipboard" />
     </PreferenceCategory>
-</PreferenceScreen>
+</android.support.v7.preference.PreferenceScreen>

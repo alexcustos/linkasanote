@@ -11,6 +11,7 @@ import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.data.source.local.LocalNotes;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.owncloud.android.lib.common.OwnCloudClient;
@@ -380,13 +381,13 @@ public class CloudDataSource {
         getRemoteFiles(ocClient, dataSourceDirectory).subscribe(file -> {
             String fileMimeType = file.getMimeType();
             String fileRemotePath = file.getRemotePath();
+            long fileSize = file.getSize();
             String id = JsonFile.getId(fileMimeType, fileRemotePath);
-            // TODO: check file size and reject if above reasonable limit
-            if (id != null) {
+            if (id != null && fileSize <= Settings.GLOBAL_JSON_MAX_BODY_SIZE_BYTES) {
                 dataSourceMap.put(id, file.getEtag());
             } else {
                 Log.w(TAG, "A problem was found in cloud dataSource "
-                        + "[" + fileRemotePath + ", mimeType=" + fileMimeType + "]");
+                        + "[" + fileRemotePath + "; mimeType=" + fileMimeType + "; size=" + fileSize + "]");
             }
         }, throwable -> { /* skip the corrupted files */ });
         return dataSourceMap;

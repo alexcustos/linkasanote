@@ -25,6 +25,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
     private static final String STATE_LOCAL_STATE = "LOCAL_STATE";
     private static final String STATE_LOCAL_STATUS = "LOCAL_STATUS";
     private static final String STATE_LOCAL_INFO = "LOCAL_INFO";
+    private static final String STATE_LOCAL_ID = "LOCAL_ID";
     private static final String STATE_LOCAL_NAME = "LOCAL_NAME";
     private static final String STATE_LOCAL_LINK = "LOCAL_LINK";
     private static final String STATE_LOCAL_TAGS = "LOCAL_TAGS";
@@ -34,6 +35,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
     private static final String STATE_CLOUD_STATE = "CLOUD_STATE";
     private static final String STATE_CLOUD_STATUS = "CLOUD_STATUS";
     private static final String STATE_CLOUD_INFO = "CLOUD_INFO";
+    private static final String STATE_CLOUD_ID = "CLOUD_ID";
     private static final String STATE_CLOUD_NAME = "CLOUD_NAME";
     private static final String STATE_CLOUD_LINK = "CLOUD_LINK";
     private static final String STATE_CLOUD_TAGS = "CLOUD_TAGS";
@@ -62,6 +64,9 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
     public final ObservableBoolean cloudRetryButton = new ObservableBoolean();
 
     public final ObservableBoolean buttonsActive = new ObservableBoolean();
+
+    private String localId;
+    private String cloudId;
 
     private final Resources resources;
 
@@ -93,6 +98,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
         outState.putString(STATE_LOCAL_STATE, localState.get());
         outState.putString(STATE_LOCAL_STATUS, localStatus.get());
         outState.putString(STATE_LOCAL_INFO, localInfo.get());
+        outState.putString(STATE_LOCAL_ID, localId);
         outState.putString(STATE_LOCAL_NAME, localName.get());
         outState.putString(STATE_LOCAL_LINK, localLink.get());
         outState.putParcelableArrayList(STATE_LOCAL_TAGS, localTags);
@@ -102,6 +108,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
         outState.putString(STATE_CLOUD_STATE, cloudState.get());
         outState.putString(STATE_CLOUD_STATUS, cloudStatus.get());
         outState.putString(STATE_CLOUD_INFO, cloudInfo.get());
+        outState.putString(STATE_CLOUD_ID, cloudId);
         outState.putString(STATE_CLOUD_NAME, cloudName.get());
         outState.putString(STATE_CLOUD_LINK, cloudLink.get());
         outState.putParcelableArrayList(STATE_CLOUD_TAGS, cloudTags);
@@ -119,6 +126,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
         localState.set(state.getString(STATE_LOCAL_STATE));
         localStatus.set(state.getString(STATE_LOCAL_STATUS));
         localInfo.set(state.getString(STATE_LOCAL_INFO));
+        localId = state.getString(STATE_LOCAL_ID);
         localName.set(state.getString(STATE_LOCAL_NAME));
         localLink.set(state.getString(STATE_LOCAL_LINK));
         localTags = state.getParcelableArrayList(STATE_LOCAL_TAGS);
@@ -128,6 +136,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
         cloudState.set(state.getString(STATE_CLOUD_STATE));
         cloudStatus.set(state.getString(STATE_CLOUD_STATUS));
         cloudInfo.set(state.getString(STATE_CLOUD_INFO));
+        cloudId = state.getString(STATE_CLOUD_ID);
         cloudName.set(state.getString(STATE_CLOUD_NAME));
         cloudLink.set(state.getString(STATE_CLOUD_LINK));
         cloudTags = state.getParcelableArrayList(STATE_CLOUD_TAGS);
@@ -147,6 +156,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
         defaultState.putString(STATE_LOCAL_STATE, null);
         defaultState.putString(STATE_LOCAL_STATUS, resources.getString(R.string.status_loading));
         defaultState.putString(STATE_LOCAL_INFO, null);
+        defaultState.putString(STATE_LOCAL_ID, null);
         defaultState.putString(STATE_LOCAL_NAME, null);
         defaultState.putString(STATE_LOCAL_LINK, null);
         defaultState.putParcelableArrayList(STATE_LOCAL_TAGS, null);
@@ -156,6 +166,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
         defaultState.putString(STATE_CLOUD_STATE, null);
         defaultState.putString(STATE_CLOUD_STATUS, resources.getString(R.string.status_loading));
         defaultState.putString(STATE_CLOUD_INFO, null);
+        defaultState.putString(STATE_CLOUD_ID, null);
         defaultState.putString(STATE_CLOUD_NAME, null);
         defaultState.putString(STATE_CLOUD_LINK, null);
         defaultState.putParcelableArrayList(STATE_CLOUD_TAGS, null);
@@ -180,6 +191,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
         localUploadButton.set(false);
         activateButtons();
 
+        localId = link.getId();
         if (link.isConflicted()) {
             if (link.isDeleted()) {
                 localState.set(resources.getString(R.string.dialog_link_conflict_state_deleted));
@@ -217,6 +229,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
         cloudDownloadButton.set(false);
         activateButtons();
 
+        cloudId = link.getId();
         if (link.isDuplicated()) { // record from the database
             cloudState.set(resources.getString(R.string.dialog_link_conflict_state_duplicated));
             cloudDeleteButton.set(true);
@@ -281,8 +294,13 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
     }
 
     @Override
-    public String getLocalLink() {
-        return localLink.get();
+    public String getLocalId() {
+        return localId;
+    }
+
+    @Override
+    public String getCloudId() {
+        return cloudId;
     }
 
     @Override

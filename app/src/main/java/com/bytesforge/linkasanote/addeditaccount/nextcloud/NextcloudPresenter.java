@@ -76,10 +76,11 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
 
     @Override
     public void checkUrl(@NonNull final String url) {
-        viewModel.hideRefreshButton();
         if (view.sendGetServerInfoOperation(url)) {
+            viewModel.hideRefreshButton();
             viewModel.showTestingConnectionStatus();
         } else {
+            viewModel.showRefreshButton();
             viewModel.showCheckUrlWaitingForServiceStatus();
         }
     }

@@ -24,6 +24,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
     private static final String STATE_LOCAL_STATE = "LOCAL_STATE";
     private static final String STATE_LOCAL_STATUS = "LOCAL_STATUS";
+    private static final String STATE_LOCAL_ID = "LOCAL_ID";
     private static final String STATE_LOCAL_NAME = "LOCAL_NAME";
     private static final String STATE_LOCAL_TAGS = "LOCAL_TAGS";
     private static final String STATE_LOCAL_DELETE_BUTTON = "LOCAL_DELETE_BUTTON";
@@ -31,6 +32,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
     private static final String STATE_CLOUD_STATE = "CLOUD_STATE";
     private static final String STATE_CLOUD_STATUS = "CLOUD_STATUS";
+    private static final String STATE_CLOUD_ID = "CLOUD_ID";
     private static final String STATE_CLOUD_NAME = "CLOUD_NAME";
     private static final String STATE_CLOUD_TAGS = "CLOUD_TAGS";
     private static final String STATE_CLOUD_DELETE_BUTTON = "CLOUD_DELETE_BUTTON";
@@ -54,6 +56,9 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
     public final ObservableBoolean cloudRetryButton = new ObservableBoolean();
 
     public final ObservableBoolean buttonsActive = new ObservableBoolean();
+
+    private String localId;
+    private String cloudId;
 
     private final Resources resources;
 
@@ -84,6 +89,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         checkNotNull(outState);
         outState.putString(STATE_LOCAL_STATE, localState.get());
         outState.putString(STATE_LOCAL_STATUS, localStatus.get());
+        outState.putString(STATE_LOCAL_ID, localId);
         outState.putString(STATE_LOCAL_NAME, localName.get());
         outState.putParcelableArrayList(STATE_LOCAL_TAGS, localTags);
         outState.putBoolean(STATE_LOCAL_DELETE_BUTTON, localDeleteButton.get());
@@ -91,6 +97,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
         outState.putString(STATE_CLOUD_STATE, cloudState.get());
         outState.putString(STATE_CLOUD_STATUS, cloudStatus.get());
+        outState.putString(STATE_CLOUD_ID, cloudId);
         outState.putString(STATE_CLOUD_NAME, cloudName.get());
         outState.putParcelableArrayList(STATE_CLOUD_TAGS, cloudTags);
         outState.putBoolean(STATE_CLOUD_DELETE_BUTTON, cloudDeleteButton.get());
@@ -106,6 +113,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         checkNotNull(state);
         localState.set(state.getString(STATE_LOCAL_STATE));
         localStatus.set(state.getString(STATE_LOCAL_STATUS));
+        localId = state.getString(STATE_LOCAL_ID);
         localName.set(state.getString(STATE_LOCAL_NAME));
         localTags = state.getParcelableArrayList(STATE_LOCAL_TAGS);
         localDeleteButton.set(state.getBoolean(STATE_LOCAL_DELETE_BUTTON));
@@ -113,6 +121,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
         cloudState.set(state.getString(STATE_CLOUD_STATE));
         cloudStatus.set(state.getString(STATE_CLOUD_STATUS));
+        cloudId = state.getString(STATE_CLOUD_ID);
         cloudName.set(state.getString(STATE_CLOUD_NAME));
         cloudTags = state.getParcelableArrayList(STATE_CLOUD_TAGS);
         cloudDeleteButton.set(state.getBoolean(STATE_CLOUD_DELETE_BUTTON));
@@ -130,6 +139,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
         defaultState.putString(STATE_LOCAL_STATE, null);
         defaultState.putString(STATE_LOCAL_STATUS, resources.getString(R.string.status_loading));
+        defaultState.putString(STATE_LOCAL_ID, null);
         defaultState.putString(STATE_LOCAL_NAME, null);
         defaultState.putParcelableArrayList(STATE_LOCAL_TAGS, null);
         defaultState.putBoolean(STATE_LOCAL_DELETE_BUTTON, false);
@@ -137,6 +147,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
         defaultState.putString(STATE_CLOUD_STATE, null);
         defaultState.putString(STATE_CLOUD_STATUS, resources.getString(R.string.status_loading));
+        defaultState.putString(STATE_CLOUD_ID, null);
         defaultState.putString(STATE_CLOUD_NAME, null);
         defaultState.putParcelableArrayList(STATE_CLOUD_TAGS, null);
         defaultState.putBoolean(STATE_CLOUD_DELETE_BUTTON, false);
@@ -160,6 +171,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         localUploadButton.set(false);
         activateButtons();
 
+        localId = favorite.getId();
         if (favorite.isConflicted()) {
             if (favorite.isDeleted()) {
                 localState.set(resources.getString(R.string.dialog_favorite_conflict_state_deleted));
@@ -191,6 +203,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         cloudDownloadButton.set(false);
         activateButtons();
 
+        cloudId = favorite.getId();
         if (favorite.isDuplicated()) { // NOTE: from database record
             cloudState.set(resources.getString(R.string.dialog_favorite_conflict_state_duplicated));
             cloudDeleteButton.set(true);
@@ -247,8 +260,13 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
     }
 
     @Override
-    public String getLocalName() {
-        return localName.get();
+    public String getLocalId() {
+        return localId;
+    }
+
+    @Override
+    public String getCloudId() {
+        return cloudId;
     }
 
     @Override

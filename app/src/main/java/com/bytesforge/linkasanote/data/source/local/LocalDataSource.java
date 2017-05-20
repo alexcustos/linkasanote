@@ -100,6 +100,10 @@ public class LocalDataSource {
         return localLinks.autoResolveConflict(linkId);
     }
 
+    public Single<Integer> resetLinksSyncState() {
+        return localLinks.resetSyncState();
+    }
+
     // Favorites
 
     public Observable<Favorite> getFavorites() {
@@ -155,6 +159,10 @@ public class LocalDataSource {
     public Single<Boolean> autoResolveFavoriteConflict(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
         return localFavorites.autoResolveConflict(favoriteId);
+    }
+
+    public Single<Integer> resetFavoritesSyncState() {
+        return localFavorites.resetSyncState();
     }
 
     // Notes
@@ -213,6 +221,10 @@ public class LocalDataSource {
 
     public Single<Boolean> isUnsyncedNotes() {
         return localNotes.isUnsynced();
+    }
+
+    public Single<Integer> resetNotesSyncState() {
+        return localNotes.resetSyncState();
     }
 
     // Tags

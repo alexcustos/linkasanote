@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.text.format.DateFormat;
 import android.util.Log;
+import android.util.Patterns;
 
 import com.google.common.base.Strings;
 
@@ -14,10 +16,13 @@ import java.net.IDN;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Date;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class CommonUtils {
+public final class CommonUtils {
+
+    private static final String TAG = CommonUtils.class.getSimpleName();
 
     public static final String HTTP_PROTOCOL = "http://";
     public static final int HTTP_DEFAULT_PORT = 80;
@@ -25,21 +30,32 @@ public class CommonUtils {
     public static final int HTTPS_DEFAULT_PORT = 443;
     public static final String DEFAULT_PROTOCOL = HTTPS_PROTOCOL;
 
+    private CommonUtils() {
+    }
+
     public static String convertIdn(@NonNull final String serverUrl, boolean toAscii) {
+        if (!Patterns.WEB_URL.matcher(serverUrl).matches()) {
+            return null;
+        }
+        String normalizedUrl = CommonUtils.normalizeUrlProtocol(serverUrl);
         URL url;
         try {
-            url = new URL(serverUrl);
+            url = new URL(normalizedUrl);
         } catch (MalformedURLException e) {
             // Only normalized URLs accepted
             return null;
         }
         String host = url.getHost();
         int port = url.getPort();
-
-        return url.getProtocol() + "://" +
-                (toAscii ? IDN.toASCII(host) : IDN.toUnicode(host)) +
-                ((port == -1 || port == 80) ? "" : ":" + port) +
-                url.getPath();
+        String authority = (toAscii ? IDN.toASCII(host) : IDN.toUnicode(host)) +
+                (port == -1 ? "" : ":" + port);
+        return new Uri.Builder()
+                .scheme(url.getProtocol())
+                .encodedAuthority(authority)
+                .encodedPath(url.getPath())
+                //.encodedQuery(url.getQuery())
+                //.encodedFragment(url.getRef())
+                .build().toString();
     }
 
     @NonNull
@@ -115,5 +131,18 @@ public class CommonUtils {
 
     public static int dpToPx(int dp) {
         return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
+    }
+
+    public static String formatDateTime(@NonNull Context context, @NonNull Date date) {
+        checkNotNull(context);
+        checkNotNull(date);
+        String datePart = DateFormat.getMediumDateFormat(context).format(date);
+        String timePart;
+        if (DateFormat.is24HourFormat(context)) {
+            timePart = DateFormat.format("HH:mm", date).toString();
+        } else {
+            timePart = DateFormat.getTimeFormat(context).format(date);
+        }
+        return datePart + " " + timePart;
     }
 }

@@ -10,6 +10,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
@@ -41,6 +44,8 @@ public class Settings {
     public static final boolean GLOBAL_CLIPBOARD_LINK_UPDATED_TOAST = true;
     // TODO: this settings should be 3 way switch: on app start; on addEdit start; off
     public static final boolean GLOBAL_CLIPBOARD_MONITOR_ON_START = true;
+    public static final long GLOBAL_JSON_MAX_BODY_SIZE_BYTES = 10 * 1024;
+    public static final String GLOBAL_APPLICATION_DIRECTORY = "LaaNo";
 
     private static final boolean DEFAULT_EXPAND_LINKS = false;
     private static final boolean DEFAULT_EXPAND_NOTES = true;
@@ -232,6 +237,14 @@ public class Settings {
 
     public synchronized void setLastSyncedETag(@NonNull String key, String lastSyncedETag) {
         putStringSetting(checkNotNull(key), lastSyncedETag);
+    }
+
+    public synchronized void resetSyncState() {
+        setLastSyncedETag(Link.SETTING_LAST_SYNCED_ETAG, DEFAULT_LAST_SYNCED_ETAG);
+        setLastSyncedETag(Favorite.SETTING_LAST_SYNCED_ETAG, DEFAULT_LAST_SYNCED_ETAG);
+        setLastSyncedETag(Note.SETTING_LAST_SYNCED_ETAG, DEFAULT_LAST_SYNCED_ETAG);
+        //putLongSetting(SETTING_LAST_SYNC_TIME, DEFAULT_LAST_SYNC_TIME);
+        setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
     }
 
     @NonNull

@@ -4,6 +4,7 @@ import android.accounts.Account;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.ActionBar;
 import android.util.SparseArray;
@@ -17,6 +18,7 @@ import com.bytesforge.linkasanote.laano.links.LinksViewModel;
 import com.bytesforge.linkasanote.laano.notes.NotesViewModel;
 import com.bytesforge.linkasanote.manageaccounts.AccountItem;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -97,7 +99,6 @@ public class LaanoUiManager {
     public void setFilterType(
             int position, @NonNull FilterType filterType, String filterTitle) {
         checkNotNull(filterType);
-
         String normalTitle;
         switch (filterType) {
             case ALL:
@@ -181,6 +182,21 @@ public class LaanoUiManager {
         headerViewModel.showSyncStatus(lastSyncTime, syncStatus);
     }
 
+    public void notifySyncStatus() {
+        int syncStatus = settings.getSyncStatus();
+        switch (syncStatus) {
+            case SyncAdapter.SYNC_STATUS_SYNCED:
+                showShortToast(R.string.toast_sync_success);
+                break;
+            case SyncAdapter.SYNC_STATUS_ERROR:
+                showLongToast(R.string.toast_sync_error);
+                break;
+            case SyncAdapter.SYNC_STATUS_CONFLICT:
+                showLongToast(R.string.toast_sync_conflict);
+                break;
+        }
+    }
+
     public void showShortToast(@StringRes int toastId) {
         Toast.makeText(laanoActivity, toastId, Toast.LENGTH_SHORT).show();
     }
@@ -223,5 +239,13 @@ public class LaanoUiManager {
 
     public void setCurrentTab(int tab) {
         laanoActivity.setCurrentTab(tab);
+    }
+
+    public void showApplicationOfflineSnackbar() {
+        Snackbar.make(tabLayout, R.string.laano_offline, Snackbar.LENGTH_LONG).show();
+    }
+
+    public void showApplicationNotSyncableSnackbar() {
+        Snackbar.make(tabLayout, R.string.laano_not_syncable, Snackbar.LENGTH_LONG).show();
     }
 }

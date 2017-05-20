@@ -173,24 +173,24 @@ public final class LinksConflictResolutionPresenter implements
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
         if (viewModel.isStateDuplicated()) {
-            replaceLink(viewModel.getLocalLink(), linkId);
+            replaceLink(viewModel.getLocalId(), viewModel.getCloudId());
         } else {
-            deleteLink(linkId);
+            deleteLink(viewModel.getLocalId());
         }
     }
 
-    private void replaceLink(@NonNull String duplicatedKey, @NonNull final String linkId) {
-        checkNotNull(duplicatedKey);
-        checkNotNull(linkId);
+    private void replaceLink(
+            @NonNull final String localLinkId, @NonNull final String duplicatedLinkId) {
+        checkNotNull(localLinkId);
+        checkNotNull(duplicatedLinkId);
         viewModel.showProgressOverlay();
-        localLinks.getMain(duplicatedKey)
+        deleteLinkSingle(localLinkId)
                 .subscribeOn(schedulerProvider.io())
-                .flatMap(link -> deleteLinkSingle(link.getId()))
                 .map(success -> {
                     if (success) {
                         SyncState state = new SyncState(SyncState.State.SYNCED);
-                        success = localLinks.update(linkId, state).blockingGet();
-                        repository.refreshLink(linkId);
+                        success = localLinks.update(duplicatedLinkId, state).blockingGet();
+                        repository.refreshLink(duplicatedLinkId);
                     }
                     return success;
                 })
@@ -208,7 +208,7 @@ public final class LinksConflictResolutionPresenter implements
     private void deleteLink(@NonNull final String linkId) {
         checkNotNull(linkId);
         viewModel.showProgressOverlay();
-        deleteLinkSingle(checkNotNull(linkId))
+        deleteLinkSingle(linkId)
                 .subscribeOn(schedulerProvider.io())
                 .observeOn(schedulerProvider.ui())
                 .doFinally(viewModel::hideProgressOverlay)
@@ -222,7 +222,8 @@ public final class LinksConflictResolutionPresenter implements
     }
 
     private Single<Boolean> deleteLinkSingle(@NonNull final String linkId) {
-        return cloudLinks.delete(checkNotNull(linkId))
+        checkNotNull(linkId);
+        return cloudLinks.delete(linkId)
                 .flatMap(result -> {
                     if (!result.isSuccess()) {
                         Log.e(TAG, "There was an error while deleting the Link from the cloud storage [" + linkId + "]");
@@ -280,7 +281,7 @@ public final class LinksConflictResolutionPresenter implements
     @Override
     public void onCloudDeleteClick() {
         viewModel.deactivateButtons();
-        deleteLink(linkId);
+        deleteLink(viewModel.getCloudId());
     }
 
     @Override
@@ -293,15 +294,16 @@ public final class LinksConflictResolutionPresenter implements
     public void onLocalUploadClick() {
         viewModel.deactivateButtons();
         viewModel.showProgressOverlay();
-        Link link = localLinks.get(linkId).blockingGet();
-        cloudLinks.upload(link)
+        String linkId = viewModel.getLocalId();
+        localLinks.get(linkId)
                 .subscribeOn(schedulerProvider.io())
+                .flatMap(cloudLinks::upload)
                 .map(result -> {
                     boolean success = false;
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        success = localLinks.update(link.getId(), state).blockingGet();
+                        success = localLinks.update(linkId, state).blockingGet();
                     }
                     return success;
                 })
@@ -321,6 +323,7 @@ public final class LinksConflictResolutionPresenter implements
     public void onCloudDownloadClick() {
         viewModel.deactivateButtons();
         viewModel.showProgressOverlay();
+        String linkId = viewModel.getCloudId();
         cloudLinks.download(linkId)
                 .subscribeOn(schedulerProvider.io())
                 .map(link -> localLinks.save(link).blockingGet())

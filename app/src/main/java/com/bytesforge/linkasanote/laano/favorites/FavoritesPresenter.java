@@ -157,6 +157,13 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         if (viewModel.isActionMode()) {
             onFavoriteSelected(favoriteId);
         } else if (isConflicted) {
+            if (!settings.isSyncable()) {
+                laanoUiManager.showApplicationNotSyncableSnackbar();
+                return;
+            } else if (!settings.isOnline()) {
+                laanoUiManager.showApplicationOfflineSnackbar();
+                return;
+            }
             repository.autoResolveFavoriteConflict(favoriteId)
                     .subscribeOn(schedulerProvider.computation())
                     .observeOn(schedulerProvider.ui())

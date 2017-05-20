@@ -10,12 +10,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.content.ContextCompat;
-import android.text.format.DateFormat;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.manageaccounts.AccountItem;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 
 import java.util.Date;
 
@@ -23,14 +23,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LaanoDrawerHeaderViewModel extends BaseObservable {
 
-    public static final String STATE_STATUS_ICON_TINT = "STATUS_ICON_TINT";
-    public static final String STATE_LAST_SYNCED_TEXT = "LAST_SYNCED_TEXT";
-    public static final String STATE_STATUS_TEXT = "STATUS_TEXT";
-    public static final String STATE_USERNAME_TEXT = "USERNAME_TEXT";
-    public static final String STATE_ACCOUNT_NAME_TEXT = "ACCOUNT_NAME_TEXT";
-    public static final String STATE_APP_NAME = "APP_NAME";
-    public static final String STATE_USERNAME = "USERNAME";
-    public static final String STATE_ACCOUNT_NAME = "ACCOUNT_NAME";
+    private static final String STATE_STATUS_ICON_TINT = "STATUS_ICON_TINT";
+    private static final String STATE_LAST_SYNCED_TEXT = "LAST_SYNCED_TEXT";
+    private static final String STATE_STATUS_TEXT = "STATUS_TEXT";
+    private static final String STATE_USERNAME_TEXT = "USERNAME_TEXT";
+    private static final String STATE_ACCOUNT_NAME_TEXT = "ACCOUNT_NAME_TEXT";
+    private static final String STATE_APP_NAME = "APP_NAME";
+    private static final String STATE_USERNAME = "USERNAME";
+    private static final String STATE_ACCOUNT_NAME = "ACCOUNT_NAME";
 
 
     public final ObservableField<String> lastSyncedText = new ObservableField<>();
@@ -131,14 +131,8 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
             return;
         }
         Date date = new Date(lastSyncTime);
-        String datePart = DateFormat.getMediumDateFormat(context).format(date);
-        String timePart;
-        if (DateFormat.is24HourFormat(context)) {
-            timePart = DateFormat.format("HH:mm", date).toString();
-        } else {
-            timePart = DateFormat.getTimeFormat(context).format(date);
-        }
-        lastSyncedText.set(datePart + " " + timePart);
+        String dateTime = CommonUtils.formatDateTime(context, date);
+        lastSyncedText.set(dateTime);
         switch (syncStatus) {
             case SyncAdapter.SYNC_STATUS_SYNCED:
                 statusText.set(getString(R.string.drawer_header_status_synced));

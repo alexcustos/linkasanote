@@ -230,15 +230,26 @@ public final class NotesPresenter extends BaseItemPresenter implements
         if (viewModel.isActionMode()) {
             onNoteSelected(noteId);
         } else if (isConflicted) {
+            if (!settings.isSyncable()) {
+                laanoUiManager.showApplicationNotSyncableSnackbar();
+                return;
+            } else if (!settings.isOnline()) {
+                laanoUiManager.showApplicationOfflineSnackbar();
+                return;
+            }
             // NOTE: Note doesn't have AUTO conflict resolution option
             view.showConflictResolution(noteId);
-        } else if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
-            boolean selected = viewModel.toggleFilterId(noteId);
-            // NOTE: filterType will be updated accordingly on the tab
-            if (selected) {
-                settings.setNoteFilter(noteId);
+        } else {
+            if (Settings.GLOBAL_ITEM_CLICK_SELECT_FILTER) {
+                boolean selected = viewModel.toggleFilterId(noteId);
+                // NOTE: filterType will be updated accordingly on the tab
+                if (selected) {
+                    settings.setNoteFilter(noteId);
+                } else {
+                    settings.setNoteFilter(null);
+                }
             } else {
-                settings.setNoteFilter(null);
+                onToggleClick(noteId);
             }
         }
     }

@@ -68,7 +68,6 @@ public class LinksPresenterTest {
         MockitoAnnotations.initMocks(this);
         PowerMockito.mockStatic(Log.class);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
-        // TODO: check if it's needed at all
         when(view.isActive()).thenReturn(true);
         when(settings.getFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE))
                 .thenReturn(FilterType.ALL);

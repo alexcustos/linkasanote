@@ -54,7 +54,7 @@ public interface LinksContract {
         void showDeleteSuccessSnackbar();
 
         void setExpandByDefault(boolean expandByDefault);
-        boolean isVisible(String id);
+        boolean isVisible(String id, int numNotes);
         void toggleVisibility(@NonNull String id);
         void setVisibility(@NonNull String[] ids, boolean expand);
     }
@@ -64,7 +64,7 @@ public interface LinksContract {
         void showAddLink();
         void loadLinks(boolean forceUpdate);
 
-        void onLinkClick(String linkId, boolean isConflicted);
+        void onLinkClick(String linkId, boolean isConflicted, int numNotes);
         boolean onLinkLongClick(String linkId);
         void onCheckboxClick(String linkId);
         void selectLinkFilter();

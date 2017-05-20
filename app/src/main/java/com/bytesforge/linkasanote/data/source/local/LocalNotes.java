@@ -172,8 +172,7 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
         return Single.fromCallable(() -> {
             ContentValues values = state.getContentValues();
             if (state.isDeleted()) {
-                // NOTE: if the Note is saved from the Cloud storage linkID is restored
-                // TODO: check constrain violation on restore
+                // NOTE: if conflict is detected, LinkId can be restored from the Cloud storage
                 values.put(LocalContract.NoteEntry.COLUMN_NAME_LINK_ID, (String) null);
             }
             Uri uri = LocalContract.NoteEntry.buildUriWith(noteId);

@@ -199,8 +199,7 @@ public class NotesTabTest {
         when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
         when(mockRepository.isConflictedNotes()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
-
-        AndroidTestUtils.sleep(250); // TODO: remove
+        //AndroidTestUtils.sleep(250);
 
         onView(withId(R.id.rv_notes))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));
@@ -223,8 +222,7 @@ public class NotesTabTest {
         when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
         when(mockRepository.isConflictedNotes()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
-
-        AndroidTestUtils.sleep(250); // TODO: remove
+        //AndroidTestUtils.sleep(250);
 
         onView(withId(R.id.rv_notes))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));
@@ -248,8 +246,7 @@ public class NotesTabTest {
         when(mockRepository.isConflictedFavorites()).thenReturn(Single.fromCallable(() -> false));
         when(mockRepository.isConflictedNotes()).thenReturn(Single.fromCallable(() -> false));
         laanoActivityTestRule.launchActivity(null);
-
-        AndroidTestUtils.sleep(250); // TODO: remove
+        //AndroidTestUtils.sleep(250);
 
         onView(withId(R.id.rv_notes))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));

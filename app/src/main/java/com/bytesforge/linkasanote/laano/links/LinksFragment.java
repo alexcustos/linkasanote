@@ -25,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.Toast;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Link;
@@ -261,6 +262,8 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
                 if (resultCode == LinksConflictResolutionDialog.RESULT_OK) {
                     presenter.updateSyncStatus();
                     //viewModel.showConflictResolutionSuccessfulSnackbar();
+                    Toast.makeText(getContext(), R.string.toast_conflict_resolved,
+                            Toast.LENGTH_SHORT).show();
                 } else if (resultCode == LinksConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
                 }
@@ -369,7 +372,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     @Override
     public void selectionChanged(@NonNull String id) {
         checkNotNull(id);
-        //adapter.notifyItemChanged(position);
+        //adapter.notifyItemChanged(id);
         updateActionModeTitle();
         updateActionModeMenu();
     }
@@ -377,7 +380,8 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     @Override
     public void visibilityChanged(@NonNull String id) {
         checkNotNull(id);
-        //adapter.notifyItemChanged(position);
+        // NOTE: this notification is required, or else rvLinkNotes randomly turns blank
+        adapter.notifyItemChanged(id);
     }
 
     @Override

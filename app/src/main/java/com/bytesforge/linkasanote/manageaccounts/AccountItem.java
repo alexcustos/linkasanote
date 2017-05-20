@@ -4,6 +4,8 @@ import android.accounts.Account;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.google.common.base.Objects;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AccountItem {
@@ -48,5 +50,18 @@ public class AccountItem {
     @Nullable
     public String getDisplayName() {
         return displayName;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        AccountItem accountItem = (AccountItem) obj;
+        if (account == null ^ accountItem.account == null) return false;
+
+        // NOTE: (account == null && accountItem.account == null)
+        return (account == null || Objects.equal(account.name, accountItem.account.name))
+                && Objects.equal(displayName, accountItem.displayName);
     }
 }

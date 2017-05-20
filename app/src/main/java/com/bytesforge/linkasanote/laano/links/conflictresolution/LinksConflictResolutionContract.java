@@ -33,7 +33,8 @@ public interface LinksConflictResolutionContract {
         void showDatabaseError();
         void showCloudLoading();
         boolean isStateDuplicated();
-        String getLocalLink();
+        String getLocalId();
+        String getCloudId();
         void activateButtons();
         void deactivateButtons();
         void showProgressOverlay();

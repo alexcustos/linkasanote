@@ -22,6 +22,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -218,6 +219,8 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
                 if (resultCode == FavoritesConflictResolutionDialog.RESULT_OK) {
                     presenter.updateSyncStatus();
                     //viewModel.showConflictResolutionSuccessfulSnackbar();
+                    Toast.makeText(getContext(), R.string.toast_conflict_resolved,
+                            Toast.LENGTH_SHORT).show();
                 } else if (resultCode == FavoritesConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
                 }

@@ -11,9 +11,12 @@ import android.view.ViewGroup;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ActivityUtils {
+public final class ActivityUtils {
 
     private static final String TAG = ActivityUtils.class.getSimpleName();
+
+    private ActivityUtils() {
+    }
 
     public static void addFragmentToActivity(
             @NonNull FragmentManager fragmentManager,

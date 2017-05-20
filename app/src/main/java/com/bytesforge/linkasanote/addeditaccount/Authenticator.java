@@ -83,7 +83,6 @@ public class Authenticator extends AbstractAccountAuthenticator {
             result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
             return result;
         }
-        // TODO: find where this intent can be useful
         Intent updateAccountIntent = new Intent(context, AddEditAccountActivity.class);
         updateAccountIntent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response);
         updateAccountIntent.putExtra(NextcloudFragment.ARGUMENT_EDIT_ACCOUNT_ACCOUNT, account);
@@ -111,13 +110,6 @@ public class Authenticator extends AbstractAccountAuthenticator {
             AccountAuthenticatorResponse response,
             Account account, String[] features) throws NetworkErrorException {
         return null;
-    }
-
-    @Override
-    public Bundle getAccountRemovalAllowed(AccountAuthenticatorResponse response, Account account)
-            throws NetworkErrorException {
-        // TODO: check response to update account list
-        return super.getAccountRemovalAllowed(response, account);
     }
 
     // Validators

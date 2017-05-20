@@ -166,7 +166,7 @@ public final class NotesConflictResolutionPresenter implements
     @Override
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
-        deleteNote(noteId);
+        deleteNote(viewModel.getLocalId());
     }
 
     private void deleteNote(@NonNull final String noteId) {
@@ -208,7 +208,7 @@ public final class NotesConflictResolutionPresenter implements
     @Override
     public void onCloudDeleteClick() {
         viewModel.deactivateButtons();
-        deleteNote(noteId);
+        deleteNote(viewModel.getCloudId());
     }
 
     @Override
@@ -221,15 +221,16 @@ public final class NotesConflictResolutionPresenter implements
     public void onLocalUploadClick() {
         viewModel.deactivateButtons();
         viewModel.showProgressOverlay();
-        Note note = localNotes.get(noteId).blockingGet();
-        cloudNotes.upload(note)
+        String noteId = viewModel.getLocalId();
+        localNotes.get(noteId)
                 .subscribeOn(schedulerProvider.io())
+                .flatMap(cloudNotes::upload)
                 .map(result -> {
                     boolean success = false;
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        success = localNotes.update(note.getId(), state).blockingGet();
+                        success = localNotes.update(noteId, state).blockingGet();
                     }
                     return success;
                 })
@@ -249,6 +250,7 @@ public final class NotesConflictResolutionPresenter implements
     public void onCloudDownloadClick() {
         viewModel.deactivateButtons();
         viewModel.showProgressOverlay();
+        String noteId = viewModel.getCloudId();
         cloudNotes.download(noteId)
                 .subscribeOn(schedulerProvider.io())
                 .map(note -> localNotes.save(note).blockingGet())

@@ -190,7 +190,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     .flatMap(unsynced -> unsynced ? Single.just(true) : localFavorites.isUnsynced())
                     .flatMap(unsynced -> unsynced ? Single.just(true) : localNotes.isUnsynced())
                     .blockingGet();
-            // TODO: notify the status to UI (toast) if sync is started manually
             if (conflictedStatus) {
                 syncStatus = SYNC_STATUS_CONFLICT;
             } else if (unsyncedStatus) {

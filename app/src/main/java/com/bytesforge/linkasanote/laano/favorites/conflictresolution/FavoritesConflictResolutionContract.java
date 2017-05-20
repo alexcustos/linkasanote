@@ -33,7 +33,8 @@ public interface FavoritesConflictResolutionContract {
         void showDatabaseError();
         void showCloudLoading();
         boolean isStateDuplicated();
-        String getLocalName();
+        String getLocalId();
+        String getCloudId();
         void activateButtons();
         void deactivateButtons();
         void showProgressOverlay();

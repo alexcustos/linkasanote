@@ -417,6 +417,7 @@ public class Repository implements DataSource {
         checkNotNull(linkId);
         return cloudDataSource.deleteLink(linkId)
                 .doOnSuccess(itemState -> {
+                    // NOTE: once nullPointerException was thrown on itemState.ordinal()
                     switch (itemState) {
                         case DELETED: // visibility was not changed
                             break;
@@ -1238,5 +1239,20 @@ public class Repository implements DataSource {
                         });
                     }
                 });
+    }
+
+    @Override
+    public Single<Long> resetSyncState() {
+        return Observable.mergeDelayError(
+                localDataSource.resetLinksSyncState()
+                        .toObservable()
+                        .doOnComplete(this::refreshLinks),
+                localDataSource.resetFavoritesSyncState()
+                        .toObservable()
+                        .doOnComplete(this::refreshFavorites),
+                localDataSource.resetNotesSyncState()
+                        .toObservable()
+                        .doOnComplete(this::refreshNotes))
+                .count();
     }
 }

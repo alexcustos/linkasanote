@@ -40,7 +40,6 @@ import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
@@ -71,11 +70,21 @@ public class NextcloudFragment extends Fragment implements
         return new NextcloudFragment();
     }
 
+    private void bindOperationService() {
+        Intent intent = new Intent(getContext(), OperationsService.class);
+        getActivity().bindService(intent, operationsServiceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void unbindOperationService() {
+        if (operationsService != null) {
+            getActivity().unbindService(operationsServiceConnection);
+        }
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent intent = new Intent(getContext(), OperationsService.class);
-        getActivity().bindService(intent, operationsServiceConnection, Context.BIND_AUTO_CREATE);
+        bindOperationService();
     }
 
     @Override
@@ -92,9 +101,7 @@ public class NextcloudFragment extends Fragment implements
 
     @Override
     public void onDestroy() {
-        if (operationsService != null) {
-            getActivity().unbindService(operationsServiceConnection);
-        }
+        unbindOperationService();
         super.onDestroy();
     }
 
@@ -193,6 +200,7 @@ public class NextcloudFragment extends Fragment implements
             if (result.isSuccess()) {
                 presenter.setServerInfo(
                         (GetServerInfoOperation.ServerInfo) result.getData().get(0));
+                viewModel.hideRefreshButton();
                 viewModel.checkLoginButton();
             } else {
                 presenter.setServerInfo(null);
@@ -246,17 +254,12 @@ public class NextcloudFragment extends Fragment implements
         String accountName = AccountUtils.buildAccountName(baseUri, username);
         Account newAccount = new Account(accountName, getAccountType(getContext()));
 
-        // TODO: replace with CloudUtils.isAccountExists if permission warning is technically impossible
-        Account[] accounts = CloudUtils.getAccountsWithPermissionCheck(getContext(), accountManager);
-        if (accounts == null) {
-            viewModel.showGetAccountsPermissionDeniedWarning();
-            return;
-        } else if (Arrays.asList(accounts).contains(newAccount)) {
+        // NOTE: permission is already granted at this point
+        if (CloudUtils.isAccountExists(getContext(), newAccount, accountManager)) {
             viewModel.showAuthResultStatus(RemoteOperationResult.ResultCode.ACCOUNT_NOT_NEW);
             viewModel.enableLoginButton();
             return;
         }
-
         final Bundle userData = new Bundle();
         userData.putString(AccountUtils.Constants.KEY_OC_ACCOUNT_VERSION,
                 Integer.toString(ACCOUNT_VERSION));

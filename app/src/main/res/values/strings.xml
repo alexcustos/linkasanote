@@ -14,6 +14,8 @@
     <string name="toast_sync_conflict">Sync conflict</string>
     <string name="toast_sync_success">Synced</string>
     <string name="toast_sync_unsynced">Still not synced</string>
+    <string name="toast_restore_success">Restored</string>
+    <string name="toast_conflict_resolved">Resolved</string>
     <string name="drawer_actions_settings">Settings</string>
     <string name="drawer_actions_about">About</string>
     <string name="drawer_actions_add_account">Add account</string>
@@ -38,6 +40,7 @@
     <string name="laano_permission_get_accounts">GET ACCOUNTS (Contacts) permission is needed to show list of existing accounts</string>
     <string name="laano_account_added">The account has been successfully added</string>
     <string name="laano_offline">Application is offline, please enable Internet connection</string>
+    <string name="laano_not_syncable">Unable to access to Cloud account, please log in again</string>
     <string name="laano_shortcut_add_link">Add Link</string>
     <string name="laano_shortcut_add_favorite">Add Favorite</string>
     <string name="laano_shortcut_add_note">Add Note</string>
@@ -46,8 +49,11 @@
     <string name="pref_summary_links_expanding">Show all Link notes with app opened</string>
     <string name="pref_title_notes_expanding">Expand Notes</string>
     <string name="pref_summary_notes_expanding">Show the whole card for all Notes with app opened</string>
+    <string name="pref_title_backup">Backup</string>
+    <string name="pref_title_restore">Restore</string>
+    <string name="pref_category_synchronization">Synchronization</string>
     <string name="pref_title_sync_directory">Directory name on the cloud storage</string>
-    <string name="pref_title_synchronization">Synchronization</string>
+    <string name="pref_title_sync_interval">Sync interval</string>
     <string name="pref_sync_interval_manual">Manual mode</string>
     <string name="pref_sync_interval_15m">Every 15 minutes</string>
     <string name="pref_sync_interval_hour">Every hour</string>
@@ -58,6 +64,7 @@
     <string name="pref_summary_sync_upload_to_empty">Even the synced items are going to be uploaded to the empty Cloud storage</string>
     <string name="pref_title_sync_protect_local">Protect local storage</string>
     <string name="pref_summary_sync_protect_local">If Cloud item is removed, will mark synced Local as conflicted instead of delete it</string>
+    <string name="pref_category_clipboard">Clipboard</string>
     <string name="pref_title_clipboard_link_get_metadata">Retrieve the metadata for URLs</string>
     <string name="pref_summary_clipboard_link_get_metadata">Download %s of the document and search for the metadata if a URL is found in the clipboard</string>
     <string name="pref_title_clipboard_link_follow">Follow server redirects</string>
@@ -66,8 +73,12 @@
     <string name="pref_summary_clipboard_fill_in_forms">Paste a normalized and extend clipboard content to the new forms</string>
     <string name="pref_title_clipboard_parameter_white_list">Preserve parameters in the URL query</string>
     <string name="pref_summary_clipboard_parameter_white_list">Completely remove the query string from the URL</string>
-    <string name="pref_title_clipboard">Clipboard</string>
-    <string name="pref_title_sync_interval">Sync interval</string>
+    <string name="pref_title_clipboard_clear_clipboard">Clear the clipboard content</string>
+    <string name="pref_snackbar_clipboard_cleared">The clipboard content has been cleared</string>
+    <string name="pref_snackbar_backup_success">Backup is created: %s</string>
+    <string name="pref_snackbar_backup_failed">Backup is failed</string>
+    <string name="pref_snackbar_permission_write_external_storage">WRITE EXTERNAL STORAGE (Access files) permission is needed to store the backup</string>
+    <string name="pref_snackbar_restore_failed">Restore is failed: %s</string>
     <string name="actionbar_title_settings">Settings</string>
     <string name="actionbar_title_new_favorite">New Favorite</string>
     <string name="actionbar_title_edit_favorite">Edit Favorite</string>
@@ -136,7 +147,7 @@
     <string name="toolbar_favorites_item_action_mode">Switch to edit mode</string>
     <string name="sync_adapter_title_failed_default">Synchronization failed</string>
     <string name="sync_adapter_title_failed_login">login again</string>
-    <string name="sync_adapter_text_failed_login">Cannot access the account, please login in again</string>
+    <string name="sync_adapter_text_failed_login">Cannot access the account, please log in again</string>
     <string name="sync_adapter_title_failed_database">reinstall application</string>
     <string name="sync_adapter_text_failed_database">The database is corrupted, please reinstall the application</string>
     <string name="sync_adapter_title_failed_cloud">check cloud</string>
@@ -176,6 +187,7 @@
     <string name="settings_fragment_snackbar_interval_error">An unexpected problem occurred, manual mode has been activated</string>
     <string name="settings_fragment_snackbar_normalized">The input was normalized, please revise the new value</string>
     <string name="settings_fragment_sync_interval_not_available">Not available</string>
+    <string name="settings_fragment_restore_not_available">No backup was found, or not enough permission to check, please try Backup first</string>
     <string name="about_license_info_version">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>
     <string name="about_info_warranty">This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</string>
     <string name="about_button_license_terms">license terms</string>
@@ -323,5 +335,9 @@
     <plurals name="notes_delete_confirmation_message">
         <item quantity="one">Are you sure you want to permanently delete selected Note?</item>
         <item quantity="other">Are you sure you want to permanently delete %d selected Notes?</item>
+    </plurals>
+    <plurals name="settings_fragment_restore_backup_found">
+        <item quantity="one">One application backup is found</item>
+        <item quantity="other">%d application backups are found</item>
     </plurals>
 </resources>

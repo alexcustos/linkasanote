@@ -117,7 +117,7 @@ public class SyncItem<T extends Item> {
                 syncNotifications.sendSyncBroadcast(notificationAction,
                         SyncNotifications.STATUS_CREATED, cloudId);
             }
-        } // for
+        }
     }
 
     private void syncItem(final T item, final String cloudETag) {

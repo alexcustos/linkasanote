@@ -77,4 +77,5 @@ public interface DataSource {
     Single<Boolean> isConflicted();
     Single<Boolean> isUnsynced();
     Single<Integer> getSyncStatus();
+    Single<Long> resetSyncState();
 }

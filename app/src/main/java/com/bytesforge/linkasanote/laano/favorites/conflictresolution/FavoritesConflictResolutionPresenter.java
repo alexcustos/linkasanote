@@ -164,25 +164,24 @@ public final class FavoritesConflictResolutionPresenter implements
     public void onLocalDeleteClick() {
         viewModel.deactivateButtons();
         if (viewModel.isStateDuplicated()) {
-            replaceFavorite(viewModel.getLocalName(), favoriteId);
+            replaceFavorite(viewModel.getLocalId(), viewModel.getCloudId());
         } else {
-            deleteFavorite(favoriteId);
+            deleteFavorite(viewModel.getLocalId());
         }
     }
 
     private void replaceFavorite(
-            @NonNull String duplicatedKey, @NonNull final String favoriteId) {
-        checkNotNull(duplicatedKey);
-        checkNotNull(favoriteId);
+            @NonNull final String localFavoriteId, @NonNull final String duplicatedFavoriteId) {
+        checkNotNull(localFavoriteId);
+        checkNotNull(duplicatedFavoriteId);
         viewModel.showProgressOverlay();
-        localFavorites.getMain(viewModel.getLocalName())
+        deleteFavoriteSingle(localFavoriteId)
                 .subscribeOn(schedulerProvider.io())
-                .flatMap(favorite -> deleteFavoriteSingle(favorite.getId()))
                 .map(success -> {
                     if (success) {
                         SyncState state = new SyncState(SyncState.State.SYNCED);
-                        success = localFavorites.update(favoriteId, state).blockingGet();
-                        repository.refreshFavorite(favoriteId);
+                        success = localFavorites.update(duplicatedFavoriteId, state).blockingGet();
+                        repository.refreshFavorite(duplicatedFavoriteId);
                     }
                     return success;
                 })
@@ -236,7 +235,7 @@ public final class FavoritesConflictResolutionPresenter implements
     @Override
     public void onCloudDeleteClick() {
         viewModel.deactivateButtons();
-        deleteFavorite(favoriteId);
+        deleteFavorite(viewModel.getCloudId());
     }
 
     @Override
@@ -249,15 +248,16 @@ public final class FavoritesConflictResolutionPresenter implements
     public void onLocalUploadClick() {
         viewModel.deactivateButtons();
         viewModel.showProgressOverlay();
-        Favorite favorite = localFavorites.get(favoriteId).blockingGet();
-        cloudFavorites.upload(favorite)
+        String favoriteId = viewModel.getLocalId();
+        localFavorites.get(favoriteId)
                 .subscribeOn(schedulerProvider.io())
+                .flatMap(cloudFavorites::upload)
                 .map(result -> {
                     boolean success = false;
                     if (result.isSuccess()) {
                         JsonFile jsonFile = (JsonFile) result.getData().get(0);
                         SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                        success = localFavorites.update(favorite.getId(), state).blockingGet();
+                        success = localFavorites.update(favoriteId, state).blockingGet();
                     }
                     return success;
                 })
@@ -277,6 +277,7 @@ public final class FavoritesConflictResolutionPresenter implements
     public void onCloudDownloadClick() {
         viewModel.deactivateButtons();
         viewModel.showProgressOverlay();
+        String favoriteId = viewModel.getCloudId();
         cloudFavorites.download(favoriteId)
                 .subscribeOn(schedulerProvider.io())
                 .map(favorite -> localFavorites.save(favorite).blockingGet())

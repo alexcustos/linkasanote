@@ -126,18 +126,9 @@ public class AccountsAdapter extends RecyclerView.Adapter<AccountsAdapter.ViewHo
 
         @Override
         public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            // TODO: override equal to AccountItem
-            String oldAccountName = oldList.get(oldItemPosition).getAccountName();
-            String newAccountName = newList.get(newItemPosition).getAccountName();
-            String oldDisplayName = oldList.get(oldItemPosition).getDisplayName();
-            String newDisplayName = newList.get(newItemPosition).getDisplayName();
-
-            boolean isAccountNameEqual = (oldAccountName == null && newAccountName == null)
-                    || (oldAccountName != null && oldAccountName.equals(newAccountName));
-            boolean isDisplayNameEqual = (oldDisplayName == null && newDisplayName == null)
-                    || (oldDisplayName != null && oldDisplayName.equals(newDisplayName));
-
-            return isAccountNameEqual && isDisplayNameEqual;
+            AccountItem oldItem = oldList.get(oldItemPosition);
+            AccountItem newItem = newList.get(newItemPosition);
+            return oldItem.equals(newItem);
         }
     }
 }

@@ -18,6 +18,8 @@ import java.util.List;
 
 public class TagsBindingAdapter {
 
+    private static final String TAG = TagsBindingAdapter.class.getSimpleName();
+
     private static SparseIntArray tagsViewWidths = new SparseIntArray();
 
     private TagsBindingAdapter() {
@@ -29,7 +31,7 @@ public class TagsBindingAdapter {
 
         view.getLayoutParams().height = ViewGroup.LayoutParams.WRAP_CONTENT;
         // NOTE: it's to prevent the view to be changed from empty to filled when adapter rebind the item
-        if (tagsViewWidths.get(view.getId()) > 0) {
+        if (tagsViewWidths.get(view.getId()) > 0 && view.getLineCount() > 0) {
             setTagsTextView(view, tags);
         } else {
             ViewTreeObserver observer = view.getViewTreeObserver();

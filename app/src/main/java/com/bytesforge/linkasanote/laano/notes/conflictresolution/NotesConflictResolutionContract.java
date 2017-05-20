@@ -32,7 +32,8 @@ public interface NotesConflictResolutionContract {
         void showCloudDownloadError();
         void showDatabaseError();
         void showCloudLoading();
-        String getLocalNote();
+        String getLocalId();
+        String getCloudId();
         void activateButtons();
         void deactivateButtons();
         void showProgressOverlay();

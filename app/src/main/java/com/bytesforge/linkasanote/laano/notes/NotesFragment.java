@@ -23,6 +23,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Note;
@@ -277,6 +278,8 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                 if (resultCode == NotesConflictResolutionDialog.RESULT_OK) {
                     presenter.updateSyncStatus();
                     //viewModel.showConflictResolutionSuccessfulSnackbar();
+                    Toast.makeText(getContext(), R.string.toast_conflict_resolved,
+                            Toast.LENGTH_SHORT).show();
                 } else if (resultCode == NotesConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
                 }
@@ -404,7 +407,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     @Override
     public void selectionChanged(@NonNull String id) {
         checkNotNull(id);
-        //adapter.notifyItemChanged(position);
+        //adapter.notifyItemChanged(id);
         updateActionModeTitle();
         updateActionModeMenu();
     }
@@ -412,7 +415,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     @Override
     public void visibilityChanged(@NonNull String id) {
         checkNotNull(id);
-        //adapter.notifyItemChanged(position);
+        //adapter.notifyItemChanged(id);
     }
 
     @Override

@@ -143,8 +143,8 @@ public class LinksViewModel extends BaseItemViewModel implements LinksContract.V
         return "(" + counter + ")";
     }
 
-    public String getToggleDescription(String linkId, boolean changed) {
-        if (isVisible(linkId)) {
+    public String getToggleDescription(String linkId, int numNotes, boolean changed) {
+        if (isVisible(linkId, numNotes)) {
             return resources.getString(R.string.card_button_collapse_notes_description);
         } else {
             return resources.getString(R.string.card_button_expand_notes_description);
@@ -176,13 +176,13 @@ public class LinksViewModel extends BaseItemViewModel implements LinksContract.V
         }
     }
 
-    public boolean isVisible(String id, boolean changed) {
-        return isVisible(id);
+    public boolean isVisible(String id, int numNotes, boolean changed) {
+        return isVisible(id, numNotes);
     }
 
     @Override
-    public boolean isVisible(String id) {
-        return expandByDefault != toggledIds.contains(id);
+    public boolean isVisible(String id, int numNotes) {
+        return numNotes > 0 && (expandByDefault != toggledIds.contains(id));
     }
 
     @Override

@@ -234,14 +234,13 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
 
     private AccountManagerCallback<Bundle> removeAccountCallback = future -> {
         if (future != null && future.isDone()) {
-            // TODO: disable sync with removed account
+            // NOTE: sync successfully completes if account is removed in the middle
             presenter.loadAccountItems(true);
         }
     };
 
     private AccountManagerCallback<Boolean> removeAccountCallbackCompat = future -> {
         if (future != null && future.isDone()) {
-            // TODO: disable sync with removed account
             presenter.loadAccountItems(true);
         }
     };

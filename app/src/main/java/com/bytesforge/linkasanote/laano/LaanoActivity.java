@@ -5,6 +5,7 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AuthenticatorException;
+import android.accounts.OnAccountsUpdateListener;
 import android.accounts.OperationCanceledException;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -19,7 +20,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
-import android.support.annotation.StringRes;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -96,6 +96,7 @@ public class LaanoActivity extends AppCompatActivity implements
     Settings settings;
 
     private boolean doubleBackPressed = false;
+    private boolean manualSync = false;
     private int activeTab;
     private IntentFilter connectivityIntentFilter;
     private ConnectivityBroadcastReceiver connectivityBroadcastReceiver;
@@ -106,7 +107,6 @@ public class LaanoActivity extends AppCompatActivity implements
 
     @Override
     protected void onStart() {
-
         if (Settings.GLOBAL_CLIPBOARD_MONITOR_ON_START) {
             // NOTE: application context
             startClipboardService();
@@ -133,6 +133,7 @@ public class LaanoActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
+        accountManager.removeOnAccountsUpdatedListener(accountsUpdateListener);
         if (!isChangingConfigurations()) {
             stopClipboardService();
         }
@@ -190,7 +191,6 @@ public class LaanoActivity extends AppCompatActivity implements
         linksPresenter.updateTabNormalState();
         favoritesPresenter.updateTabNormalState();
         notesPresenter.updateTabNormalState();
-        updateDefaultAccount();
         // Connectivity receiver
         connectivityIntentFilter = new IntentFilter();
         connectivityIntentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -202,6 +202,8 @@ public class LaanoActivity extends AppCompatActivity implements
         syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_FAVORITES);
         syncIntentFilter.addAction(SyncNotifications.ACTION_SYNC_NOTES);
         syncBroadcastReceiver = new SyncBroadcastReceiver();
+        // AccountManager
+        accountManager.addOnAccountsUpdatedListener(accountsUpdateListener, null, true);
     }
 
     private void startClipboardService() {
@@ -245,22 +247,23 @@ public class LaanoActivity extends AppCompatActivity implements
 
     private void triggerSync() {
         Account account = CloudUtils.getDefaultAccount(this, accountManager);
-        if (account == null) return;
-
+        if (account == null) { // NOTE: should not be happened
+            updateDefaultAccount();
+            laanoUiManager.showApplicationNotSyncableSnackbar();
+            return;
+        }
         Bundle extras = new Bundle();
         extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         extras.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         ContentResolver.requestSync(account, LocalContract.CONTENT_AUTHORITY, extras);
+        manualSync = true;
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        if (ACTION_MANAGE_ACCOUNTS == requestCode && RESULT_OK == resultCode
-                && data.getBooleanExtra(ManageAccountsActivity.KEY_ACCOUNT_LIST_CHANGED, false)) {
-            updateDefaultAccount();
-        }
+        /*if (ACTION_MANAGE_ACCOUNTS == requestCode && RESULT_OK == resultCode) {
+        }*/
     }
 
     @Override
@@ -284,6 +287,7 @@ public class LaanoActivity extends AppCompatActivity implements
     }
 
     private void updateDefaultAccount() {
+        Log.d(TAG, "updateDefaultAccount()");
         Account account = CloudUtils.getDefaultAccount(this, accountManager);
         laanoUiManager.updateDefaultAccount(account);
         laanoUiManager.updateSyncStatus();
@@ -397,6 +401,10 @@ public class LaanoActivity extends AppCompatActivity implements
                     case SyncNotifications.STATUS_SYNC_STOP:
                         laanoUiManager.updateSyncStatus();
                         laanoUiManager.setNormalDrawerMenu();
+                        if (manualSync) {
+                            manualSync = false;
+                            laanoUiManager.notifySyncStatus();
+                        }
                         break;
                 }
                 return;
@@ -550,7 +558,7 @@ public class LaanoActivity extends AppCompatActivity implements
                             break;
                         case R.id.sync_menu_item:
                             if (!settings.isOnline()) {
-                                showApplicationOfflineSnackbar();
+                                laanoUiManager.showApplicationOfflineSnackbar();
                             } else {
                                 triggerSync();
                             }
@@ -614,12 +622,12 @@ public class LaanoActivity extends AppCompatActivity implements
     private AccountManagerCallback<Bundle> addAccountCallback = future -> {
         try {
             future.getResult(); // NOTE: see exceptions
-            updateDefaultAccount();
+            //updateDefaultAccount(); // NOTE: see accountsUpdateListener
             showAccountSuccessfullyAddedSnackbar();
         } catch (OperationCanceledException e) {
             Log.d(TAG, "Account creation was canceled by user");
         } catch (IOException | AuthenticatorException e) {
-            Log.e(TAG, "Account creation was finished with an exception", e);
+            Log.e(TAG, "Account creation was finished with an exception");
             Throwable throwable = e.getCause();
             if (throwable != null) {
                 Snackbar.make(binding.laanoViewPager, throwable.getMessage(), Snackbar.LENGTH_LONG)
@@ -628,22 +636,18 @@ public class LaanoActivity extends AppCompatActivity implements
         }
     };
 
+    private OnAccountsUpdateListener accountsUpdateListener = accounts -> updateDefaultAccount();
+
     // SnackBars
 
     private void showPermissionDeniedSnackbar() {
-        showSnackbar(R.string.snackbar_no_permission, Snackbar.LENGTH_LONG);
+        Snackbar.make(binding.laanoViewPager, R.string.snackbar_no_permission,
+                Snackbar.LENGTH_LONG).show();
     }
 
     private void showAccountSuccessfullyAddedSnackbar() {
-        showSnackbar(R.string.laano_account_added, Snackbar.LENGTH_LONG);
-    }
-
-    private void showApplicationOfflineSnackbar() {
-        showSnackbar(R.string.laano_offline, Snackbar.LENGTH_LONG);
-    }
-
-    private void showSnackbar(@StringRes int stringId, int duration) {
-        Snackbar.make(binding.laanoViewPager, stringId, duration).show();
+        Snackbar.make(binding.laanoViewPager, R.string.laano_account_added,
+                Snackbar.LENGTH_LONG).show();
     }
 
     // Testing

@@ -17,7 +17,7 @@
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="@{() -> presenter.onLinkClick(link.id, link.conflicted)}"
+        android:onClick="@{() -> presenter.onLinkClick(link.id, link.conflicted, link.notesSize)}"
         android:onLongClick="@{() -> presenter.onLinkLongClick(link.id)}"
         app:cardUseCompatPadding="true">
 
@@ -30,8 +30,7 @@
 
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_height="wrap_content">
 
                 <!-- bind:imageButtonEnabled="@{!(link.conflicted || link.disabled)}" -->
                 <ImageButton
@@ -161,8 +160,7 @@
             <!-- Footer chain -->
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_height="wrap_content">
 
                 <Button
                     android:id="@+id/add_note_button"
@@ -187,7 +185,7 @@
                     android:layout_marginStart="@dimen/card_notes_count_margin_horizontal"
                     android:layout_marginEnd="@dimen/card_notes_count_margin_horizontal"
                     android:gravity="end"
-                    android:text="@{viewModel.getLinkCounter(link.notes.size)}"
+                    android:text="@{viewModel.getLinkCounter(link.notesSize)}"
                     android:textAppearance="@style/LinksText.Count"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -197,7 +195,7 @@
                     android:id="@+id/notes_toggle"
                     android:layout_width="48dp"
                     android:layout_height="56dp"
-                    android:contentDescription="@{viewModel.getToggleDescription(link.id, viewModel.visibilityChanged)}"
+                    android:contentDescription="@{viewModel.getToggleDescription(link.id, link.notesSize, viewModel.visibilityChanged)}"
                     android:paddingStart="@dimen/card_button_padding"
                     android:paddingEnd="@dimen/card_right_button_padding_end"
                     android:paddingTop="@dimen/card_button_padding_vertical"
@@ -205,25 +203,26 @@
                     android:onClick="@{() -> presenter.onToggleClick(link.id)}"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     style="@style/Button.RecyclerView"
-                    bind:imageButtonEnabled="@{link.notes.size > 0}"
-                    app:srcCompat="@{viewModel.isVisible(link.id, viewModel.visibilityChanged) ? @drawable/ic_expand_less : @drawable/ic_expand_more}"
+                    bind:imageButtonEnabled="@{link.notesSize > 0}"
+                    app:srcCompat="@{viewModel.isVisible(link.id, link.notesSize, viewModel.visibilityChanged) ? @drawable/ic_expand_less : @drawable/ic_expand_more}"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/notes_count"
                     app:layout_constraintEnd_toEndOf="parent" />
             </android.support.constraint.ConstraintLayout>
 
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/rv_link_notes"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:visibility="@{viewModel.isVisible(link.id, viewModel.visibilityChanged) ? View.VISIBLE : View.GONE}" />
-            <Space
-                android:id="@+id/note_bottom_spacer"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/card_link_notes_bottom_spacer_height"
-                android:visibility="@{viewModel.isVisible(link.id, viewModel.visibilityChanged) ? View.VISIBLE : View.GONE}" />
+                android:layout_marginBottom="@dimen/card_link_notes_bottom_spacer_height"
+                android:visibility="@{viewModel.isVisible(link.id, link.notesSize, viewModel.visibilityChanged) ? View.VISIBLE : View.GONE}">
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/rv_link_notes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none" />
+            </LinearLayout>
         </LinearLayout>
     </android.support.v7.widget.CardView>
 </layout>

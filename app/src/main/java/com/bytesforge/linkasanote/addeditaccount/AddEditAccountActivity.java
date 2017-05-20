@@ -128,7 +128,7 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         }
     }
 
-    // NOTE: It must be there because activity can be launched from system settings
+    // NOTE: It must be here because activity can be launched from the system settings
     @Override
     public void onRequestPermissionsResult(
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

@@ -279,7 +279,6 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
                 binding.linkTagsLayout.setError(null);
                 return source;
             } else {
-                // TODO: filter spaces at the beginning of the tag
                 StringBuilder filteredStringBuilder = new StringBuilder();
                 for (int i = start; i < end; i++) {
                     char currentChar = source.charAt(i);

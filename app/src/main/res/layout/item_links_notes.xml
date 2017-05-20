@@ -26,12 +26,16 @@
             android:background="@color/link_note_divider"
             android:visibility="@{adapter.getPosition(note.id) > 0 ? View.VISIBLE : View.GONE}" />
 
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/card_text_margin_vertical"
+            android:visibility="@{adapter.getPosition(note.id) > 0 ? View.VISIBLE : View.GONE}" />
+
         <TextView
             android:id="@+id/link_note_note"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@{note.note}"
-            android:paddingTop="@{adapter.getPosition(note.id) > 0 ? @dimen/card_text_margin_vertical : 0}"
             android:paddingBottom="@dimen/card_text_margin_vertical"
             android:paddingStart="@dimen/card_text_margin_horizontal"
             android:paddingEnd="@dimen/card_text_margin_horizontal" />
