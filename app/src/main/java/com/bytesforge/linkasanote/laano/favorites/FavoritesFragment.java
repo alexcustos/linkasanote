@@ -124,6 +124,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
                     public boolean onMenuItemActionCollapse(MenuItem item) {
                         getActivity().supportInvalidateOptionsMenu();
                         viewModel.setSearchText(null);
+                        presenter.setFilterIsChanged(true);
                         presenter.loadFavorites(false);
                         return true;
                     }
@@ -133,6 +134,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
             @Override
             public boolean onQueryTextSubmit(String query) {
                 viewModel.setSearchText(query);
+                presenter.setFilterIsChanged(true);
                 presenter.loadFavorites(false);
                 return true;
             }

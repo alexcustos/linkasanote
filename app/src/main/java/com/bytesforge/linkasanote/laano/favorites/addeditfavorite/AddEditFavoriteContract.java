@@ -38,6 +38,7 @@ public interface AddEditFavoriteContract {
         void showEmptyFavoriteSnackbar();
         void showFavoriteNotFoundSnackbar();
         void showDuplicateKeyError();
+        void showTagsDuplicateRemovedToast();
 
         boolean isValid();
         boolean isEmpty();

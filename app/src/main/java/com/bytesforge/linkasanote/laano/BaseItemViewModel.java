@@ -93,6 +93,11 @@ public abstract class BaseItemViewModel extends BaseObservable implements
         return defaultState;
     }
 
+    @Override
+    public int getListSize() {
+        return listSize.get();
+    }
+
     /**
      * @return Returns true if listSize has never been set before
      */

@@ -142,7 +142,7 @@ public final class FavoritesConflictResolutionPresenter implements
             if (!viewModel.isCloudPopulated()) {
                 loadCloudFavorite();
             }
-        } // if
+        }
     }
 
     private void loadCloudFavorite() {
@@ -265,7 +265,7 @@ public final class FavoritesConflictResolutionPresenter implements
                 .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
-                        repository.refreshFavorites();
+                        repository.refreshFavorite(favoriteId);
                         view.finishActivity();
                     } else {
                         view.cancelActivity();

@@ -263,6 +263,7 @@ public class AddEditNoteFragment extends Fragment implements AddEditNoteContract
         completionView.performBestGuess(false);
         int threshold = Settings.GLOBAL_TAGS_AUTOCOMPLETE_THRESHOLD;
         completionView.setThreshold(threshold);
+        completionView.setTokenListener((AddEditNotePresenter) presenter);
         // Adapter
         tags = new ArrayList<>();
         ArrayAdapter<Tag> adapter = new FilteredArrayAdapter<Tag>(
@@ -290,7 +291,7 @@ public class AddEditNoteFragment extends Fragment implements AddEditNoteContract
                         binding.noteTagsLayout.setError(null);
                     } else {
                         binding.noteTagsLayout.setError(getResources().getString(
-                                R.string.add_edit_note_tags_validation_error));
+                                R.string.validation_error_tags_invalid_char));
                     }
                 }
                 return filteredStringBuilder.toString();

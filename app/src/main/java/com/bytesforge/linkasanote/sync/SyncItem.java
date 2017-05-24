@@ -100,11 +100,11 @@ public class SyncItem<T extends Item> {
 
         // New cloud records
         // OPTIMIZATION: Cloud Map can be updated in the previous step
-        // TODO: check if the item violates constraint just be dropped with failCount++
         final Set<String> cloudIds = cloudItem.getDataSourceMap(ocClient).keySet();
         for (String cloudId : cloudIds) {
-            if (localIds.contains(cloudId)) continue;
-
+            if (localIds.contains(cloudId)) {
+                continue;
+            }
             T cloudItem = download(cloudId);
             if (cloudItem == null) {
                 syncResult.incFailsCount();
@@ -121,6 +121,9 @@ public class SyncItem<T extends Item> {
     }
 
     private void syncItem(final T item, final String cloudETag) {
+        // NOTE: some updates on the conflicted state may cause constraint violation, so let it be resolved first
+        if (item.isConflicted()) return;
+
         final String itemId = item.getId();
         final String itemETag = item.getETag();
         boolean notifyChanged = false;
@@ -218,7 +221,6 @@ public class SyncItem<T extends Item> {
     // NOTE: any cloud item can violate the DB constraints
     private boolean save(@NonNull final T item) {
         checkNotNull(item);
-
         // Primary record
         try {
             return localItem.save(item).blockingGet();

@@ -238,7 +238,7 @@ public final class NotesConflictResolutionPresenter implements
                 .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
-                        repository.refreshNotes();
+                        repository.refreshNote(noteId);
                         view.finishActivity();
                     } else {
                         view.cancelActivity();

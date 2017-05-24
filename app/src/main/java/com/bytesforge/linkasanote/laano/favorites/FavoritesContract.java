@@ -65,5 +65,6 @@ public interface FavoritesContract {
         @NonNull FilterType getFilterType();
         void syncSavedFavorite(@NonNull final String favoriteId);
         void deleteFavorites(@NonNull ArrayList<String> selectedIds);
+        void setFilterIsChanged(boolean filterIsChanged);
     }
 }

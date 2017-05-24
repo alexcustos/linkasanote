@@ -76,5 +76,6 @@ public interface NotesContract {
         boolean isExpandNotes();
         boolean isNotesLayoutModeReading();
         boolean toggleNotesLayoutModeReading();
+        void setFilterIsChanged(boolean filterIsChanged);
     }
 }

@@ -87,5 +87,6 @@ public interface LinksContract {
         boolean isNoteFilter();
         boolean isExpandLinks();
         void setShowConflictResolutionWarning(boolean show);
+        void setFilterIsChanged(boolean filterIsChanged);
     }
 }

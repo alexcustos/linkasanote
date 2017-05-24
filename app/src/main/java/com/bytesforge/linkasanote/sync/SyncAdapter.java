@@ -30,6 +30,7 @@ import io.reactivex.Single;
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static final String TAG = SyncAdapter.class.getSimpleName();
+
     public static final int SYNC_STATUS_UNKNOWN = 0;
     public static final int SYNC_STATUS_SYNCED = 1;
     public static final int SYNC_STATUS_UNSYNCED = 2;
@@ -172,9 +173,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         noteFailsCount, noteFailsCount));
             }
             if (!failSources.isEmpty()) {
-                syncNotifications.notifyFailedSynchronization(
-                        resources.getString(R.string.sync_adapter_text_failed) + " " +
-                                Joiner.on(", ").join(failSources));
+                syncNotifications.notifyFailedSynchronization(resources.getString(
+                        R.string.sync_adapter_text_failed, Joiner.on(", ").join(failSources)));
             }
         }
     }

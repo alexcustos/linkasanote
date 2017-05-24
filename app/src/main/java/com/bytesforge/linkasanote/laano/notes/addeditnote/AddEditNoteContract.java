@@ -40,7 +40,7 @@ public interface AddEditNoteContract {
         void showDatabaseErrorSnackbar();
         void showEmptyNoteSnackbar();
         void showNoteNotFoundSnackbar();
-        void showDuplicateKeyError();
+        void showTagsDuplicateRemovedToast();
         void showLinkStatusNoteWillBeUnbound();
         void showLinkStatusLoading();
         void hideLinkStatus();

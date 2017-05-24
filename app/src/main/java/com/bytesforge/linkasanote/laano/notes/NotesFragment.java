@@ -133,6 +133,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                     public boolean onMenuItemActionCollapse(MenuItem item) {
                         getActivity().supportInvalidateOptionsMenu();
                         viewModel.setSearchText(null);
+                        presenter.setFilterIsChanged(true);
                         presenter.loadNotes(false);
                         return true;
                     }
@@ -142,6 +143,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
             @Override
             public boolean onQueryTextSubmit(String query) {
                 viewModel.setSearchText(query);
+                presenter.setFilterIsChanged(true);
                 presenter.loadNotes(false);
                 return true;
             }

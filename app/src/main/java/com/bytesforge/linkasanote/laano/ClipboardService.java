@@ -24,6 +24,7 @@ import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Strings;
 
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -258,9 +259,12 @@ public class ClipboardService extends Service {
                     linkKeywords = null;
                     notifySubscriber();
                     if (Settings.GLOBAL_CLIPBOARD_LINK_UPDATED_TOAST) {
-                        Toast.makeText(ClipboardService.this,
-                                R.string.clipboard_service_extra_failed,
-                                Toast.LENGTH_SHORT).show();
+                        String message = getResources().getString(
+                                R.string.clipboard_service_extra_failed);
+                        if (throwable instanceof HttpStatusException) {
+                            message += ": " + ((HttpStatusException) throwable).getStatusCode();
+                        }
+                        Toast.makeText(ClipboardService.this, message, Toast.LENGTH_SHORT).show();
                     }
                 });
         compositeDisposable.add(disposable);

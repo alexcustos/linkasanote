@@ -12,6 +12,7 @@ import com.bytesforge.linkasanote.laano.notes.NoteId;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
+import com.tokenautocomplete.TokenCompleteTextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,8 @@ import io.reactivex.disposables.Disposable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class AddEditNotePresenter implements AddEditNoteContract.Presenter {
+public final class AddEditNotePresenter implements
+        AddEditNoteContract.Presenter, TokenCompleteTextView.TokenListener<Tag> {
 
     private static final String TAG = AddEditNotePresenter.class.getSimpleName();
 
@@ -221,5 +223,20 @@ public final class AddEditNotePresenter implements AddEditNoteContract.Presenter
     @Override
     public boolean isShowFillInFormInfo() {
         return settings.isShowFillInFormInfo();
+    }
+
+    // Tags
+
+    @Override
+    public void onTokenAdded(Tag token) {
+    }
+
+    @Override
+    public void onTokenRemoved(Tag token) {
+    }
+
+    @Override
+    public void onDuplicateRemoved(Tag token) {
+        viewModel.showTagsDuplicateRemovedToast();
     }
 }

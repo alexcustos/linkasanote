@@ -12,6 +12,7 @@ public interface BaseItemViewModelInterface {
     void saveInstanceState(@NonNull Bundle outState);
     void applyInstanceState(@NonNull Bundle state);
 
+    int getListSize();
     boolean setListSize(int listSize);
     boolean isActionMode();
     void enableActionMode();

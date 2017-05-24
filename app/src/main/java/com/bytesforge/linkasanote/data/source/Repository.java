@@ -129,8 +129,16 @@ public class Repository implements DataSource {
     }
 
     @Override
+    public boolean isLinkCacheDirty() {
+        boolean needRefresh = dirtyLinks != null && !dirtyLinks.isEmpty();
+        return linkCacheIsDirty || cachedLinks == null || needRefresh;
+    }
+
+    @Override
     public Observable<Link> getLinks() {
-        Log.d(TAG, "getLinks() [" + linkCacheIsDirty + "; cached=" + cachedLinks +  "; dirty=" + dirtyLinks + "]");
+        Log.d(TAG, "getLinks() [" + linkCacheIsDirty + "; cached=" +
+                (cachedLinks == null ? "NULL" : cachedLinks.size()) +  "; dirty=" +
+                (dirtyLinks == null ? "NULL" : dirtyLinks.size()) + "]");
         boolean needRefresh = dirtyLinks != null && !dirtyLinks.isEmpty();
         if (!linkCacheIsDirty && cachedLinks != null && !needRefresh) {
             return Observable.fromIterable(cachedLinks.values());
@@ -484,6 +492,11 @@ public class Repository implements DataSource {
         cachedLinks.remove(linkId);
     }
 
+    @Override
+    public int getLinkCacheSize() {
+        return cachedLinks == null ? 0 : cachedLinks.size();
+    }
+
     // Favorites
 
     @Override
@@ -526,8 +539,16 @@ public class Repository implements DataSource {
     }
 
     @Override
+    public boolean isFavoriteCacheDirty() {
+        boolean needRefresh = dirtyFavorites != null && !dirtyFavorites.isEmpty();
+        return favoriteCacheIsDirty || cachedFavorites == null || needRefresh;
+    }
+
+    @Override
     public Observable<Favorite> getFavorites() {
-        Log.d(TAG, "getFavorites() [" + favoriteCacheIsDirty + "; cached=" + cachedFavorites +  "; dirty=" + dirtyFavorites + "]");
+        Log.d(TAG, "getFavorites() [" + favoriteCacheIsDirty + "; cached=" +
+                (cachedFavorites == null ? "NULL" : cachedFavorites.size()) +  "; dirty=" +
+                (dirtyFavorites == null ? "NULL" : dirtyFavorites.size()) + "]");
         boolean needRefresh = dirtyFavorites != null && !dirtyFavorites.isEmpty();
         if (!favoriteCacheIsDirty && cachedFavorites != null && !needRefresh) {
             return Observable.fromIterable(cachedFavorites.values());
@@ -824,6 +845,11 @@ public class Repository implements DataSource {
         cachedFavorites.remove(favoriteId);
     }
 
+    @Override
+    public int getFavoriteCacheSize() {
+        return cachedFavorites == null ? 0 : cachedFavorites.size();
+    }
+
     // Notes
 
     @Override
@@ -866,8 +892,16 @@ public class Repository implements DataSource {
     }
 
     @Override
+    public boolean isNoteCacheDirty() {
+        boolean needRefresh = dirtyNotes != null && !dirtyNotes.isEmpty();
+        return noteCacheIsDirty || cachedNotes == null || needRefresh;
+    }
+
+    @Override
     public Observable<Note> getNotes() {
-        Log.d(TAG, "getNotes() [" + noteCacheIsDirty + "; cached=" + cachedNotes +  "; dirty=" + dirtyNotes + "]");
+        Log.d(TAG, "getNotes() [" + noteCacheIsDirty + "; cached=" +
+                (cachedNotes == null ? "NULL" : cachedNotes.size()) +  "; dirty=" +
+                (dirtyNotes == null ? "NULL" : dirtyNotes.size()) + "]");
         boolean needRefresh = dirtyNotes != null && !dirtyNotes.isEmpty();
         if (!noteCacheIsDirty && cachedNotes != null && !needRefresh) {
             return Observable.fromIterable(cachedNotes.values());
@@ -1145,6 +1179,11 @@ public class Repository implements DataSource {
             cachedNotes = new LinkedHashMap<>();
         }
         cachedNotes.remove(noteId);
+    }
+
+    @Override
+    public int getNoteCacheSize() {
+        return cachedNotes == null ? 0 : cachedNotes.size();
     }
 
     // Tags: tag is part of the object and should be bound with the object

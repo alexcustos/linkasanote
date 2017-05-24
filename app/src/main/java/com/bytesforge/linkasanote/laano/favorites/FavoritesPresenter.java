@@ -49,6 +49,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     private final CompositeDisposable compositeDisposable;
 
     private FilterType filterType;
+    private boolean filterIsChanged = true;
     private boolean firstLoad = true;
 
     @Inject
@@ -108,10 +109,15 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         if (forceUpdate) {
             repository.refreshFavorites();
         }
+        updateFilter();
+        if (!repository.isFavoriteCacheDirty()
+                && !filterIsChanged
+                && viewModel.getListSize() == repository.getFavoriteCacheSize()) {
+            return;
+        }
         if (showLoading) {
             viewModel.showProgressOverlay();
         }
-        updateFilter();
         Disposable disposable = repository.getFavorites()
                 .subscribeOn(schedulerProvider.computation())
                 .filter(favorite -> {
@@ -143,6 +149,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                 .subscribe(favorites -> {
                     view.showFavorites(favorites);
                     selectFavoriteFilter();
+                    filterIsChanged = false;
                 }, throwable -> {
                     // NullPointerException
                     CommonUtils.logStackTrace(TAG, throwable);
@@ -409,10 +416,12 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                 if (this.filterType == filterType) {
                     return null;
                 }
+                filterIsChanged = true;
                 this.filterType = filterType;
                 laanoUiManager.setFilterType(TAB, filterType, null);
                 break;
             default:
+                filterIsChanged = true;
                 setDefaultNotesFilterType();
         }
         return null;
@@ -446,5 +455,10 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         if (itemState == DataSource.ItemState.DELETED) {
             throw new IllegalStateException("DELETED state is not allowed to Save operation");
         }
+    }
+
+    @Override
+    public void setFilterIsChanged(boolean filterIsChanged) {
+        this.filterIsChanged = filterIsChanged;
     }
 }

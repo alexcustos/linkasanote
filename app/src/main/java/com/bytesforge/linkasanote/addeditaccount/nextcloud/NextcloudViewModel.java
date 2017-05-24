@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -356,11 +357,10 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     }
 
     @Override
-    public void showConnectionResultStatus(RemoteOperationResult.ResultCode result) {
+    public void showConnectionResultStatus(RemoteOperationResult.ResultCode resultCode) {
         int icon = R.drawable.ic_warning;
         int text;
-
-        switch (result) {
+        switch (resultCode) {
             case OK_SSL:
                 icon = R.drawable.ic_lock;
                 text = R.string.add_edit_account_nextcloud_connection_secure;
@@ -395,21 +395,22 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
                 text = R.string.add_edit_account_nextcloud_ssl_problem;
                 break;
             case INCORRECT_ADDRESS:
-            case UNKNOWN_ERROR:
+                text = R.string.add_edit_account_nextcloud_warning_malformed_url;
+                break;
             default:
+                RemoteOperationResult result = new RemoteOperationResult(resultCode);
+                Log.d(TAG, "showAuthResultStatus(): Unknown error [" + resultCode.name() +  "; message=" + result.getLogMessage() + "]");
                 text = R.string.add_edit_account_nextcloud_unknown_error;
                 break;
-        } // switch
-
+        }
         setServerStatus(icon, text);
     }
 
     @Override
-    public void showAuthResultStatus(RemoteOperationResult.ResultCode result) {
+    public void showAuthResultStatus(RemoteOperationResult.ResultCode resultCode) {
         int icon = R.drawable.ic_warning;
         int text;
-
-        switch (result) {
+        switch (resultCode) {
             case OK:
                 icon = R.drawable.ic_check;
                 text = R.string.add_edit_account_nextcloud_successful;
@@ -420,16 +421,12 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
             case ACCOUNT_NOT_NEW:
                 text = R.string.add_edit_account_nextcloud_auth_exists;
                 break;
-            case ACCOUNT_NOT_THE_SAME:
-                text = R.string.add_edit_account_nextcloud_auth_not_match;
-                break;
-            case UNHANDLED_HTTP_CODE:
-            case UNKNOWN_ERROR:
             default:
+                RemoteOperationResult result = new RemoteOperationResult(resultCode);
+                Log.d(TAG, "showAuthResultStatus(): Unknown error [" + resultCode.name() +  "; message=" + result.getLogMessage() + "]");
                 text = R.string.add_edit_account_nextcloud_unknown_error;
                 break;
-        } // switch
-
+        }
         setAuthStatus(icon, text);
     }
 

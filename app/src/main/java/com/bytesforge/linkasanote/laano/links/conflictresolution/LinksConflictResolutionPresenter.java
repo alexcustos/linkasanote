@@ -311,7 +311,7 @@ public final class LinksConflictResolutionPresenter implements
                 .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
-                        repository.refreshLinks();
+                        repository.refreshLink(linkId);
                         view.finishActivity();
                     } else {
                         view.cancelActivity();

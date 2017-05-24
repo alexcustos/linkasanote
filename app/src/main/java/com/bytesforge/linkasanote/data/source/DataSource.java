@@ -31,6 +31,7 @@ public interface DataSource {
 
     void addLinksCallback(@NonNull DataSource.Callback callback);
     void removeLinksCallback(@NonNull DataSource.Callback callback);
+    boolean isLinkCacheDirty();
     Observable<Link> getLinks();
     Single<Link> getLink(@NonNull String linkId);
     Observable<ItemState> saveLink(@NonNull Link link, boolean syncable);
@@ -42,9 +43,11 @@ public interface DataSource {
     void refreshLinks();
     void refreshLink(@NonNull String linkId);
     void removeCachedLink(@NonNull String linkId);
+    int getLinkCacheSize();
 
     void addFavoritesCallback(@NonNull DataSource.Callback callback);
     void removeFavoritesCallback(@NonNull DataSource.Callback callback);
+    boolean isFavoriteCacheDirty();
     Observable<Favorite> getFavorites();
     Single<Favorite> getFavorite(@NonNull String favoriteId);
     Observable<ItemState> saveFavorite(@NonNull Favorite favorite, boolean syncable);
@@ -56,9 +59,11 @@ public interface DataSource {
     void refreshFavorites();
     void refreshFavorite(@NonNull String favoriteId);
     void removeCachedFavorite(@NonNull String favoriteId);
+    int getFavoriteCacheSize();
 
     void addNotesCallback(@NonNull DataSource.Callback callback);
     void removeNotesCallback(@NonNull DataSource.Callback callback);
+    boolean isNoteCacheDirty();
     Observable<Note> getNotes();
     Single<Note> getNote(@NonNull String noteId);
     Observable<ItemState> saveNote(@NonNull Note note, boolean syncable);
@@ -69,6 +74,7 @@ public interface DataSource {
     void refreshNotes();
     void refreshNote(@NonNull String noteId);
     void removeCachedNote(@NonNull String noteId);
+    int getNoteCacheSize();
 
     Observable<Tag> getTags();
     Single<Tag> getTag(@NonNull String tagId);

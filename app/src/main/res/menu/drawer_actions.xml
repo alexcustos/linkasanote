@@ -9,7 +9,7 @@
             android:title="@string/drawer_actions_add_account" />
         <item
             android:id="@+id/manage_accounts_menu_item"
-            android:icon="@drawable/ic_edit"
+            android:icon="@drawable/ic_person"
             android:title="@string/drawer_actions_manage_accounts" />
     </group>
     <group android:id="@+id/sync_menu_group">

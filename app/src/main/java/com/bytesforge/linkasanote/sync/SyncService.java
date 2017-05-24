@@ -21,7 +21,7 @@ import javax.inject.Inject;
 
 public class SyncService extends Service {
 
-    // TODO: check out best practice about this warning
+    // NOTE: the application context is used here, so no way to leak it somehow
     private static SyncAdapter syncAdapter = null;
     private static final Object syncAdapterLock = new Object();
 

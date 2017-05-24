@@ -38,6 +38,7 @@ public interface AddEditLinkContract {
         void showEmptyLinkSnackbar();
         void showLinkNotFoundSnackbar();
         void showDuplicateKeyError();
+        void showTagsDuplicateRemovedToast();
 
         boolean isValid();
         boolean isEmpty();

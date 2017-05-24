@@ -261,6 +261,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
         completionView.performBestGuess(false);
         int threshold = Settings.GLOBAL_TAGS_AUTOCOMPLETE_THRESHOLD;
         completionView.setThreshold(threshold);
+        completionView.setTokenListener((AddEditLinkPresenter) presenter);
         // Adapter
         tags = new ArrayList<>();
         ArrayAdapter<Tag> adapter = new FilteredArrayAdapter<Tag>(
@@ -288,7 +289,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
                         binding.linkTagsLayout.setError(null);
                     } else {
                         binding.linkTagsLayout.setError(getResources().getString(
-                                R.string.add_edit_link_tags_validation_error));
+                                R.string.validation_error_tags_invalid_char));
                     }
                 }
                 return filteredStringBuilder.toString();

@@ -189,7 +189,7 @@ public final class AddEditFavoritePresenter implements
         return settings.isShowFillInFormInfo();
     }
 
-    // ViewModel
+    // Tags
 
     @Override
     public void onTokenAdded(Tag tag) {
@@ -199,5 +199,10 @@ public final class AddEditFavoritePresenter implements
     @Override
     public void onTokenRemoved(Tag tag) {
         viewModel.afterTagsChanged();
+    }
+
+    @Override
+    public void onDuplicateRemoved(Tag tag) {
+        viewModel.showTagsDuplicateRemovedToast();
     }
 }

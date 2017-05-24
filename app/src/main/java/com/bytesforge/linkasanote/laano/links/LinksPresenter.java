@@ -58,6 +58,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
     private String noteFilter;
     private List<Tag> favoriteFilterTags;
     private FilterType filterType;
+    private boolean filterIsChanged = true;
     private boolean firstLoad = true;
 
     @Inject
@@ -117,10 +118,15 @@ public final class LinksPresenter extends BaseItemPresenter implements
         if (forceUpdate) {
             repository.refreshLinks();
         }
+        FilterType extendedFilter = updateFilter();
+        if (!repository.isLinkCacheDirty()
+                && !filterIsChanged
+                && viewModel.getListSize() == repository.getLinkCacheSize()) {
+            return;
+        }
         if (showLoading) {
             viewModel.showProgressOverlay();
         }
-        FilterType extendedFilter = updateFilter();
         Observable<Link> loadLinks = null;
         if (extendedFilter == FilterType.FAVORITE) {
             loadLinks = repository.getFavorite(favoriteFilter)
@@ -228,6 +234,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 .subscribe(links -> {
                     view.showLinks(links);
                     selectLinkFilter();
+                    filterIsChanged = false;
                 }, throwable -> {
                     // NullPointerException
                     CommonUtils.logStackTrace(TAG, throwable);
@@ -569,7 +576,10 @@ public final class LinksPresenter extends BaseItemPresenter implements
             case ALL:
             case CONFLICTED:
             case NO_TAGS:
-                if (this.filterType == filterType) return null;
+                if (this.filterType == filterType) {
+                    return null;
+                }
+                filterIsChanged = true;
                 this.filterType = filterType;
                 laanoUiManager.setFilterType(TAB, filterType, null);
                 break;
@@ -579,6 +589,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         && this.favoriteFilter.equals(prevFavoriteFilter)) {
                     return null;
                 }
+                filterIsChanged = true;
                 if (this.favoriteFilter == null) {
                     setDefaultLinksFilterType();
                     return null;
@@ -591,6 +602,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         && this.noteFilter.equals(prevNoteFilter)) {
                     return null;
                 }
+                filterIsChanged = true;
                 if (this.noteFilter == null) {
                     setDefaultLinksFilterType();
                     return null;
@@ -598,6 +610,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 this.filterType = filterType;
                 return filterType;
             default:
+                filterIsChanged = true;
                 setDefaultLinksFilterType();
         }
         return null;
@@ -667,5 +680,10 @@ public final class LinksPresenter extends BaseItemPresenter implements
         if (itemState == DataSource.ItemState.DELETED) {
             throw new IllegalStateException("DELETED state is not allowed to Save operation");
         }
+    }
+
+    @Override
+    public void setFilterIsChanged(boolean filterIsChanged) {
+        this.filterIsChanged = filterIsChanged;
     }
 }

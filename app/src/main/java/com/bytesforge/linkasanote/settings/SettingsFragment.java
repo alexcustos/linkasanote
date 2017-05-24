@@ -89,6 +89,10 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
         return fragment;
     }
 
+    private boolean isActive() {
+        return isAdded();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         context = getContext();
@@ -131,11 +135,15 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                                         Toast.LENGTH_SHORT).show(),
                                 throwable -> {
                                     CommonUtils.logStackTrace(TAG, throwable);
-                                    showSnackbar(resources.getString(
-                                            R.string.pref_snackbar_restore_failed,
-                                            backupFile), Snackbar.LENGTH_LONG);
+                                    if (isActive()) {
+                                        refreshBackupEntries();
+                                        showSnackbar(resources.getString(
+                                                R.string.pref_snackbar_restore_failed,
+                                                backupFile), Snackbar.LENGTH_LONG);
+                                    }
                                 });
             } else {
+                refreshBackupEntries();
                 showSnackbar(resources.getString(R.string.pref_snackbar_restore_failed,
                         backupFile), Snackbar.LENGTH_LONG);
             }
@@ -314,13 +322,11 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
         }
     }
 
-    private void applicationBackup() {
+    private void backup() {
         String backupFile = ApplicationBackup.backupDB(getContext());
-        String message;
         if (backupFile != null) {
             refreshBackupEntries();
-            message = resources.getString(R.string.pref_snackbar_backup_success, backupFile);
-            showSnackbar(message, Snackbar.LENGTH_SHORT);
+            Toast.makeText(context, R.string.toast_backup_success, Toast.LENGTH_SHORT).show();
         } else {
             showSnackbar(R.string.pref_snackbar_backup_failed, Snackbar.LENGTH_LONG);
         }
@@ -350,9 +356,12 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
             prefSyncInterval.setSummary(names[index] + " " +
                     resources.getString(R.string.pref_sync_interval_notice));
         }, throwable -> {
-            prefSyncInterval.setEnabled(false);
-            prefSyncInterval.setSummary(
-                    getString(R.string.settings_fragment_sync_interval_not_available));
+            CommonUtils.logStackTrace(TAG, throwable);
+            if (isActive()) {
+                prefSyncInterval.setEnabled(false);
+                prefSyncInterval.setSummary(
+                        getString(R.string.settings_fragment_sync_interval_not_available));
+            }
         });
     }
 
@@ -379,7 +388,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                 showSnackbar(R.string.snackbar_no_permission, Snackbar.LENGTH_LONG);
             }
         } else {
-            applicationBackup();
+            backup();
         }
     }
 
@@ -388,7 +397,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                applicationBackup();
+                backup();
             } else {
                 showSnackbar(R.string.snackbar_no_permission, Snackbar.LENGTH_LONG);
             }

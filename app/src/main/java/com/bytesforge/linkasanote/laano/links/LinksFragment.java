@@ -135,6 +135,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
                     public boolean onMenuItemActionCollapse(MenuItem item) {
                         getActivity().supportInvalidateOptionsMenu();
                         viewModel.setSearchText(null);
+                        presenter.setFilterIsChanged(true);
                         presenter.loadLinks(false);
                         return true;
                     }
@@ -144,6 +145,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
             @Override
             public boolean onQueryTextSubmit(String query) {
                 viewModel.setSearchText(query);
+                presenter.setFilterIsChanged(true);
                 presenter.loadLinks(false);
                 return true;
             }

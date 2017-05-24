@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.widget.Toast;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
@@ -274,5 +275,10 @@ public class AddEditLinkViewModel extends BaseObservable implements
         for (String tag : tags) {
             linkTags.addObject(new Tag(tag));
         }
+    }
+
+    @Override
+    public void showTagsDuplicateRemovedToast() {
+        Toast.makeText(context, R.string.toast_tags_duplicate_removed, Toast.LENGTH_SHORT).show();
     }
 }

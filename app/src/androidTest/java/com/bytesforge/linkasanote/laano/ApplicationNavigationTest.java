@@ -152,7 +152,7 @@ public class ApplicationNavigationTest {
                 .perform(DrawerActions.open());
         onView(withId(R.id.nav_view)).perform(navigateTo(R.id.manage_accounts_menu_item));
         onView(allOf(
-                withText(R.string.action_bar_title_manage_accounts),
+                withText(R.string.actionbar_title_manage_accounts),
                 isDescendantOfA(withResourceName("toolbar"))))
                 .check(matches(isDisplayed()));
         // Close

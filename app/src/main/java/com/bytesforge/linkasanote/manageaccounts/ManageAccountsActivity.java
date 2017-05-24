@@ -30,7 +30,7 @@ public class ManageAccountsActivity extends AppCompatActivity {
         setSupportActionBar(binding.toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setTitle(R.string.action_bar_title_manage_accounts);
+            actionBar.setTitle(R.string.actionbar_title_manage_accounts);
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setDisplayShowHomeEnabled(true);
         }

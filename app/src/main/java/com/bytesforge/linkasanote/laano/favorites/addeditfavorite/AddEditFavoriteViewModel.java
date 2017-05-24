@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.widget.Toast;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
@@ -204,6 +205,11 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         nameErrorText = context.getResources().getString(
                 R.string.add_edit_favorite_error_name_duplicated);
         notifyPropertyChanged(BR.nameErrorText);
+    }
+
+    @Override
+    public void showTagsDuplicateRemovedToast() {
+        Toast.makeText(context, R.string.toast_tags_duplicate_removed, Toast.LENGTH_SHORT).show();
     }
 
     @Override

@@ -13,6 +13,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.widget.Toast;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
@@ -44,6 +45,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public final ObservableField<String> linkLink = new ObservableField<>();
 
     private TagsCompletionView noteTags;
+    private Context context;
     private Resources resources;
     private AddEditNoteContract.Presenter presenter;
 
@@ -57,7 +59,8 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public String noteErrorText;
 
     public AddEditNoteViewModel(@NonNull Context context) {
-        resources = checkNotNull(context).getResources();
+        this.context = checkNotNull(context);
+        resources = context.getResources();
     }
 
     @Override
@@ -209,12 +212,6 @@ public class AddEditNoteViewModel extends BaseObservable implements
     }
 
     @Override
-    public void showDuplicateKeyError() {
-        noteErrorText = resources.getString(R.string.add_edit_note_error_note_duplicated);
-        notifyPropertyChanged(BR.noteErrorText);
-    }
-
-    @Override
     public void showLinkStatusNoteWillBeUnbound() {
         linkStatus.set(resources.getString(R.string.add_edit_note_message_link_will_unbound));
     }
@@ -285,5 +282,10 @@ public class AddEditNoteViewModel extends BaseObservable implements
         for (String tag : tags) {
             noteTags.addObject(new Tag(tag));
         }
+    }
+
+    @Override
+    public void showTagsDuplicateRemovedToast() {
+        Toast.makeText(context, R.string.toast_tags_duplicate_removed, Toast.LENGTH_SHORT).show();
     }
 }

@@ -21,7 +21,6 @@ public abstract class NotesAdapterBase<VH extends RecyclerView.ViewHolder> exten
     protected final NotesViewModel viewModel;
 
     @NonNull
-    // TODO: switch Note to generic variable and move adapter class to BaseItemAdapter
     protected List<Note> notes;
     private List<String> noteIds;
 

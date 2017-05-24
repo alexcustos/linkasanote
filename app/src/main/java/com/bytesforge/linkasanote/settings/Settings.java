@@ -33,7 +33,7 @@ public class Settings {
     public static final float GLOBAL_ICON_ALPHA_DISABLED = 0.4f;
     public static final float GLOBAL_PROGRESS_OVERLAY_ALPHA = 0.4f;
     public static final long GLOBAL_PROGRESS_OVERLAY_DURATION = 200; // ms
-    public static final long GLOBAL_PROGRESS_OVERLAY_SHOW_DELAY = 200; // ms
+    public static final long GLOBAL_PROGRESS_OVERLAY_SHOW_DELAY = 100; // ms
     public static final boolean GLOBAL_ITEM_CLICK_SELECT_FILTER = false;
     public static final String GLOBAL_PARAMETER_WHITE_LIST_DELIMITER = ", ";
     public static final long GLOBAL_DOUBLE_BACK_TO_EXIT_MILLIS = 2000;
@@ -243,7 +243,7 @@ public class Settings {
         setLastSyncedETag(Link.SETTING_LAST_SYNCED_ETAG, DEFAULT_LAST_SYNCED_ETAG);
         setLastSyncedETag(Favorite.SETTING_LAST_SYNCED_ETAG, DEFAULT_LAST_SYNCED_ETAG);
         setLastSyncedETag(Note.SETTING_LAST_SYNCED_ETAG, DEFAULT_LAST_SYNCED_ETAG);
-        //putLongSetting(SETTING_LAST_SYNC_TIME, DEFAULT_LAST_SYNC_TIME);
+        putLongSetting(SETTING_LAST_SYNC_TIME, DEFAULT_LAST_SYNC_TIME);
         setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
     }
 

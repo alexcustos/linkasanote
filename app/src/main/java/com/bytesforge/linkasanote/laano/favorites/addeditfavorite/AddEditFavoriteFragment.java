@@ -283,7 +283,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
                         binding.favoriteTagsLayout.setError(null);
                     } else {
                         binding.favoriteTagsLayout.setError(getResources().getString(
-                                R.string.add_edit_favorite_tags_validation_error));
+                                R.string.validation_error_tags_invalid_char));
                     }
                 }
                 return filteredStringBuilder.toString();

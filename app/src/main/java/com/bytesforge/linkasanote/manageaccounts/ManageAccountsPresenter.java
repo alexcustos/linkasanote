@@ -3,7 +3,12 @@ package com.bytesforge.linkasanote.manageaccounts;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
+import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
@@ -47,9 +52,7 @@ public final class ManageAccountsPresenter implements ManageAccountsContract.Pre
 
     @Override
     public void loadAccountItems(final boolean showLoading) {
-        // TODO: implement showLoading
         disposable.clear();
-
         Disposable disposable = view.loadAccountItems()
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
@@ -83,5 +86,16 @@ public final class ManageAccountsPresenter implements ManageAccountsContract.Pre
 
     public void onRemoveClick(Account account) {
         view.confirmAccountRemoval(account);
+    }
+
+    public boolean onImageButtonLongClick(ImageButton view) {
+        Context context = view.getContext();
+        Toast toast = Toast.makeText(context, view.getContentDescription(), Toast.LENGTH_SHORT);
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        int xOffset = displayMetrics.widthPixels - view.getLeft();
+        int yOffset = view.getBottom() + view.getHeight();
+        toast.setGravity(Gravity.TOP|Gravity.END, xOffset, yOffset);
+        toast.show();
+        return true;
     }
 }

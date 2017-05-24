@@ -49,7 +49,7 @@ public class LaanoApplication extends MultiDexApplication { // Application {
         this.applicationComponent = applicationComponent;
     }
 
-    public static Context getContext() {
+    private static Context getContext() {
         return context.get();
     }
 
