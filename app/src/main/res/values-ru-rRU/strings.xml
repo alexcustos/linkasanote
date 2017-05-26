@@ -248,7 +248,7 @@
     <string name="item_notes_edit_button">Изменить заметку</string>
     <string name="item_notes_checkbox">Выбрать заметку</string>
     <string name="notes_empty_title">Список пуст</string>
-    <string name="add_edit_note_note_hint">Заметка</string>
+    <string name="add_edit_note_note_hint">*Заметка</string>
     <string name="add_edit_note_tags_hint">Теги</string>
     <string name="add_edit_note_new_button_title">Создать</string>
     <string name="add_edit_note_edit_button_title">Обновить</string>
@@ -302,7 +302,7 @@
     <string name="clipboard_service_stopped">%s монитор буфера обмена остановлен</string>
     <string name="fill_in_form_info_title">Информация</string>
     <string name="fill_in_form_info_message">Это действие предназначено для работы с нормализованным и дополненным буфером обмена. Если данные доступны они будут вставлены (с заменой) в соответствующие поля формы. Оригинальный буфер не был затронут, его можно использовать как обычно.</string>
-    <string name="about_launch_google_play_error">Google Play на данном устройстве не установлен</string>
+    <string name="about_launch_google_play_error">Google Play и интернет обозреватель не найдены на этом устройстве</string>
 
     <plurals name="count_favorites">
         <item quantity="one">%d избранное</item>

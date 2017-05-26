@@ -3,8 +3,11 @@ package com.bytesforge.linkasanote.about;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
@@ -33,6 +36,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -43,6 +47,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AboutFragment extends Fragment implements AboutContract.View {
 
     private static final String TAG = AboutFragment.class.getSimpleName();
+
+    private static final String GOOGLE_PLAY_PACKAGE_NAME = "com.android.vending";
 
     private AboutContract.Presenter presenter;
     private AboutContract.ViewModel viewModel;
@@ -96,12 +102,34 @@ public class AboutFragment extends Fragment implements AboutContract.View {
 
     @Override
     public void showGooglePlay() {
-        Uri uri = Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID);
-        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-        try {
-            startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            viewModel.showLaunchGooglePlayErrorSnackbar();
+        final Uri uri = Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID);
+        final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        final List<ResolveInfo> apps =
+                getContext().getPackageManager().queryIntentActivities(intent, 0);
+        boolean found = false;
+        for (ResolveInfo app : apps) {
+            if (app.activityInfo.applicationInfo.packageName.equals(GOOGLE_PLAY_PACKAGE_NAME)) {
+                ActivityInfo activityInfo = app.activityInfo;
+                ComponentName componentName = new ComponentName(
+                        activityInfo.applicationInfo.packageName, activityInfo.name);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                        | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.setComponent(componentName);
+                startActivity(intent);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            Uri webUri = Uri.parse(
+                    "https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID);
+            Intent webIntent = new Intent(Intent.ACTION_VIEW, webUri);
+            try {
+                startActivity(webIntent);
+            } catch (ActivityNotFoundException e) {
+                viewModel.showLaunchGooglePlayErrorSnackbar();
+            }
         }
     }
 

@@ -254,7 +254,7 @@
     <string name="item_notes_edit_button">Edit Note</string>
     <string name="item_notes_checkbox">Select Note</string>
     <string name="notes_empty_title">List is empty</string>
-    <string name="add_edit_note_note_hint">Note</string>
+    <string name="add_edit_note_note_hint">*Note</string>
     <string name="add_edit_note_tags_hint">Tags</string>
     <string name="add_edit_note_new_button_title">Create</string>
     <string name="add_edit_note_edit_button_title">Update</string>
@@ -308,7 +308,7 @@
     <string name="clipboard_service_stopped">%s clipboard monitor is stopped</string>
     <string name="fill_in_form_info_title">Information</string>
     <string name="fill_in_form_info_message">This operation is using the normalized and extended clipboard content to try filling in or replacing the form fields. The original clipboard content remain intact, so feel free to use it as well.</string>
-    <string name="about_launch_google_play_error">This device doesn\'t have Google Play installed</string>
+    <string name="about_launch_google_play_error">Neither Google Play nor Browser are installed on this device</string>
 
     <plurals name="count_favorites">
         <item quantity="one">%d Favorite</item>
