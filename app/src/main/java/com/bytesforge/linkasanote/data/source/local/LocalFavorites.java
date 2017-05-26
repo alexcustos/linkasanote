@@ -2,7 +2,6 @@ package com.bytesforge.linkasanote.data.source.local;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -10,7 +9,6 @@ import android.support.annotation.NonNull;
 import com.bytesforge.linkasanote.data.FavoriteFactory;
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.Tag;
-import com.bytesforge.linkasanote.data.source.Provider;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.collect.ObjectArrays;
@@ -29,15 +27,13 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
 
     // NOTE: static fails Mockito to mock this class
     private final Uri FAVORITE_URI;
-    private final Context context;
     private final ContentResolver contentResolver;
     private final LocalTags localTags;
     private final FavoriteFactory<T> factory;
 
     public LocalFavorites(
-            @NonNull Context context, @NonNull ContentResolver contentResolver,
+            @NonNull ContentResolver contentResolver,
             @NonNull LocalTags localTags, @NonNull FavoriteFactory<T> factory) {
-        this.context = checkNotNull(context);
         this.contentResolver = checkNotNull(contentResolver);
         this.localTags = checkNotNull(localTags);
         this.factory = checkNotNull(factory);
@@ -240,9 +236,10 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
         final String[] selectionArgs = {duplicatedKey};
 
         return Single.fromCallable(() -> {
-            try (Cursor cursor = Provider.rawQuery(context,
-                    LocalContract.FavoriteEntry.TABLE_NAME,
-                    columns, selection, selectionArgs, null)) {
+            try (Cursor cursor = contentResolver.query(
+                    FAVORITE_URI, columns, selection, selectionArgs, null)) {
+                if (cursor == null) return null;
+
                 if (cursor.moveToLast()) {
                     return cursor.getInt(0);
                 }
@@ -258,9 +255,8 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
         final String[] selectionArgs = {duplicatedKey, "0"};
 
         return Single.fromCallable(() -> {
-            try (Cursor cursor = Provider.rawQuery(context,
-                    LocalContract.FavoriteEntry.TABLE_NAME,
-                    LocalContract.FavoriteEntry.FAVORITE_COLUMNS,
+            try (Cursor cursor = contentResolver.query(
+                    FAVORITE_URI, LocalContract.FavoriteEntry.FAVORITE_COLUMNS,
                     selection, selectionArgs, null)) {
                 if (cursor == null) {
                     return null; // NOTE: NullPointerException

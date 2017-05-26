@@ -1,43 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">LaaNo</string>
-    <string name="app_url">https://www.laano.net</string>
-    <string name="app_author">Aleksandr Borisenko</string>
-    <string name="app_was_created_year">2017</string>
-    <string name="authenticator_account_type">linkasanote</string>
-    <string name="application_content_authority">com.bytesforge.linkasanote.provider</string>
-    <string name="scroll_aware_fab_behavior">com.bytesforge.linkasanote.utils.ScrollAwareFABBehavior</string>
-    <string name="filter_menu_item_postfix">(%s)</string>
+    <string name="app_url" translatable="false">https://www.laano.net</string>
+    <string name="app_author" translatable="false">Aleksandr Borisenko</string>
+    <string name="app_was_created_year" translatable="false">2017</string>
+    <string name="authenticator_account_type" translatable="false">linkasanote</string>
+    <string name="application_content_authority" translatable="false">com.bytesforge.linkasanote.provider</string>
+    <string name="scroll_aware_fab_behavior" translatable="false">com.bytesforge.linkasanote.utils.ScrollAwareFABBehavior</string>
+    <string name="filter_menu_item_postfix" translatable="false">(%s)</string>
+
     <integer name="add_edit_note_lines">5</integer>
     <integer name="dialog_note_lines">5</integer>
-
     <integer xmlns:tools="http://schemas.android.com/tools" tools:override="true"
         name="design_snackbar_text_max_lines">3</integer>
 
-    <string name="pref_sync_interval_manual_mode">0</string>
-    <string name="pref_key_expand_links">expand_links</string>
-    <string name="pref_key_expand_notes">expand_notes</string>
-    <string name="pref_key_backup">application_backup</string>
-    <string name="pref_key_restore">application_restore</string>
-    <string name="pref_key_sync_directory">sync_directory</string>
-    <string name="pref_key_sync_interval">sync_interval</string>
-    <string name="pref_key_sync_upload_to_empty">sync_upload_to_empty</string>
-    <string name="pref_key_sync_protect_local">sync_protect_local</string>
-    <string name="pref_key_clipboard_link_get_metadata">link_metadata</string>
-    <string name="pref_key_clipboard_link_follow">link_follow</string>
-    <string name="pref_key_clipboard_fill_in_forms">clipboard_fill_in_forms</string>
-    <string name="pref_key_clipboard_parameter_white_list">parameter_white_list</string>
-    <string name="pref_key_clipboard_clear_clipboard">clear_clipboard</string>
+    <string name="pref_sync_interval_manual_mode" translatable="false">0</string>
+    <string name="pref_key_expand_links" translatable="false">expand_links</string>
+    <string name="pref_key_expand_notes" translatable="false">expand_notes</string>
+    <string name="pref_key_backup" translatable="false">application_backup</string>
+    <string name="pref_key_restore" translatable="false">application_restore</string>
+    <string name="pref_key_sync_directory" translatable="false">sync_directory</string>
+    <string name="pref_key_sync_interval" translatable="false">sync_interval</string>
+    <string name="pref_key_sync_upload_to_empty" translatable="false">sync_upload_to_empty</string>
+    <string name="pref_key_sync_protect_local" translatable="false">sync_protect_local</string>
+    <string name="pref_key_clipboard_link_get_metadata" translatable="false">link_metadata</string>
+    <string name="pref_key_clipboard_link_follow" translatable="false">link_follow</string>
+    <string name="pref_key_clipboard_fill_in_forms" translatable="false">clipboard_fill_in_forms</string>
+    <string name="pref_key_clipboard_parameter_white_list" translatable="false">parameter_white_list</string>
+    <string name="pref_key_clipboard_clear_clipboard" translatable="false">clear_clipboard</string>
 
-    <string name="about_nextcloud_url">https://nextcloud.com/</string>
-    <string name="libraries_apache_v2">
+    <string name="about_nextcloud_url" translatable="false">https://nextcloud.com/</string>
+    <string name="libraries_apache_v2" translatable="false">
         <li>Android Open Source Project</li>\n
         <li>RxJava 2</li>\n
         <li>RxAndroid</li>\n
         <li>Dagger 2</li>\n
         <li>TokenAutoComplete</li>
     </string>
-    <string name="libraries_mit">
+    <string name="libraries_mit" translatable="false">
         <li>Nextcloud Android Library</li>\n
         <li>jsoup: Java HTML Parser</li>
     </string>

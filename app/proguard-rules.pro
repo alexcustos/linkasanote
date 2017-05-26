@@ -15,3 +15,42 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# Uncomment this to preserve the line number information for
+# debugging stack traces.
+#-keepattributes SourceFile,LineNumberTable
+
+# If you keep the line number information, uncomment this to
+# hide the original source file name.
+#-renamesourcefileattribute SourceFile
+
+-optimizationpasses 5
+-verbose
+#-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*
+
+-assumenosideeffects class com.bytesforge.linkasanote.utils.CommonUtils  {
+    public static void logStackTrace(...);
+}
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+    public static int w(...);
+    public static int e(...);
+}
+
+
+-keep class org.apache.jackrabbit.webdav.** { *; }
+-dontwarn org.apache.jackrabbit.**
+
+-dontwarn javax.servlet.http.**
+-dontwarn org.apache.commons.**
+-dontwarn org.slf4j.*
+
+-dontwarn sun.misc.Unsafe
+-dontwarn java.lang.ClassValue
+-dontwarn javax.lang.model.element.Modifier
+
+-dontwarn android.util.Pair
+
+-keep class android.support.v7.** { *; }

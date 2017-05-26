@@ -14,7 +14,8 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        bind:layoutEnabled="@{viewModel.layoutEnabled}">
 
         <LinearLayout
             android:id="@+id/snackbar_layout"
@@ -58,10 +59,7 @@
                         android:text="@={viewModel.serverUrlText}"
                         android:enabled="@{viewModel.serverUrl}"
                         android:afterTextChanged="@{() -> viewModel.afterServerUrlChanged(serverUrl)}"
-                        android:onFocusChange="@{viewModel::onServerUrlFocusChange}">
-
-                        <requestFocus />
-                    </EditText>
+                        android:onFocusChange="@{viewModel::onServerUrlFocusChange}" />
                 </android.support.design.widget.TextInputLayout>
 
                 <ImageButton

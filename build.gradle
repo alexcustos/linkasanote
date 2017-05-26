@@ -2,7 +2,7 @@
 
 ext {
     // NOTE: xxx.yy.zz; -SNAPSHOT; -RCxx
-    VERSION_NAME = "0.0.1-SNAPSHOT"
+    VERSION_NAME = "0.1.0-RC1"
     SDK_VERSION = 25
     MIN_SDK_VERSION = 19
     BUILD_TOOL_VERSION = '25.0.3'
@@ -12,17 +12,19 @@ ext {
     constraintLayoutVersion = '1.0.2'
     junitVersion = '4.12'
     espressoVersion = '2.2.2'
-    guavaVersion = '20.0' // NOTE: v21 requested Java1.7 compatibility
+    guavaVersion = '22.0'
     daggerVersion = '2.10'
     jsr250ApiVersion = '1.0'
-    mockitoVersion = '2.7.22'
+    mockitoVersion = '2.8.9'
     dexmakerVersion = '2.2.0'
     powermockVersion = '1.7.0RC4'
     rxjavaVersion = '2.1.0'
     rxandroidVersion = '2.0.1'
-    nextcloudLibraryVersion = '1.0.15'
+    nextcloudLibraryVersion = '1.0.18'
     uiAutomatorVersion = '2.1.2'
     jsoupVersion = '1.10.2'
+    // Resolve conflicts
+    findbugsJsr305Version = '2.0.1'
 }
 
 ext {
@@ -54,14 +56,14 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.2'
-        classpath 'me.tatarka:gradle-retrolambda:3.5.0'
+        classpath "me.tatarka:gradle-retrolambda:3.6.1"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
 }
 
 //plugins {
-//    id "me.tatarka.retrolambda" version "3.5.0"
+//    id "me.tatarka.retrolambda" version "3.6.1"
 //}
 
 allprojects {

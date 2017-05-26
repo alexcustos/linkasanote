@@ -21,5 +21,5 @@ public abstract class AppBarLayoutOnStateChangeListener implements AppBarLayout.
             currentState = State.COLLAPSED;
             onStateChanged(appBarLayout, currentState);
         }
-    } // onOffsetChanged
+    }
 }

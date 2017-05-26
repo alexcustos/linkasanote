@@ -448,7 +448,7 @@ public class LaanoActivity extends AppCompatActivity implements
             if (tabPosition == activeTab) {
                 laanoUiManager.updateTitle(activeTab);
             }
-        } // onReceive
+        }
     }
 
     // Setup
@@ -628,6 +628,7 @@ public class LaanoActivity extends AppCompatActivity implements
             Log.d(TAG, "Account creation was canceled by user");
         } catch (IOException | AuthenticatorException e) {
             Log.e(TAG, "Account creation was finished with an exception");
+            updateDefaultAccount();
             Throwable throwable = e.getCause();
             if (throwable != null) {
                 Snackbar.make(binding.laanoViewPager, throwable.getMessage(), Snackbar.LENGTH_LONG)

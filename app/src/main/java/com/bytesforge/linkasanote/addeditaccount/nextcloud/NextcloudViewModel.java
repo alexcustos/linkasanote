@@ -12,8 +12,10 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.bytesforge.linkasanote.BR;
@@ -28,6 +30,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
 
     private static final String TAG = NextcloudViewModel.class.getSimpleName();
 
+    private static final String STATE_LAYOUT_ENABLED = "LAYOUT_ENABLED";
     private static final String STATE_SERVER_URL = "SERVER_URL";
     private static final String STATE_SERVER_URL_TEXT = "SERVER_URL_TEXT";
     private static final String STATE_ACCOUNT_USERNAME = "ACCOUNT_USERNAME";
@@ -40,14 +43,14 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     private static final String STATE_SERVER_STATUS_TEXT = "SERVER_STATUS_TEXT";
     private static final String STATE_AUTH_STATUS_TEXT = "AUTH_STATUS_TEXT";
 
+    public final ObservableBoolean layoutEnabled = new ObservableBoolean();
     public final ObservableField<String> serverUrlText = new ObservableField<>();
     public final ObservableField<String> accountUsernameText = new ObservableField<>();
     public final ObservableField<String> accountPasswordText = new ObservableField<>();
-
-    public final ObservableBoolean serverUrl = new ObservableBoolean(true);
-    public final ObservableBoolean accountUsername = new ObservableBoolean(true);
-    public final ObservableBoolean refreshButton = new ObservableBoolean(false);
-    public final ObservableBoolean loginButton = new ObservableBoolean(false);
+    public final ObservableBoolean serverUrl = new ObservableBoolean();
+    public final ObservableBoolean accountUsername = new ObservableBoolean();
+    public final ObservableBoolean refreshButton = new ObservableBoolean();
+    public final ObservableBoolean loginButton = new ObservableBoolean();
 
     private final Context context;
     private NextcloudContract.Presenter presenter;
@@ -87,6 +90,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
         instantiated = false;
+        outState.putBoolean(STATE_LAYOUT_ENABLED, layoutEnabled.get());
         outState.putBoolean(STATE_SERVER_URL, serverUrl.get());
         outState.putString(STATE_SERVER_URL_TEXT, serverUrlText.get());
         outState.putBoolean(STATE_ACCOUNT_USERNAME, accountUsername.get());
@@ -103,6 +107,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     @Override
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
+        layoutEnabled.set(state.getBoolean(STATE_LAYOUT_ENABLED));
         serverUrl.set(state.getBoolean(STATE_SERVER_URL));
         serverUrlText.set(state.getString(STATE_SERVER_URL_TEXT));
         accountUsername.set(state.getBoolean(STATE_ACCOUNT_USERNAME));
@@ -121,7 +126,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     @Override
     public Bundle getDefaultInstanceState() {
         Bundle defaultState = new Bundle();
-
+        defaultState.putBoolean(STATE_LAYOUT_ENABLED, true);
         defaultState.putBoolean(STATE_SERVER_URL, true);
         defaultState.putString(STATE_SERVER_URL_TEXT, "");
         defaultState.putBoolean(STATE_ACCOUNT_USERNAME, true);
@@ -133,7 +138,6 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
         defaultState.putInt(STATE_AUTH_STATUS_ICON, 0);
         defaultState.putInt(STATE_SERVER_STATUS_TEXT, 0);
         defaultState.putInt(STATE_AUTH_STATUS_TEXT, 0);
-
         return defaultState;
     }
 
@@ -153,6 +157,27 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     }
 
     // Adapters
+
+    @BindingAdapter({"layoutEnabled"})
+    public static void updateLayoutEnabled(ScrollView view, boolean enabled) {
+        setEnabledViewGroupViews(view, enabled);
+    }
+
+    private static void setEnabledViewGroupViews(ViewGroup viewGroup, boolean enabled) {
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+            View child = viewGroup.getChildAt(i);
+            int childId = child.getId();
+            if (child instanceof TextView
+                    && childId != R.id.server_url
+                    && childId != R.id.account_username
+                    && childId != R.id.login_button) {
+                child.setEnabled(enabled);
+            }
+            if (child instanceof ViewGroup) {
+                setEnabledViewGroupViews((ViewGroup) child, enabled);
+            }
+        }
+    }
 
     @BindingAdapter({"android:drawableStart", "android:text"})
     public static void showStatus(TextView view, int icon, @NonNull String text) {
@@ -311,6 +336,22 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
 
     @Override
     public void disableLoginButton() {
+        loginButton.set(false);
+    }
+
+    @Override
+    public void enableLayout() {
+        layoutEnabled.set(true);
+        serverUrl.set(true);
+        accountUsername.set(true);
+        checkLoginButton();
+    }
+
+    @Override
+    public void disableLayout() {
+        layoutEnabled.set(false);
+        serverUrl.set(false);
+        accountUsername.set(false);
         loginButton.set(false);
     }
 

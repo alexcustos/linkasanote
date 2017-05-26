@@ -35,7 +35,6 @@ import static junit.framework.TestCase.assertNotNull;
 @LargeTest
 public class LocalDataSourceTest {
 
-    private final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
     private final BaseSchedulerProvider schedulerProvider;
     private final ContentResolver contentResolver;
     private LocalDataSource localDataSource;
@@ -46,6 +45,7 @@ public class LocalDataSourceTest {
 
     public LocalDataSourceTest() {
         schedulerProvider = new ImmediateSchedulerProvider();
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         contentResolver = context.getContentResolver();
     }
 
@@ -59,11 +59,11 @@ public class LocalDataSourceTest {
 
         LinkFactory<Link> linkFactory = Link.getFactory();
         LocalLinks<Link> localLinks = new LocalLinks<>(
-                context, contentResolver, localTags, localNotes, linkFactory);
+                contentResolver, localTags, localNotes, linkFactory);
 
         FavoriteFactory<Favorite> favoriteFactory = Favorite.getFactory();
         LocalFavorites<Favorite> localFavorites = new LocalFavorites<>(
-                context, contentResolver, localTags, favoriteFactory);
+                contentResolver, localTags, favoriteFactory);
 
         localDataSource = new LocalDataSource(localLinks, localFavorites, localNotes, localTags);
         cleanupLocalDataSource();

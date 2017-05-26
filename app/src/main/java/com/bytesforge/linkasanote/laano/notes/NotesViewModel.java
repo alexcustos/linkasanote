@@ -160,9 +160,9 @@ public class NotesViewModel extends BaseItemViewModel implements NotesContract.V
         return ContextCompat.getColor(context, R.color.note_background);
     }
 
-    public int getFilterBackground(@NonNull String noteId, boolean conflicted, String filterId) {
+    public int getFilterBackground(@NonNull String noteId, String filterId) {
         checkNotNull(noteId);
-        if (!conflicted && !isActionMode() && noteId.equals(filterId)) {
+        if (!isActionMode() && noteId.equals(filterId)) {
             return ContextCompat.getColor(context, R.color.item_filter);
         }
         return ContextCompat.getColor(context, android.R.color.transparent);

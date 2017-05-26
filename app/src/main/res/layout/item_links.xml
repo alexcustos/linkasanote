@@ -106,7 +106,7 @@
                     android:paddingEnd="@dimen/card_right_button_padding_end"
                     android:visibility="@{viewModel.actionMode ? View.INVISIBLE : View.VISIBLE}"
                     android:onClick="@{() -> presenter.onToNotesClick(link.id)}"
-                    android:background="@{viewModel.getFilterBackground(link.id, link.conflicted, viewModel.filterId)}"
+                    android:background="@{viewModel.getFilterBackground(link.id, viewModel.filterId)}"
                     style="@style/Button.RecyclerView"
                     app:srcCompat="@drawable/ic_chevron_right"
                     app:layout_constraintTop_toTopOf="parent"

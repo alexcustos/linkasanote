@@ -2,7 +2,6 @@ package com.bytesforge.linkasanote.data.source.local;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -11,7 +10,6 @@ import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.LinkFactory;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
-import com.bytesforge.linkasanote.data.source.Provider;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.collect.ObjectArrays;
@@ -30,17 +28,15 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
 
     // NOTE: static fails Mockito to mock this class
     private final Uri LINK_URI;
-    private final Context context;
     private final ContentResolver contentResolver;
     private final LocalTags localTags;
     private final LocalNotes<Note> localNotes;
     private final LinkFactory<T> factory;
 
     public LocalLinks(
-            @NonNull Context context, @NonNull ContentResolver contentResolver,
+            @NonNull ContentResolver contentResolver,
             @NonNull LocalTags localTags, @NonNull LocalNotes<Note> localNotes,
             @NonNull LinkFactory<T> factory) {
-        this.context = checkNotNull(context);
         this.contentResolver = checkNotNull(contentResolver);
         this.localTags = checkNotNull(localTags);
         this.localNotes = checkNotNull(localNotes);
@@ -241,16 +237,17 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
         return LocalDataSource.isUnsynced(contentResolver, LINK_URI);
     }
 
-    private Single<Integer> getNextDuplicated(final String linkName) {
+    private Single<Integer> getNextDuplicated(final String duplicatedKey) {
         final String[] columns = new String[]{
                 "MAX(" + LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + ") + 1"};
         final String selection = LocalContract.LinkEntry.COLUMN_NAME_LINK + " = ?";
-        final String[] selectionArgs = {linkName};
+        final String[] selectionArgs = {duplicatedKey};
 
         return Single.fromCallable(() -> {
-            try (Cursor cursor = Provider.rawQuery(context,
-                    LocalContract.LinkEntry.TABLE_NAME,
-                    columns, selection, selectionArgs, null)) {
+            try (Cursor cursor = contentResolver.query(
+                    LINK_URI, columns, selection, selectionArgs, null)) {
+                if (cursor == null) return null;
+
                 if (cursor.moveToLast()) {
                     return cursor.getInt(0);
                 }
@@ -266,9 +263,8 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
         final String[] selectionArgs = {duplicatedKey, "0"};
 
         return Single.fromCallable(() -> {
-            try (Cursor cursor = Provider.rawQuery(context,
-                    LocalContract.LinkEntry.TABLE_NAME,
-                    LocalContract.LinkEntry.LINK_COLUMNS,
+            try (Cursor cursor = contentResolver.query(
+                    LINK_URI, LocalContract.LinkEntry.LINK_COLUMNS,
                     selection, selectionArgs, null)) {
                 if (cursor == null) {
                     return null; // NOTE: NullPointerException

@@ -9,7 +9,6 @@ android {
         applicationId "com.bytesforge.linkasanote"
         minSdkVersion MIN_SDK_VERSION
         targetSdkVersion SDK_VERSION
-        multiDexEnabled true
         versionCode buildVersionCode()
         versionName VERSION_NAME
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -25,17 +24,34 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    signingConfigs {
+        release {
+            File singRelease = file('sign_release.properties')
+            if (singRelease.exists()) {
+                Properties properties = new Properties()
+                properties.load(new FileInputStream(singRelease))
+                storeFile file(properties['STORE_FILE'])
+                storePassword properties['STORE_PASSWORD']
+                keyAlias properties['KEY_ALIAS']
+                keyPassword properties['KEY_PASSWORD']
+            }
+        }
+    }
+
     buildTypes {
         debug {
+            debuggable true
             minifyEnabled false
             shrinkResources false
-            //useProguard false
+            multiDexEnabled true
         }
         release {
+            debuggable false
             minifyEnabled true
             shrinkResources true
-            //useProguard true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            multiDexEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 
@@ -93,7 +109,8 @@ dependencies {
     compile "com.android.support:recyclerview-v7:${supportLibraryVersion}"
     compile "com.android.support:cardview-v7:${supportLibraryVersion}"
     compile "com.android.support.constraint:constraint-layout:${constraintLayoutVersion}"
-    compile "com.google.guava:guava:${guavaVersion}"
+
+    compile "com.google.guava:guava:${guavaVersion}-android"
     compile "com.github.nextcloud:android-library:${nextcloudLibraryVersion}"
     compile "org.jsoup:jsoup:${jsoupVersion}"
 
@@ -120,6 +137,7 @@ dependencies {
     androidTestCompile "com.android.support.test.uiautomator:uiautomator-v18:${uiAutomatorVersion}"
 
     // Resolve conflicts
+    compile "com.google.code.findbugs:jsr305:${findbugsJsr305Version}"
     androidTestCompile "com.android.support:recyclerview-v7:${supportLibraryVersion}"
     androidTestCompile "com.android.support:appcompat-v7:${supportLibraryVersion}"
     androidTestCompile "com.android.support:design:${supportLibraryVersion}"

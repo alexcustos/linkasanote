@@ -43,7 +43,6 @@ public class AddEditAccountActivity extends AppCompatActivity implements
 
     private AccountAuthenticatorResponse accountAuthenticatorResponse = null;
     private ActivityAddEditAccountBinding binding;
-    private Bundle currentViewModelSate;
 
     @Inject
     NextcloudPresenter presenter;
@@ -104,18 +103,18 @@ public class AddEditAccountActivity extends AppCompatActivity implements
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestGetAccountsPermission();
             } else {
-                disableActivity();
+                presenter.disableLayout();
                 exitWithNotEnoughPermissionsError();
             }
         } else if (!accountCanBeProcessed()) {
-            disableActivity();
+            presenter.disableLayout();
             exitWithUnsupportedMultipleAccountsError();
         }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void requestGetAccountsPermission() {
-        disableActivity();
+        presenter.disableLayout();
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, PERMISSION_GET_ACCOUNTS)) {
             Snackbar.make(binding.contentFrame,
                     R.string.add_edit_account_permission_get_accounts,
@@ -134,7 +133,7 @@ public class AddEditAccountActivity extends AppCompatActivity implements
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_PERMISSION_GET_ACCOUNTS) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (accountCanBeProcessed()) enableActivity();
+                if (accountCanBeProcessed()) presenter.enableLayout();
                 else exitWithUnsupportedMultipleAccountsError();
             } else {
                 exitWithNotEnoughPermissionsError();
@@ -149,21 +148,6 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         return !presenter.isNewAccount() // edit
                 || (accounts != null && accounts.length <= 0) // first
                 || Settings.GLOBAL_MULTIACCOUNT_SUPPORT;
-    }
-
-    private void disableActivity() {
-        if (currentViewModelSate == null) {
-            currentViewModelSate = presenter.getInstanceState();
-        }
-        ActivityUtils.disableViewGroupControls(binding.contentFrame);
-    }
-
-    private void enableActivity() {
-        ActivityUtils.enableViewGroupControls(binding.contentFrame);
-        if (currentViewModelSate != null) {
-            presenter.applyInstanceState(currentViewModelSate); // notifyChange here
-            currentViewModelSate = null;
-        }
     }
 
     private void exitWithNotEnoughPermissionsError() {

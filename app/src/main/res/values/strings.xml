@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">LaaNo</string>
     <string name="placeholder_title">placeholder</string>
     <string name="placeholder_text">This is a placeholder</string>
     <string name="error_database">Cannot access the database, please reinstall the application</string>
@@ -52,8 +53,8 @@
     <string name="pref_summary_links_expanding">Show all Link\'s Notes when the app is opened</string>
     <string name="pref_title_notes_expanding">Expand Notes</string>
     <string name="pref_summary_notes_expanding">Show the whole card for all Notes when the app is opened</string>
-    <string name="pref_title_backup">Backup</string>
-    <string name="pref_title_restore">Restore</string>
+    <string name="pref_title_backup">Backup database</string>
+    <string name="pref_title_restore">Restore database</string>
     <string name="pref_category_synchronization">Synchronization</string>
     <string name="pref_title_sync_directory">Directory name on the Cloud storage</string>
     <string name="pref_title_sync_interval">Sync interval</string>
@@ -194,11 +195,11 @@
     <string name="about_app_version">Version %s</string>
     <string name="about_fragment_error_license">Could not read the license file: %s</string>
 
-    <string name="about_license_info_version">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>
-    <string name="about_info_warranty">This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</string>
-    <string name="about_notices_license_apache_v2">Licensed under the Apache License, Version 2.0. You may not use this program except in compliance with the License.</string>
-    <string name="about_notices_license_mit">Licensed under the MIT License. You may not use this program except in compliance with the License.</string>
-    <string name="about_app_copyright">Copyright © %1$s %2$s</string>
+    <string name="about_license_info_version" translatable="false">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>
+    <string name="about_info_warranty" translatable="false">This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</string>
+    <string name="about_notices_license_apache_v2" translatable="false">Licensed under the Apache License, Version 2.0. You may not use this program except in compliance with the License.</string>
+    <string name="about_notices_license_mit" translatable="false">Licensed under the MIT License. You may not use this program except in compliance with the License.</string>
+    <string name="about_app_copyright" translatable="false">Copyright © %1$s %2$s</string>
 
     <string name="actionbar_title_new_link">New Link</string>
     <string name="actionbar_title_edit_link">Edit Link</string>

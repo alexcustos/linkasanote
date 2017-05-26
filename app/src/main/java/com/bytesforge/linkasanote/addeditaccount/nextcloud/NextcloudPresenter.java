@@ -4,7 +4,6 @@ import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.net.Uri;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Patterns;
@@ -156,17 +155,13 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
     }
 
     @Override
-    public Bundle getInstanceState() {
-        Bundle state = new Bundle();
-        viewModel.saveInstanceState(state);
-
-        return state;
+    public void enableLayout() {
+        viewModel.enableLayout();
     }
 
     @Override
-    public void applyInstanceState(Bundle state) {
-        if (state == null) return;
-        viewModel.applyInstanceState(state);
+    public void disableLayout() {
+        viewModel.disableLayout();
     }
 
     @Override

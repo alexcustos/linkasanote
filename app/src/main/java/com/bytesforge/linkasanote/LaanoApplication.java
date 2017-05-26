@@ -2,6 +2,7 @@ package com.bytesforge.linkasanote;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.StrictMode;
 import android.support.annotation.VisibleForTesting;
 import android.support.multidex.MultiDexApplication;
 import android.support.v7.app.AppCompatDelegate;
@@ -14,7 +15,9 @@ import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
 
 import java.lang.ref.WeakReference;
 
-public class LaanoApplication extends MultiDexApplication { // Application {
+public class LaanoApplication extends MultiDexApplication {
+
+    private static final boolean STRICT_MODE = true;
 
     static {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
@@ -38,6 +41,21 @@ public class LaanoApplication extends MultiDexApplication { // Application {
                 .providerModule(new ProviderModule())
                 .schedulerProviderModule(new SchedulerProviderModule())
                 .build();
+
+        if (BuildConfig.DEBUG && STRICT_MODE) {
+            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .penaltyFlashScreen()
+                    .build());
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                    .detectLeakedSqlLiteObjects()
+                    .detectLeakedClosableObjects()
+                    .detectLeakedRegistrationObjects()
+                    .penaltyLog()
+                    //.penaltyDeath() // NOTE: it wants contentProvider's databaseHelper closed
+                    .build());
+        }
     }
 
     public ApplicationComponent getApplicationComponent() {

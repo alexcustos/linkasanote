@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="pref_sync_interval_seconds">
+    <string-array name="pref_sync_interval_seconds" translatable="false">
         <item>@string/pref_sync_interval_manual_mode</item>
         <item>900</item>
         <item>3600</item>
         <item>10800</item>
         <item>86400</item>
     </string-array>
-    <string-array name="pref_sync_interval_names">
+    <string-array name="pref_sync_interval_names" translatable="false">
         <item>@string/pref_sync_interval_manual</item>
         <item>@string/pref_sync_interval_15m</item>
         <item>@string/pref_sync_interval_hour</item>

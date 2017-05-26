@@ -158,9 +158,9 @@ public class LinksViewModel extends BaseItemViewModel implements LinksContract.V
         return ContextCompat.getColor(context, android.R.color.transparent);
     }
 
-    public int getFilterBackground(@NonNull String linkId, boolean conflicted, String filterId) {
+    public int getFilterBackground(@NonNull String linkId, String filterId) {
         checkNotNull(linkId);
-        if (!conflicted && !isActionMode() && linkId.equals(filterId)) {
+        if (!isActionMode() && linkId.equals(filterId)) {
             return ContextCompat.getColor(context, R.color.item_filter);
         }
         return ContextCompat.getColor(context, android.R.color.transparent);

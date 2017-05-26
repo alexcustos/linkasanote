@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">LaaNo</string>
     <string name="placeholder_title">placeholder</string>
     <string name="placeholder_text">This is a placeholder</string>
     <string name="error_database">Ошибка доступа к базе данных, пожалуйста, переустановите приложение</string>
@@ -52,8 +53,8 @@
     <string name="pref_summary_links_expanding">Показывать все заметки ссылок при открытии приложения</string>
     <string name="pref_title_notes_expanding">Раскрывать заметки</string>
     <string name="pref_summary_notes_expanding">Показывать полные карточки заметок при открытии приложения</string>
-    <string name="pref_title_backup">Создать резервную копию</string>
-    <string name="pref_title_restore">Восстановить резервную копию</string>
+    <string name="pref_title_backup">Создать резервную копию базы данных</string>
+    <string name="pref_title_restore">Восстановить резервную копию базы данных</string>
     <string name="pref_category_synchronization">Синхронизация</string>
     <string name="pref_title_sync_directory">Имя директории в облачном хранилище</string>
     <string name="pref_title_sync_interval">Интервал синхронизации</string>
@@ -187,18 +188,12 @@
     <string name="settings_fragment_snackbar_interval_error">Возникла неизвестная ошибка, установлен ручной режим</string>
     <string name="settings_fragment_snackbar_normalized">Введённые данные были нормализованы, проверьте установленное значение</string>
     <string name="settings_fragment_sync_interval_not_available">Не доступно</string>
-    <string name="settings_fragment_restore_not_available">Резервных копий пока нет, либо не достаточно прав для проверки. Сделайте сначала резервную копию</string>
+    <string name="settings_fragment_restore_not_available">Резервных копий пока нет, либо не достаточно прав для проверки. Сначала создайте резервную копию</string>
     <string name="about_button_license_terms">условия лицензии</string>
     <string name="about_notices_title">Уведомления</string>
     <string name="about_button_launch_google_play">Оценить это приложение</string>
     <string name="about_app_version">Версия %s</string>
     <string name="about_fragment_error_license">Ошибка чтения файла лицензии: %s</string>
-
-    <string name="about_license_info_version">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>
-    <string name="about_info_warranty">This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</string>
-    <string name="about_notices_license_apache_v2">Licensed under the Apache License, Version 2.0. You may not use this program except in compliance with the License.</string>
-    <string name="about_notices_license_mit">Licensed under the MIT License. You may not use this program except in compliance with the License.</string>
-    <string name="about_app_copyright">Copyright © %1$s %2$s</string>
 
     <string name="actionbar_title_new_link">Создать ссылку</string>
     <string name="actionbar_title_edit_link">Изменить ссылку</string>

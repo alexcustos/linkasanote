@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
 
 public class UploadFileOperation extends RemoteOperation {
 
@@ -82,8 +83,9 @@ public class UploadFileOperation extends RemoteOperation {
         private String fileId;
         private String eTag;
 
-        public EnhancedUploadRemoteFileOperation(String localPath, String remotePath, String mimeType) {
-            super(localPath, remotePath, mimeType);
+        public EnhancedUploadRemoteFileOperation(
+                String localPath, String remotePath, String mimeType) {
+            super(localPath, remotePath, mimeType, Long.toString(currentTimeMillis()));
         }
 
         @Nullable
@@ -139,5 +141,5 @@ public class UploadFileOperation extends RemoteOperation {
             }
             return nextcloudHeaders.size() <= 0 ? null : nextcloudHeaders;
         }
-    } // class
+    }
 }

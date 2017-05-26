@@ -211,12 +211,10 @@ public class Provider extends ContentProvider {
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown query uri [" + uri + "]");
-
         }
         Cursor returnCursor = db.query(
                 tableName, projection, selection, selectionArgs, null, null, sortOrder);
         returnCursor.setNotificationUri(contentResolver, uri);
-
         return returnCursor;
     }
 
@@ -302,7 +300,6 @@ public class Provider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown insert uri [" + uri + "]");
         }
         contentResolver.notifyChange(uri, null);
-
         return returnUri;
     }
 
@@ -436,7 +433,6 @@ public class Provider extends ContentProvider {
         refValues.put(leftTable + BaseEntry._ID, leftId);
         refValues.put(tagTable + BaseEntry._ID, tagId);
         insertEntry(db, refTable, refValues); // NOTE: it's refTable rowId can be ignored
-
         return tagId;
     }
 
@@ -444,7 +440,6 @@ public class Provider extends ContentProvider {
             @NonNull final SQLiteDatabase db, final String tableName,
             final String idField, final ContentValues values) {
         checkNotNull(db);
-
         String idValue = values.getAsString(idField);
         long rowId = updateEntry(db, tableName, idField, idValue, values);
         if (rowId <= 0) {
@@ -460,7 +455,6 @@ public class Provider extends ContentProvider {
             @NonNull final SQLiteDatabase db,
             final String tableName, final ContentValues values) {
         checkNotNull(db);
-
         long rowId = db.insertOrThrow(tableName, null, values); // SQLiteConstraintException
         if (rowId <= 0) {
             throw new SQLException(String.format(
@@ -478,7 +472,6 @@ public class Provider extends ContentProvider {
             @NonNull final SQLiteDatabase db, final String tableName,
             final String idField, final String idValue, final ContentValues values) {
         checkNotNull(db);
-
         // NOTE: return value
         long rowId = queryRowId(db, tableName, idField, idValue);
         if (rowId <= 0) return 0;
@@ -496,13 +489,11 @@ public class Provider extends ContentProvider {
     private int deleteTagReferences(
             @NonNull final SQLiteDatabase db, final String leftTable, final long leftId) {
         checkNotNull(db);
-
         final String tagTable = LocalContract.TagEntry.TABLE_NAME;
         final String refTable = leftTable + "_" + tagTable;
 
         final String selection = leftTable + BaseEntry._ID + " = ?";
         final String[] selectionArgs = new String[]{Long.toString(leftId)};
-
         return db.delete(refTable, selection, selectionArgs);
     }
 
@@ -515,23 +506,22 @@ public class Provider extends ContentProvider {
 
         final String selection = idField + " = ?";
         final String[] selectionArgs = new String[]{idValue};
-        Cursor exists = db.query(
+        try (Cursor exists = db.query(
                 tableName, new String[]{BaseEntry._ID},
-                selection, selectionArgs, null, null, null);
-        long rowId = 0;
-        if (exists.moveToLast()) {
-            int rowIdIndex = exists.getColumnIndexOrThrow(BaseEntry._ID);
-            rowId = exists.getLong(rowIdIndex);
+                selection, selectionArgs, null, null, null)) {
+            long rowId = 0;
+            if (exists.moveToLast()) {
+                int rowIdIndex = exists.getColumnIndexOrThrow(BaseEntry._ID);
+                rowId = exists.getLong(rowIdIndex);
+            }
+            return rowId;
         }
-        exists.close();
-        return rowId;
     }
 
     private static String sqlJoinManyToManyWithTags(final String leftTable) {
         final String tagTable = LocalContract.TagEntry.TABLE_NAME;
         final String TAG_ID = tagTable + BaseEntry._ID;
         final String refTable = leftTable + "_" + tagTable;
-
         return refTable + " LEFT OUTER JOIN " + tagTable +
                 " ON " + refTable + "." + TAG_ID + "=" + tagTable + "." + BaseEntry._ID;
     }
@@ -540,13 +530,5 @@ public class Provider extends ContentProvider {
         final String tagTable = LocalContract.TagEntry.TABLE_NAME;
         final String refTable = leftTable + "_" + tagTable;
         return refTable + "." + BaseEntry.COLUMN_NAME_CREATED + " ASC";
-    }
-
-    public static Cursor rawQuery(
-            @NonNull Context context, @NonNull String table, @NonNull String[] columns,
-            @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String orderBy) {
-        DatabaseHelper databaseHelper = new DatabaseHelper(context);
-        SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        return db.query(table, columns, selection, selectionArgs, null, null, orderBy);
     }
 }

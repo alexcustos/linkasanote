@@ -38,10 +38,9 @@ public class RepositoryModule {
     @Provides
     @Singleton
     public LocalLinks<Link> provideLocalLinks(
-            Context context, ContentResolver contentResolver,
-            LocalTags localTags, LocalNotes<Note> localNotes) {
+            ContentResolver contentResolver, LocalTags localTags, LocalNotes<Note> localNotes) {
         LinkFactory<Link> linkFactory = Link.getFactory();
-        return new LocalLinks<>(context, contentResolver, localTags, localNotes, linkFactory);
+        return new LocalLinks<>(contentResolver, localTags, localNotes, linkFactory);
     }
 
     @Provides
@@ -56,9 +55,9 @@ public class RepositoryModule {
     @Provides
     @Singleton
     public LocalFavorites<Favorite> provideLocalFavorites(
-            Context context, ContentResolver contentResolver, LocalTags localTags) {
+            ContentResolver contentResolver, LocalTags localTags) {
         FavoriteFactory<Favorite> favoriteFactory = Favorite.getFactory();
-        return new LocalFavorites<>(context, contentResolver, localTags, favoriteFactory);
+        return new LocalFavorites<>(contentResolver, localTags, favoriteFactory);
     }
 
     @Provides
@@ -73,7 +72,7 @@ public class RepositoryModule {
     @Provides
     @Singleton
     public LocalNotes<Note> provideLocalNotes(
-            Context context, ContentResolver contentResolver, LocalTags localTags) {
+            ContentResolver contentResolver, LocalTags localTags) {
         NoteFactory<Note> noteFactory = Note.getFactory();
         return new LocalNotes<>(contentResolver, localTags, noteFactory);
     }

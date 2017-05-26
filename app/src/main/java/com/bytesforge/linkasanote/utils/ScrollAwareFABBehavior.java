@@ -44,5 +44,5 @@ public class ScrollAwareFABBehavior extends FloatingActionButton.Behavior {
         } else if (dy < 0 && !child.isShown()) {
             child.show();
         }
-    } // onNestedScroll
+    }
 }

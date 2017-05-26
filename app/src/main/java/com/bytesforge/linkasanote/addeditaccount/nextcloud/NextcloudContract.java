@@ -52,6 +52,8 @@ public interface NextcloudContract {
         void hideRefreshButton();
         void enableLoginButton();
         void disableLoginButton();
+        void enableLayout();
+        void disableLayout();
         void checkLoginButton();
 
         void showEmptyUrlWarning();
@@ -72,8 +74,8 @@ public interface NextcloudContract {
         boolean isNewAccount();
         void populateAccount();
 
-        Bundle getInstanceState();
-        void applyInstanceState(@Nullable Bundle state);
+        void enableLayout();
+        void disableLayout();
 
         String normalizeUrl(String url);
         void checkUrl(String url);

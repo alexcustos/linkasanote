@@ -18,6 +18,7 @@
 
     <application
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -43,7 +44,8 @@
         </activity>
 
         <activity android:name=".addeditaccount.AddEditAccountActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
         </activity>
         <activity android:name=".manageaccounts.ManageAccountsActivity" />
         <activity android:name=".laano.favorites.addeditfavorite.AddEditFavoriteActivity" />
@@ -56,6 +58,7 @@
             android:name=".data.source.Provider"
             android:exported="false" />
 
+        <!-- android:permission="android.permission.ACCOUNT_MANAGER" -->
         <service android:name=".addeditaccount.AuthenticatorService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
@@ -66,7 +69,9 @@
         </service>
 
         <!-- android:process=":sync" -->
-        <service android:name=".sync.SyncService">
+        <service android:name=".sync.SyncService"
+            android:exported="true">
+
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
@@ -77,5 +82,4 @@
         <service android:name=".sync.operations.OperationsService" />
         <service android:name=".laano.ClipboardService" />
     </application>
-
 </manifest>
