@@ -99,7 +99,7 @@ public class AddEditLinkPresenterTest {
                 .thenReturn(Observable.just(DataSource.ItemState.DEFERRED));
 
         presenter.saveLink(linkLink, linkName, linkDisabled, linkTags);
-        verify(repository).refreshLinks();
+        verify(repository, never()).refreshLinks();
         verify(view).finishActivity(any(String.class));
     }
 
@@ -123,7 +123,7 @@ public class AddEditLinkPresenterTest {
         AddEditLinkPresenter presenter = new AddEditLinkPresenter(
                 repository, view, viewModel, schedulerProvider, settings, linkId);
         presenter.saveLink(linkLink, linkName, linkDisabled, linkTags);
-        verify(repository).refreshLinks();
+        verify(repository, never()).refreshLinks();
         verify(view).finishActivity(eq(linkId));
     }
 

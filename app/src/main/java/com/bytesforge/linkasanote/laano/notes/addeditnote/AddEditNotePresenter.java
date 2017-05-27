@@ -185,7 +185,6 @@ public final class AddEditNotePresenter implements
                 .subscribe(itemState -> {
                     switch (itemState) {
                         case DEFERRED:
-                            repository.refreshNotes();
                             if (linkId != null) {
                                 repository.refreshLink(linkId);
                             }

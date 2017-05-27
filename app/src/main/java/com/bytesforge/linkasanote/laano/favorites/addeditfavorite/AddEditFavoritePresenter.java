@@ -148,7 +148,6 @@ public final class AddEditFavoritePresenter implements
                 .subscribe(itemState -> {
                     switch (itemState) {
                         case DEFERRED:
-                            repository.refreshFavorites();
                             view.finishActivity(favoriteId);
                             break;
                     }

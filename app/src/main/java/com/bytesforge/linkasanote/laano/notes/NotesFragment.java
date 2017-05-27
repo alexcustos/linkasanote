@@ -17,6 +17,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -257,7 +258,6 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         switch (requestCode) {
             case REQUEST_ADD_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
-                    presenter.loadNotes(false);
                     //viewModel.showSaveSuccessSnackbar();
                     String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
                     String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
@@ -266,7 +266,6 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                 break;
             case REQUEST_EDIT_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
-                    presenter.loadNotes(false);
                     //viewModel.showSaveSuccessSnackbar();
                     String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
                     String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
@@ -299,6 +298,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                 rvNotes.getContext(), rvLayoutManager.getOrientation());
         boolean readingMode = presenter.isNotesLayoutModeReading();
         updateNotesAdapter(readingMode);
+        ((SimpleItemAnimator) rvNotes.getItemAnimator()).setSupportsChangeAnimations(false);
     }
 
     private void updateNotesAdapter(final boolean readingMode) {

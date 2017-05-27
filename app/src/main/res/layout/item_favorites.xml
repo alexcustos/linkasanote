@@ -136,6 +136,7 @@
             android:layout_marginBottom="@dimen/recycler_view_tags_margin_bottom"
             android:layout_marginStart="@dimen/recycler_view_text_margin_horizontal"
             android:layout_marginEnd="@dimen/recycler_view_text_margin_horizontal"
-            android:text="@{favorite.tags}" />
+            android:text="@{favorite.tags}"
+            android:lineSpacingExtra="@dimen/tags_line_spacing_extra" />
     </LinearLayout>
 </layout>

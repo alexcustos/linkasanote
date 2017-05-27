@@ -96,7 +96,7 @@ public class AddEditNotePresenterTest {
                 .thenReturn(Observable.just(DataSource.ItemState.DEFERRED));
 
         presenter.saveNote(noteNote, noteTags);
-        verify(repository).refreshNotes();
+        verify(repository, never()).refreshNotes();
         verify(view).finishActivity(any(String.class), eq(linkId));
     }
 
@@ -119,7 +119,7 @@ public class AddEditNotePresenterTest {
         AddEditNotePresenter presenter = new AddEditNotePresenter(
                 repository, view, viewModel, schedulerProvider, settings, noteId, linkId);
         presenter.saveNote(noteNote, noteTags);
-        verify(repository).refreshNotes();
+        verify(repository, never()).refreshNotes();
         verify(view).finishActivity(eq(noteId), eq(linkId));
     }
 

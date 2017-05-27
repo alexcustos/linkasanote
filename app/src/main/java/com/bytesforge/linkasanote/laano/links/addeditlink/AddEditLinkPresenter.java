@@ -150,7 +150,6 @@ public final class AddEditLinkPresenter implements
                 .subscribe(itemState -> {
                     switch (itemState) {
                         case DEFERRED:
-                            repository.refreshLinks();
                             view.finishActivity(linkId);
                             break;
                     }

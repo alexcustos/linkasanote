@@ -155,6 +155,7 @@
                 android:layout_marginStart="@dimen/card_text_margin_horizontal"
                 android:layout_marginEnd="@dimen/card_text_margin_horizontal"
                 android:text="@{link.tags}"
+                android:lineSpacingExtra="@dimen/tags_line_spacing_extra"
                 android:visibility="@{link.tags == null ? View.GONE : View.VISIBLE}" />
 
             <!-- Footer chain -->

@@ -88,7 +88,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/add_edit_link_tags_hint"
-                        android:inputType="text|textNoSuggestions|textMultiLine" />
+                        android:inputType="text|textNoSuggestions|textMultiLine"
+                        android:lineSpacingExtra="@dimen/tags_line_spacing_extra" />
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.v7.widget.AppCompatButton

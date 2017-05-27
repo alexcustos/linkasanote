@@ -154,6 +154,7 @@
                 android:layout_marginStart="@dimen/card_text_margin_horizontal"
                 android:layout_marginEnd="@dimen/card_text_margin_horizontal"
                 android:text="@{note.tags}"
+                android:lineSpacingExtra="@dimen/tags_line_spacing_extra"
                 android:visibility="@{note.tags == null ? View.GONE : View.VISIBLE}" />
 
             <Space

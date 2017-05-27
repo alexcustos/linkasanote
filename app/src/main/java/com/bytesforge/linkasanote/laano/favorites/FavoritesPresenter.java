@@ -105,6 +105,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     }
 
     private void loadFavorites(boolean forceUpdate, final boolean showLoading) {
+        Log.d(TAG, "loadFavorites() [" + forceUpdate + "]");
         compositeDisposable.clear();
         if (forceUpdate) {
             repository.refreshFavorites();

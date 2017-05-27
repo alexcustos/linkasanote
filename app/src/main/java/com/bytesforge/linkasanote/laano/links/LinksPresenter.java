@@ -114,6 +114,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
     }
 
     private void loadLinks(boolean forceUpdate, final boolean showLoading) {
+        Log.d(TAG, "loadLinks() [" + forceUpdate + "]");
         compositeDisposable.clear();
         if (forceUpdate) {
             repository.refreshLinks();

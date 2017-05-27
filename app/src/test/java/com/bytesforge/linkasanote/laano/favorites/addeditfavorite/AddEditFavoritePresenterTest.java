@@ -97,7 +97,7 @@ public class AddEditFavoritePresenterTest {
                 .thenReturn(Observable.just(DataSource.ItemState.DEFERRED));
 
         presenter.saveFavorite(favoriteName, favoriteTags);
-        verify(repository).refreshFavorites();
+        verify(repository, never()).refreshFavorites();
         verify(view).finishActivity(any(String.class));
     }
 
@@ -120,7 +120,7 @@ public class AddEditFavoritePresenterTest {
         AddEditFavoritePresenter presenter = new AddEditFavoritePresenter(
                 repository, view, viewModel, schedulerProvider, settings, favoriteId);
         presenter.saveFavorite(favoriteName, favoriteTags);
-        verify(repository).refreshFavorites();
+        verify(repository, never()).refreshFavorites();
         verify(view).finishActivity(eq(favoriteId));
     }
 

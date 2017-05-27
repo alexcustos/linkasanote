@@ -54,6 +54,7 @@
                         android:layout_height="wrap_content"
                         android:hint="@string/add_edit_favorite_tags_hint"
                         android:inputType="text|textNoSuggestions|textMultiLine"
+                        android:lineSpacingExtra="@dimen/tags_line_spacing_extra"
                         android:afterTextChanged="@{() -> viewModel.afterTagsChanged()}" />
                 </android.support.design.widget.TextInputLayout>
 

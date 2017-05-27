@@ -111,6 +111,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
     }
 
     private void loadNotes(boolean forceUpdate, final boolean showLoading) {
+        Log.d(TAG, "loadNotes() [" + forceUpdate + "]");
         compositeDisposable.clear();
         if (forceUpdate) {
             repository.refreshNotes();
