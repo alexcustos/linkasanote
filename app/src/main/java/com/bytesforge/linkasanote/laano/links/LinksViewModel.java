@@ -24,7 +24,7 @@ public class LinksViewModel extends BaseItemViewModel implements LinksContract.V
 
     private static final String TAG = LinksViewModel.class.getSimpleName();
 
-    public static final String FILTER_PREFIX = "#";
+    public static final String FILTER_PREFIX = "@";
 
     private static final String STATE_EXPAND_BY_DEFAULT = "EXPAND_BY_DEFAULT";
     private static final String STATE_TOGGLED_IDS = "TOGGLED_IDS";

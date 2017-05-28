@@ -69,8 +69,7 @@ public class FavoritesPresenterTest {
         PowerMockito.mockStatic(Log.class);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
         when(view.isActive()).thenReturn(true);
-        when(settings.getFilterType(FavoritesPresenter.SETTING_FAVORITES_FILTER_TYPE))
-                .thenReturn(FilterType.ALL);
+        when(settings.getFavoritesFilterType()).thenReturn(FilterType.ALL);
         presenter = new FavoritesPresenter(
                 repository, view, viewModel, schedulerProvider, laanoUiManager, settings);
     }

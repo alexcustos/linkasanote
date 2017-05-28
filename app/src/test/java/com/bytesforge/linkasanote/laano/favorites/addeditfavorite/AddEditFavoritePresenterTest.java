@@ -92,26 +92,31 @@ public class AddEditFavoritePresenterTest {
     @Test
     public void saveNewFavoriteToRepository_finishesActivity() {
         String favoriteName = defaultFavorite.getName();
+        boolean favoriteAndGate = defaultFavorite.isAndGate();
         List<Tag> favoriteTags = defaultFavorite.getTags();
         when(repository.saveFavorite(any(Favorite.class), eq(false)))
                 .thenReturn(Observable.just(DataSource.ItemState.DEFERRED));
 
-        presenter.saveFavorite(favoriteName, favoriteTags);
+        presenter.saveFavorite(favoriteName, favoriteAndGate, favoriteTags);
         verify(repository, never()).refreshFavorites();
         verify(view).finishActivity(any(String.class));
     }
 
     @Test
     public void saveEmptyFavorite_showsEmptyError() {
-        presenter.saveFavorite(defaultFavorite.getName(), new ArrayList<>());
-        presenter.saveFavorite("", new ArrayList<>());
-        presenter.saveFavorite("", defaultFavorite.getTags());
-        verify(viewModel, times(3)).showEmptyFavoriteSnackbar();
+        presenter.saveFavorite(defaultFavorite.getName(), false, new ArrayList<>());
+        presenter.saveFavorite(defaultFavorite.getName(), true, new ArrayList<>());
+        presenter.saveFavorite("", false, new ArrayList<>());
+        presenter.saveFavorite("", true, new ArrayList<>());
+        presenter.saveFavorite("", false, defaultFavorite.getTags());
+        presenter.saveFavorite("", true, defaultFavorite.getTags());
+        verify(viewModel, times(6)).showEmptyFavoriteSnackbar();
     }
 
     @Test
     public void saveExistingFavorite_finishesActivity() {
         String favoriteId = defaultFavorite.getId();
+        boolean favoriteAndGate = defaultFavorite.isAndGate();
         String favoriteName = defaultFavorite.getName();
         List<Tag> favoriteTags = defaultFavorite.getTags();
         when(repository.saveFavorite(any(Favorite.class), eq(false)))
@@ -119,7 +124,7 @@ public class AddEditFavoritePresenterTest {
         // Edit Favorite Presenter
         AddEditFavoritePresenter presenter = new AddEditFavoritePresenter(
                 repository, view, viewModel, schedulerProvider, settings, favoriteId);
-        presenter.saveFavorite(favoriteName, favoriteTags);
+        presenter.saveFavorite(favoriteName, favoriteAndGate, favoriteTags);
         verify(repository, never()).refreshFavorites();
         verify(view).finishActivity(eq(favoriteId));
     }
@@ -127,12 +132,13 @@ public class AddEditFavoritePresenterTest {
     @Test
     public void saveFavoriteWithExistedName_showsDuplicateError() {
         String favoriteId = defaultFavorite.getId();
+        boolean favoriteAndGate = defaultFavorite.isAndGate();
         String favoriteName = defaultFavorite.getName();
         List<Tag> favoriteTags = defaultFavorite.getTags();
         when(repository.saveFavorite(any(Favorite.class), eq(false)))
                 .thenReturn(Observable.error(new SQLiteConstraintException()));
 
-        presenter.saveFavorite(favoriteName, favoriteTags);
+        presenter.saveFavorite(favoriteName, favoriteAndGate, favoriteTags);
         verify(view, never()).finishActivity(eq(favoriteId));
         verify(viewModel).showDuplicateKeyError();
     }

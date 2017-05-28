@@ -122,7 +122,7 @@ public class SyncAdapterTest {
     @Test
     public void newLocalFavorite_goesToUploadThenChangesStateToSynced() {
         Favorite favorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS);
         assertNotNull(favorite);
         String favoriteId = favorite.getId();
 
@@ -153,7 +153,7 @@ public class SyncAdapterTest {
     @Test
     public void newCloudFavorite_goesToLocalWithSyncedState() {
         Favorite favorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS);
         assertNotNull(favorite);
         String favoriteId = favorite.getId();
         SyncState state = new SyncState(E_TAGC, SyncState.State.SYNCED);
@@ -178,12 +178,12 @@ public class SyncAdapterTest {
     public void localUnsyncedFavorite_ifEqualUpdateLocalETag() {
         SyncState localState = new SyncState(E_TAGL, SyncState.State.UNSYNCED);
         Favorite localFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS, localState);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS, localState);
         assertNotNull(localFavorite);
         String favoriteId = localFavorite.getId();
         SyncState cloudState = new SyncState(E_TAGC, SyncState.State.SYNCED); // default
         Favorite cloudFavorite = new Favorite(
-                favoriteId, "Favorite", TestUtils.TAGS, cloudState);
+                favoriteId, "Favorite", false, TestUtils.TAGS, cloudState);
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
@@ -206,12 +206,12 @@ public class SyncAdapterTest {
     public void localDeletedFavoriteAgainstUpdatedCloud_ifEqualDeleteCloudAndLocal() {
         SyncState localState = new SyncState(E_TAGL, SyncState.State.DELETED);
         Favorite localFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS, localState);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS, localState);
         assertNotNull(localFavorite);
         String favoriteId = localFavorite.getId();
         SyncState cloudState = new SyncState(E_TAGC, SyncState.State.SYNCED); // default
         Favorite cloudFavorite = new Favorite(
-                favoriteId, "Favorite", TestUtils.TAGS, cloudState);
+                favoriteId, "Favorite", false, TestUtils.TAGS, cloudState);
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
@@ -235,12 +235,12 @@ public class SyncAdapterTest {
     public void localUnsyncedFavorite_ifNotEqualLocalGoesToConflictedState() {
         SyncState localState = new SyncState(E_TAGL, SyncState.State.UNSYNCED);
         Favorite localFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS, localState);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS, localState);
         assertNotNull(localFavorite);
         String favoriteId = localFavorite.getId();
         SyncState cloudState = new SyncState(E_TAGC, SyncState.State.SYNCED); // default
         Favorite cloudFavorite = new Favorite(
-                favoriteId, "Favorite #2", TestUtils.TAGS, cloudState);
+                favoriteId, "Favorite #2", false, TestUtils.TAGS, cloudState);
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
@@ -262,12 +262,12 @@ public class SyncAdapterTest {
     public void cloudFavoriteUpdatedWhenLocalSynced_downloadCloudAndUpdateLocal() {
         SyncState localState = new SyncState(E_TAGL, SyncState.State.SYNCED);
         Favorite localFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS, localState);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS, localState);
         assertNotNull(localFavorite);
         String favoriteId = localFavorite.getId();
         SyncState cloudState = new SyncState(E_TAGC, SyncState.State.SYNCED); // default
         Favorite cloudFavorite = new Favorite(
-                favoriteId, "Favorite #2", TestUtils.TAGS, cloudState);
+                favoriteId, "Favorite #2", false, TestUtils.TAGS, cloudState);
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
@@ -286,7 +286,7 @@ public class SyncAdapterTest {
     public void localNeverSyncedFavorite_deleteLocalOnly() {
         SyncState localState = new SyncState(SyncState.State.DELETED);
         Favorite localFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS, localState);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS, localState);
         assertNotNull(localFavorite);
         String favoriteId = localFavorite.getId();
 
@@ -305,12 +305,12 @@ public class SyncAdapterTest {
     public void localDeletedFavoriteWithCloudETag_deleteCloudAndLocal() {
         SyncState localState = new SyncState(E_TAGL, SyncState.State.DELETED);
         Favorite localFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS, localState);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS, localState);
         assertNotNull(localFavorite);
         String favoriteId = localFavorite.getId();
         SyncState cloudState = new SyncState(E_TAGL, SyncState.State.SYNCED); // default
         Favorite cloudFavorite = new Favorite(
-                favoriteId, "Favorite", TestUtils.TAGS, cloudState);
+                favoriteId, "Favorite", false, TestUtils.TAGS, cloudState);
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));
@@ -331,7 +331,7 @@ public class SyncAdapterTest {
     public void cloudDeletedFavoriteAgainstLocalSynced_deleteLocal() {
         SyncState localState = new SyncState(E_TAGL, SyncState.State.SYNCED);
         Favorite localFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS, localState);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS, localState);
         assertNotNull(localFavorite);
         String favoriteId = localFavorite.getId();
 
@@ -350,7 +350,7 @@ public class SyncAdapterTest {
     public void cloudDeletedFavoriteAgainstLocalUnsynced_localGoesToConflictedState() {
         SyncState localState = new SyncState(E_TAGL, SyncState.State.UNSYNCED);
         Favorite localFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS, localState);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS, localState);
         assertNotNull(localFavorite);
         String favoriteId = localFavorite.getId();
 
@@ -372,7 +372,7 @@ public class SyncAdapterTest {
     public void cloudDeletedFavoriteAgainstLocalDeleted_deleteLocal() {
         SyncState localState = new SyncState(E_TAGL, SyncState.State.DELETED);
         Favorite localFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite", TestUtils.TAGS, localState);
+                TestUtils.KEY_PREFIX + 'A', "Favorite", false, TestUtils.TAGS, localState);
         assertNotNull(localFavorite);
         String favoriteId = localFavorite.getId();
 
@@ -391,12 +391,12 @@ public class SyncAdapterTest {
     public void localUnsyncedFavoriteWithCloudETag_uploadIfNotDuplicated() {
         SyncState localState = new SyncState(E_TAGC, SyncState.State.UNSYNCED);
         Favorite localFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'A', "Favorite #2", TestUtils.TAGS, localState);
+                TestUtils.KEY_PREFIX + 'A', "Favorite #2", false, TestUtils.TAGS, localState);
         assertNotNull(localFavorite);
         String favoriteId = localFavorite.getId();
         SyncState cloudState = new SyncState(E_TAGC, SyncState.State.SYNCED); // default
         Favorite cloudFavorite = new Favorite(
-                favoriteId, "Favorite", TestUtils.TAGS, cloudState);
+                favoriteId, "Favorite", false, TestUtils.TAGS, cloudState);
 
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, singletonList(cloudFavorite));

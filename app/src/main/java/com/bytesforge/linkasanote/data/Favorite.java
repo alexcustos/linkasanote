@@ -40,6 +40,7 @@ public final class Favorite implements Comparable<Favorite>, Item {
     private static final String JSON_PROPERTY_CREATED = "created";
     private static final String JSON_PROPERTY_UPDATED = "updated";
     private static final String JSON_PROPERTY_NAME = "name";
+    private static final String JSON_PROPERTY_AND_GATE = "and_gate";
     private static final String JSON_PROPERTY_TAGS = "tags";
 
     @NonNull
@@ -51,43 +52,47 @@ public final class Favorite implements Comparable<Favorite>, Item {
     @Nullable
     private final String name;
 
+    private final boolean andGate;
+
     @Nullable
     private final List<Tag> tags;
 
     @NonNull
     private final SyncState state;
 
-    public Favorite(String name, List<Tag> tags) {
-        this(generateKey(), currentTimeMillis(), currentTimeMillis(), name, tags, new SyncState());
+    public Favorite(String name, boolean andGate, List<Tag> tags) {
+        this(generateKey(), currentTimeMillis(), currentTimeMillis(),
+                name, andGate, tags, new SyncState());
     }
 
-    public Favorite(String id, String name, List<Tag> tags) {
+    public Favorite(String id, String name, boolean andGate, List<Tag> tags) {
         // NOTE: updating syncState must not change update entry
-        this(id, 0, currentTimeMillis(), name, tags, new SyncState());
+        this(id, 0, currentTimeMillis(), name, andGate, tags, new SyncState());
     }
 
     @VisibleForTesting
-    public Favorite(String id, String name, List<Tag> tags, SyncState state) {
-        this(id, 0, currentTimeMillis(), name, tags, state);
+    public Favorite(String id, String name, boolean andGate, List<Tag> tags, SyncState state) {
+        this(id, 0, currentTimeMillis(), name, andGate, tags, state);
     }
 
     public Favorite(Favorite favorite, List<Tag> tags) {
         this(favorite.getId(), favorite.getCreated(), favorite.getUpdated(),
-                favorite.getName(), tags, favorite.getState());
+                favorite.getName(), favorite.isAndGate(), tags, favorite.getState());
     }
 
     public Favorite(Favorite favorite, @NonNull SyncState state) {
-        this(favorite.getId(), favorite.getCreated(), favorite.getUpdated(), favorite.getName(),
-                favorite.getTags(), state);
+        this(favorite.getId(), favorite.getCreated(), favorite.getUpdated(),
+                favorite.getName(), favorite.isAndGate(), favorite.getTags(), state);
     }
 
     public Favorite(
             @NonNull String id, long created, long updated, @Nullable String name,
-            @Nullable List<Tag> tags, @NonNull SyncState state) {
+            boolean andGate, @Nullable List<Tag> tags, @NonNull SyncState state) {
         this.id = checkNotNull(id);
         this.created = created;
         this.updated = updated;
         this.name = name;
+        this.andGate = andGate;
         this.tags = (tags == null || tags.isEmpty() ? null : tags);
         this.state = checkNotNull(state);
     }
@@ -103,8 +108,10 @@ public final class Favorite implements Comparable<Favorite>, Item {
                 LocalContract.FavoriteEntry.COLUMN_NAME_UPDATED));
         String name = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.FavoriteEntry.COLUMN_NAME_NAME));
+        boolean andGate = cursor.getInt(cursor.getColumnIndexOrThrow(
+                LocalContract.FavoriteEntry.COLUMN_NAME_AND_GATE)) == 1;
 
-        return new Favorite(id, created, updated, name, null, state);
+        return new Favorite(id, created, updated, name, andGate, null, state);
     }
 
     public static Favorite from(ContentValues values) {
@@ -114,8 +121,9 @@ public final class Favorite implements Comparable<Favorite>, Item {
         long created = values.getAsLong(LocalContract.FavoriteEntry.COLUMN_NAME_CREATED);
         long updated = values.getAsLong(LocalContract.FavoriteEntry.COLUMN_NAME_UPDATED);
         String name = values.getAsString(LocalContract.FavoriteEntry.COLUMN_NAME_NAME);
+        boolean andGate = values.getAsBoolean(LocalContract.FavoriteEntry.COLUMN_NAME_AND_GATE);
 
-        return new Favorite(id, created, updated, name, null, state);
+        return new Favorite(id, created, updated, name, andGate, null, state);
     }
 
     @Nullable
@@ -149,12 +157,13 @@ public final class Favorite implements Comparable<Favorite>, Item {
                 long created = jsonFavorite.getLong(JSON_PROPERTY_CREATED);
                 long updated = jsonFavorite.getLong(JSON_PROPERTY_UPDATED);
                 String name = jsonFavorite.getString(JSON_PROPERTY_NAME);
+                boolean andGate = jsonFavorite.getBoolean(JSON_PROPERTY_AND_GATE);
                 JSONArray jsonTags = jsonFavorite.getJSONArray(JSON_PROPERTY_TAGS);
                 List<Tag> tags = new ArrayList<>();
                 for (int i = 0; i < jsonTags.length(); i++) {
                     tags.add(Tag.from(jsonTags.getJSONObject(i)));
                 }
-                return new Favorite(id, created, updated, name, tags, state);
+                return new Favorite(id, created, updated, name, andGate, tags, state);
             } else {
                 return null;
             }
@@ -176,6 +185,7 @@ public final class Favorite implements Comparable<Favorite>, Item {
         }
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_UPDATED, getUpdated());
         values.put(LocalContract.FavoriteEntry.COLUMN_NAME_NAME, getName());
+        values.put(LocalContract.FavoriteEntry.COLUMN_NAME_AND_GATE, isAndGate());
 
         return values;
     }
@@ -239,6 +249,10 @@ public final class Favorite implements Comparable<Favorite>, Item {
         return name;
     }
 
+    public boolean isAndGate() {
+        return andGate;
+    }
+
     @Override
     public String getDuplicatedKey() {
         return getName();
@@ -272,6 +286,7 @@ public final class Favorite implements Comparable<Favorite>, Item {
             jsonFavorite.put(JSON_PROPERTY_CREATED, created);
             jsonFavorite.put(JSON_PROPERTY_UPDATED, updated);
             jsonFavorite.put(JSON_PROPERTY_NAME, name);
+            jsonFavorite.put(JSON_PROPERTY_AND_GATE, andGate);
             JSONArray jsonTags = new JSONArray();
             for (Tag tag : tags) {
                 jsonTags.put(tag.getJsonObject());
@@ -300,18 +315,18 @@ public final class Favorite implements Comparable<Favorite>, Item {
         Favorite favorite = (Favorite) obj;
         return Objects.equal(id, favorite.id)
                 && Objects.equal(name, favorite.name)
+                && Objects.equal(andGate, favorite.andGate)
                 && (tags == favorite.tags || (tags != null && tags.equals(favorite.tags)));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id, name, tags);
+        return Objects.hashCode(id, name, andGate, tags);
     }
 
     @Override
     public int compareTo(@NonNull Favorite obj) {
         checkNotNull(obj);
-
         String objName = obj.getName();
         if (this == obj) return 0;
         if (name == null && objName == null) return 0;

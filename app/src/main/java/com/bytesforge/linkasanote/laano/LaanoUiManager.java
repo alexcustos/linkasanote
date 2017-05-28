@@ -13,6 +13,9 @@ import android.view.Menu;
 import android.widget.Toast;
 
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.Link;
+import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
 import com.bytesforge.linkasanote.laano.links.LinksViewModel;
 import com.bytesforge.linkasanote.laano.notes.NotesViewModel;
@@ -24,6 +27,8 @@ import com.bytesforge.linkasanote.utils.CloudUtils;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LaanoUiManager {
+
+    private static final String TAG = LaanoUiManager.class.getSimpleName();
 
     private final LaanoActivity laanoActivity;
     private final Settings settings;
@@ -84,20 +89,7 @@ public class LaanoUiManager {
         syncTitles.put(position, title);
     }
 
-    public void setFilterType(int position, FilterType filterType) {
-        switch (filterType) {
-            case ALL:
-            case CONFLICTED:
-                setFilterType(position, filterType, null);
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        "This filter type must be set with the title [" + filterType.name() + "]");
-        }
-    }
-
-    public void setFilterType(
-            int position, @NonNull FilterType filterType, String filterTitle) {
+    public void setFilterType(int position, @NonNull FilterType filterType) {
         checkNotNull(filterType);
         String normalTitle;
         switch (filterType) {
@@ -108,22 +100,31 @@ public class LaanoUiManager {
                 normalTitle = resources.getString(R.string.filter_conflicted);
                 break;
             case LINK:
-                if (filterTitle == null) {
-                    throw new IllegalStateException("Link filter title must not be null or empty");
+                Link linkFilter = settings.getLinkFilter();
+                if (linkFilter == null) {
+                    throw new IllegalStateException("setFilterType(): Link filter must not be null");
                 }
-                normalTitle = LinksViewModel.FILTER_PREFIX + " " + filterTitle;
+                String linkTitle = linkFilter.getName() == null
+                        ? linkFilter.getLink()
+                        : linkFilter.getName();
+                normalTitle = LinksViewModel.FILTER_PREFIX + " " + linkTitle;
                 break;
             case FAVORITE:
-                if (filterTitle == null) {
-                    throw new IllegalStateException("Favorite filter title must not be null or empty");
+                Favorite favoriteFilter = settings.getFavoriteFilter();
+                if (favoriteFilter == null) {
+                    throw new IllegalStateException("setFilterType(): Favorite filter must not be null");
                 }
-                normalTitle = FavoritesViewModel.FILTER_PREFIX + " " + filterTitle;
+                String filterPrefix = favoriteFilter.isAndGate()
+                            ? FavoritesViewModel.FILTER_AND_GATE_PREFIX
+                            : FavoritesViewModel.FILTER_OR_GATE_PREFIX;
+                normalTitle = filterPrefix + " " + favoriteFilter.getName();
                 break;
             case NOTE:
-                if (filterTitle == null) {
-                    throw new IllegalStateException("Note filter title must not be null or empty");
+                Note noteFilter = settings.getNoteFilter();
+                if (noteFilter == null) {
+                    throw new IllegalStateException("setFilterType(): Note filter must not be null");
                 }
-                normalTitle = NotesViewModel.FILTER_PREFIX + " " + filterTitle;
+                normalTitle = NotesViewModel.FILTER_PREFIX + " " + noteFilter.getNote();
                 break;
             case NO_TAGS:
                 normalTitle = resources.getString(R.string.filter_no_tags);

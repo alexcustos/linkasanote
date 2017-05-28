@@ -29,11 +29,13 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         AddEditFavoriteContract.ViewModel {
 
     public static final String STATE_FAVORITE_NAME = "FAVORITE_NAME";
+    public static final String STATE_FAVORITE_AND_GATE = "FAVORITE_AND_GATE";
     public static final String STATE_ADD_BUTTON = "ADD_BUTTON";
     public static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
     public static final String STATE_NAME_ERROR_TEXT = "NAME_ERROR_TEXT";
 
     public final ObservableField<String> favoriteName = new ObservableField<>();
+    public final ObservableBoolean favoriteAndGate = new ObservableBoolean();
     public final ObservableBoolean addButton = new ObservableBoolean();
     private int addButtonText;
 
@@ -67,6 +69,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
         outState.putString(STATE_FAVORITE_NAME, favoriteName.get());
+        outState.putBoolean(STATE_FAVORITE_AND_GATE, favoriteAndGate.get());
         outState.putBoolean(STATE_ADD_BUTTON, addButton.get());
         outState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
         outState.putString(STATE_NAME_ERROR_TEXT, nameErrorText);
@@ -76,6 +79,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
         favoriteName.set(state.getString(STATE_FAVORITE_NAME));
+        favoriteAndGate.set(state.getBoolean(STATE_FAVORITE_AND_GATE));
         addButton.set(state.getBoolean(STATE_ADD_BUTTON));
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
         nameErrorText = state.getString(STATE_NAME_ERROR_TEXT);
@@ -84,15 +88,14 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Override
     public Bundle getDefaultInstanceState() {
         Bundle defaultState = new Bundle();
-
         defaultState.putString(STATE_FAVORITE_NAME, null);
+        defaultState.putBoolean(STATE_FAVORITE_AND_GATE, false);
         defaultState.putBoolean(STATE_ADD_BUTTON, false);
         int addButtonText = presenter.isNewFavorite()
                 ? R.string.add_edit_favorite_new_button_title
                 : R.string.add_edit_favorite_edit_button_title;
         defaultState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
         defaultState.putString(STATE_NAME_ERROR_TEXT, null);
-
         return defaultState;
     }
 
@@ -150,7 +153,8 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     public void onAddButtonClick() {
         favoriteTags.performCompletion();
         // NOTE: there is no way to pass these values directly to the presenter
-        presenter.saveFavorite(favoriteName.get(), favoriteTags.getObjects());
+        presenter.saveFavorite(
+                favoriteName.get(), favoriteAndGate.get(), favoriteTags.getObjects());
     }
 
     @Override
@@ -239,6 +243,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     public void populateFavorite(@NonNull Favorite favorite) {
         checkNotNull(favorite);
         favoriteName.set(favorite.getName());
+        favoriteAndGate.set(favorite.isAndGate());
         setFavoriteTags(favorite.getTags());
         checkAddButton();
     }

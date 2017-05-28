@@ -227,7 +227,7 @@ public final class FavoritesConflictResolutionPresenter implements
                 .doOnSuccess(success -> {
                     if (success) {
                         repository.removeCachedFavorite(favoriteId);
-                        settings.resetFavoriteFilter(favoriteId);
+                        settings.resetFavoriteFilterId(favoriteId);
                     }
                 });
     }

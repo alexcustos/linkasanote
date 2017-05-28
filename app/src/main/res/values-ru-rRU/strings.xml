@@ -128,6 +128,7 @@
     <string name="item_favorites_checkbox">Выбрать избранное</string>
     <string name="favorites_empty_title">Список пуст</string>
     <string name="add_edit_favorite_name_hint">Имя</string>
+    <string name="add_edit_favorite_and_gate_hint">Искать все перечисленные теги</string>
     <string name="add_edit_favorite_tags_hint">Теги</string>
     <string name="add_edit_favorite_new_button_title">Создать</string>
     <string name="add_edit_favorite_edit_button_title">Обновить</string>

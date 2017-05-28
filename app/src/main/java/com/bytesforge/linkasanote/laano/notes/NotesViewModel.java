@@ -24,7 +24,7 @@ public class NotesViewModel extends BaseItemViewModel implements NotesContract.V
 
     private static final String TAG = NotesViewModel.class.getSimpleName();
 
-    public static final String FILTER_PREFIX = "*";
+    public static final String FILTER_PREFIX = "#";
 
     private static final String STATE_EXPAND_BY_DEFAULT = "EXPAND_BY_DEFAULT";
     private static final String STATE_TOGGLE_IDS = "TOGGLE_IDS";

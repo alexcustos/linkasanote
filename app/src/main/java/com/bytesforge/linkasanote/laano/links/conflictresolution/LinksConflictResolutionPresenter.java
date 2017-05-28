@@ -252,7 +252,7 @@ public final class LinksConflictResolutionPresenter implements
                 .doOnSuccess(success -> {
                     if (success) {
                         repository.removeCachedLink(linkId);
-                        settings.resetLinkFilter(linkId);
+                        settings.resetLinkFilterId(linkId);
                     }
                 });
     }
@@ -273,7 +273,7 @@ public final class LinksConflictResolutionPresenter implements
                 .doOnSuccess(success -> {
                     if (success) {
                         repository.removeCachedNote(noteId);
-                        settings.resetNoteFilter(noteId);
+                        settings.resetNoteFilterId(noteId);
                     }
                 });
     }

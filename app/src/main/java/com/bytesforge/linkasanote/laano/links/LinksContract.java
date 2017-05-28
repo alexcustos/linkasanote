@@ -3,6 +3,7 @@ package com.bytesforge.linkasanote.laano.links;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Link;
@@ -80,6 +81,7 @@ public interface LinksContract {
         int getPosition(String linkId);
         void setFilterType(@NonNull FilterType filtering);
         @NonNull FilterType getFilterType();
+        @Nullable Boolean isFavoriteAndGate();
         void syncSavedLink(@NonNull final String linkId);
         void syncSavedNote(@NonNull final String linkId, @NonNull final String noteId);
         void deleteLinks(@NonNull ArrayList<String> selectedIds, boolean deleteNotes);

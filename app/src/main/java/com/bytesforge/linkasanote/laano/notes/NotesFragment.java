@@ -360,9 +360,21 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
         MenuItem filterFavoriteMenuItem = menu.findItem(R.id.filter_favorite);
         boolean isFavoriteFilter = presenter.isFavoriteFilter();
+        Boolean favoriteAndGate = presenter.isFavoriteAndGate();
+        String filterFavoritePostfix;
+        if (favoriteAndGate != null) {
+            if (favoriteAndGate) {
+                filterFavoritePostfix = " " + resources.getString(
+                        R.string.filter_menu_item_postfix, FavoritesViewModel.FILTER_AND_GATE_PREFIX);
+            } else {
+                filterFavoritePostfix = " " + resources.getString(
+                        R.string.filter_menu_item_postfix, FavoritesViewModel.FILTER_OR_GATE_PREFIX);
+            }
+        } else {
+            filterFavoritePostfix = "";
+        }
         filterFavoriteMenuItem.setTitle(
-                resources.getString(R.string.filter_favorite) + " " + resources.getString(
-                        R.string.filter_menu_item_postfix, FavoritesViewModel.FILTER_PREFIX));
+                resources.getString(R.string.filter_favorite) + filterFavoritePostfix);
         filterFavoriteMenuItem.setEnabled(isFavoriteFilter);
 
         MenuItem filterLinkMenuItem = menu.findItem(R.id.filter_link);

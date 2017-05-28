@@ -200,7 +200,7 @@ public final class NotesConflictResolutionPresenter implements
                 .doOnSuccess(success -> {
                     if (success) {
                         repository.removeCachedNote(noteId);
-                        settings.resetNoteFilter(noteId);
+                        settings.resetNoteFilterId(noteId);
                     }
                 });
     }

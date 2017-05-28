@@ -27,9 +27,9 @@ public class SharedUtils {
     }};
 
     private static final List<Favorite> FAVORITES = new ArrayList<Favorite>() {{
-        add(new Favorite(KEY_PREFIX + 'A', "Favorite title", TAGS));
-        add(new Favorite(KEY_PREFIX + 'B', "Second Favorite", TAGS2));
-        add(new Favorite(KEY_PREFIX + 'C', "Third Favorite with very long title which end up with ellipsis", TAGS3));
+        add(new Favorite(KEY_PREFIX + 'A', "Favorite title", false, TAGS));
+        add(new Favorite(KEY_PREFIX + 'B', "Second Favorite", true, TAGS2));
+        add(new Favorite(KEY_PREFIX + 'C', "Third Favorite with very long title which end up with ellipsis", false, TAGS3));
     }};
 
     private static final List<Link> LINKS = new ArrayList<Link>() {{

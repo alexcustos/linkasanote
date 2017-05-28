@@ -19,7 +19,8 @@ public class FavoritesViewModel extends BaseItemViewModel implements FavoritesCo
 
     private static final String TAG = FavoritesViewModel.class.getSimpleName();
 
-    public static final String FILTER_PREFIX = "@";
+    public static final String FILTER_OR_GATE_PREFIX = "*";
+    public static final String FILTER_AND_GATE_PREFIX = "&";
 
     private Context context;
 
@@ -86,8 +87,8 @@ public class FavoritesViewModel extends BaseItemViewModel implements FavoritesCo
         super.notifyChange();
     }
 
-    public String getFilterPrefix() {
-        return FILTER_PREFIX;
+    public String getFilterPrefix(boolean andGate) {
+        return andGate ? FILTER_AND_GATE_PREFIX : FILTER_OR_GATE_PREFIX;
     }
 
     public int getFavoriteBackground(boolean conflicted) {

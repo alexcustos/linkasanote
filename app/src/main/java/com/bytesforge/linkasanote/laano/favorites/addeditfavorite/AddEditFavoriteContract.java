@@ -58,7 +58,7 @@ public interface AddEditFavoriteContract {
 
         boolean isNewFavorite();
         void loadTags();
-        void saveFavorite(String name, List<Tag> tags);
+        void saveFavorite(String name, boolean andGate, List<Tag> tags);
         void populateFavorite();
 
         void setShowFillInFormInfo(boolean show);
