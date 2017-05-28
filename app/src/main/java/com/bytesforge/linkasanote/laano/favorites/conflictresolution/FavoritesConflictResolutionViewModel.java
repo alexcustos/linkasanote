@@ -14,6 +14,7 @@ import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
 
 import java.util.ArrayList;
 
@@ -184,7 +185,10 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
             localState.set(resources.getString(R.string.dialog_favorite_conflict_state_no_conflict));
             localDeleteButton.set(true);
         }
-        localName.set(favorite.getName());
+        String prefix = "(" + (favorite.isAndGate()
+                ? FavoritesViewModel.FILTER_AND_GATE_PREFIX
+                : FavoritesViewModel.FILTER_OR_GATE_PREFIX) + ")";
+        localName.set(prefix + " " + favorite.getName());
         localTags = (ArrayList<Tag>) favorite.getTags();
         localStatus.set(null);
         notifyChange(); // NOTE: it is really needed
@@ -211,7 +215,10 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
             cloudState.set(resources.getString(R.string.dialog_favorite_conflict_state_updated));
             cloudDownloadButton.set(true);
         }
-        cloudName.set(favorite.getName());
+        String prefix = "(" + (favorite.isAndGate()
+                ? FavoritesViewModel.FILTER_AND_GATE_PREFIX
+                : FavoritesViewModel.FILTER_OR_GATE_PREFIX) + ")";
+        cloudName.set(prefix + " " + favorite.getName());
         cloudTags = (ArrayList<Tag>) favorite.getTags();
         cloudStatus.set(null);
         notifyChange();

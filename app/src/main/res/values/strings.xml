@@ -128,6 +128,7 @@
     <string name="item_favorites_checkbox">Select Favorite</string>
     <string name="favorites_empty_title">List is empty</string>
     <string name="add_edit_favorite_name_hint">Name</string>
+    <string name="add_edit_favorite_and_gate_hint">Set the filter to search for all tags</string>
     <string name="add_edit_favorite_tags_hint">Tags</string>
     <string name="add_edit_favorite_new_button_title">Create</string>
     <string name="add_edit_favorite_edit_button_title">Update</string>

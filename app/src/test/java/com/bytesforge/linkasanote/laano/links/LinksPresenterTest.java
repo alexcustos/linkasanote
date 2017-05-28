@@ -69,8 +69,7 @@ public class LinksPresenterTest {
         PowerMockito.mockStatic(Log.class);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
         when(view.isActive()).thenReturn(true);
-        when(settings.getFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE))
-                .thenReturn(FilterType.ALL);
+        when(settings.getLinksFilterType()).thenReturn(FilterType.ALL);
         presenter = new LinksPresenter(
                 repository, view, viewModel, schedulerProvider, laanoUiManager, settings);
     }

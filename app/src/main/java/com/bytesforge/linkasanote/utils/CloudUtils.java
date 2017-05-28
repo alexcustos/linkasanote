@@ -58,8 +58,7 @@ public final class CloudUtils {
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.GET_ACCOUNTS)
                 != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "Insufficient permission to access accounts in device");
-            // NOTE: if permission have been revoked when the activity run (seems it's impossible)
+            Log.i(TAG, "Insufficient permission to access accounts in device");
             return null;
         }
         return accountManager.getAccountsByType(getAccountType(context));

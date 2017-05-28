@@ -9,10 +9,10 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.ProviderTestCase2;
 
+import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
-import com.bytesforge.linkasanote.utils.CommonUtils;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,10 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @RunWith(AndroidJUnit4.class)
 public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
 
-    private final String KEY_PREFIX = CommonUtils.charRepeat('A', 21);
-    private final String[] ENTRY_KEYS;
-    private final List<Tag> FAVORITE_TAGS;
-    private final String[] FAVORITE_NAMES;
+    private final List<Favorite> FAVORITES;
 
     private ContentResolver contentResolver;
     private Provider provider;
@@ -38,13 +35,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
     public ProviderFavoritesTest() {
         super(Provider.class, LocalContract.CONTENT_AUTHORITY);
 
-        ENTRY_KEYS = new String[]{KEY_PREFIX + 'A', KEY_PREFIX + 'B'};
-        FAVORITE_NAMES = new String[]{"Favorite", "Favorite #2"};
-        FAVORITE_TAGS = new ArrayList<Tag>() {{
-            add(new Tag("first"));
-            add(new Tag("second"));
-            add(new Tag("third"));
-        }};
+        FAVORITES = AndroidTestUtils.buildFavorites();
     }
 
     @Before
@@ -59,18 +50,18 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
 
     @Test
     public void provider_insertFavoriteEntry() {
-        final String favoriteId = ENTRY_KEYS[0];
-        final Favorite favorite = new Favorite(favoriteId, FAVORITE_NAMES[0], FAVORITE_TAGS);
+        final Favorite favorite = FAVORITES.get(0);
+        final String favoriteId = favorite.getId();
 
         insertFavoriteOnly(favorite);
-        Favorite savedFavorite = queryFavoriteOnly(favoriteId, FAVORITE_TAGS);
+        Favorite savedFavorite = queryFavoriteOnly(favoriteId, favorite.getTags());
         assertEquals(favorite, savedFavorite);
     }
 
     @Test
     public void provider_insertFavoriteEntryWithTags() {
-        final String favoriteId = ENTRY_KEYS[0];
-        final Favorite favorite = new Favorite(favoriteId, FAVORITE_NAMES[0], FAVORITE_TAGS);
+        final Favorite favorite = FAVORITES.get(0);
+        final String favoriteId = favorite.getId();
 
         insertFavoriteWithTags(favorite);
         Favorite savedFavorite = queryFavoriteWithTags(favoriteId);
@@ -79,35 +70,38 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
 
     @Test
     public void provider_deleteFavoriteButLeaveTags() {
-        final String favoriteId = ENTRY_KEYS[0];
-        final Favorite favorite = new Favorite(favoriteId, FAVORITE_NAMES[0], FAVORITE_TAGS);
+        final Favorite favorite = FAVORITES.get(0);
+        final String favoriteId = favorite.getId();
+        final List<Tag> favoriteTags = favorite.getTags();
 
         insertFavoriteWithTags(favorite);
         List<Tag> tags = queryAllTags();
-        assertEquals(FAVORITE_TAGS, tags);
+        assertEquals(favoriteTags, tags);
 
         int numRows = deleteFavorite(favoriteId);
         assertThat(numRows, equalTo(1));
 
         tags = queryAllTags();
-        assertEquals(FAVORITE_TAGS, tags);
+        assertEquals(favoriteTags, tags);
     }
 
     @Test
     public void provider_updateFavoriteEntry() {
-        final String favoriteId = ENTRY_KEYS[0];
-        final Favorite favorite = new Favorite(favoriteId, FAVORITE_NAMES[0], FAVORITE_TAGS);
+        final Favorite favorite = FAVORITES.get(0);
+        final String favoriteId = favorite.getId();
+        assert favorite.getTags() != null;
+        final List<Tag> favoriteTags = new ArrayList<>(favorite.getTags());
         insertFavoriteWithTags(favorite);
 
-        FAVORITE_TAGS.add(new Tag("four"));
-        final Favorite updatedFavorite = new Favorite(favoriteId, FAVORITE_NAMES[1], FAVORITE_TAGS);
+        favoriteTags.add(new Tag("third"));
+        final Favorite updatedFavorite = new Favorite(favorite, favoriteTags);
         insertFavoriteWithTags(updatedFavorite);
 
         Favorite savedFavorite = queryFavoriteWithTags(favoriteId);
         assertEquals(updatedFavorite, savedFavorite);
 
         List<Tag> tags = queryAllTags();
-        assertEquals(FAVORITE_TAGS, tags);
+        assertEquals(favoriteTags, tags);
     }
 
     private int deleteFavorite(String favoriteId) {

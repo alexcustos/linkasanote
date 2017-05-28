@@ -66,7 +66,7 @@ public class FavoritesConflictResolutionPresenterTest {
         PowerMockito.mockStatic(Log.class);
         schedulerProvider = new ImmediateSchedulerProvider();
         favoriteId = TestUtils.KEY_PREFIX + 'A';
-        defaultFavorite = new Favorite(favoriteId, "Favorite", TestUtils.TAGS);
+        defaultFavorite = new Favorite(favoriteId, "Favorite", false, TestUtils.TAGS);
         presenter = new FavoritesConflictResolutionPresenter(
                 repository, settings, localFavorites, cloudFavorites,
                 view, viewModel, schedulerProvider, defaultFavorite.getId());
@@ -108,7 +108,7 @@ public class FavoritesConflictResolutionPresenterTest {
         SyncState state = new SyncState(E_TAGL, 1); // duplicated
         Favorite favorite = new Favorite(defaultFavorite, state);
         Favorite mainFavorite = new Favorite(
-                TestUtils.KEY_PREFIX + 'B', "Favorite", TestUtils.TAGS);
+                TestUtils.KEY_PREFIX + 'B', "Favorite", false, TestUtils.TAGS);
         when(localFavorites.get(eq(favoriteId)))
                 .thenReturn(Single.just(favorite));
         when(localFavorites.getMain(eq(favorite.getDuplicatedKey())))

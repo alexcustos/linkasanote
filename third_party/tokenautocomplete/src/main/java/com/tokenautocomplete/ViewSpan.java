@@ -1,6 +1,5 @@
 package com.tokenautocomplete;
 
-import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.support.annotation.IntRange;
@@ -20,6 +19,11 @@ import android.view.ViewGroup;
  * Aleksandr Borisenko
  */
 public class ViewSpan extends ReplacementSpan {
+
+    private static final String TAG = ViewSpan.class.getSimpleName();
+
+    private static final char SENTINEL = ',';
+
     protected View view;
     private int maxWidth;
     private boolean prepared;
@@ -67,27 +71,23 @@ public class ViewSpan extends ReplacementSpan {
             @IntRange(from = 0) int start, @IntRange(from = 0) int end,
             @Nullable Paint.FontMetricsInt fm) {
         prepView();
+        // NOTE: only the first tag (measure) has ~2dp "padding"
+        // NOTE: a string with the single tag can be trimmed up to span height when the layout is inflated
+        String str = text.toString();
+        str = str.substring(0, str.lastIndexOf(SENTINEL) + 1);
+        if (start == 0 && str.length() > end) {
+            // WORKAROUND: first measure is ignored if there are other ones
+            return view.getRight();
+        }
         if (fm != null) {
-            int height = view.getMeasuredHeight();
-            int top_need = height - (fm.bottom - fm.top);
-            if (top_need > 0) {
+            final int height = view.getMeasuredHeight();
+            final int top_need = height - (fm.bottom - fm.top);
+            if (top_need != 0) {
                 int top_patch = top_need / 2;
-                fm.top -= top_patch;
-                fm.bottom += top_need - top_patch;
-                // NOTE: only the first line has ~2dp "padding", adding the same gap to the other lines;
-                // NOTE: one line string can be trimmed when the layout is inflated
-                int ascent_need = height - (fm.descent - fm.ascent) + dpToPx(2);
-                if (ascent_need > 0) {
-                    int ascent_patch = ascent_need / 2;
-                    fm.ascent -= ascent_patch;
-                    fm.descent += ascent_need - ascent_patch;
-                }
+                fm.ascent = (fm.top -= top_patch);
+                fm.descent = (fm.bottom += top_need - top_patch);
             }
         }
         return view.getRight();
-    }
-
-    private static int dpToPx(int dp) {
-        return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
     }
 }

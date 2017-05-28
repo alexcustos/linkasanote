@@ -44,6 +44,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.FavoriteEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_UPDATED + DATETIME_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_NAME + TEXT_TYPE + " NOT NULL," + // UNIQUE
+                    LocalContract.FavoriteEntry.COLUMN_NAME_AND_GATE + BOOLEAN_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_ETAG + TEXT_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + INTEGER_TYPE + "," +
                     LocalContract.FavoriteEntry.COLUMN_NAME_CONFLICTED + BOOLEAN_TYPE + "," +

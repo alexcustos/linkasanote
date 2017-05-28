@@ -56,8 +56,8 @@ public interface FavoritesContract {
         void selectFavoriteFilter();
 
         void onEditClick(@NonNull String favoriteId);
-        void onToLinksClick(@NonNull String favoriteId);
-        void onToNotesClick(@NonNull String favoriteId);
+        void onToLinksClick(@NonNull Favorite favoriteFilter);
+        void onToNotesClick(@NonNull Favorite favoriteFilter);
         void onDeleteClick();
         void onSelectAllClick();
         int getPosition(String favoriteId);

@@ -130,9 +130,13 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                         .subscribeOn(schedulerProvider.computation())
                         .observeOn(schedulerProvider.ui())
                         .subscribe(
-                                count -> Toast.makeText(
-                                        context, R.string.toast_restore_success,
-                                        Toast.LENGTH_SHORT).show(),
+                                count -> {
+                                    if (isActive()) {
+                                        Toast.makeText(
+                                                context, R.string.toast_restore_success,
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                },
                                 throwable -> {
                                     CommonUtils.logStackTrace(TAG, throwable);
                                     if (isActive()) {
@@ -349,14 +353,17 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
             Long validatedSyncInterval = Long.parseLong(seconds[index]);
             if (!Objects.equals(syncInterval, validatedSyncInterval)) {
                 settings.setSyncInterval(account, validatedSyncInterval);
-                showSnackbar(R.string.settings_fragment_snackbar_interval_error,
-                        Snackbar.LENGTH_LONG);
+                if (isActive()) {
+                    showSnackbar(R.string.settings_fragment_snackbar_interval_error,
+                            Snackbar.LENGTH_LONG);
+                }
             }
-            prefSyncInterval.setValue(seconds[index]);
-            prefSyncInterval.setSummary(names[index] + " " +
-                    resources.getString(R.string.pref_sync_interval_notice));
+            if (isActive()) {
+                prefSyncInterval.setValue(seconds[index]);
+                prefSyncInterval.setSummary(names[index] + " " +
+                        resources.getString(R.string.pref_sync_interval_notice));
+            }
         }, throwable -> {
-            CommonUtils.logStackTrace(TAG, throwable);
             if (isActive()) {
                 prefSyncInterval.setEnabled(false);
                 prefSyncInterval.setSummary(

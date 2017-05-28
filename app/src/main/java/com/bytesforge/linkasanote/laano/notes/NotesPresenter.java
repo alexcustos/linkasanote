@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.data.Favorite;
+import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.DataSource;
@@ -13,7 +15,6 @@ import com.bytesforge.linkasanote.laano.BaseItemPresenter;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
-import com.bytesforge.linkasanote.laano.links.LinksPresenter;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CommonUtils;
@@ -51,12 +52,14 @@ public final class NotesPresenter extends BaseItemPresenter implements
     @NonNull
     private final CompositeDisposable compositeDisposable;
 
-    private String favoriteFilter;
-    private String linkFilter;
-    private List<Tag> favoriteFilterTags;
+    private String favoriteFilterId;
+    private int favoriteHashCode;
+    private String linkFilterId;
+    private int linkHashCode;
+    private int noteCacheSize = -1;
     private FilterType filterType;
     private boolean filterIsChanged = true;
-    private boolean firstLoad = true;
+    private boolean loadIsCompleted = false;
 
     @Inject
     NotesPresenter(
@@ -101,16 +104,16 @@ public final class NotesPresenter extends BaseItemPresenter implements
 
     @Override
     public void showAddNote() {
-        view.startAddNoteActivity(filterType == FilterType.LINK ? linkFilter : null);
+        view.startAddNoteActivity(filterType == FilterType.LINK ? linkFilterId : null);
     }
 
     @Override
     public void loadNotes(final boolean forceUpdate) {
-        loadNotes(forceUpdate || firstLoad, true);
-        firstLoad = false;
+        loadNotes(forceUpdate, true);
     }
 
     private void loadNotes(boolean forceUpdate, final boolean showLoading) {
+        Log.d(TAG, "loadNotes() [" + forceUpdate + "]");
         compositeDisposable.clear();
         if (forceUpdate) {
             repository.refreshNotes();
@@ -118,28 +121,31 @@ public final class NotesPresenter extends BaseItemPresenter implements
         FilterType extendedFilter = updateFilter();
         if (!repository.isNoteCacheDirty()
                 && !filterIsChanged
-                && viewModel.getListSize() == repository.getNoteCacheSize()) {
+                && noteCacheSize == repository.getNoteCacheSize()
+                && loadIsCompleted) {
             return;
         }
+        loadIsCompleted = false;
         if (showLoading) {
             viewModel.showProgressOverlay();
         }
         Observable<Note> loadNotes = null;
         if (extendedFilter == FilterType.FAVORITE) {
-            loadNotes = repository.getFavorite(favoriteFilter)
+            loadNotes = repository.getFavorite(favoriteFilterId)
                     .toObservable()
                     .flatMap(favorite -> {
                         // NOTE: just to be sure we are still in sync
                         filterType = FilterType.FAVORITE;
-                        favoriteFilter = favorite.getId();
-                        favoriteFilterTags = favorite.getTags();
-                        laanoUiManager.setFilterType(TAB, filterType, favorite.getName());
+                        favoriteFilterId = favorite.getId();
+                        favoriteHashCode = favorite.hashCode();
+                        settings.setFavoriteFilter(favorite);
+                        laanoUiManager.setFilterType(TAB, filterType);
                         return repository.getNotes();
                     }).doOnError(throwable -> {
                         if (throwable instanceof NoSuchElementException) {
                             setDefaultNotesFilterType();
-                            favoriteFilter = null;
-                            settings.setFavoriteFilter(null);
+                            favoriteFilterId = null;
+                            settings.setFavoriteFilterId(null);
                         } else {
                             CommonUtils.logStackTrace(TAG, throwable);
                         }
@@ -151,19 +157,20 @@ public final class NotesPresenter extends BaseItemPresenter implements
                         }
                     });
         } else if (extendedFilter == FilterType.LINK) {
-            loadNotes = repository.getLink(linkFilter)
+            loadNotes = repository.getLink(linkFilterId)
                     .toObservable()
                     .flatMap(link -> {
                         filterType = FilterType.LINK;
-                        linkFilter = link.getId();
-                        String linkName = link.getName() == null ? link.getLink() : link.getName();
-                        laanoUiManager.setFilterType(TAB, filterType, linkName);
+                        linkFilterId = link.getId();
+                        linkHashCode = link.hashCode();
+                        settings.setLinkFilter(link);
+                        laanoUiManager.setFilterType(TAB, filterType);
                         return repository.getNotes();
                     }).doOnError(throwable -> {
                         if (throwable instanceof NoSuchElementException) {
                             setDefaultNotesFilterType();
-                            linkFilter = null;
-                            settings.setLinkFilter(null);
+                            linkFilterId = null;
+                            settings.setLinkFilterId(null);
                         } else {
                             CommonUtils.logStackTrace(TAG, throwable);
                         }
@@ -194,15 +201,26 @@ public final class NotesPresenter extends BaseItemPresenter implements
                             return note.isConflicted();
                         case LINK:
                             String linkId = note.getLinkId();
-                            return linkId != null && linkId.equals(linkFilter);
+                            return linkId != null && linkId.equals(linkFilterId);
                         case FAVORITE:
                             List<Tag> noteTags = note.getTags();
-                            if (favoriteFilter == null) {
+                            if (favoriteFilterId == null) {
                                 return true; // No filter
                             } else if (noteTags == null) {
                                 return false; // No tags
                             }
-                            return !Collections.disjoint(favoriteFilterTags, noteTags);
+                            Favorite favoriteFilter = settings.getFavoriteFilter();
+                            if (favoriteFilter == null
+                                    || !favoriteFilter.getId().equals(favoriteFilterId)
+                                    || favoriteFilter.getTags() == null) {
+                                Log.e(TAG, "loadNotes(): invalid Favorite filter");
+                                return false;
+                            }
+                            if (favoriteFilter.isAndGate()) {
+                                return noteTags.containsAll(favoriteFilter.getTags());
+                            } else {
+                                return !Collections.disjoint(favoriteFilter.getTags(), noteTags);
+                            }
                         case NO_TAGS:
                             return note.getTags() == null;
                         case UNBOUND:
@@ -224,6 +242,8 @@ public final class NotesPresenter extends BaseItemPresenter implements
                     view.showNotes(notes);
                     selectNoteFilter();
                     filterIsChanged = false;
+                    noteCacheSize = repository.getNoteCacheSize();
+                    loadIsCompleted = true;
                 }, throwable -> {
                     // NullPointerException
                     CommonUtils.logStackTrace(TAG, throwable);
@@ -251,9 +271,9 @@ public final class NotesPresenter extends BaseItemPresenter implements
                 boolean selected = viewModel.toggleFilterId(noteId);
                 // NOTE: filterType will be updated accordingly on the tab
                 if (selected) {
-                    settings.setNoteFilter(noteId);
+                    settings.setNoteFilterId(noteId);
                 } else {
-                    settings.setNoteFilter(null);
+                    settings.setNoteFilterId(null);
                 }
             } else {
                 onToggleClick(noteId);
@@ -282,7 +302,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
     public void selectNoteFilter() {
         if (viewModel.isActionMode()) return;
 
-        String noteFilter = settings.getNoteFilter();
+        String noteFilter = settings.getNoteFilterId();
         if (noteFilter != null) {
             int position = getPosition(noteFilter);
             if (position >= 0) { // NOTE: check if there is the filter in the list
@@ -301,8 +321,8 @@ public final class NotesPresenter extends BaseItemPresenter implements
     public void onToLinksClick(@NonNull String noteId) {
         checkNotNull(noteId);
         viewModel.setFilterId(noteId);
-        settings.setFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE, FilterType.NOTE);
-        settings.setNoteFilter(noteId);
+        settings.setLinksFilterType(FilterType.NOTE);
+        settings.setNoteFilterId(noteId);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.LINKS_TAB);
     }
 
@@ -394,7 +414,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
                                         || itemState == DataSource.ItemState.DEFERRED) {
                                     // NOTE: can be called twice
                                     view.removeNote(noteId);
-                                    settings.resetNoteFilter(noteId);
+                                    settings.resetNoteFilterId(noteId);
                                 }
                             });
                 })
@@ -457,7 +477,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
     @Override
     public void setFilterType(@NonNull FilterType filterType) {
         checkNotNull(filterType);
-        settings.setFilterType(SETTING_NOTES_FILTER_TYPE, filterType);
+        settings.setNotesFilterType(filterType);
         if (this.filterType != filterType) {
             loadNotes(false);
         }
@@ -466,7 +486,14 @@ public final class NotesPresenter extends BaseItemPresenter implements
     @Override
     @NonNull
     public FilterType getFilterType() {
-        return settings.getFilterType(SETTING_NOTES_FILTER_TYPE);
+        return settings.getNotesFilterType();
+    }
+
+    @Override
+    @Nullable
+    public Boolean isFavoriteAndGate() {
+        Favorite favoriteFilter = settings.getFavoriteFilter();
+        return favoriteFilter != null && favoriteFilter.isAndGate();
     }
 
     /**
@@ -475,11 +502,19 @@ public final class NotesPresenter extends BaseItemPresenter implements
     @Nullable
     private FilterType updateFilter() {
         FilterType filterType = getFilterType();
-        String prevLinkFilter = this.linkFilter;
-        this.linkFilter = settings.getLinkFilter();
-        // NOTE: there may be some concurrency who actually will reset the filter, but it OK
-        String prevFavoriteFilter = this.favoriteFilter;
-        this.favoriteFilter = settings.getFavoriteFilter();
+
+        String prevLinkFilterId = this.linkFilterId;
+        this.linkFilterId = settings.getLinkFilterId();
+        Link linkFilter = settings.getLinkFilter();
+        int prevLinkHashCode = this.linkHashCode;
+        this.linkHashCode = linkFilter == null ? 0 : linkFilter.hashCode();
+
+        String prevFavoriteFilterId = this.favoriteFilterId;
+        this.favoriteFilterId = settings.getFavoriteFilterId();
+        Favorite favoriteFilter = settings.getFavoriteFilter();
+        int prevFavoriteHashCode = this.favoriteHashCode;
+        this.favoriteHashCode = favoriteFilter == null ? 0 : favoriteFilter.hashCode();
+
         switch (filterType) {
             case ALL:
             case CONFLICTED:
@@ -490,16 +525,17 @@ public final class NotesPresenter extends BaseItemPresenter implements
                 }
                 filterIsChanged = true;
                 this.filterType = filterType;
-                laanoUiManager.setFilterType(TAB, filterType, null);
+                laanoUiManager.setFilterType(TAB, filterType);
                 break;
             case LINK:
                 if (this.filterType == filterType
-                        && this.linkFilter != null
-                        && this.linkFilter.equals(prevLinkFilter)) {
+                        && this.linkFilterId != null
+                        && this.linkFilterId.equals(prevLinkFilterId)
+                        && this.linkHashCode == prevLinkHashCode) {
                     return null;
                 }
                 filterIsChanged = true;
-                if (this.linkFilter == null) {
+                if (this.linkFilterId == null) {
                     setDefaultNotesFilterType();
                     return null;
                 }
@@ -507,12 +543,13 @@ public final class NotesPresenter extends BaseItemPresenter implements
                 return filterType;
             case FAVORITE:
                 if (this.filterType == filterType
-                        && this.favoriteFilter != null
-                        && this.favoriteFilter.equals(prevFavoriteFilter)) {
+                        && this.favoriteFilterId != null
+                        && this.favoriteFilterId.equals(prevFavoriteFilterId)
+                        && this.favoriteHashCode == prevFavoriteHashCode) {
                     return null;
                 }
                 filterIsChanged = true;
-                if (this.favoriteFilter == null) {
+                if (this.favoriteFilterId == null) {
                     setDefaultNotesFilterType();
                     return null;
                 }
@@ -527,18 +564,18 @@ public final class NotesPresenter extends BaseItemPresenter implements
 
     private void setDefaultNotesFilterType() {
         filterType = Settings.DEFAULT_FILTER_TYPE;
-        laanoUiManager.setFilterType(TAB, filterType, null);
-        settings.setFilterType(SETTING_NOTES_FILTER_TYPE, filterType);
+        laanoUiManager.setFilterType(TAB, filterType);
+        settings.setNotesFilterType(filterType);
     }
 
     @Override
     public boolean isFavoriteFilter() {
-        return favoriteFilter != null;
+        return favoriteFilterId != null;
     }
 
     @Override
     public boolean isLinkFilter() {
-        return linkFilter != null;
+        return linkFilterId != null;
     }
 
     @Override

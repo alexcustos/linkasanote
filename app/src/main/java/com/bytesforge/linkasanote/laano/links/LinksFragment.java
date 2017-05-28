@@ -18,6 +18,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -243,7 +244,6 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         switch (requestCode) {
             case REQUEST_ADD_LINK:
                 if (resultCode == Activity.RESULT_OK) {
-                    presenter.loadLinks(false);
                     //viewModel.showSaveSuccessSnackbar();
                     String linkId = data.getStringExtra(AddEditLinkFragment.ARGUMENT_LINK_ID);
                     presenter.syncSavedLink(linkId);
@@ -251,7 +251,6 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
                 break;
             case REQUEST_EDIT_LINK:
                 if (resultCode == Activity.RESULT_OK) {
-                    presenter.loadLinks(false);
                     //viewModel.showSaveSuccessSnackbar();
                     String linkId = data.getStringExtra(AddEditLinkFragment.ARGUMENT_LINK_ID);
                     presenter.syncSavedLink(linkId);
@@ -289,6 +288,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         rvLinks.setAdapter(adapter);
         rvLayoutManager = new LinearLayoutManager(getContext());
         rvLinks.setLayoutManager(rvLayoutManager);
+        ((SimpleItemAnimator) rvLinks.getItemAnimator()).setSupportsChangeAnimations(false);
     }
 
     private void showFilteringPopupMenu() {
@@ -325,9 +325,21 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
 
         MenuItem filterFavoriteMenuItem = menu.findItem(R.id.filter_favorite);
         boolean isFavoriteFilter = presenter.isFavoriteFilter();
+        Boolean favoriteAndGate = presenter.isFavoriteAndGate();
+        String filterFavoritePostfix;
+        if (favoriteAndGate != null) {
+            if (favoriteAndGate) {
+                filterFavoritePostfix = " " + resources.getString(
+                        R.string.filter_menu_item_postfix, FavoritesViewModel.FILTER_AND_GATE_PREFIX);
+            } else {
+                filterFavoritePostfix = " " + resources.getString(
+                        R.string.filter_menu_item_postfix, FavoritesViewModel.FILTER_OR_GATE_PREFIX);
+            }
+        } else {
+            filterFavoritePostfix = "";
+        }
         filterFavoriteMenuItem.setTitle(
-                resources.getString(R.string.filter_favorite) + " " + resources.getString(
-                        R.string.filter_menu_item_postfix, FavoritesViewModel.FILTER_PREFIX));
+                resources.getString(R.string.filter_favorite) + filterFavoritePostfix);
         filterFavoriteMenuItem.setEnabled(isFavoriteFilter);
 
         MenuItem filterNoteMenuItem = menu.findItem(R.id.filter_note);

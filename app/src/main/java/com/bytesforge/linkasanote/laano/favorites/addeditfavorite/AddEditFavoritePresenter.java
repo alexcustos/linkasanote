@@ -80,7 +80,6 @@ public final class AddEditFavoritePresenter implements
     @Override
     public void loadTags() {
         tagsDisposable.clear(); // stop previous requests
-
         Disposable disposable = repository.getTags()
                 .subscribeOn(schedulerProvider.computation())
                 .toList()
@@ -103,7 +102,6 @@ public final class AddEditFavoritePresenter implements
             throw new RuntimeException("populateFavorite() was called but favoriteId is null");
         }
         favoriteDisposable.clear();
-
         Disposable disposable = repository.getFavorite(favoriteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
@@ -115,24 +113,24 @@ public final class AddEditFavoritePresenter implements
     }
 
     @Override
-    public void saveFavorite(String name, List<Tag> tags) {
+    public void saveFavorite(String name, boolean andGate, List<Tag> tags) {
         if (isNewFavorite()) {
-            createFavorite(name, tags);
+            createFavorite(name, andGate, tags);
         } else {
-            updateFavorite(name, tags);
+            updateFavorite(name, andGate, tags);
         }
     }
 
-    private void createFavorite(String name, List<Tag> tags) {
-        saveFavorite(new Favorite(name, tags));
+    private void createFavorite(String name, boolean andGate, List<Tag> tags) {
+        saveFavorite(new Favorite(name, andGate, tags));
     }
 
-    private void updateFavorite(String name, List<Tag> tags) {
+    private void updateFavorite(String name, boolean andGate, List<Tag> tags) {
         if (favoriteId == null) {
             throw new RuntimeException("updateFavorite() was called but favoriteId is null");
         }
         // NOTE: state eTag will NOT be overwritten if null
-        saveFavorite(new Favorite(favoriteId, name, tags)); // UNSYNCED
+        saveFavorite(new Favorite(favoriteId, name, andGate, tags)); // UNSYNCED
     }
 
     private void saveFavorite(@NonNull final Favorite favorite) {
@@ -148,8 +146,13 @@ public final class AddEditFavoritePresenter implements
                 .subscribe(itemState -> {
                     switch (itemState) {
                         case DEFERRED:
-                            repository.refreshFavorites();
-                            view.finishActivity(favoriteId);
+                            String favoriteFilterId = settings.getFavoriteFilterId();
+                            if (favoriteId.equals(favoriteFilterId)) {
+                                settings.setFavoriteFilter(favorite);
+                            }
+                            if (view.isActive()) {
+                                view.finishActivity(favoriteId);
+                            }
                             break;
                     }
                 }, throwable -> {

@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.BaseItemPresenter;
@@ -12,8 +13,6 @@ import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.LaanoFragmentPagerAdapter;
 import com.bytesforge.linkasanote.laano.LaanoUiManager;
 import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionDialog;
-import com.bytesforge.linkasanote.laano.links.LinksPresenter;
-import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CommonUtils;
@@ -48,9 +47,10 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     @NonNull
     private final CompositeDisposable compositeDisposable;
 
+    private int favoriteCacheSize = -1;
     private FilterType filterType;
     private boolean filterIsChanged = true;
-    private boolean firstLoad = true;
+    private boolean loadIsCompleted = false;
 
     @Inject
     FavoritesPresenter(
@@ -100,11 +100,11 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
 
     @Override
     public void loadFavorites(final boolean forceUpdate) {
-        loadFavorites(forceUpdate || firstLoad, true);
-        firstLoad = false;
+        loadFavorites(forceUpdate, true);
     }
 
     private void loadFavorites(boolean forceUpdate, final boolean showLoading) {
+        Log.d(TAG, "loadFavorites() [" + forceUpdate + "]");
         compositeDisposable.clear();
         if (forceUpdate) {
             repository.refreshFavorites();
@@ -112,9 +112,11 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         updateFilter();
         if (!repository.isFavoriteCacheDirty()
                 && !filterIsChanged
-                && viewModel.getListSize() == repository.getFavoriteCacheSize()) {
+                && favoriteCacheSize == repository.getFavoriteCacheSize()
+                && loadIsCompleted) {
             return;
         }
+        loadIsCompleted = false;
         if (showLoading) {
             viewModel.showProgressOverlay();
         }
@@ -150,6 +152,8 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     view.showFavorites(favorites);
                     selectFavoriteFilter();
                     filterIsChanged = false;
+                    favoriteCacheSize = repository.getFavoriteCacheSize();
+                    loadIsCompleted = true;
                 }, throwable -> {
                     // NullPointerException
                     CommonUtils.logStackTrace(TAG, throwable);
@@ -194,9 +198,9 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
             boolean selected = viewModel.toggleFilterId(favoriteId);
             // NOTE: filterType will be updated accordingly on the tab
             if (selected) {
-                settings.setFavoriteFilter(favoriteId);
+                settings.setFavoriteFilterId(favoriteId);
             } else {
-                settings.setFavoriteFilter(null);
+                settings.setFavoriteFilterId(null);
             }
         }
     }
@@ -222,7 +226,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     public void selectFavoriteFilter() {
         if (viewModel.isActionMode()) return;
 
-        String favoriteFilter = settings.getFavoriteFilter();
+        String favoriteFilter = settings.getFavoriteFilterId();
         if (favoriteFilter != null) {
             int position = getPosition(favoriteFilter);
             if (position >= 0) { // NOTE: check if there is the filter in the list
@@ -238,20 +242,24 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     }
 
     @Override
-    public void onToLinksClick(@NonNull String favoriteId) {
-        checkNotNull(favoriteId);
-        viewModel.setFilterId(favoriteId);
-        settings.setFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE, FilterType.FAVORITE);
-        settings.setFavoriteFilter(favoriteId);
+    public void onToLinksClick(@NonNull Favorite favoriteFilter) {
+        checkNotNull(favoriteFilter);
+        String filterId = favoriteFilter.getId();
+        viewModel.setFilterId(filterId);
+        settings.setLinksFilterType(FilterType.FAVORITE);
+        settings.setFavoriteFilterId(filterId);
+        settings.setFavoriteFilter(favoriteFilter);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.LINKS_TAB);
     }
 
     @Override
-    public void onToNotesClick(@NonNull String favoriteId) {
-        checkNotNull(favoriteId);
-        viewModel.setFilterId(favoriteId);
-        settings.setFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE, FilterType.FAVORITE);
-        settings.setFavoriteFilter(favoriteId);
+    public void onToNotesClick(@NonNull Favorite favoriteFilter) {
+        checkNotNull(favoriteFilter);
+        String filterId = favoriteFilter.getId();
+        viewModel.setFilterId(filterId);
+        settings.setNotesFilterType(FilterType.FAVORITE);
+        settings.setFavoriteFilterId(filterId);
+        settings.setFavoriteFilter(favoriteFilter);
         laanoUiManager.setCurrentTab(LaanoFragmentPagerAdapter.NOTES_TAB);
     }
 
@@ -326,7 +334,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                                         || itemState == DataSource.ItemState.DEFERRED) {
                                     // NOTE: can be called twice
                                     view.removeFavorite(favoriteId);
-                                    settings.resetFavoriteFilter(favoriteId);
+                                    settings.resetFavoriteFilterId(favoriteId);
                                 }
                             });
                 })
@@ -392,7 +400,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     @Override
     public void setFilterType(@NonNull FilterType filterType) {
         checkNotNull(filterType);
-        settings.setFilterType(SETTING_FAVORITES_FILTER_TYPE, filterType);
+        settings.setFavoritesFilterType(filterType);
         if (this.filterType != filterType) {
             loadFavorites(false);
         }
@@ -401,7 +409,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     @Override
     @NonNull
     public FilterType getFilterType() {
-        return settings.getFilterType(SETTING_FAVORITES_FILTER_TYPE);
+        return settings.getFavoritesFilterType();
     }
 
     /**
@@ -418,19 +426,19 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                 }
                 filterIsChanged = true;
                 this.filterType = filterType;
-                laanoUiManager.setFilterType(TAB, filterType, null);
+                laanoUiManager.setFilterType(TAB, filterType);
                 break;
             default:
                 filterIsChanged = true;
-                setDefaultNotesFilterType();
+                setDefaultFavoriteFilterType();
         }
         return null;
     }
 
-    private void setDefaultNotesFilterType() {
+    private void setDefaultFavoriteFilterType() {
         filterType = Settings.DEFAULT_FILTER_TYPE;
-        laanoUiManager.setFilterType(TAB, filterType, null);
-        settings.setFilterType(SETTING_FAVORITES_FILTER_TYPE, filterType);
+        laanoUiManager.setFilterType(TAB, filterType);
+        settings.setFavoritesFilterType(filterType);
     }
 
     @Override

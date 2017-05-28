@@ -16,6 +16,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -200,7 +201,6 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         switch (requestCode) {
             case REQUEST_ADD_FAVORITE:
                 if (resultCode == Activity.RESULT_OK) {
-                    presenter.loadFavorites(false);
                     //viewModel.showSaveSuccessSnackbar();
                     String favoriteId = data.getStringExtra(AddEditFavoriteFragment.ARGUMENT_FAVORITE_ID);
                     presenter.syncSavedFavorite(favoriteId);
@@ -208,7 +208,6 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
                 break;
             case REQUEST_EDIT_FAVORITE:
                 if (resultCode == Activity.RESULT_OK) {
-                    presenter.loadFavorites(false);
                     //viewModel.showSaveSuccessSnackbar();
                     String favoriteId = data.getStringExtra(AddEditFavoriteFragment.ARGUMENT_FAVORITE_ID);
                     presenter.syncSavedFavorite(favoriteId);
@@ -241,6 +240,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
                 rvFavorites.getContext(), rvLayoutManager.getOrientation());
         rvFavorites.addItemDecoration(dividerItemDecoration);
+        ((SimpleItemAnimator) rvFavorites.getItemAnimator()).setSupportsChangeAnimations(false);
     }
 
     private void showFilteringPopupMenu() {

@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.laano.notes;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BaseView;
 import com.bytesforge.linkasanote.data.Note;
@@ -69,6 +70,7 @@ public interface NotesContract {
         int getPosition(String noteId);
         void setFilterType(@NonNull FilterType filtering);
         @NonNull FilterType getFilterType();
+        @Nullable Boolean isFavoriteAndGate();
         void syncSavedNote(final String linkId, @NonNull final String noteId);
         void deleteNotes(ArrayList<String> selectedIds);
         boolean isFavoriteFilter();

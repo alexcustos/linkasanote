@@ -69,8 +69,7 @@ public class NotesPresenterTest {
         PowerMockito.mockStatic(Log.class);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
         when(view.isActive()).thenReturn(true);
-        when(settings.getFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE))
-                .thenReturn(FilterType.ALL);
+        when(settings.getNotesFilterType()).thenReturn(FilterType.ALL);
         presenter = new NotesPresenter(
                 repository, view, viewModel, schedulerProvider, laanoUiManager, settings);
     }

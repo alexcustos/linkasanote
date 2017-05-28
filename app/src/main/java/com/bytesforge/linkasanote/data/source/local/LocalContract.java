@@ -154,6 +154,7 @@ public final class LocalContract {
         public static final String TABLE_NAME = "favorite";
 
         public static final String COLUMN_NAME_NAME = "name";
+        public static final String COLUMN_NAME_AND_GATE = "and_gate";
 
         public static final String CONTENT_TYPE =
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + FavoriteEntry.TABLE_NAME;
@@ -169,6 +170,7 @@ public final class LocalContract {
                 FavoriteEntry.COLUMN_NAME_CREATED,
                 FavoriteEntry.COLUMN_NAME_UPDATED,
                 FavoriteEntry.COLUMN_NAME_NAME,
+                FavoriteEntry.COLUMN_NAME_AND_GATE,
                 FavoriteEntry.COLUMN_NAME_ETAG,
                 FavoriteEntry.COLUMN_NAME_DUPLICATED,
                 FavoriteEntry.COLUMN_NAME_CONFLICTED,

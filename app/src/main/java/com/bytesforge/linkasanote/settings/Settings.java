@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -15,6 +16,9 @@ import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.laano.FilterType;
+import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenter;
+import com.bytesforge.linkasanote.laano.links.LinksPresenter;
+import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.google.common.base.Strings;
@@ -59,9 +63,9 @@ public class Settings {
 
     private static final String SETTING_LAST_SYNC_TIME = "LAST_SYNC_TIME";
     private static final String SETTING_SYNC_STATUS = "SYNC_STATUS";
-    private static final String SETTING_LINK_FILTER = "LINK_FILTER";
-    private static final String SETTING_FAVORITE_FILTER = "FAVORITE_FILTER";
-    private static final String SETTING_NOTE_FILTER = "NOTE_FILTER";
+    private static final String SETTING_LINK_FILTER_ID = "LINK_FILTER";
+    private static final String SETTING_FAVORITE_FILTER_ID = "FAVORITE_FILTER";
+    private static final String SETTING_NOTE_FILTER_ID = "NOTE_FILTER";
     private static final String SETTING_SHOW_CONFLICT_RESOLUTION_WARNING =
             "SHOW_CONFLICT_RESOLUTION_WARNING";
     private static final String SETTING_SHOW_FILL_IN_FORM_INFO = "SHOW_FILL_IN_FORM_INFO";
@@ -71,9 +75,9 @@ public class Settings {
     private static final int DEFAULT_SYNC_STATUS = SyncAdapter.SYNC_STATUS_UNKNOWN;
     public static final FilterType DEFAULT_FILTER_TYPE = FilterType.ALL;
     private static final String DEFAULT_LAST_SYNCED_ETAG  = null;
-    private static final String DEFAULT_LINK_FILTER = null;
-    private static final String DEFAULT_FAVORITE_FILTER = null;
-    private static final String DEFAULT_NOTE_FILTER = null;
+    private static final String DEFAULT_LINK_FILTER_ID = null;
+    private static final String DEFAULT_FAVORITE_FILTER_ID = null;
+    private static final String DEFAULT_NOTE_FILTER_ID = null;
     private static final boolean DEFAULT_SHOW_CONFLICT_RESOLUTION_WARNING = true;
     private static final boolean DEFAULT_SHOW_FILL_IN_FORM_INFO = true;
     private static final boolean DEFAULT_NOTES_LAYOUT_MODE_READING = false;
@@ -85,23 +89,53 @@ public class Settings {
 
     // Runtime settings
 
-    private boolean syncable;
-    private boolean online;
+    private boolean syncable = false;
+    private boolean online = false;
+    private Link linkFilter = null; // OPTIMIZATION: just linkTitle is needed
+    private Favorite favoriteFilter = null;
+    private Note noteFilter = null; // OPTIMIZATION: just noteTitle is needed
+
+    public boolean isSyncable() {
+        return syncable;
+    }
 
     public void setSyncable(boolean syncable) {
         this.syncable = syncable;
     }
 
-    public boolean isSyncable() {
-        return syncable;
+    public boolean isOnline() {
+        return online;
     }
 
     public void setOnline(boolean online) {
         this.online = online;
     }
 
-    public boolean isOnline() {
-        return online;
+    @Nullable
+    public Link getLinkFilter() {
+        return linkFilter;
+    }
+
+    public void setLinkFilter(Link linkFilter) {
+        this.linkFilter = linkFilter;
+    }
+
+    @Nullable
+    public Favorite getFavoriteFilter() {
+        return favoriteFilter;
+    }
+
+    public void setFavoriteFilter(Favorite favoriteFilter) {
+        this.favoriteFilter = favoriteFilter;
+    }
+
+    @Nullable
+    public Note getNoteFilter() {
+        return noteFilter;
+    }
+
+    public void setNoteFilter(Note noteFilter) {
+        this.noteFilter = noteFilter;
     }
 
     // Normal settings
@@ -248,7 +282,7 @@ public class Settings {
     }
 
     @NonNull
-    public FilterType getFilterType(@NonNull String key) {
+    private FilterType getFilterType(@NonNull String key) {
         checkNotNull(key);
         int ordinal = sharedPreferences.getInt(key, DEFAULT_FILTER_TYPE.ordinal());
         try {
@@ -258,7 +292,7 @@ public class Settings {
         }
     }
 
-    public synchronized void setFilterType(@NonNull String key, FilterType filterType) {
+    private synchronized void setFilterType(@NonNull String key, FilterType filterType) {
         checkNotNull(key);
         if (filterType == null) return;
 
@@ -268,75 +302,108 @@ public class Settings {
         }
     }
 
-    public String getLinkFilter() {
-        return sharedPreferences.getString(SETTING_LINK_FILTER, DEFAULT_LINK_FILTER);
+    public FilterType getLinksFilterType() {
+        return getFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE);
     }
 
-    public synchronized void setLinkFilter(String linkId) {
-        String filter = getLinkFilter();
-        if (filter == null && linkId == null) return;
+    public void setLinksFilterType(@NonNull FilterType filterType) {
+        checkNotNull(filterType);
+        setFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE, filterType);
+    }
 
-        if (filter == null ^ linkId == null) {
-            putStringSetting(SETTING_LINK_FILTER, linkId);
-        } else if (!linkId.equals(filter)) {
-            putStringSetting(SETTING_LINK_FILTER, linkId);
+    @Nullable
+    public String getLinkFilterId() {
+        return sharedPreferences.getString(SETTING_LINK_FILTER_ID, DEFAULT_LINK_FILTER_ID);
+    }
+
+    public synchronized void setLinkFilterId(String linkId) {
+        if (linkId == null) linkFilter = null;
+        String filterId = getLinkFilterId();
+        if (filterId == null && linkId == null) return;
+
+        if (filterId == null ^ linkId == null) {
+            putStringSetting(SETTING_LINK_FILTER_ID, linkId);
+        } else if (!linkId.equals(filterId)) {
+            putStringSetting(SETTING_LINK_FILTER_ID, linkId);
         }
     }
 
-    public void resetLinkFilter(String linkId) {
-        String filter = getLinkFilter();
-        if (filter == null || linkId == null) return;
+    public void resetLinkFilterId(String linkId) {
+        String filterId = getLinkFilterId();
+        if (filterId == null || linkId == null) return;
 
-        if (filter.equals(linkId)) {
-            setLinkFilter(null);
+        if (filterId.equals(linkId)) {
+            setLinkFilterId(null);
         }
     }
 
-    public String getFavoriteFilter() {
-        return sharedPreferences.getString(SETTING_FAVORITE_FILTER, DEFAULT_FAVORITE_FILTER);
+    public FilterType getFavoritesFilterType() {
+        return getFilterType(FavoritesPresenter.SETTING_FAVORITES_FILTER_TYPE);
     }
 
-    public synchronized void setFavoriteFilter(String favoriteId) {
-        String filter = getFavoriteFilter();
-        if (filter == null && favoriteId == null) return;
+    public void setFavoritesFilterType(@NonNull FilterType filterType) {
+        checkNotNull(filterType);
+        setFilterType(FavoritesPresenter.SETTING_FAVORITES_FILTER_TYPE, filterType);
+    }
 
-        if (filter == null ^ favoriteId == null) {
-            putStringSetting(SETTING_FAVORITE_FILTER, favoriteId);
-        } else if (!favoriteId.equals(filter)) {
-            putStringSetting(SETTING_FAVORITE_FILTER, favoriteId);
+    @Nullable
+    public String getFavoriteFilterId() {
+        return sharedPreferences.getString(SETTING_FAVORITE_FILTER_ID, DEFAULT_FAVORITE_FILTER_ID);
+    }
+
+    public synchronized void setFavoriteFilterId(String favoriteId) {
+        if (favoriteId == null) favoriteFilter = null;
+        String filterId = getFavoriteFilterId();
+        if (filterId == null && favoriteId == null) return;
+
+        if (filterId == null ^ favoriteId == null) {
+            putStringSetting(SETTING_FAVORITE_FILTER_ID, favoriteId);
+        } else if (!favoriteId.equals(filterId)) {
+            putStringSetting(SETTING_FAVORITE_FILTER_ID, favoriteId);
         }
     }
 
-    public void resetFavoriteFilter(String favoriteId) {
-        String filter = getFavoriteFilter();
-        if (filter == null || favoriteId == null) return;
+    public void resetFavoriteFilterId(String favoriteId) {
+        String filterId = getFavoriteFilterId();
+        if (filterId == null || favoriteId == null) return;
 
-        if (filter.equals(favoriteId)) {
-            setFavoriteFilter(null);
+        if (filterId.equals(favoriteId)) {
+            setFavoriteFilterId(null);
         }
     }
 
-    public String getNoteFilter() {
-        return sharedPreferences.getString(SETTING_NOTE_FILTER, DEFAULT_NOTE_FILTER);
+    public FilterType getNotesFilterType() {
+        return getFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE);
     }
 
-    public synchronized void setNoteFilter(String noteId) {
-        String filter = getNoteFilter();
-        if (filter == null && noteId == null) return;
+    public void setNotesFilterType(@NonNull FilterType filterType) {
+        checkNotNull(filterType);
+        setFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE, filterType);
+    }
 
-        if (filter == null ^ noteId == null) {
-            putStringSetting(SETTING_NOTE_FILTER, noteId);
-        } else if (!noteId.equals(filter)) {
-            putStringSetting(SETTING_NOTE_FILTER, noteId);
+    @Nullable
+    public String getNoteFilterId() {
+        return sharedPreferences.getString(SETTING_NOTE_FILTER_ID, DEFAULT_NOTE_FILTER_ID);
+    }
+
+    public synchronized void setNoteFilterId(String noteId) {
+        if (noteId == null) noteFilter = null;
+        String filterId = getNoteFilterId();
+        if (filterId == null && noteId == null) return;
+
+        if (filterId == null ^ noteId == null) {
+            putStringSetting(SETTING_NOTE_FILTER_ID, noteId);
+        } else if (!noteId.equals(filterId)) {
+            putStringSetting(SETTING_NOTE_FILTER_ID, noteId);
         }
     }
 
-    public void resetNoteFilter(String noteId) {
-        String filter = getNoteFilter();
-        if (filter == null || noteId == null) return;
+    public void resetNoteFilterId(String noteId) {
+        String filterId = getNoteFilterId();
+        if (filterId == null || noteId == null) return;
 
-        if (filter.equals(noteId)) {
-            setNoteFilter(null);
+        if (filterId.equals(noteId)) {
+            setNoteFilterId(null);
         }
     }
 
