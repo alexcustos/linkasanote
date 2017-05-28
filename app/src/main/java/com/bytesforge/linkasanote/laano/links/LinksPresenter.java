@@ -54,12 +54,14 @@ public final class LinksPresenter extends BaseItemPresenter implements
     @NonNull
     private final CompositeDisposable compositeDisposable;
 
-    private String favoriteFilterId; // cache
-    private boolean favoriteAndGate; // cache
-    private String noteFilterId; // cache
+    private String favoriteFilterId;
+    private int favoriteHashCode;
+    private String noteFilterId;
+    private int noteHashCode;
+    private int linkCacheSize = -1;
     private FilterType filterType;
     private boolean filterIsChanged = true;
-    private boolean firstLoad = true;
+    private boolean loadIsCompleted = false;
 
     @Inject
     LinksPresenter(
@@ -109,8 +111,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
 
     @Override
     public void loadLinks(final boolean forceUpdate) {
-        loadLinks(forceUpdate || firstLoad, true);
-        firstLoad = false;
+        loadLinks(forceUpdate, true);
     }
 
     private void loadLinks(boolean forceUpdate, final boolean showLoading) {
@@ -122,9 +123,11 @@ public final class LinksPresenter extends BaseItemPresenter implements
         FilterType extendedFilter = updateFilter();
         if (!repository.isLinkCacheDirty()
                 && !filterIsChanged
-                && viewModel.getListSize() == repository.getLinkCacheSize()) {
+                && linkCacheSize == repository.getLinkCacheSize()
+                && loadIsCompleted) {
             return;
         }
+        loadIsCompleted = false;
         if (showLoading) {
             viewModel.showProgressOverlay();
         }
@@ -135,8 +138,8 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     .flatMap(favorite -> {
                         // NOTE: just to be sure we are still in sync
                         filterType = FilterType.FAVORITE;
-                        favoriteFilterId = favorite.getId(); // cache
-                        favoriteAndGate = favorite.isAndGate(); // cache
+                        favoriteFilterId = favorite.getId();
+                        favoriteHashCode = favorite.hashCode();
                         settings.setFavoriteFilter(favorite);
                         laanoUiManager.setFilterType(TAB, filterType);
                         return repository.getLinks();
@@ -161,7 +164,8 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     .toObservable()
                     .flatMap(note -> {
                         filterType = FilterType.NOTE;
-                        noteFilterId = note.getId(); // cache
+                        noteFilterId = note.getId();
+                        noteHashCode = note.hashCode();
                         settings.setNoteFilter(note);
                         laanoUiManager.setFilterType(TAB, filterType);
                         return repository.getLinks();
@@ -251,6 +255,8 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     view.showLinks(links);
                     selectLinkFilter();
                     filterIsChanged = false;
+                    linkCacheSize = repository.getLinkCacheSize();
+                    loadIsCompleted = true;
                 }, throwable -> {
                     // NullPointerException
                     CommonUtils.logStackTrace(TAG, throwable);
@@ -582,7 +588,8 @@ public final class LinksPresenter extends BaseItemPresenter implements
     @Override
     @Nullable
     public Boolean isFavoriteAndGate() {
-        return favoriteAndGate;
+        Favorite favoriteFilter = settings.getFavoriteFilter();
+        return favoriteFilter != null && favoriteFilter.isAndGate();
     }
 
     /**
@@ -594,13 +601,15 @@ public final class LinksPresenter extends BaseItemPresenter implements
 
         String prevFavoriteFilterId = this.favoriteFilterId;
         this.favoriteFilterId = settings.getFavoriteFilterId();
-
         Favorite favoriteFilter = settings.getFavoriteFilter();
-        boolean prevFavoriteAndGate = this.favoriteAndGate;
-        this.favoriteAndGate = (favoriteFilter != null && favoriteFilter.isAndGate());
+        int prevFavoriteHashCode = this.favoriteHashCode;
+        this.favoriteHashCode = favoriteFilter == null ? 0 : favoriteFilter.hashCode();
 
         String prevNoteFilterId = this.noteFilterId;
         this.noteFilterId = settings.getNoteFilterId();
+        Note noteFilter = settings.getNoteFilter();
+        int prevNoteHashCode = this.noteHashCode;
+        this.noteHashCode = noteFilter == null ? 0 : noteFilter.hashCode();
 
         switch (filterType) {
             case ALL:
@@ -617,7 +626,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 if (this.filterType == filterType
                         && this.favoriteFilterId != null
                         && this.favoriteFilterId.equals(prevFavoriteFilterId)
-                        && this.favoriteAndGate == prevFavoriteAndGate) {
+                        && this.favoriteHashCode == prevFavoriteHashCode) {
                     return null;
                 }
                 filterIsChanged = true;
@@ -630,7 +639,8 @@ public final class LinksPresenter extends BaseItemPresenter implements
             case NOTE:
                 if (this.filterType == filterType
                         && this.noteFilterId != null
-                        && this.noteFilterId.equals(prevNoteFilterId)) {
+                        && this.noteFilterId.equals(prevNoteFilterId)
+                        && this.noteHashCode == prevNoteHashCode) {
                     return null;
                 }
                 filterIsChanged = true;

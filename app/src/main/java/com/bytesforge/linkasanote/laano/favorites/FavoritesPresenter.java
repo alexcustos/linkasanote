@@ -47,9 +47,10 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     @NonNull
     private final CompositeDisposable compositeDisposable;
 
+    private int favoriteCacheSize = -1;
     private FilterType filterType;
     private boolean filterIsChanged = true;
-    private boolean firstLoad = true;
+    private boolean loadIsCompleted = false;
 
     @Inject
     FavoritesPresenter(
@@ -99,8 +100,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
 
     @Override
     public void loadFavorites(final boolean forceUpdate) {
-        loadFavorites(forceUpdate || firstLoad, true);
-        firstLoad = false;
+        loadFavorites(forceUpdate, true);
     }
 
     private void loadFavorites(boolean forceUpdate, final boolean showLoading) {
@@ -112,9 +112,11 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         updateFilter();
         if (!repository.isFavoriteCacheDirty()
                 && !filterIsChanged
-                && viewModel.getListSize() == repository.getFavoriteCacheSize()) {
+                && favoriteCacheSize == repository.getFavoriteCacheSize()
+                && loadIsCompleted) {
             return;
         }
+        loadIsCompleted = false;
         if (showLoading) {
             viewModel.showProgressOverlay();
         }
@@ -150,6 +152,8 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     view.showFavorites(favorites);
                     selectFavoriteFilter();
                     filterIsChanged = false;
+                    favoriteCacheSize = repository.getFavoriteCacheSize();
+                    loadIsCompleted = true;
                 }, throwable -> {
                     // NullPointerException
                     CommonUtils.logStackTrace(TAG, throwable);

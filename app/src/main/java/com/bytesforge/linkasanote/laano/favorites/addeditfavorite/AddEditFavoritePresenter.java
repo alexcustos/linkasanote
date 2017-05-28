@@ -80,7 +80,6 @@ public final class AddEditFavoritePresenter implements
     @Override
     public void loadTags() {
         tagsDisposable.clear(); // stop previous requests
-
         Disposable disposable = repository.getTags()
                 .subscribeOn(schedulerProvider.computation())
                 .toList()
@@ -103,7 +102,6 @@ public final class AddEditFavoritePresenter implements
             throw new RuntimeException("populateFavorite() was called but favoriteId is null");
         }
         favoriteDisposable.clear();
-
         Disposable disposable = repository.getFavorite(favoriteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
@@ -149,11 +147,12 @@ public final class AddEditFavoritePresenter implements
                     switch (itemState) {
                         case DEFERRED:
                             String favoriteFilterId = settings.getFavoriteFilterId();
-                            if (favoriteFilterId != null
-                                    && favoriteFilterId.equals(favoriteId)) {
+                            if (favoriteId.equals(favoriteFilterId)) {
                                 settings.setFavoriteFilter(favorite);
                             }
-                            view.finishActivity(favoriteId);
+                            if (view.isActive()) {
+                                view.finishActivity(favoriteId);
+                            }
                             break;
                     }
                 }, throwable -> {

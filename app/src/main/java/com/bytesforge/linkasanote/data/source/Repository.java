@@ -425,7 +425,7 @@ public class Repository implements DataSource {
         checkNotNull(linkId);
         return cloudDataSource.deleteLink(linkId)
                 .doOnSuccess(itemState -> {
-                    // NOTE: once nullPointerException was thrown on itemState.ordinal()
+                    // NOTE: flatMap -> return null: actually returns null to onSuccess, so NPE here is not normal but it is expected
                     switch (itemState) {
                         case DELETED: // visibility was not changed
                             break;
@@ -444,7 +444,6 @@ public class Repository implements DataSource {
                     notifyLinksDeleteCallbacks(linkId, itemState);
                     return itemState;
                 });
-
     }
 
     @Override
@@ -779,6 +778,7 @@ public class Repository implements DataSource {
         checkNotNull(favoriteId);
         return cloudDataSource.deleteFavorite(favoriteId)
                 .doOnSuccess(itemState -> {
+                    // NOTE: flatMap -> return null: actually returns null to onSuccess, so NPE here is not normal but it is expected
                     switch (itemState) {
                         case DELETED: // visibility was not changed
                             break;
@@ -797,7 +797,6 @@ public class Repository implements DataSource {
                     notifyFavoritesDeleteCallbacks(favoriteId, itemState);
                     return itemState;
                 });
-
     }
 
     @Override
@@ -1124,6 +1123,7 @@ public class Repository implements DataSource {
         checkNotNull(noteId);
         return cloudDataSource.deleteNote(noteId)
                 .doOnSuccess(itemState -> {
+                    // NOTE: flatMap -> return null: actually returns null to onSuccess, so NPE here is not normal but it is expected
                     switch (itemState) {
                         case DELETED: // visibility was not changed
                             break;
@@ -1142,7 +1142,6 @@ public class Repository implements DataSource {
                     notifyNotesDeleteCallbacks(noteId, itemState);
                     return itemState;
                 });
-
     }
 
     @Override

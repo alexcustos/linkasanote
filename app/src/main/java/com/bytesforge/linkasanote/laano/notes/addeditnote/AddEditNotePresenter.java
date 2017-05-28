@@ -88,7 +88,6 @@ public final class AddEditNotePresenter implements
     @Override
     public void loadTags() {
         tagsDisposable.clear(); // stop previous requests
-
         Disposable disposable = repository.getTags()
                 .subscribeOn(schedulerProvider.computation())
                 .toList()
@@ -111,7 +110,6 @@ public final class AddEditNotePresenter implements
             throw new RuntimeException("populateNote() was called but noteId is null");
         }
         noteDisposable.clear();
-
         Disposable disposable = repository.getNote(noteId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
@@ -188,7 +186,13 @@ public final class AddEditNotePresenter implements
                             if (linkId != null) {
                                 repository.refreshLink(linkId);
                             }
-                            view.finishActivity(noteId, linkId);
+                            String noteFilterId = settings.getNoteFilterId();
+                            if (noteId.equals(noteFilterId)) {
+                                settings.setNoteFilter(note);
+                            }
+                            if (view.isActive()) {
+                                view.finishActivity(noteId, linkId);
+                            }
                             break;
                     }
                 }, throwable -> {

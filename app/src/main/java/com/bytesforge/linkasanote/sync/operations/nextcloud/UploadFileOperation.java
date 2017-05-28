@@ -85,7 +85,7 @@ public class UploadFileOperation extends RemoteOperation {
 
         public EnhancedUploadRemoteFileOperation(
                 String localPath, String remotePath, String mimeType) {
-            super(localPath, remotePath, mimeType, Long.toString(currentTimeMillis()));
+            super(localPath, remotePath, mimeType, Long.toString(currentTimeMillis() / 1000));
         }
 
         @Nullable

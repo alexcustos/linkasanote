@@ -132,8 +132,9 @@ public class CloudDataSource {
                         return null;
                     }).flatMap(result -> {
                         if (result.isSuccess()) {
+                            // NOTE: success == false if unsynced item has been already deleted
                             return localLinks.delete(linkId).map(
-                                    success -> success ? DataSource.ItemState.DELETED : null);
+                                    success -> DataSource.ItemState.DELETED);
                         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                             SyncState conflictedState = new SyncState(
                                     state, SyncState.State.CONFLICTED_DELETE);
@@ -220,8 +221,9 @@ public class CloudDataSource {
                         return null;
                     }).flatMap(result -> {
                         if (result.isSuccess()) {
+                            // NOTE: success == false if unsynced item has been already deleted
                             return localFavorites.delete(favoriteId).map(
-                                    success -> success ? DataSource.ItemState.DELETED : null);
+                                    success -> DataSource.ItemState.DELETED);
                         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                             SyncState conflictedState = new SyncState(
                                     state, SyncState.State.CONFLICTED_DELETE);
@@ -308,8 +310,9 @@ public class CloudDataSource {
                         return null;
                     }).flatMap(result -> {
                         if (result.isSuccess()) {
+                            // NOTE: success == false if unsynced item has been already deleted
                             return localNotes.delete(noteId).map(
-                                    success -> success ? DataSource.ItemState.DELETED : null);
+                                    success -> DataSource.ItemState.DELETED);
                         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                             SyncState conflictedState = new SyncState(
                                     state, SyncState.State.CONFLICTED_DELETE);

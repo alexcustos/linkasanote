@@ -88,7 +88,7 @@ public class CloudItem<T extends Item> {
                     JsonFile.getTempFileName(item.getId());
             final File localFile = new File(localPath);
             try {
-                Files.write(itemJson.toString(), localFile, Charsets.UTF_8);
+                Files.asCharSink(localFile, Charsets.UTF_8).write(itemJson.toString());
             } catch (IOException e) {
                 Log.e(TAG, "Cannot create temporary file [" + localPath + "]");
                 return null;

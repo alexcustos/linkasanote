@@ -185,9 +185,9 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
             localState.set(resources.getString(R.string.dialog_favorite_conflict_state_no_conflict));
             localDeleteButton.set(true);
         }
-        String prefix = favorite.isAndGate()
+        String prefix = "(" + (favorite.isAndGate()
                 ? FavoritesViewModel.FILTER_AND_GATE_PREFIX
-                : FavoritesViewModel.FILTER_OR_GATE_PREFIX;
+                : FavoritesViewModel.FILTER_OR_GATE_PREFIX) + ")";
         localName.set(prefix + " " + favorite.getName());
         localTags = (ArrayList<Tag>) favorite.getTags();
         localStatus.set(null);
@@ -215,9 +215,9 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
             cloudState.set(resources.getString(R.string.dialog_favorite_conflict_state_updated));
             cloudDownloadButton.set(true);
         }
-        String prefix = favorite.isAndGate()
+        String prefix = "(" + (favorite.isAndGate()
                 ? FavoritesViewModel.FILTER_AND_GATE_PREFIX
-                : FavoritesViewModel.FILTER_OR_GATE_PREFIX;
+                : FavoritesViewModel.FILTER_OR_GATE_PREFIX) + ")";
         cloudName.set(prefix + " " + favorite.getName());
         cloudTags = (ArrayList<Tag>) favorite.getTags();
         cloudStatus.set(null);

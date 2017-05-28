@@ -266,6 +266,7 @@ public final class FavoritesConflictResolutionPresenter implements
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshFavorite(favoriteId);
+                        refreshFavoriteFilter(favoriteId);
                         view.finishActivity();
                     } else {
                         view.cancelActivity();
@@ -280,16 +281,25 @@ public final class FavoritesConflictResolutionPresenter implements
         String favoriteId = viewModel.getCloudId();
         cloudFavorites.download(favoriteId)
                 .subscribeOn(schedulerProvider.io())
-                .map(favorite -> localFavorites.save(favorite).blockingGet())
+                .flatMap(localFavorites::save)
                 .observeOn(schedulerProvider.ui())
                 .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshFavorites();
+                        refreshFavoriteFilter(favoriteId);
                         view.finishActivity();
                     } else {
                         view.cancelActivity();
                     }
                 }, throwable -> view.cancelActivity());
+    }
+
+    private void refreshFavoriteFilter(@NonNull String favoriteId) {
+        checkNotNull(favoriteId);
+        String favoriteFilterId = settings.getFavoriteFilterId();
+        if (favoriteId.equals(favoriteFilterId)) {
+            settings.setFavoriteFilter(null); // filter is set to be refreshed
+        }
     }
 }

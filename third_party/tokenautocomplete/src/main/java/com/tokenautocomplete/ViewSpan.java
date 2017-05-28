@@ -22,6 +22,8 @@ public class ViewSpan extends ReplacementSpan {
 
     private static final String TAG = ViewSpan.class.getSimpleName();
 
+    private static final char SENTINEL = ',';
+
     protected View view;
     private int maxWidth;
     private boolean prepared;
@@ -71,7 +73,9 @@ public class ViewSpan extends ReplacementSpan {
         prepView();
         // NOTE: only the first tag (measure) has ~2dp "padding"
         // NOTE: a string with the single tag can be trimmed up to span height when the layout is inflated
-        if (start == 0 && text.length() - 1 > end) {
+        String str = text.toString();
+        str = str.substring(0, str.lastIndexOf(SENTINEL) + 1);
+        if (start == 0 && str.length() > end) {
             // WORKAROUND: first measure is ignored if there are other ones
             return view.getRight();
         }

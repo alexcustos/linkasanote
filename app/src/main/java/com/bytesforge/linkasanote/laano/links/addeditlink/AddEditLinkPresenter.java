@@ -79,7 +79,6 @@ public final class AddEditLinkPresenter implements
     @Override
     public void loadTags() {
         tagsDisposable.clear(); // stop previous requests
-
         Disposable disposable = repository.getTags()
                 .subscribeOn(schedulerProvider.computation())
                 .toList()
@@ -102,7 +101,6 @@ public final class AddEditLinkPresenter implements
             throw new RuntimeException("populateLink() was called but linkId is null");
         }
         linkDisposable.clear();
-
         Disposable disposable = repository.getLink(linkId)
                 .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
@@ -150,7 +148,13 @@ public final class AddEditLinkPresenter implements
                 .subscribe(itemState -> {
                     switch (itemState) {
                         case DEFERRED:
-                            view.finishActivity(linkId);
+                            String linkFilterId = settings.getLinkFilterId();
+                            if (linkId.equals(linkFilterId)) {
+                                settings.setLinkFilter(link);
+                            }
+                            if (view.isActive()) {
+                                view.finishActivity(linkId);
+                            }
                             break;
                     }
                 }, throwable -> {

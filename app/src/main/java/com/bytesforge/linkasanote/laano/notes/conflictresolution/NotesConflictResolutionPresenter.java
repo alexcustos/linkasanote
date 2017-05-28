@@ -239,6 +239,7 @@ public final class NotesConflictResolutionPresenter implements
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshNote(noteId);
+                        refreshNoteFilter(noteId);
                         view.finishActivity();
                     } else {
                         view.cancelActivity();
@@ -253,16 +254,25 @@ public final class NotesConflictResolutionPresenter implements
         String noteId = viewModel.getCloudId();
         cloudNotes.download(noteId)
                 .subscribeOn(schedulerProvider.io())
-                .map(note -> localNotes.save(note).blockingGet())
+                .flatMap(localNotes::save)
                 .observeOn(schedulerProvider.ui())
                 .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshNotes();
+                        refreshNoteFilter(noteId);
                         view.finishActivity();
                     } else {
                         view.cancelActivity();
                     }
                 }, throwable -> view.cancelActivity());
+    }
+
+    private void refreshNoteFilter(@NonNull String noteId) {
+        checkNotNull(noteId);
+        String noteFilterId = settings.getNoteFilterId();
+        if (noteId.equals(noteFilterId)) {
+            settings.setNoteFilter(null); // filter is set to be refreshed
+        }
     }
 }

@@ -312,6 +312,7 @@ public final class LinksConflictResolutionPresenter implements
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshLink(linkId);
+                        refreshLinkFilter(linkId);
                         view.finishActivity();
                     } else {
                         view.cancelActivity();
@@ -326,16 +327,25 @@ public final class LinksConflictResolutionPresenter implements
         String linkId = viewModel.getCloudId();
         cloudLinks.download(linkId)
                 .subscribeOn(schedulerProvider.io())
-                .map(link -> localLinks.save(link).blockingGet())
+                .flatMap(localLinks::save)
                 .observeOn(schedulerProvider.ui())
                 .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
                         repository.refreshLinks();
+                        refreshLinkFilter(linkId);
                         view.finishActivity();
                     } else {
                         view.cancelActivity();
                     }
                 }, throwable -> view.cancelActivity());
+    }
+
+    private void refreshLinkFilter(@NonNull String linkId) {
+        checkNotNull(linkId);
+        String linkFilterId = settings.getLinkFilterId();
+        if (linkId.equals(linkFilterId)) {
+            settings.setLinkFilter(null); // filter is set to be refreshed
+        }
     }
 }
