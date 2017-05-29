@@ -67,6 +67,14 @@
                             android:layout_toEndOf="@+id/local_state_title"
                             android:text="@{viewModel.localState}"
                             style="@style/ConflictResolution.Title" />
+                        <TextView
+                            android:id="@+id/local_info"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/local_state_title"
+                            android:textAppearance="@style/ConflictResolution.Info"
+                            android:text="@{viewModel.localInfo}"
+                            android:visibility="@{viewModel.localInfo == null ? View.GONE : View.VISIBLE}" />
                     </RelativeLayout>
 
                     <TextView
@@ -163,6 +171,14 @@
                             android:layout_toEndOf="@+id/cloud_state_title"
                             android:text="@{viewModel.cloudState}"
                             style="@style/ConflictResolution.Title" />
+                        <TextView
+                            android:id="@+id/cloud_info"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/cloud_state_title"
+                            android:textAppearance="@style/ConflictResolution.Info"
+                            android:text="@{viewModel.cloudInfo}"
+                            android:visibility="@{viewModel.cloudInfo == null ? View.GONE : View.VISIBLE}" />
                     </RelativeLayout>
 
                     <TextView

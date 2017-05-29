@@ -206,8 +206,10 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
         }
         int notesSize = link.getNotesSize();
         localInfo.set(resources.getString(
-                R.string.links_conflict_resolution_info,
-                link.isDisabled() ? resources.getString(R.string.status_disabled) : resources.getString(R.string.status_enabled),
+                R.string.dialog_note_conflict_info,
+                link.isDisabled()
+                        ? resources.getString(R.string.status_disabled)
+                        : resources.getString(R.string.status_enabled),
                 resources.getQuantityString(R.plurals.count_notes, notesSize, notesSize).toLowerCase()));
         localName.set(link.getName());
         localLink.set(link.getLink());
@@ -235,7 +237,7 @@ public class LinksConflictResolutionViewModel extends BaseObservable implements
             cloudDeleteButton.set(true);
             int notesSize = link.getNotesSize();
             cloudInfo.set(resources.getString(
-                    R.string.links_conflict_resolution_info, link.isDisabled()
+                    R.string.dialog_note_conflict_info, link.isDisabled()
                             ? resources.getString(R.string.status_disabled)
                             : resources.getString(R.string.status_enabled),
                     resources.getQuantityString(R.plurals.count_notes, notesSize, notesSize).toLowerCase()));

@@ -25,6 +25,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
     private static final String STATE_LOCAL_STATE = "LOCAL_STATE";
     private static final String STATE_LOCAL_STATUS = "LOCAL_STATUS";
+    private static final String STATE_LOCAL_INFO = "LOCAL_INFO";
     private static final String STATE_LOCAL_ID = "LOCAL_ID";
     private static final String STATE_LOCAL_NAME = "LOCAL_NAME";
     private static final String STATE_LOCAL_TAGS = "LOCAL_TAGS";
@@ -33,6 +34,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
     private static final String STATE_CLOUD_STATE = "CLOUD_STATE";
     private static final String STATE_CLOUD_STATUS = "CLOUD_STATUS";
+    private static final String STATE_CLOUD_INFO = "CLOUD_INFO";
     private static final String STATE_CLOUD_ID = "CLOUD_ID";
     private static final String STATE_CLOUD_NAME = "CLOUD_NAME";
     private static final String STATE_CLOUD_TAGS = "CLOUD_TAGS";
@@ -45,12 +47,14 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
     public final ObservableField<String> localState = new ObservableField<>();
     public final ObservableField<String> localStatus = new ObservableField<>();
+    public final ObservableField<String> localInfo = new ObservableField<>();
     public final ObservableField<String> localName = new ObservableField<>();
     public final ObservableBoolean localDeleteButton = new ObservableBoolean();
     public final ObservableBoolean localUploadButton = new ObservableBoolean();
 
     public final ObservableField<String> cloudState = new ObservableField<>();
     public final ObservableField<String> cloudStatus = new ObservableField<>();
+    public final ObservableField<String> cloudInfo = new ObservableField<>();
     public final ObservableField<String> cloudName = new ObservableField<>();
     public final ObservableBoolean cloudDeleteButton = new ObservableBoolean();
     public final ObservableBoolean cloudDownloadButton = new ObservableBoolean();
@@ -90,6 +94,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         checkNotNull(outState);
         outState.putString(STATE_LOCAL_STATE, localState.get());
         outState.putString(STATE_LOCAL_STATUS, localStatus.get());
+        outState.putString(STATE_LOCAL_INFO, localInfo.get());
         outState.putString(STATE_LOCAL_ID, localId);
         outState.putString(STATE_LOCAL_NAME, localName.get());
         outState.putParcelableArrayList(STATE_LOCAL_TAGS, localTags);
@@ -98,6 +103,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
         outState.putString(STATE_CLOUD_STATE, cloudState.get());
         outState.putString(STATE_CLOUD_STATUS, cloudStatus.get());
+        outState.putString(STATE_CLOUD_INFO, cloudInfo.get());
         outState.putString(STATE_CLOUD_ID, cloudId);
         outState.putString(STATE_CLOUD_NAME, cloudName.get());
         outState.putParcelableArrayList(STATE_CLOUD_TAGS, cloudTags);
@@ -114,6 +120,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         checkNotNull(state);
         localState.set(state.getString(STATE_LOCAL_STATE));
         localStatus.set(state.getString(STATE_LOCAL_STATUS));
+        localInfo.set(state.getString(STATE_LOCAL_INFO));
         localId = state.getString(STATE_LOCAL_ID);
         localName.set(state.getString(STATE_LOCAL_NAME));
         localTags = state.getParcelableArrayList(STATE_LOCAL_TAGS);
@@ -122,6 +129,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
         cloudState.set(state.getString(STATE_CLOUD_STATE));
         cloudStatus.set(state.getString(STATE_CLOUD_STATUS));
+        cloudInfo.set(state.getString(STATE_CLOUD_INFO));
         cloudId = state.getString(STATE_CLOUD_ID);
         cloudName.set(state.getString(STATE_CLOUD_NAME));
         cloudTags = state.getParcelableArrayList(STATE_CLOUD_TAGS);
@@ -140,6 +148,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
         defaultState.putString(STATE_LOCAL_STATE, null);
         defaultState.putString(STATE_LOCAL_STATUS, resources.getString(R.string.status_loading));
+        defaultState.putString(STATE_LOCAL_INFO, null);
         defaultState.putString(STATE_LOCAL_ID, null);
         defaultState.putString(STATE_LOCAL_NAME, null);
         defaultState.putParcelableArrayList(STATE_LOCAL_TAGS, null);
@@ -148,6 +157,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
 
         defaultState.putString(STATE_CLOUD_STATE, null);
         defaultState.putString(STATE_CLOUD_STATUS, resources.getString(R.string.status_loading));
+        defaultState.putString(STATE_CLOUD_INFO, null);
         defaultState.putString(STATE_CLOUD_ID, null);
         defaultState.putString(STATE_CLOUD_NAME, null);
         defaultState.putParcelableArrayList(STATE_CLOUD_TAGS, null);
@@ -185,10 +195,18 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
             localState.set(resources.getString(R.string.dialog_favorite_conflict_state_no_conflict));
             localDeleteButton.set(true);
         }
-        String prefix = "(" + (favorite.isAndGate()
-                ? FavoritesViewModel.FILTER_AND_GATE_PREFIX
-                : FavoritesViewModel.FILTER_OR_GATE_PREFIX) + ")";
-        localName.set(prefix + " " + favorite.getName());
+        String gateInfo;
+        if (favorite.isAndGate()) {
+            gateInfo = resources.getString(
+                    R.string.dialog_favorite_conflict_info_and_gate,
+                    FavoritesViewModel.FILTER_AND_GATE_PREFIX);
+        } else {
+            gateInfo = resources.getString(
+                    R.string.dialog_favorite_conflict_info_or_gate,
+                    FavoritesViewModel.FILTER_OR_GATE_PREFIX);
+        }
+        localInfo.set(resources.getString(R.string.dialog_favorite_conflict_info, gateInfo));
+        localName.set(favorite.getName());
         localTags = (ArrayList<Tag>) favorite.getTags();
         localStatus.set(null);
         notifyChange(); // NOTE: it is really needed
@@ -215,10 +233,18 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
             cloudState.set(resources.getString(R.string.dialog_favorite_conflict_state_updated));
             cloudDownloadButton.set(true);
         }
-        String prefix = "(" + (favorite.isAndGate()
-                ? FavoritesViewModel.FILTER_AND_GATE_PREFIX
-                : FavoritesViewModel.FILTER_OR_GATE_PREFIX) + ")";
-        cloudName.set(prefix + " " + favorite.getName());
+        String gateInfo;
+        if (favorite.isAndGate()) {
+            gateInfo = resources.getString(
+                    R.string.dialog_favorite_conflict_info_and_gate,
+                    FavoritesViewModel.FILTER_AND_GATE_PREFIX);
+        } else {
+            gateInfo = resources.getString(
+                    R.string.dialog_favorite_conflict_info_or_gate,
+                    FavoritesViewModel.FILTER_OR_GATE_PREFIX);
+        }
+        cloudInfo.set(resources.getString(R.string.dialog_favorite_conflict_info, gateInfo));
+        cloudName.set(favorite.getName());
         cloudTags = (ArrayList<Tag>) favorite.getTags();
         cloudStatus.set(null);
         notifyChange();

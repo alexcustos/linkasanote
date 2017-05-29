@@ -169,6 +169,9 @@
     <string name="dialog_favorite_conflict_state_not_found">not found</string>
     <string name="dialog_favorite_conflict_state_error">error</string>
     <string name="dialog_favorite_conflict_status_error_download">There was an error while downloading</string>
+    <string name="dialog_favorite_conflict_info">Search: %s</string>
+    <string name="dialog_favorite_conflict_info_and_gate">all tags (%s)</string>
+    <string name="dialog_favorite_conflict_info_or_gate">any tag (%s)</string>
     <string name="dialog_favorite_conflict_resolved_success">Conflict is successfully resolved</string>
     <string name="dialog_favorite_conflict_resolved_error">There was an error while trying to resolve the conflict</string>
     <string name="dialog_favorite_conflicted_error">A conflict has been found while synchronizing</string>
@@ -289,6 +292,7 @@
     <string name="dialog_note_conflict_status_error_download">There was an error while downloading</string>
     <string name="dialog_note_conflict_resolved_success">Conflict is successfully resolved</string>
     <string name="dialog_note_conflict_resolved_error">There was an error while trying to resolve the conflict</string>
+    <string name="dialog_note_conflict_info">Status: %1$s, %2$s</string>
     <string name="dialog_note_conflict_info_unbound">Unbound</string>
     <string name="dialog_note_conflict_info_bound">Bound: %s</string>
     <string name="dialog_note_conflict_info_orphaned">ID: %s</string>
@@ -299,7 +303,6 @@
     <string name="dialog_do_not_show_checkbox">OK, please do not show again</string>
     <string name="links_conflict_resolution_warning_title">Warning</string>
     <string name="links_conflict_resolution_warning_message">All actions on the conflict resolution dialog will affect the Link and all it\'s Notes. If you want to process the Notes separately, please resolve the conflict manually.</string>
-    <string name="links_conflict_resolution_info">Status: %1$s, %2$s</string>
     <string name="card_button_expand_note_description">Expand the Note</string>
     <string name="card_button_collapse_note_description">Collapse the Note</string>
 

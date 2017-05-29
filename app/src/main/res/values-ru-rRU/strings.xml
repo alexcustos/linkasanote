@@ -172,6 +172,9 @@
     <string name="dialog_favorite_conflict_resolved_success">Конфликт успешно разрешён</string>
     <string name="dialog_favorite_conflict_resolved_error">Возникла ошибка в процессе разрешения конфликта</string>
     <string name="dialog_favorite_conflicted_error">Обнаружен конфликт во время синхронизации</string>
+    <string name="dialog_favorite_conflict_info">Искать: %s</string>
+    <string name="dialog_favorite_conflict_info_and_gate">все теги (%s)</string>
+    <string name="dialog_favorite_conflict_info_or_gate">любой тег (%s)</string>
     <string name="dialog_favorite_cloud_error">Обнаружена ошибка во время синхронизации</string>
     <string name="dialog_favorite_save_success">Избранное успешно сохранено</string>
     <string name="dialog_favorite_delete_success">Выделенные избранные удалены</string>
@@ -283,6 +286,7 @@
     <string name="dialog_note_conflict_status_error_download">Ошибка в процессе загрузки</string>
     <string name="dialog_note_conflict_resolved_success">Конфликт успешно разрешён</string>
     <string name="dialog_note_conflict_resolved_error">Возникла ошибка в процессе разрешения конфликта</string>
+    <string name="dialog_note_conflict_info">Статус: %1$s, %2$s</string>
     <string name="dialog_note_conflict_info_unbound">Отвязанная</string>
     <string name="dialog_note_conflict_info_bound">Связанная: %s</string>
     <string name="dialog_note_conflict_info_orphaned">ID: %s</string>
@@ -293,7 +297,6 @@
     <string name="dialog_do_not_show_checkbox">Хорошо, больше не показывать</string>
     <string name="links_conflict_resolution_warning_title">Предупреждение</string>
     <string name="links_conflict_resolution_warning_message">Все действия в окне разрешения конфликта будут также затрагивать связанные со ссылкой заметки. Если необходимо обработать заметки отдельно, пожалуйста разрешите конфликт вручную.</string>
-    <string name="links_conflict_resolution_info">Статус: %1$s, %2$s</string>
     <string name="card_button_expand_note_description">Развернуть заметку</string>
     <string name="card_button_collapse_note_description">Свернуть заметку</string>
 
