@@ -65,4 +65,9 @@
     <dimen name="card_link_notes_bottom_spacer_height">8dp</dimen>
     <dimen name="card_link_add_note_margin_start">4dp</dimen>
     <dimen name="card_notes_count_margin_horizontal">4dp</dimen>
+
+    <dimen name="app_default_size_w">600dp</dimen>
+    <dimen name="app_default_size_h">600dp</dimen>
+    <dimen name="app_minimum_size_w">600dp</dimen>
+    <dimen name="app_minimum_size_h">600dp</dimen>
 </resources>

@@ -29,6 +29,8 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+                <category android:name="android.intent.category.PENWINDOW_LAUNCHER" />
             </intent-filter>
             <meta-data android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
@@ -81,5 +83,24 @@
 
         <service android:name=".sync.operations.OperationsService" />
         <service android:name=".laano.ClipboardService" />
+
+        <uses-library android:name="com.sec.android.app.multiwindow"
+            android:required="false" />
+        <meta-data android:name="com.sec.android.support.multiwindow"
+            android:value="true" />
+
+        <meta-data android:name="com.sec.android.multiwindow.DEFAULT_SIZE_W"
+            android:value="@dimen/app_default_size_w" />
+        <meta-data android:name="com.sec.android.multiwindow.DEFAULT_SIZE_H"
+            android:value="@dimen/app_default_size_h" />
+        <meta-data android:name="com.sec.android.multiwindow.MINIMUM_SIZE_W"
+            android:value="@dimen/app_minimum_size_w" />
+        <meta-data android:name="com.sec.android.multiwindow.MINIMUM_SIZE_H"
+            android:value="@dimen/app_minimum_size_h" />
+
+        <meta-data android:name="com.samsung.android.sdk.multiwindow.enable"
+            android:value="true" />
+        <meta-data android:name="com.samsung.android.sdk.multiwindow.penwindow.enable"
+            android:value="true" />
     </application>
 </manifest>
