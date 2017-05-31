@@ -28,6 +28,8 @@ public abstract class BaseItemViewModel extends BaseObservable implements
     private static final String STATE_SEARCH_TEXT = "SEARCH_TEXT";
     private static final String STATE_PROGRESS_OVERLAY = "PROGRESS_OVERLAY";
 
+    public static final String STATE_RECYCLER_LAYOUT = "RECYCLER_LAYOUT";
+
     public final ObservableBoolean actionMode = new ObservableBoolean();
     public final ObservableInt listSize = new ObservableInt();
     public final ObservableField<String> filterId = new ObservableField<>();

@@ -188,6 +188,7 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
             accountManager.removeAccount(account, getActivity(), removeAccountCallback, handler);
         } else {
+            //noinspection deprecation
             accountManager.removeAccount(account, removeAccountCallbackCompat, handler);
         }
     }

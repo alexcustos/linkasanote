@@ -119,7 +119,8 @@ public final class CloudUtils {
         try {
             ocAccount = new OwnCloudAccount(account, context);
         } catch (AccountUtils.AccountNotFoundException e) {
-            Log.e(TAG, "Account was not found on this device. ", e);
+            Log.e(TAG, "Account was not found on this device");
+            CommonUtils.logStackTrace(TAG, e);
             return null;
         }
         try {
@@ -127,7 +128,8 @@ public final class CloudUtils {
                     .getClientFor(ocAccount, context);
         } catch (AccountUtils.AccountNotFoundException
                 | OperationCanceledException | AuthenticatorException | IOException e) {
-            Log.e(TAG, "Cannot get client for the account. ", e);
+            Log.e(TAG, "Cannot get client for the account");
+            CommonUtils.logStackTrace(TAG, e);
         }
         return null;
     }
@@ -148,7 +150,6 @@ public final class CloudUtils {
     public static AccountItem getAccountItem(@NonNull Account account, @NonNull Context context) {
         checkNotNull(account);
         checkNotNull(context);
-
         AccountItem accountItem = new AccountItem(account);
         try {
             OwnCloudAccount ocAccount = new OwnCloudAccount(account, context);

@@ -187,7 +187,7 @@ public class OperationsService extends Service {
     @NonNull
     private OperationItem buildOperation(
             Intent intent, OnRemoteOperationListener listener, Handler handler) {
-        RemoteOperation operation = null;
+        RemoteOperation operation;
 
         if (!intent.hasExtra(EXTRA_ACCOUNT) && !intent.hasExtra(EXTRA_SERVER_URL)) {
             throw new InvalidParameterException(

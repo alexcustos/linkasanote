@@ -269,7 +269,8 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
             @Override
             protected boolean keepObject(Tag tag, String mask) {
                 String name = tag.getName();
-                return name != null && name.toLowerCase().startsWith(mask)
+                return name != null
+                        && name.toLowerCase().startsWith(mask.trim().toLowerCase())
                         && !completionView.getObjects().contains(tag);
             }
         };

@@ -86,7 +86,7 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
 
     @Override
     public String normalizeUrl(final String serverUrl) {
-        String normalizedUrl = "";
+        String normalizedUrl;
         // Empty
         if (Strings.isNullOrEmpty(serverUrl)) {
             viewModel.showEmptyUrlWarning();

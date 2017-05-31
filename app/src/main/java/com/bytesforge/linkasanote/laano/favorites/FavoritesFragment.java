@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -29,6 +30,7 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoFavoritesBinding;
 import com.bytesforge.linkasanote.laano.BaseItemFragment;
+import com.bytesforge.linkasanote.laano.BaseItemViewModel;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteActivity;
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteFragment;
@@ -51,6 +53,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     private FavoritesAdapter adapter;
     private ActionMode actionMode;
     private LinearLayoutManager rvLayoutManager;
+    private Parcelable rvLayoutState;
     private FavoritesActionModeCallback favoritesActionModeCallback;
 
     public static FavoritesFragment newInstance() {
@@ -98,6 +101,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         FragmentLaanoFavoritesBinding binding =
                 FragmentLaanoFavoritesBinding.inflate(inflater, container, false);
         viewModel.setInstanceState(savedInstanceState);
+        setRvLayoutState(savedInstanceState);
         binding.setViewModel((FavoritesViewModel) viewModel);
         // RecyclerView
         setupFavoritesRecyclerView(binding.rvFavorites);
@@ -170,6 +174,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         viewModel.saveInstanceState(outState);
+        saveRvLayoutState(outState);
     }
 
     @Override
@@ -194,6 +199,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         if (viewModel.isActionMode()) {
             enableActionMode();
         }
+        applyRvLayoutState();
     }
 
     @Override
@@ -243,6 +249,26 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         ((SimpleItemAnimator) rvFavorites.getItemAnimator()).setSupportsChangeAnimations(false);
     }
 
+    private void setRvLayoutState(@Nullable Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            rvLayoutState = savedInstanceState.getParcelable(
+                    BaseItemViewModel.STATE_RECYCLER_LAYOUT);
+        }
+    }
+
+    private void saveRvLayoutState(@NonNull Bundle outState) {
+        checkNotNull(outState);
+        outState.putParcelable(BaseItemViewModel.STATE_RECYCLER_LAYOUT,
+                rvLayoutManager.onSaveInstanceState());
+    }
+
+    private void applyRvLayoutState() {
+        if (rvLayoutManager != null && rvLayoutState != null) {
+            rvLayoutManager.onRestoreInstanceState(rvLayoutState);
+            rvLayoutState = null;
+        }
+    }
+
     private void showFilteringPopupMenu() {
         PopupMenu popupMenu = new PopupMenu(
                 getContext(), getActivity().findViewById(R.id.toolbar_favorites_filter));
@@ -257,7 +283,8 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
                     presenter.setFilterType(FilterType.CONFLICTED);
                     break;
             }
-            presenter.loadFavorites(false);
+            // NOTE: also go to the start of the list if the current filter is selected
+            scrollToPosition(0);
             return true;
         });
         MenuItem filterLinkMenuItem = menu.findItem(R.id.filter_link);

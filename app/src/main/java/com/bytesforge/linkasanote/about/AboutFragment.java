@@ -223,6 +223,7 @@ public class AboutFragment extends Fragment implements AboutContract.View {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 return Html.fromHtml(source, Html.FROM_HTML_MODE_LEGACY);
             } else {
+                //noinspection deprecation
                 return Html.fromHtml(source);
             }
         }

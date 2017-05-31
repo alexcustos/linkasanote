@@ -50,6 +50,7 @@ public class Settings {
     public static final boolean GLOBAL_CLIPBOARD_MONITOR_ON_START = true;
     public static final long GLOBAL_JSON_MAX_BODY_SIZE_BYTES = 10 * 1024;
     public static final String GLOBAL_APPLICATION_DIRECTORY = "LaaNo";
+    public static final int GLOBAL_RETRY_ON_NETWORK_ERROR = 1;
 
     private static final boolean DEFAULT_EXPAND_LINKS = false;
     private static final boolean DEFAULT_EXPAND_NOTES = true;

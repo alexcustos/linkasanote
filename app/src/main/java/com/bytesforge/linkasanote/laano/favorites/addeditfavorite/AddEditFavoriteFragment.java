@@ -263,7 +263,8 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
             @Override
             protected boolean keepObject(Tag tag, String mask) {
                 String name = tag.getName();
-                return name != null && name.toLowerCase().startsWith(mask)
+                return name != null
+                        && name.toLowerCase().startsWith(mask.trim().toLowerCase())
                         && !completionView.getObjects().contains(tag);
             }
         };

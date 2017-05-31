@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -30,6 +31,7 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoNotesBinding;
 import com.bytesforge.linkasanote.laano.BaseItemFragment;
+import com.bytesforge.linkasanote.laano.BaseItemViewModel;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
 import com.bytesforge.linkasanote.laano.links.LinksViewModel;
@@ -57,6 +59,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     private ActionMode actionMode;
     private RecyclerView rvNotes;
     private LinearLayoutManager rvLayoutManager;
+    private Parcelable rvLayoutState;
     private DividerItemDecoration dividerItemDecoration;
     private NotesActionModeCallback notesActionModeCallback;
 
@@ -105,6 +108,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         FragmentLaanoNotesBinding binding =
                 FragmentLaanoNotesBinding.inflate(inflater, container, false);
         viewModel.setInstanceState(savedInstanceState);
+        setRvLayoutState(savedInstanceState);
         binding.setViewModel((NotesViewModel) viewModel);
         // RecyclerView
         setupNotesRecyclerView(binding.rvNotes);
@@ -205,6 +209,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         viewModel.saveInstanceState(outState);
+        saveRvLayoutState(outState);
     }
 
     @Override
@@ -251,6 +256,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         if (viewModel.isActionMode()) {
             enableActionMode();
         }
+        applyRvLayoutState();
     }
 
     @Override
@@ -299,6 +305,26 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         boolean readingMode = presenter.isNotesLayoutModeReading();
         updateNotesAdapter(readingMode);
         ((SimpleItemAnimator) rvNotes.getItemAnimator()).setSupportsChangeAnimations(false);
+    }
+
+    private void setRvLayoutState(@Nullable Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            rvLayoutState = savedInstanceState.getParcelable(
+                    BaseItemViewModel.STATE_RECYCLER_LAYOUT);
+        }
+    }
+
+    private void saveRvLayoutState(@NonNull Bundle outState) {
+        checkNotNull(outState);
+        outState.putParcelable(BaseItemViewModel.STATE_RECYCLER_LAYOUT,
+                rvLayoutManager.onSaveInstanceState());
+    }
+
+    private void applyRvLayoutState() {
+        if (rvLayoutManager != null && rvLayoutState != null) {
+            rvLayoutManager.onRestoreInstanceState(rvLayoutState);
+            rvLayoutState = null;
+        }
     }
 
     private void updateNotesAdapter(final boolean readingMode) {
@@ -352,6 +378,8 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                     presenter.setFilterType(FilterType.CONFLICTED);
                     break;
             }
+            // NOTE: also go to the start of the list if the current filter is selected
+            scrollToPosition(0);
             return true;
         });
         Resources resources = getContext().getResources();

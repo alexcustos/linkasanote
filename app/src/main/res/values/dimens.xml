@@ -42,7 +42,6 @@
     <dimen name="dialog_state_margin_end">8dp</dimen>
     <dimen name="dialog_margin_status_top">12dp</dimen>
     <dimen name="dialog_margin_status_bottom">16dp</dimen>
-    <dimen name="dialog_padding_license_terms_bottom">8dp</dimen>
     <dimen name="about_margin_vertical_text">16dp</dimen>
     <dimen name="about_margin_vertical">4dp</dimen>
 

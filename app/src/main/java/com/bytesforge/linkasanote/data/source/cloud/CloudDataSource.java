@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.data.source.cloud;
 
+import android.accounts.NetworkErrorException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
 
@@ -352,12 +354,28 @@ public class CloudDataSource {
 
     @Nullable
     public static String getDataSourceETag(
-            OwnCloudClient ocClient, String dataSourceDirectory, boolean createDataSource) {
-        if (dataSourceDirectory == null) return null;
-
+            @NonNull OwnCloudClient ocClient, @NonNull String dataSourceDirectory,
+            boolean createDataSource) {
+        checkNotNull(ocClient);
+        checkNotNull(dataSourceDirectory);
         final ReadRemoteFileOperation readOperation =
                 new ReadRemoteFileOperation(dataSourceDirectory);
-        RemoteOperationResult result = readOperation.execute(ocClient);
+        final AtomicInteger retryCount = new AtomicInteger(0);
+        RemoteOperationResult result = Single.fromCallable(() -> readOperation.execute(ocClient))
+                .flatMap(r -> {
+                    if (retryCount.getAndAdd(1) < Settings.GLOBAL_RETRY_ON_NETWORK_ERROR) {
+                        RemoteOperationResult.ResultCode code = r.getCode();
+                        if (code == RemoteOperationResult.ResultCode.HOST_NOT_AVAILABLE
+                                || code == RemoteOperationResult.ResultCode.SSL_ERROR
+                                || code == RemoteOperationResult.ResultCode.TIMEOUT) {
+                            Log.e(TAG, "Retry on Network error [" + retryCount.get() + ":" + code.name()  + "]");
+                            return Single.error(new NetworkErrorException());
+                        }
+                    }
+                    return Single.just(r);
+                })
+                .retry(Settings.GLOBAL_RETRY_ON_NETWORK_ERROR)
+                .blockingGet();
         if (result.isSuccess()) {
             RemoteFile file = (RemoteFile) result.getData().get(0);
             return file.getEtag();
@@ -367,7 +385,7 @@ public class CloudDataSource {
                     new CreateRemoteFolderOperation(dataSourceDirectory, true);
             result = writeOperation.execute(ocClient);
             if (result.isSuccess()) {
-                Log.i(TAG, "New folder has been created");
+                Log.d(TAG, "New folder has been created");
                 // NOTE: recursion, but with !createDataSource
                 return getDataSourceETag(ocClient, dataSourceDirectory, false);
             }
@@ -381,7 +399,7 @@ public class CloudDataSource {
         checkNotNull(ocClient);
         checkNotNull(dataSourceDirectory);
         final Map<String, String> dataSourceMap = new HashMap<>();
-        getRemoteFiles(ocClient, dataSourceDirectory).subscribe(file -> {
+        CloudDataSource.getRemoteFiles(ocClient, dataSourceDirectory).subscribe(file -> {
             String fileMimeType = file.getMimeType();
             String fileRemotePath = file.getRemotePath();
             long fileSize = file.getSize();

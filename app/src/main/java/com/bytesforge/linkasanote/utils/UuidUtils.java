@@ -39,7 +39,8 @@ public class UuidUtils {
             ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
             return new UUID(byteBuffer.getLong(), byteBuffer.getLong());
         } catch (IllegalArgumentException e) {
-            Log.e(TAG, "Invalid UUID key was detected [" + key + "]", e);
+            Log.e(TAG, "Invalid UUID key was detected [" + key + "]");
+            CommonUtils.logStackTrace(TAG, e);
         }
         return null;
     }

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -33,6 +34,7 @@ import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.databinding.DialogDoNotShowCheckboxBinding;
 import com.bytesforge.linkasanote.databinding.FragmentLaanoLinksBinding;
 import com.bytesforge.linkasanote.laano.BaseItemFragment;
+import com.bytesforge.linkasanote.laano.BaseItemViewModel;
 import com.bytesforge.linkasanote.laano.FilterType;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
 import com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkActivity;
@@ -62,6 +64,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     private LinksAdapter adapter;
     private ActionMode actionMode;
     private LinearLayoutManager rvLayoutManager;
+    private Parcelable rvLayoutState;
     private LinksActionModeCallback linksActionModeCallback;
 
     public static LinksFragment newInstance() {
@@ -109,6 +112,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         FragmentLaanoLinksBinding binding =
                 FragmentLaanoLinksBinding.inflate(inflater, container, false);
         viewModel.setInstanceState(savedInstanceState);
+        setRvLayoutState(savedInstanceState);
         binding.setViewModel((LinksViewModel) viewModel);
         // RecyclerView
         setupLinksRecyclerView(binding.rvLinks);
@@ -187,6 +191,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         viewModel.saveInstanceState(outState);
+        saveRvLayoutState(outState);
     }
 
     @Override
@@ -237,6 +242,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         if (viewModel.isActionMode()) {
             enableActionMode();
         }
+        applyRvLayoutState();
     }
 
     @Override
@@ -291,6 +297,26 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         ((SimpleItemAnimator) rvLinks.getItemAnimator()).setSupportsChangeAnimations(false);
     }
 
+    private void setRvLayoutState(@Nullable Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            rvLayoutState = savedInstanceState.getParcelable(
+                    BaseItemViewModel.STATE_RECYCLER_LAYOUT);
+        }
+    }
+
+    private void saveRvLayoutState(@NonNull Bundle outState) {
+        checkNotNull(outState);
+        outState.putParcelable(BaseItemViewModel.STATE_RECYCLER_LAYOUT,
+                rvLayoutManager.onSaveInstanceState());
+    }
+
+    private void applyRvLayoutState() {
+        if (rvLayoutManager != null && rvLayoutState != null) {
+            rvLayoutManager.onRestoreInstanceState(rvLayoutState);
+            rvLayoutState = null;
+        }
+    }
+
     private void showFilteringPopupMenu() {
         PopupMenu popupMenu = new PopupMenu(
                 getContext(), getActivity().findViewById(R.id.toolbar_links_filter));
@@ -314,6 +340,8 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
                     presenter.setFilterType(FilterType.CONFLICTED);
                     break;
             }
+            // NOTE: also go to the start of the list if the current filter is selected
+            scrollToPosition(0);
             return true;
         });
         Resources resources = getContext().getResources();

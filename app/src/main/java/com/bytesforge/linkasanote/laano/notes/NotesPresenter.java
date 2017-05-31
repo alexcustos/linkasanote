@@ -213,7 +213,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
                             if (favoriteFilter == null
                                     || !favoriteFilter.getId().equals(favoriteFilterId)
                                     || favoriteFilter.getTags() == null) {
-                                Log.e(TAG, "loadNotes(): invalid Favorite filter");
+                                Log.e(TAG, "Invalid Favorite filter on Notes tab");
                                 return false;
                             }
                             if (favoriteFilter.isAndGate()) {
@@ -514,6 +514,22 @@ public final class NotesPresenter extends BaseItemPresenter implements
         Favorite favoriteFilter = settings.getFavoriteFilter();
         int prevFavoriteHashCode = this.favoriteHashCode;
         this.favoriteHashCode = favoriteFilter == null ? 0 : favoriteFilter.hashCode();
+        if (filterType != FilterType.FAVORITE
+                && favoriteFilter == null
+                && this.favoriteFilterId != null) {
+            // NOTE: preload Favorite filter
+            repository.getFavorite(favoriteFilterId)
+                    .subscribeOn(schedulerProvider.computation())
+                    .subscribe(favorite -> {
+                        favoriteFilterId = favorite.getId();
+                        favoriteHashCode = favorite.hashCode();
+                        settings.setFavoriteFilter(favorite);
+                    }, throwable -> {
+                        favoriteFilterId = null;
+                        favoriteHashCode = 0;
+                        settings.setFavoriteFilter(null);
+                    });
+        }
 
         switch (filterType) {
             case ALL:

@@ -131,7 +131,7 @@ public class CloudItem<T extends Item> {
                 File localFile = new File(localPath);
                 String jsonString = null;
                 try {
-                    jsonString = Files.toString(localFile, Charsets.UTF_8);
+                    jsonString = Files.asCharSource(localFile, Charsets.UTF_8).read();
                 } catch (IOException e) {
                     Log.e(TAG, "Cannot read the file downloaded [" + localPath + "]");
                 }

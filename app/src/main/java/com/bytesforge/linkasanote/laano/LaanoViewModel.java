@@ -16,18 +16,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LaanoViewModel extends BaseObservable {
 
-    private final Context context;
-
     @Bindable
     public LaanoDrawerHeaderViewModel headerViewModel;
 
     public LaanoViewModel(@NonNull Context context) {
-        this.context = checkNotNull(context);
-        headerViewModel = new LaanoDrawerHeaderViewModel(context);
+        headerViewModel = new LaanoDrawerHeaderViewModel(checkNotNull(context));
     }
 
     @BindingAdapter({"headerViewModel"})
-    public static void setupDrawerHeader(NavigationView view, LaanoDrawerHeaderViewModel viewModel) {
+    public static void setupDrawerHeader(
+            NavigationView view, LaanoDrawerHeaderViewModel viewModel) {
         DrawerHeaderBinding binding = DrawerHeaderBinding.inflate(
                 LayoutInflater.from(view.getContext()), view, false);
         binding.setViewModel(viewModel);
