@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.view.View;
 import android.widget.Toast;
 
 import com.bytesforge.linkasanote.BR;
@@ -19,6 +20,7 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.base.Strings;
 
 import java.util.List;
@@ -28,11 +30,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AddEditFavoriteViewModel extends BaseObservable implements
         AddEditFavoriteContract.ViewModel {
 
-    public static final String STATE_FAVORITE_NAME = "FAVORITE_NAME";
-    public static final String STATE_FAVORITE_AND_GATE = "FAVORITE_AND_GATE";
-    public static final String STATE_ADD_BUTTON = "ADD_BUTTON";
-    public static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
-    public static final String STATE_NAME_ERROR_TEXT = "NAME_ERROR_TEXT";
+    private static final String STATE_FAVORITE_NAME = "FAVORITE_NAME";
+    private static final String STATE_FAVORITE_AND_GATE = "FAVORITE_AND_GATE";
+    private static final String STATE_ADD_BUTTON = "ADD_BUTTON";
+    private static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
+    private static final String STATE_NAME_ERROR_TEXT = "NAME_ERROR_TEXT";
 
     public final ObservableField<String> favoriteName = new ObservableField<>();
     public final ObservableBoolean favoriteAndGate = new ObservableBoolean();
@@ -42,6 +44,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     private TagsCompletionView favoriteTags;
     private Context context;
     private AddEditFavoriteContract.Presenter presenter;
+    private boolean tagsHasFocus;
 
     public enum SnackbarId {
         DATABASE_ERROR, FAVORITE_EMPTY, FAVORITE_NOT_FOUND}
@@ -222,7 +225,6 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         notifyPropertyChanged(BR.nameErrorText);
     }
 
-    @Override
     public void afterNameChanged() {
         hideNameError();
         checkAddButton();
@@ -231,6 +233,10 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Override
     public void afterTagsChanged() {
         checkAddButton();
+    }
+
+    public void onTagsFocusChange(View view, boolean hasFocus) {
+        tagsHasFocus = hasFocus;
     }
 
     @Override
@@ -250,7 +256,16 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
 
     @Override
     public void setFavoriteName(String favoriteName) {
-        this.favoriteName.set(favoriteName);
+        if (Strings.isNullOrEmpty(favoriteName)) {
+            this.favoriteName.set(null);
+        } else {
+            String name = CommonUtils.strFirstLine(favoriteName);
+            if (tagsHasFocus) {
+                favoriteTags.addObject(new Tag(name));
+            } else {
+                this.favoriteName.set(name);
+            }
+        }
     }
 
     private void setFavoriteTags(List<Tag> tags) {

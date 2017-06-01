@@ -51,7 +51,6 @@ public interface AddEditNoteContract {
         void enableAddButton();
         void disableAddButton();
         void hideNoteError();
-        void afterNoteChanged();
 
         void populateNote(@NonNull Note note);
         void populateLink(@NonNull Link link);

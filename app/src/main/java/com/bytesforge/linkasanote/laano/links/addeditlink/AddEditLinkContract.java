@@ -46,7 +46,6 @@ public interface AddEditLinkContract {
         void enableAddButton();
         void disableAddButton();
         void hideLinkError();
-        void afterLinkChanged();
 
         void populateLink(@NonNull Link link);
 

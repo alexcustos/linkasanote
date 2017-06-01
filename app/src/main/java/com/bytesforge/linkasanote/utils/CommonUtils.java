@@ -133,6 +133,13 @@ public final class CommonUtils {
         return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
     }
 
+    public static String strFirstLine(String str) {
+        if (Strings.isNullOrEmpty(str)) return null;
+
+        String separator = System.getProperty("line.separator");
+        return str.split(separator, 2)[0];
+    }
+
     public static String formatDateTime(@NonNull Context context, @NonNull Date date) {
         checkNotNull(context);
         checkNotNull(date);

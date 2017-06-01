@@ -13,6 +13,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.view.View;
 import android.widget.Toast;
 
 import com.bytesforge.linkasanote.BR;
@@ -21,6 +22,7 @@ import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.base.Strings;
 
 import java.util.List;
@@ -30,10 +32,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AddEditNoteViewModel extends BaseObservable implements
         AddEditNoteContract.ViewModel {
 
-    public static final String STATE_NOTE_NOTE = "NOTE_NOTE";
-    public static final String STATE_ADD_BUTTON = "ADD_BUTTON";
-    public static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
-    public static final String STATE_NOTE_ERROR_TEXT = "NOTE_ERROR_TEXT";
+    private static final String STATE_NOTE_NOTE = "NOTE_NOTE";
+    private static final String STATE_ADD_BUTTON = "ADD_BUTTON";
+    private static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
+    private static final String STATE_NOTE_ERROR_TEXT = "NOTE_ERROR_TEXT";
 
     public final ObservableField<String> noteNote = new ObservableField<>();
     public final ObservableBoolean addButton = new ObservableBoolean();
@@ -48,6 +50,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
     private Context context;
     private Resources resources;
     private AddEditNoteContract.Presenter presenter;
+    private boolean tagsHasFocus;
 
     public enum SnackbarId {
         DATABASE_ERROR, NOTE_EMPTY, NOTE_NOT_FOUND}
@@ -232,10 +235,13 @@ public class AddEditNoteViewModel extends BaseObservable implements
         notifyPropertyChanged(BR.noteErrorText);
     }
 
-    @Override
     public void afterNoteChanged() {
         hideNoteError();
         checkAddButton();
+    }
+
+    public void onTagsFocusChange(View view, boolean hasFocus) {
+        tagsHasFocus = hasFocus;
     }
 
     @Override
@@ -262,7 +268,12 @@ public class AddEditNoteViewModel extends BaseObservable implements
 
     @Override
     public void setNoteNote(String noteNote) {
-        this.noteNote.set(noteNote);
+        if (tagsHasFocus && !Strings.isNullOrEmpty(noteNote)) {
+            String tag = CommonUtils.strFirstLine(noteNote);
+            noteTags.addObject(new Tag(tag));
+        } else {
+            this.noteNote.set(noteNote);
+        }
     }
 
     private void setNoteTags(List<Tag> tags) {

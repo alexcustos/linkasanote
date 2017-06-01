@@ -77,7 +77,8 @@
                         android:hint="@string/add_edit_favorite_tags_hint"
                         android:inputType="text|textNoSuggestions|textMultiLine"
                         android:lineSpacingExtra="@dimen/tags_line_spacing_extra"
-                        android:afterTextChanged="@{() -> viewModel.afterTagsChanged()}" />
+                        android:afterTextChanged="@{() -> viewModel.afterTagsChanged()}"
+                        android:onFocusChange="@{viewModel::onTagsFocusChange}" />
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.v7.widget.AppCompatButton

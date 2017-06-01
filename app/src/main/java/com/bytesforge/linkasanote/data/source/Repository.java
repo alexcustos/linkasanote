@@ -245,8 +245,15 @@ public class Repository implements DataSource {
                             if (cachedLinks == null) {
                                 cachedLinks = new LinkedHashMap<>();
                             }
-                            // NOTE: new Link has no rowId to bind to RecyclerView and it position is unknown
-                            refreshLinks();
+                            // NOTE: new Link has no rowId to bind to RecyclerView
+                            if (link.getRowId() < 0) {
+                                Map<String, Link> map = new LinkedHashMap<>(cachedLinks);
+                                cachedLinks.clear();
+                                // NOTE: new Link goes to the top of the list
+                                cachedLinks.put(linkId, link);
+                                cachedLinks.putAll(map);
+                            }
+                            refreshLink(linkId);
                             // Tags
                             if (cachedTags == null) {
                                 cachedTags = new LinkedHashMap<>();
@@ -261,7 +268,6 @@ public class Repository implements DataSource {
                         default:
                             throw new IllegalStateException("Unexpected state came from Local saveLink()");
                     }
-                    notifyLinksSaveCallbacks(linkId, itemState);
                 })
                 .onErrorReturn(throwable -> {
                     // NOTE: return null - NullPointerException; throw new - CompositeException
@@ -273,10 +279,10 @@ public class Repository implements DataSource {
                         CommonUtils.logStackTrace(TAG, throwable);
                         itemState = ItemState.ERROR_LOCAL;
                     }
-                    notifyLinksSaveCallbacks(linkId, itemState);
                     return itemState;
                 })
                 .doOnSuccess(itemState -> {
+                    notifyLinksSaveCallbacks(linkId, itemState);
                     if (itemState == ItemState.DUPLICATED) {
                         throw new SQLiteConstraintException("Links UNIQUE constraint failed [" + linkId + "]");
                     }
@@ -670,7 +676,6 @@ public class Repository implements DataSource {
                         default:
                             throw new IllegalStateException("Unexpected state came from Local saveFavorite()");
                     }
-                    notifyFavoritesSaveCallbacks(favoriteId, itemState);
                 })
                 .onErrorReturn(throwable -> {
                     ItemState itemState;
@@ -680,10 +685,10 @@ public class Repository implements DataSource {
                         CommonUtils.logStackTrace(TAG, throwable);
                         itemState = ItemState.ERROR_LOCAL;
                     }
-                    notifyFavoritesSaveCallbacks(favoriteId, itemState);
                     return itemState;
                 })
                 .doOnSuccess(itemState -> {
+                    notifyFavoritesSaveCallbacks(favoriteId, itemState);
                     if (itemState == ItemState.DUPLICATED) {
                         throw new SQLiteConstraintException("Favorites UNIQUE constraint failed [" + favoriteId + "]");
                     }
@@ -1007,8 +1012,15 @@ public class Repository implements DataSource {
                             if (cachedNotes == null) {
                                 cachedNotes = new LinkedHashMap<>();
                             }
-                            // NOTE: new Note has no rowId to bind to RecyclerView and it position is unknown
-                            refreshNotes();
+                            // NOTE: new Note has no rowId to bind to RecyclerView
+                            if (note.getRowId() < 0) {
+                                Map<String, Note> map = new LinkedHashMap<>(cachedNotes);
+                                cachedNotes.clear();
+                                // NOTE: new Note goes to the top of the list
+                                cachedNotes.put(noteId, note);
+                                cachedNotes.putAll(map);
+                            }
+                            refreshNote(noteId);
                             // Tags
                             if (cachedTags == null) {
                                 cachedTags = new LinkedHashMap<>();
@@ -1026,7 +1038,6 @@ public class Repository implements DataSource {
                     notifyNotesSaveCallbacks(noteId, itemState);
                 })
                 .onErrorReturn(throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
                     ItemState itemState = ItemState.ERROR_LOCAL;
                     notifyNotesSaveCallbacks(noteId, itemState);
                     return itemState;

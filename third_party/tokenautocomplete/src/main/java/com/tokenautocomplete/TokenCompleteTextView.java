@@ -950,7 +950,12 @@ public abstract class TokenCompleteTextView<T> extends AppCompatMultiAutoComplet
             @Override
             public void run() {
                 if (object == null) return;
-                if (!allowDuplicates && objects.contains(object)) return;
+                if (!allowDuplicates && objects.contains(object)) {
+                    if (listener != null) {
+                        listener.onDuplicateRemoved(object);
+                    }
+                    return;
+                }
                 if (tokenLimit != -1 && objects.size() == tokenLimit) return;
                 insertSpan(object, sourceText);
                 if (getText() != null && isFocused()) setSelection(getText().length());

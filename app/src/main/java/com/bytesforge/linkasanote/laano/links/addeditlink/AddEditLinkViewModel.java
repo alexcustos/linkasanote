@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.view.View;
 import android.widget.Toast;
 
 import com.bytesforge.linkasanote.BR;
@@ -19,6 +20,7 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.base.Strings;
 
 import java.util.List;
@@ -28,12 +30,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AddEditLinkViewModel extends BaseObservable implements
         AddEditLinkContract.ViewModel {
 
-    public static final String STATE_LINK_LINK = "LINK_LINK";
-    public static final String STATE_LINK_NAME = "LINK_NAME";
-    public static final String STATE_LINK_DISABLED = "LINK_DISABLED";
-    public static final String STATE_ADD_BUTTON = "ADD_BUTTON";
-    public static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
-    public static final String STATE_LINK_ERROR_TEXT = "LINK_ERROR_TEXT";
+    private static final String STATE_LINK_LINK = "LINK_LINK";
+    private static final String STATE_LINK_NAME = "LINK_NAME";
+    private static final String STATE_LINK_DISABLED = "LINK_DISABLED";
+    private static final String STATE_ADD_BUTTON = "ADD_BUTTON";
+    private static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
+    private static final String STATE_LINK_ERROR_TEXT = "LINK_ERROR_TEXT";
 
     public final ObservableField<String> linkLink = new ObservableField<>();
     public final ObservableField<String> linkName = new ObservableField<>();
@@ -44,6 +46,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
     private TagsCompletionView linkTags;
     private Context context;
     private AddEditLinkContract.Presenter presenter;
+    private boolean tagsHasFocus;
 
     public enum SnackbarId {
         DATABASE_ERROR, LINK_EMPTY, LINK_NOT_FOUND}
@@ -221,10 +224,13 @@ public class AddEditLinkViewModel extends BaseObservable implements
         notifyPropertyChanged(BR.linkErrorText);
     }
 
-    @Override
     public void afterLinkChanged() {
         hideLinkError();
         checkAddButton();
+    }
+
+    public void onTagsFocusChange(View view, boolean hasFocus) {
+        tagsHasFocus = hasFocus;
     }
 
     @Override
@@ -250,7 +256,16 @@ public class AddEditLinkViewModel extends BaseObservable implements
 
     @Override
     public void setLinkName(String linkName) {
-        this.linkName.set(linkName);
+        if (Strings.isNullOrEmpty(linkName)) {
+            this.linkName.set(null);
+        } else {
+            String name = CommonUtils.strFirstLine(linkName);
+            if (tagsHasFocus) {
+                linkTags.addObject(new Tag(name));
+            } else {
+                this.linkName.set(name);
+            }
+        }
     }
 
     @Override

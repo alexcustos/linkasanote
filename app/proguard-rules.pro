@@ -39,6 +39,7 @@
     #public static int e(...);
 }
 
+-keeppackagenames org.jsoup.nodes
 
 -keep class org.apache.jackrabbit.webdav.** { *; }
 -dontwarn org.apache.jackrabbit.**

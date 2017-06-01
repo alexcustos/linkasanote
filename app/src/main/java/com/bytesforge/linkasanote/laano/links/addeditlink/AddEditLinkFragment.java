@@ -35,6 +35,7 @@ import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CommonUtils;
+import com.google.common.base.Strings;
 import com.tokenautocomplete.FilteredArrayAdapter;
 import com.tokenautocomplete.TokenCompleteTextView;
 
@@ -222,7 +223,10 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
         int clipboardState = clipboardService.getClipboardState();
         switch (clipboardState) {
             case ClipboardService.CLIPBOARD_TEXT:
-                viewModel.setLinkName(clipboardService.getLinkTitle());
+                String title = clipboardService.getLinkTitle();
+                viewModel.setLinkName(Strings.isNullOrEmpty(title)
+                        ? clipboardService.getNormalizedClipboard()
+                        : title);
                 break;
             case ClipboardService.CLIPBOARD_LINK:
                 viewModel.setLinkLink(clipboardService.getNormalizedClipboard());

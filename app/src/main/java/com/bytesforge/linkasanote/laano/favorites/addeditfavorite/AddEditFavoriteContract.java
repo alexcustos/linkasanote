@@ -46,7 +46,6 @@ public interface AddEditFavoriteContract {
         void enableAddButton();
         void disableAddButton();
         void hideNameError();
-        void afterNameChanged();
         void afterTagsChanged();
 
         void populateFavorite(@NonNull Favorite favorite);
