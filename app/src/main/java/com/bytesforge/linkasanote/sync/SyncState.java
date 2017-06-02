@@ -2,14 +2,17 @@ package com.bytesforge.linkasanote.sync;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.source.local.BaseEntry;
+import com.google.common.base.Objects;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class SyncState {
+public class SyncState implements Parcelable {
 
     private final long rowId;
 
@@ -21,7 +24,36 @@ public class SyncState {
     @Nullable
     private String eTag;
 
-    public enum State {UNSYNCED, SYNCED, DELETED, CONFLICTED_UPDATE, CONFLICTED_DELETE}
+    public static final Creator<SyncState> CREATOR = new Creator<SyncState>() {
+
+        @Override
+        public SyncState createFromParcel(Parcel source) {
+            return new SyncState(source);
+        }
+
+        @Override
+        public SyncState[] newArray(int size) {
+            return new SyncState[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return super.hashCode();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(rowId);
+        dest.writeString(eTag);
+        dest.writeInt(duplicated);
+        dest.writeInt(conflicted ? 1 : 0);
+        dest.writeInt(deleted ? 1 : 0);
+        dest.writeInt(synced ? 1 : 0);
+    }
+
+    public enum State {
+        UNSYNCED, SYNCED, DELETED, CONFLICTED_UPDATE, CONFLICTED_DELETE}
 
     public SyncState() {
         // UNSYNCED
@@ -39,7 +71,20 @@ public class SyncState {
         this.synced = synced;
     }
 
-    public SyncState(SyncState syncState, State state) {
+    protected SyncState(Parcel source) {
+        rowId = source.readLong();
+        eTag = source.readString();
+        duplicated = source.readInt();
+        conflicted = source.readInt() != 0;
+        deleted = source.readInt() != 0;
+        synced = source.readInt() != 0;
+    }
+
+    public SyncState(SyncState syncState, @NonNull final State state) {
+        checkNotNull(state);
+        if (syncState == null) {
+            syncState = new SyncState();
+        }
         rowId = syncState.getRowId();
         eTag = syncState.getETag();
         duplicated = syncState.getDuplicated();
@@ -74,11 +119,10 @@ public class SyncState {
             default:
                 throw new IllegalArgumentException("Unexpected state was provided [" + state.name() + "]");
         }
-
     }
 
     public SyncState(State state) {
-        this(new SyncState(), state);
+        this((SyncState) null, state);
     }
 
     public SyncState(@Nullable String eTag, int duplicated) {
@@ -174,5 +218,10 @@ public class SyncState {
 
     public boolean isSynced() {
         return synced;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(rowId, eTag, duplicated, conflicted, deleted, synced);
     }
 }

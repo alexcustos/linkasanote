@@ -38,7 +38,7 @@ public final class Tag implements Serializable, Parcelable, Comparable<Tag> {
 
     public Tag(long created, @Nullable String name) {
         this.created = created;
-        this.name = name;
+        this.name = Strings.isNullOrEmpty(name) ? null : name.toLowerCase();
     }
 
     protected Tag(Parcel in) {

@@ -20,6 +20,7 @@
     <string name="toast_conflict_resolved">Конфликт разрешён</string>
     <string name="toast_tags_duplicate_removed">Дубликат</string>
     <string name="toast_empty">Пустой</string>
+    <string name="toast_clipboard_cleared">Буфер обмена очищен</string>
     <string name="validation_error_tags_invalid_char">Здесь разрешены только буквы цифры и пробелы, запятая используется как разделитель</string>
     <string name="drawer_actions_settings">Настройки</string>
     <string name="drawer_actions_about">О приложении</string>
@@ -78,8 +79,6 @@
     <string name="pref_summary_clipboard_fill_in_forms">Вставлять нормализованное и дополненное содержимое буфера обмена в новые формы </string>
     <string name="pref_title_clipboard_parameter_white_list">Сохранять параметры в URL</string>
     <string name="pref_summary_clipboard_parameter_white_list">Полностью удалять строку запроса из URL</string>
-    <string name="pref_title_clipboard_clear_clipboard">Очистить буфер обмена</string>
-    <string name="pref_snackbar_clipboard_cleared">Буфер обмена очищен</string>
     <string name="pref_snackbar_backup_failed">Ошибка сохранения резервной копии</string>
     <string name="pref_snackbar_permission_write_external_storage">Разрешение \"Доступ к файлам\" необходимо для сохранения файла резервной копии</string>
     <string name="pref_snackbar_restore_failed">Ошибка восстановления из резервной копии: %s</string>
@@ -147,7 +146,6 @@
     <string name="action_mode_favorites_delete">Удалить</string>
     <string name="action_mode_favorites_select_all">Выделить/Снять выделения со всех избранных</string>
     <string name="laano_favorites_action_mode_selected">%1$d из %2$d выделено</string>
-    <string name="toolbar_favorites_item_action_mode">Включить режим редактирования</string>
     <string name="sync_adapter_title_failed_default">Ошибка синхронизации</string>
     <string name="sync_adapter_title_failed_login">проверьте учётную запись</string>
     <string name="sync_adapter_text_failed_login">Данные учётной записи не корректны, пожалуйста, обновите учётную запись</string>
@@ -157,6 +155,8 @@
     <string name="sync_adapter_text_failed_cloud">Ошибка подключения к облачному хранилищу, пожалуйста, убедитесь, что оно работает</string>
     <string name="sync_adapter_text_failed">Проблемы в облачном хранилище с: %s</string>
     <string name="laano_actionbar_manager_sync_title">Выг: %1$d / заг: %2$d</string>
+    <string name="toolbar_favorites_item_action_mode">Включить режим редактирования</string>
+    <string name="toolbar_favorites_item_clear_clipboard">Очистить буфер обмена</string>
     <string name="toolbar_favorites_item_filter">Фильтр избранного</string>
     <string name="toolbar_favorites_search">Поиск</string>
     <string name="toolbar_favorite_item_paste">Заполнить форму</string>
@@ -222,6 +222,7 @@
     <string name="toolbar_links_item_action_mode">Включить режим редактирования</string>
     <string name="toolbar_links_item_expand_all">Развернуть все карточки</string>
     <string name="toolbar_links_item_collapse_all">Свернуть все карточки</string>
+    <string name="toolbar_links_item_clear_clipboard">Очистить буфер обмена</string>
     <string name="toolbar_links_item_filter">Фильтр ссылок</string>
     <string name="toolbar_links_search">Поиск</string>
     <string name="toolbar_link_item_paste">Заполнить форму</string>
@@ -270,6 +271,7 @@
     <string name="toolbar_notes_item_mode_action">Включить режим редактирования</string>
     <string name="toolbar_notes_item_expand_all">Развернуть все заметки</string>
     <string name="toolbar_notes_item_collapse_all">Свернуть все заметки</string>
+    <string name="toolbar_notes_item_clear_clipboard">Очистить буфер обмена</string>
     <string name="toolbar_notes_item_filter">Фильтр заметок</string>
     <string name="toolbar_notes_item_mode_normal">Включить нормальный режим</string>
     <string name="toolbar_notes_item_mode_reading">Включить режим чтения</string>

@@ -10,6 +10,7 @@ import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
+import com.bytesforge.linkasanote.sync.SyncState;
 
 import java.util.List;
 
@@ -51,6 +52,7 @@ public interface AddEditFavoriteContract {
         void populateFavorite(@NonNull Favorite favorite);
         void setFavoriteName(String favoriteName);
         void setFavoriteTags(String[] tags);
+        SyncState getFavoriteSyncState();
     }
 
     interface Presenter extends BasePresenter, ClipboardService.Callback {

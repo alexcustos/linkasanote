@@ -27,8 +27,9 @@ public class SyncNotifications {
             BuildConfig.APPLICATION_ID + ".ACTION_SYNC_NOTES";
 
     public static final String EXTRA_ACCOUNT_NAME = "ACCOUNT_NAME";
-    public static final String EXTRA_ID = "ID";
     public static final String EXTRA_STATUS = "STATUS";
+    public static final String EXTRA_ID = "ID";
+    public static final String EXTRA_COUNT = "COUNT";
 
     public static final int STATUS_SYNC_START = 10;
     public static final int STATUS_SYNC_STOP = 11;
@@ -50,15 +51,20 @@ public class SyncNotifications {
     }
 
     public void sendSyncBroadcast(String action, int status) {
-        sendSyncBroadcast(action, status, null);
+        sendSyncBroadcast(action, status, null, -1);
     }
 
     public void sendSyncBroadcast(String action, int status, String id) {
+        sendSyncBroadcast(action, status, id, -1);
+    }
+
+    public void sendSyncBroadcast(String action, int status, String id, int count) {
         checkNotNull(accountName);
         Intent intent = new Intent(action);
         intent.putExtra(EXTRA_ACCOUNT_NAME, accountName);
         if (status >= 0) intent.putExtra(EXTRA_STATUS, status);
         if (id != null) intent.putExtra(EXTRA_ID, id);
+        if (count >= 0) intent.putExtra(EXTRA_COUNT, count);
 
         context.sendBroadcast(intent);
     }

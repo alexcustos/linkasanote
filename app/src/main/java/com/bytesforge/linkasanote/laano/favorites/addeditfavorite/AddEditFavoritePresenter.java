@@ -10,6 +10,7 @@ import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.favorites.FavoriteId;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.tokenautocomplete.TokenCompleteTextView;
@@ -129,8 +130,9 @@ public final class AddEditFavoritePresenter implements
         if (favoriteId == null) {
             throw new RuntimeException("updateFavorite() was called but favoriteId is null");
         }
-        // NOTE: state eTag will NOT be overwritten if null
-        saveFavorite(new Favorite(favoriteId, name, andGate, tags)); // UNSYNCED
+        SyncState state = new SyncState(
+                viewModel.getFavoriteSyncState(), SyncState.State.UNSYNCED);
+        saveFavorite(new Favorite(favoriteId, name, andGate, tags, state));
     }
 
     private void saveFavorite(@NonNull final Favorite favorite) {

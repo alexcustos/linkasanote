@@ -2,12 +2,18 @@ package com.bytesforge.linkasanote.utils;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import com.bytesforge.linkasanote.R;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -100,5 +106,13 @@ public final class ActivityUtils {
                         view.setVisibility(toVisibility);
                     }
                 });
+    }
+
+    public static void clearClipboard(@NonNull Context context) {
+        ClipboardManager clipboardManager =
+                (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clipData = ClipData.newPlainText(null, null);
+        clipboardManager.setPrimaryClip(clipData);
+        Toast.makeText(context, R.string.toast_clipboard_cleared, Toast.LENGTH_SHORT).show();
     }
 }

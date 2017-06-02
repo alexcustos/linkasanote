@@ -32,6 +32,9 @@ public class SyncItem<T extends Item> {
     private final boolean uploadToEmpty;
     private final boolean protectLocal;
 
+    private int uploaded;
+    private int downloaded;
+
     private SyncItemResult syncResult;
 
     public SyncItem(
@@ -47,6 +50,8 @@ public class SyncItem<T extends Item> {
         this.uploadToEmpty = uploadToEmpty;
         this.protectLocal = protectLocal;
         syncResult = new SyncItemResult(SyncItemResult.Status.FAILS_COUNT);
+        uploaded = 0;
+        downloaded = 0;
     }
 
     @NonNull
@@ -111,7 +116,7 @@ public class SyncItem<T extends Item> {
                 continue;
             }
             syncNotifications.sendSyncBroadcast(notificationAction,
-                    SyncNotifications.STATUS_DOWNLOADED, cloudId);
+                    SyncNotifications.STATUS_DOWNLOADED, cloudId, ++downloaded);
             boolean notifyChanged = save(cloudItem);
             if (notifyChanged) {
                 syncNotifications.sendSyncBroadcast(notificationAction,
@@ -180,7 +185,7 @@ public class SyncItem<T extends Item> {
             T cloudItem = download(itemId);
             if (cloudItem != null) {
                 syncNotifications.sendSyncBroadcast(notificationAction,
-                        SyncNotifications.STATUS_DOWNLOADED, itemId);
+                        SyncNotifications.STATUS_DOWNLOADED, itemId, ++downloaded);
                 if (item.isSynced() && !item.isDeleted()) {
                     // SAVE local
                     notifyChanged = save(cloudItem);
@@ -273,7 +278,7 @@ public class SyncItem<T extends Item> {
         String itemId = item.getId();
         if (result.isSuccess()) {
             syncNotifications.sendSyncBroadcast(notificationAction,
-                    SyncNotifications.STATUS_UPLOADED, itemId);
+                    SyncNotifications.STATUS_UPLOADED, itemId, ++uploaded);
             JsonFile jsonFile = (JsonFile) result.getData().get(0);
             SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
             localItem.update(itemId, state).blockingGet();

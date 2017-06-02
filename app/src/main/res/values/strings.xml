@@ -14,12 +14,13 @@
     <string name="toast_sync_error">Sync error</string>
     <string name="toast_sync_conflict">Sync conflict</string>
     <string name="toast_sync_success">Synced</string>
-    <string name="toast_sync_unsynced">Still not synced</string>
+    <string name="toast_sync_unsynced">Partially synced</string>
     <string name="toast_backup_success">Backed up</string>
     <string name="toast_restore_success">Restored</string>
     <string name="toast_conflict_resolved">Resolved</string>
     <string name="toast_tags_duplicate_removed">Duplicate</string>
     <string name="toast_empty">Empty</string>
+    <string name="toast_clipboard_cleared">Clipboard is cleared</string>
     <string name="validation_error_tags_invalid_char">Only alphanumeric and spaces are allowed here, comma is used as the separator</string>
     <string name="drawer_actions_settings">Settings</string>
     <string name="drawer_actions_about">About</string>
@@ -78,8 +79,6 @@
     <string name="pref_summary_clipboard_fill_in_forms">Paste a normalized and extend clipboard content to the new forms</string>
     <string name="pref_title_clipboard_parameter_white_list">Preserve parameters in the URL query</string>
     <string name="pref_summary_clipboard_parameter_white_list">Completely remove the query string from the URL</string>
-    <string name="pref_title_clipboard_clear_clipboard">Clear the clipboard content</string>
-    <string name="pref_snackbar_clipboard_cleared">All clipboard content has been cleared</string>
     <string name="pref_snackbar_backup_failed">Backup is failed</string>
     <string name="pref_snackbar_permission_write_external_storage">WRITE EXTERNAL STORAGE (Access files) permission is needed to store the backup</string>
     <string name="pref_snackbar_restore_failed">Restore is failed: %s</string>
@@ -147,7 +146,6 @@
     <string name="action_mode_favorites_delete">Delete</string>
     <string name="action_mode_favorites_select_all">Select/Deselect all Favorites</string>
     <string name="laano_favorites_action_mode_selected">%1$d of %2$d selected</string>
-    <string name="toolbar_favorites_item_action_mode">Switch to Edit mode</string>
     <string name="sync_adapter_title_failed_default">Synchronization failed</string>
     <string name="sync_adapter_title_failed_login">log in again</string>
     <string name="sync_adapter_text_failed_login">Cannot access the account, please log in again</string>
@@ -157,6 +155,8 @@
     <string name="sync_adapter_text_failed_cloud">Cannot access the Cloud storage, please check if it works</string>
     <string name="sync_adapter_text_failed">Problem on the Cloud storage with: %s</string>
     <string name="laano_actionbar_manager_sync_title">Up: %1$d / dl: %2$d</string>
+    <string name="toolbar_favorites_item_action_mode">Switch to Edit mode</string>
+    <string name="toolbar_favorites_item_clear_clipboard">Clear clipboard</string>
     <string name="toolbar_favorites_item_filter">Favorite filter</string>
     <string name="toolbar_favorites_search">Search</string>
     <string name="toolbar_favorite_item_paste">Fill in form</string>
@@ -228,6 +228,7 @@
     <string name="toolbar_links_item_action_mode">Switch to Edit mode</string>
     <string name="toolbar_links_item_expand_all">Expand all cards</string>
     <string name="toolbar_links_item_collapse_all">Collapse all cards</string>
+    <string name="toolbar_links_item_clear_clipboard">Clear clipboard</string>
     <string name="toolbar_links_item_filter">Link filter</string>
     <string name="toolbar_links_search">Search</string>
     <string name="toolbar_link_item_paste">Fill in form</string>
@@ -276,6 +277,7 @@
     <string name="toolbar_notes_item_mode_action">Switch to Edit mode</string>
     <string name="toolbar_notes_item_expand_all">Expand all Notes</string>
     <string name="toolbar_notes_item_collapse_all">Collapse all Notes</string>
+    <string name="toolbar_notes_item_clear_clipboard">Clear clipboard</string>
     <string name="toolbar_notes_item_filter">Note filter</string>
     <string name="toolbar_notes_item_mode_normal">Switch to the Normal mode</string>
     <string name="toolbar_notes_item_mode_reading">Switch to the Reading mode</string>

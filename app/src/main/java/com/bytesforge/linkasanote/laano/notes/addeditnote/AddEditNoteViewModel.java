@@ -22,6 +22,7 @@ import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
+import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.base.Strings;
 
@@ -33,6 +34,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
         AddEditNoteContract.ViewModel {
 
     private static final String STATE_NOTE_NOTE = "NOTE_NOTE";
+    private static final String STATE_NOTE_SYNC_STATE = "NOTE_SYNC_STATE";
     private static final String STATE_ADD_BUTTON = "ADD_BUTTON";
     private static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
     private static final String STATE_NOTE_ERROR_TEXT = "NOTE_ERROR_TEXT";
@@ -46,6 +48,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public final ObservableField<String> linkName = new ObservableField<>();
     public final ObservableField<String> linkLink = new ObservableField<>();
 
+    private SyncState noteSyncState;
     private TagsCompletionView noteTags;
     private Context context;
     private Resources resources;
@@ -79,6 +82,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public void saveInstanceState(@NonNull Bundle outState) {
         checkNotNull(outState);
         outState.putString(STATE_NOTE_NOTE, noteNote.get());
+        outState.putParcelable(STATE_NOTE_SYNC_STATE, noteSyncState);
         outState.putBoolean(STATE_ADD_BUTTON, addButton.get());
         outState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
         outState.putString(STATE_NOTE_ERROR_TEXT, noteErrorText);
@@ -88,6 +92,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
         noteNote.set(state.getString(STATE_NOTE_NOTE));
+        noteSyncState = state.getParcelable(STATE_NOTE_SYNC_STATE);
         addButton.set(state.getBoolean(STATE_ADD_BUTTON));
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
         noteErrorText = state.getString(STATE_NOTE_ERROR_TEXT);
@@ -104,6 +109,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
         Bundle defaultState = new Bundle();
 
         defaultState.putString(STATE_NOTE_NOTE, null);
+        defaultState.putParcelable(STATE_NOTE_SYNC_STATE, null);
         defaultState.putBoolean(STATE_ADD_BUTTON, false);
         int addButtonText = presenter.isNewNote()
                 ? R.string.add_edit_note_new_button_title
@@ -259,6 +265,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public void populateNote(@NonNull Note note) {
         checkNotNull(note);
         noteNote.set(note.getNote());
+        noteSyncState = note.getState();
         setNoteTags(note.getTags());
         checkAddButton();
     }
@@ -276,8 +283,9 @@ public class AddEditNoteViewModel extends BaseObservable implements
         if (tagsHasFocus) {
             String tag = CommonUtils.strFirstLine(noteNote); // trimmed
             if (!Strings.isNullOrEmpty(tag)) {
-                noteTags.addObject(new Tag(tag.toLowerCase()));
+                noteTags.addObject(new Tag(tag));
             } else {
+                // NOTE: do not spam on auto fill in form
                 showEmptyToast();
             }
         } else {
@@ -302,6 +310,11 @@ public class AddEditNoteViewModel extends BaseObservable implements
         for (String tag : tags) {
             noteTags.addObject(new Tag(tag));
         }
+    }
+
+    @Override
+    public SyncState getNoteSyncState() {
+        return noteSyncState;
     }
 
     @Override

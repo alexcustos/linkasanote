@@ -44,6 +44,7 @@ import com.bytesforge.linkasanote.laano.notes.NotesViewModel;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteActivity;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteFragment;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.utils.ActivityUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -180,6 +181,9 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
                 break;
             case R.id.toolbar_links_collapse_all:
                 collapseAllLinks();
+                break;
+            case R.id.toolbar_links_clear_clipboard:
+                ActivityUtils.clearClipboard(getContext());
                 break;
             default:
                 return super.onOptionsItemSelected(item);

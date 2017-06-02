@@ -98,7 +98,7 @@ public class JsonFile implements Parcelable, Comparable<JsonFile> {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(remotePath, length);
+        return Objects.hashCode(length, localPath, remotePath, eTag);
     }
 
     // Getters & Setters

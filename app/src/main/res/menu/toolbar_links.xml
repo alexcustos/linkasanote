@@ -26,4 +26,8 @@
         android:id="@+id/toolbar_links_collapse_all"
         android:title="@string/toolbar_links_item_collapse_all"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/toolbar_links_clear_clipboard"
+        android:title="@string/toolbar_links_item_clear_clipboard"
+        app:showAsAction="never" />
 </menu>

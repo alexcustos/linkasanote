@@ -8,6 +8,10 @@ import android.content.Context;
 import android.content.SyncResult;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.support.annotation.StringRes;
+import android.widget.Toast;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -37,6 +41,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public static final int SYNC_STATUS_ERROR = 3;
     public static final int SYNC_STATUS_CONFLICT = 4;
 
+    public static final String SYNC_MANUAL_MODE = "MANUAL_MODE";
+
     private final Context context;
     private final Settings settings;
     private final SyncNotifications syncNotifications;
@@ -48,6 +54,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private final CloudItem<Note> cloudNotes;
     private final AccountManager accountManager;
     private final Resources resources;
+    private boolean manualMode;
 
     // NOTE: Note should contain linkId to notify related Link
     public SyncAdapter(
@@ -74,6 +81,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(
             Account account, Bundle extras, String authority,
             ContentProviderClient provider, SyncResult syncResult) {
+        manualMode = extras.getBoolean(SYNC_MANUAL_MODE, false);
         syncNotifications.setAccountName(CloudUtils.getAccountName(account));
 
         OwnCloudClient ocClient = CloudUtils.getOwnCloudClient(account, context);
@@ -192,15 +200,32 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     .blockingGet();
             if (conflictedStatus) {
                 syncStatus = SYNC_STATUS_CONFLICT;
+                if (manualMode) {
+                    showToast(R.string.toast_sync_conflict, Toast.LENGTH_LONG);
+                }
             } else if (unsyncedStatus) {
                 // NOTE: normally it should not be happened, but the chance is not zero
                 syncStatus = SYNC_STATUS_UNSYNCED;
+                if (manualMode) {
+                    showToast(R.string.toast_sync_unsynced, Toast.LENGTH_LONG);
+                }
             } else {
                 syncStatus = SYNC_STATUS_SYNCED;
+                if (manualMode) {
+                    showToast(R.string.toast_sync_success, Toast.LENGTH_SHORT);
+                }
             }
         } else {
             syncStatus = SYNC_STATUS_ERROR;
+            if (manualMode) {
+                showToast(R.string.toast_sync_error, Toast.LENGTH_LONG);
+            }
         }
         settings.setSyncStatus(syncStatus);
+    }
+
+    private void showToast(@StringRes final int toastId, final int duration) {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(() -> Toast.makeText(context, toastId, duration).show());
     }
 }

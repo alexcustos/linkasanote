@@ -10,6 +10,7 @@ import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.links.LinkId;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.tokenautocomplete.TokenCompleteTextView;
@@ -131,8 +132,9 @@ public final class AddEditLinkPresenter implements
         if (linkId == null) {
             throw new RuntimeException("updateLink() was called but linkId is null");
         }
-        // NOTE: state eTag will NOT be overwritten if null
-        saveLink(new Link(linkId, linkLink, linkName, linkDisabled, linkTags)); // UNSYNCED
+        SyncState state = new SyncState(
+                viewModel.getLinkSyncState(), SyncState.State.UNSYNCED);
+        saveLink(new Link(linkId, linkLink, linkName, linkDisabled, linkTags, state));
     }
 
     private void saveLink(@NonNull final Link link) {

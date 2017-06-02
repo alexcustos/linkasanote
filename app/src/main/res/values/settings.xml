@@ -26,7 +26,6 @@
     <string name="pref_key_clipboard_link_follow" translatable="false">link_follow</string>
     <string name="pref_key_clipboard_fill_in_forms" translatable="false">clipboard_fill_in_forms</string>
     <string name="pref_key_clipboard_parameter_white_list" translatable="false">parameter_white_list</string>
-    <string name="pref_key_clipboard_clear_clipboard" translatable="false">clear_clipboard</string>
 
     <string name="about_nextcloud_url" translatable="false">https://nextcloud.com/</string>
     <string name="libraries_apache_v2" translatable="false">

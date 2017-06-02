@@ -36,6 +36,7 @@ import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavorit
 import com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteFragment;
 import com.bytesforge.linkasanote.laano.favorites.conflictresolution.FavoritesConflictResolutionDialog;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.utils.ActivityUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -163,6 +164,9 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
                 break;
             case R.id.toolbar_favorites_action_mode:
                 enableActionMode();
+                break;
+            case R.id.toolbar_favorites_clear_clipboard:
+                ActivityUtils.clearClipboard(getContext());
                 break;
             default:
                 return super.onOptionsItemSelected(item);

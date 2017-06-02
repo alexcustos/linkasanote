@@ -2,8 +2,6 @@ package com.bytesforge.linkasanote.settings;
 
 import android.Manifest;
 import android.accounts.Account;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -70,7 +68,6 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
     private Preference prefBackup;
     private ListPreference prefRestore;
     private ListPreference prefSyncInterval;
-    private Preference prefClipboardClearClipboard;
 
     @Inject
     Repository repository;
@@ -219,9 +216,6 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
             return true;
         });
 
-        prefClipboardClearClipboard = findPreference(
-                resources.getString(R.string.pref_key_clipboard_clear_clipboard));
-
         EditTextPreference prefSyncDirectory = (EditTextPreference) findPreference(
                 resources.getString(R.string.pref_key_sync_directory));
         String syncDirectory = settings.getSyncDirectory();
@@ -257,13 +251,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
 
     @Override
     public boolean onPreferenceTreeClick(Preference preference) {
-        if (preference == prefClipboardClearClipboard) {
-            ClipboardManager clipboardManager =
-                    (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-            ClipData clipData = ClipData.newPlainText(null, null);
-            clipboardManager.setPrimaryClip(clipData);
-            showSnackbar(R.string.pref_snackbar_clipboard_cleared, Snackbar.LENGTH_LONG);
-        } else if (preference == prefBackup) {
+        if (preference == prefBackup) {
             checkWriteExternalStoragePermission();
         } else {
             return false;

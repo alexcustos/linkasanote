@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
@@ -71,7 +70,6 @@ public final class Note implements Comparable<Note>, Item {
         this(id, 0, currentTimeMillis(), note, linkId, tags, new SyncState());
     }
 
-    @VisibleForTesting
     public Note(String id, String note, String linkId, List<Tag> tags, SyncState state) {
         this(id, 0, currentTimeMillis(), note, linkId, tags, state);
     }

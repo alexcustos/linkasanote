@@ -39,6 +39,7 @@ import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteActivity;
 import com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteFragment;
 import com.bytesforge.linkasanote.laano.notes.conflictresolution.NotesConflictResolutionDialog;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.utils.ActivityUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -193,6 +194,9 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                 break;
             case R.id.toolbar_notes_collapse_all:
                 collapseAllNotes();
+                break;
+            case R.id.toolbar_notes_clear_clipboard:
+                ActivityUtils.clearClipboard(getContext());
                 break;
             case R.id.toolbar_notes_layout_mode:
                 readingMode = presenter.toggleNotesLayoutModeReading();

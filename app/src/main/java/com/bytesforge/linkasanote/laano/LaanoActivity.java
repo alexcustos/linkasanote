@@ -53,6 +53,7 @@ import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.settings.SettingsActivity;
+import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.sync.SyncNotifications;
 import com.bytesforge.linkasanote.utils.AppBarLayoutOnStateChangeListener;
 import com.bytesforge.linkasanote.utils.CloudUtils;
@@ -96,7 +97,6 @@ public class LaanoActivity extends AppCompatActivity implements
     Settings settings;
 
     private boolean doubleBackPressed = false;
-    private boolean manualSync = false;
     private int activeTab;
     private IntentFilter connectivityIntentFilter;
     private ConnectivityBroadcastReceiver connectivityBroadcastReceiver;
@@ -252,11 +252,14 @@ public class LaanoActivity extends AppCompatActivity implements
             laanoUiManager.showApplicationNotSyncableSnackbar();
             return;
         }
+        laanoUiManager.resetCounters(LaanoFragmentPagerAdapter.LINKS_TAB);
+        laanoUiManager.resetCounters(LaanoFragmentPagerAdapter.FAVORITES_TAB);
+        laanoUiManager.resetCounters(LaanoFragmentPagerAdapter.NOTES_TAB);
         Bundle extras = new Bundle();
         extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         extras.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        extras.putBoolean(SyncAdapter.SYNC_MANUAL_MODE, true);
         ContentResolver.requestSync(account, LocalContract.CONTENT_AUTHORITY, extras);
-        manualSync = true;
     }
 
     @Override
@@ -302,6 +305,12 @@ public class LaanoActivity extends AppCompatActivity implements
     public void setCurrentTab(int tab) {
         ViewPager viewPager = binding.laanoViewPager;
         viewPager.setCurrentItem(tab);
+    }
+
+    public void loadLinks() {
+        if (linksPresenter != null) {
+            linksPresenter.loadLinks(false);
+        }
     }
 
     // Get Accounts Permission
@@ -396,6 +405,7 @@ public class LaanoActivity extends AppCompatActivity implements
             String action = intent.getAction();
             int status = intent.getIntExtra(SyncNotifications.EXTRA_STATUS, -1);
             //String id = intent.getStringExtra(SyncNotifications.EXTRA_ID);
+            int count = intent.getIntExtra(SyncNotifications.EXTRA_COUNT, -1);
 
             if (action.equals(SyncNotifications.ACTION_SYNC)) {
                 switch (status) {
@@ -405,15 +415,10 @@ public class LaanoActivity extends AppCompatActivity implements
                     case SyncNotifications.STATUS_SYNC_STOP:
                         laanoUiManager.updateSyncStatus();
                         laanoUiManager.setNormalDrawerMenu();
-                        if (manualSync) {
-                            manualSync = false;
-                            laanoUiManager.notifySyncStatus();
-                        }
                         break;
                 }
                 return;
             }
-            laanoUiManager.setSyncDrawerMenu(); // NOTE: if the first SYNC_START was missed
             int tabPosition;
             switch (action) {
                 case SyncNotifications.ACTION_SYNC_LINKS:
@@ -433,8 +438,7 @@ public class LaanoActivity extends AppCompatActivity implements
                 case SyncNotifications.ACTION_SYNC_NOTES:
                     tabPosition = LaanoFragmentPagerAdapter.NOTES_TAB;
                     if (status == SyncNotifications.STATUS_SYNC_STOP) {
-                        notesPresenter.loadNotes(true);
-                        linksPresenter.loadLinks(true);
+                        notesPresenter.loadNotes(true, true);
                         notesPresenter.updateTabNormalState();
                     }
                     break;
@@ -442,14 +446,17 @@ public class LaanoActivity extends AppCompatActivity implements
                     throw new IllegalArgumentException(
                             "Unexpected action has been received in SyncBroadcastReceiver [" + action + "]");
             }
-            if (status == SyncNotifications.STATUS_SYNC_START) {
-                laanoUiManager.setTabSyncState(tabPosition);
-            } else if (status == SyncNotifications.STATUS_UPLOADED) {
-                laanoUiManager.incUploaded(tabPosition);
+            if (status == SyncNotifications.STATUS_UPLOADED) {
+                if (count >= 0) laanoUiManager.setUploaded(tabPosition, count);
+                else laanoUiManager.incUploaded(tabPosition);
             } else if (status == SyncNotifications.STATUS_DOWNLOADED) {
-                laanoUiManager.incDownloaded(tabPosition);
+                if (count >= 0) laanoUiManager.setDownloaded(tabPosition, count);
+                else laanoUiManager.incDownloaded(tabPosition);
             }
             laanoUiManager.updateTitle(tabPosition);
+            // NOTE: if the first SYNC_START was missed
+            laanoUiManager.setSyncDrawerMenu();
+            laanoUiManager.setTabSyncState(tabPosition);
         }
     }
 

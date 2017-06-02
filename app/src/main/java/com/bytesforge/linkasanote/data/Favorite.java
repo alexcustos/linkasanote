@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
@@ -70,7 +69,6 @@ public final class Favorite implements Comparable<Favorite>, Item {
         this(id, 0, currentTimeMillis(), name, andGate, tags, new SyncState());
     }
 
-    @VisibleForTesting
     public Favorite(String id, String name, boolean andGate, List<Tag> tags, SyncState state) {
         this(id, 0, currentTimeMillis(), name, andGate, tags, state);
     }

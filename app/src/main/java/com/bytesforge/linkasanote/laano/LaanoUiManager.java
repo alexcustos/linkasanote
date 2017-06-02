@@ -64,10 +64,10 @@ public class LaanoUiManager {
     }
 
     public void setTabSyncState(int position) {
-        setTab(position, LaanoFragmentPagerAdapter.STATE_SYNC);
-        syncUploaded.put(position, 0);
-        syncDownloaded.put(position, 0);
-        setSyncTitle(position);
+        if (pagerAdapter.getState(position) != LaanoFragmentPagerAdapter.STATE_SYNC) {
+            setTab(position, LaanoFragmentPagerAdapter.STATE_SYNC);
+            setSyncTitle(position);
+        }
     }
 
     public void setTabNormalState(int position, boolean isConflicted) {
@@ -159,8 +159,23 @@ public class LaanoUiManager {
         actionBar.setTitle(title);
     }
 
+    public void resetCounters(int position) {
+        syncUploaded.put(position, 0);
+        syncDownloaded.put(position, 0);
+    }
+
+    public void setUploaded(int position, int count) {
+        syncUploaded.put(position, count);
+        setSyncTitle(position);
+    }
+
     public void incUploaded(int position) {
         syncUploaded.put(position, syncUploaded.get(position) + 1);
+        setSyncTitle(position);
+    }
+
+    public void setDownloaded(int position, int count) {
+        syncDownloaded.put(position, count);
         setSyncTitle(position);
     }
 
@@ -252,5 +267,9 @@ public class LaanoUiManager {
 
     public void showApplicationNotSyncableSnackbar() {
         Snackbar.make(tabLayout, R.string.laano_not_syncable, Snackbar.LENGTH_LONG).show();
+    }
+
+    public void loadLinks() {
+        laanoActivity.loadLinks();
     }
 }

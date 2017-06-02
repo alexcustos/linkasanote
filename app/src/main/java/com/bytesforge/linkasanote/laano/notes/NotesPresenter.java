@@ -109,10 +109,16 @@ public final class NotesPresenter extends BaseItemPresenter implements
 
     @Override
     public void loadNotes(final boolean forceUpdate) {
-        loadNotes(forceUpdate, true);
+        loadNotes(forceUpdate, false, true);
     }
 
-    private void loadNotes(boolean forceUpdate, final boolean showLoading) {
+    @Override
+    public void loadNotes(final boolean forceUpdate, final boolean refreshRelatedLinks) {
+        loadNotes(forceUpdate, refreshRelatedLinks, true);
+    }
+
+    private void loadNotes(
+            boolean forceUpdate, final boolean refreshRelatedLinks, final boolean showLoading) {
         Log.d(TAG, "loadNotes() [" + forceUpdate + "]");
         compositeDisposable.clear();
         if (forceUpdate) {
@@ -188,6 +194,10 @@ public final class NotesPresenter extends BaseItemPresenter implements
         Disposable disposable = loadNotes
                 .subscribeOn(schedulerProvider.computation())
                 .filter(note -> {
+                    String relatedLinkId = note.getLinkId();
+                    if (refreshRelatedLinks && relatedLinkId != null) {
+                        repository.refreshLink(relatedLinkId);
+                    }
                     String searchText = viewModel.getSearchText();
                     if (!Strings.isNullOrEmpty(searchText)) {
                         searchText = searchText.toLowerCase();
@@ -237,6 +247,9 @@ public final class NotesPresenter extends BaseItemPresenter implements
                         viewModel.hideProgressOverlay();
                     }
                     laanoUiManager.updateTitle(TAB);
+                    if (refreshRelatedLinks) {
+                        laanoUiManager.loadLinks();
+                    }
                 })
                 .subscribe(notes -> {
                     view.showNotes(notes);

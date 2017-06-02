@@ -11,6 +11,7 @@ import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
+import com.bytesforge.linkasanote.sync.SyncState;
 
 import java.util.List;
 
@@ -57,6 +58,7 @@ public interface AddEditNoteContract {
 
         void setNoteNote(String noteNote);
         void setNoteTags(String[] tags);
+        SyncState getNoteSyncState();
     }
 
     interface Presenter extends BasePresenter, ClipboardService.Callback {

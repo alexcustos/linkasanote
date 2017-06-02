@@ -71,8 +71,5 @@
             android:key="@string/pref_key_clipboard_fill_in_forms"
             android:title="@string/pref_title_clipboard_fill_in_forms"
             android:summary="@string/pref_summary_clipboard_fill_in_forms" />
-        <Preference
-            android:key="@string/pref_key_clipboard_clear_clipboard"
-            android:title="@string/pref_title_clipboard_clear_clipboard" />
     </PreferenceCategory>
 </android.support.v7.preference.PreferenceScreen>

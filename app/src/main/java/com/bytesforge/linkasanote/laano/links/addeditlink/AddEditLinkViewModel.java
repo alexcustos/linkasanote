@@ -20,6 +20,7 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
+import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.base.Strings;
 
@@ -33,6 +34,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
     private static final String STATE_LINK_LINK = "LINK_LINK";
     private static final String STATE_LINK_NAME = "LINK_NAME";
     private static final String STATE_LINK_DISABLED = "LINK_DISABLED";
+    private static final String STATE_LINK_SYNC_STATE = "LINK_SYNC_STATE";
     private static final String STATE_ADD_BUTTON = "ADD_BUTTON";
     private static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
     private static final String STATE_LINK_ERROR_TEXT = "LINK_ERROR_TEXT";
@@ -43,6 +45,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
     public final ObservableBoolean addButton = new ObservableBoolean();
     private int addButtonText;
 
+    private SyncState linkSyncState;
     private TagsCompletionView linkTags;
     private Context context;
     private AddEditLinkContract.Presenter presenter;
@@ -76,6 +79,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
         outState.putString(STATE_LINK_LINK, linkLink.get());
         outState.putString(STATE_LINK_NAME, linkName.get());
         outState.putBoolean(STATE_LINK_DISABLED, linkDisabled.get());
+        outState.putParcelable(STATE_LINK_SYNC_STATE, linkSyncState);
         outState.putBoolean(STATE_ADD_BUTTON, addButton.get());
         outState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
         outState.putString(STATE_LINK_ERROR_TEXT, linkErrorText);
@@ -87,6 +91,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
         linkLink.set(state.getString(STATE_LINK_LINK));
         linkName.set(state.getString(STATE_LINK_NAME));
         linkDisabled.set(state.getBoolean(STATE_LINK_DISABLED));
+        linkSyncState = state.getParcelable(STATE_LINK_SYNC_STATE);
         addButton.set(state.getBoolean(STATE_ADD_BUTTON));
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
         linkErrorText = state.getString(STATE_LINK_ERROR_TEXT);
@@ -99,6 +104,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
         defaultState.putString(STATE_LINK_LINK, null);
         defaultState.putString(STATE_LINK_NAME, null);
         defaultState.putBoolean(STATE_LINK_DISABLED, false);
+        defaultState.putParcelable(STATE_LINK_SYNC_STATE, null);
         defaultState.putBoolean(STATE_ADD_BUTTON, false);
         int addButtonText = presenter.isNewLink()
                 ? R.string.add_edit_link_new_button_title
@@ -255,6 +261,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
         linkLink.set(link.getLink());
         linkName.set(link.getName());
         linkDisabled.set(link.isDisabled());
+        linkSyncState = link.getState();
         setLinkTags(link.getTags());
         checkAddButton();
     }
@@ -267,14 +274,15 @@ public class AddEditLinkViewModel extends BaseObservable implements
     @Override
     public void setLinkName(String linkName) {
         String name = CommonUtils.strFirstLine(linkName); // trimmed
-        if (!Strings.isNullOrEmpty(name)) {
-            if (tagsHasFocus) {
-                linkTags.addObject(new Tag(name.toLowerCase()));
+        if (tagsHasFocus) {
+            if (!Strings.isNullOrEmpty(name)) {
+                linkTags.addObject(new Tag(name));
             } else {
-                this.linkName.set(name);
+                // NOTE: do not spam on auto fill in form
+                showEmptyToast();
             }
         } else {
-            showEmptyToast();
+            this.linkName.set(name);
         }
     }
 
@@ -300,6 +308,11 @@ public class AddEditLinkViewModel extends BaseObservable implements
         for (String tag : tags) {
             linkTags.addObject(new Tag(tag));
         }
+    }
+
+    @Override
+    public SyncState getLinkSyncState() {
+        return linkSyncState;
     }
 
     @Override

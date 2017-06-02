@@ -56,6 +56,7 @@ public interface NotesContract {
 
         void showAddNote();
         void loadNotes(boolean forceUpdate);
+        void loadNotes(final boolean forceUpdate, final boolean refreshRelatedLinks);
 
         void onNoteClick(String noteId, boolean isConflicted);
         boolean onNoteLongClick(String noteId);

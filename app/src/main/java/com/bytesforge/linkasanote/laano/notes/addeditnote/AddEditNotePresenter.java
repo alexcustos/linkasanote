@@ -10,6 +10,7 @@ import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.links.LinkId;
 import com.bytesforge.linkasanote.laano.notes.NoteId;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.tokenautocomplete.TokenCompleteTextView;
@@ -166,8 +167,9 @@ public final class AddEditNotePresenter implements
         if (noteId == null) {
             throw new RuntimeException("updateNote() was called but noteId is null");
         }
-        // NOTE: state eTag will NOT be overwritten if null
-        saveNote(new Note(noteId, noteNote, linkId, noteTags)); // UNSYNCED
+        SyncState state = new SyncState(
+                viewModel.getNoteSyncState(), SyncState.State.UNSYNCED);
+        saveNote(new Note(noteId, noteNote, linkId, noteTags, state));
     }
 
     private void saveNote(@NonNull final Note note) {

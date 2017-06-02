@@ -26,6 +26,10 @@
         android:title="@string/toolbar_notes_item_collapse_all"
         app:showAsAction="never" />
     <item
+        android:id="@+id/toolbar_notes_clear_clipboard"
+        android:title="@string/toolbar_notes_item_clear_clipboard"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/toolbar_notes_layout_mode"
         android:title="@string/toolbar_notes_item_mode_reading"
         app:showAsAction="never" />

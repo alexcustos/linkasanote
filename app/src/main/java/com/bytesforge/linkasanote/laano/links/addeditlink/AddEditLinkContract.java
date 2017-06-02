@@ -10,6 +10,7 @@ import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.ClipboardService;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
+import com.bytesforge.linkasanote.sync.SyncState;
 
 import java.util.List;
 
@@ -53,6 +54,7 @@ public interface AddEditLinkContract {
         void setLinkTags(String[] tags);
         void setLinkName(String linkName);
         void setStateLinkDisabled(boolean disabled);
+        SyncState getLinkSyncState();
     }
 
     interface Presenter extends BasePresenter, ClipboardService.Callback {

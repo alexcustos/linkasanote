@@ -20,6 +20,7 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
+import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.base.Strings;
 
@@ -32,6 +33,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
 
     private static final String STATE_FAVORITE_NAME = "FAVORITE_NAME";
     private static final String STATE_FAVORITE_AND_GATE = "FAVORITE_AND_GATE";
+    private static final String STATE_FAVORITE_SYNC_STATE = "FAVORITE_SYNC_STATE";
     private static final String STATE_ADD_BUTTON = "ADD_BUTTON";
     private static final String STATE_ADD_BUTTON_TEXT = "ADD_BUTTON_TEXT";
     private static final String STATE_NAME_ERROR_TEXT = "NAME_ERROR_TEXT";
@@ -41,6 +43,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     public final ObservableBoolean addButton = new ObservableBoolean();
     private int addButtonText;
 
+    private SyncState favoriteSyncState;
     private TagsCompletionView favoriteTags;
     private Context context;
     private AddEditFavoriteContract.Presenter presenter;
@@ -73,6 +76,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         checkNotNull(outState);
         outState.putString(STATE_FAVORITE_NAME, favoriteName.get());
         outState.putBoolean(STATE_FAVORITE_AND_GATE, favoriteAndGate.get());
+        outState.putParcelable(STATE_FAVORITE_SYNC_STATE, favoriteSyncState);
         outState.putBoolean(STATE_ADD_BUTTON, addButton.get());
         outState.putInt(STATE_ADD_BUTTON_TEXT, addButtonText);
         outState.putString(STATE_NAME_ERROR_TEXT, nameErrorText);
@@ -83,6 +87,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         checkNotNull(state);
         favoriteName.set(state.getString(STATE_FAVORITE_NAME));
         favoriteAndGate.set(state.getBoolean(STATE_FAVORITE_AND_GATE));
+        favoriteSyncState = state.getParcelable(STATE_FAVORITE_SYNC_STATE);
         addButton.set(state.getBoolean(STATE_ADD_BUTTON));
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
         nameErrorText = state.getString(STATE_NAME_ERROR_TEXT);
@@ -93,6 +98,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         Bundle defaultState = new Bundle();
         defaultState.putString(STATE_FAVORITE_NAME, null);
         defaultState.putBoolean(STATE_FAVORITE_AND_GATE, false);
+        defaultState.putParcelable(STATE_FAVORITE_SYNC_STATE, null);
         defaultState.putBoolean(STATE_ADD_BUTTON, false);
         int addButtonText = presenter.isNewFavorite()
                 ? R.string.add_edit_favorite_new_button_title
@@ -254,6 +260,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         checkNotNull(favorite);
         favoriteName.set(favorite.getName());
         favoriteAndGate.set(favorite.isAndGate());
+        favoriteSyncState = favorite.getState();
         setFavoriteTags(favorite.getTags());
         checkAddButton();
     }
@@ -261,14 +268,15 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     @Override
     public void setFavoriteName(String favoriteName) {
         String name = CommonUtils.strFirstLine(favoriteName); // trimmed
-        if (!Strings.isNullOrEmpty(name)) {
-            if (tagsHasFocus) {
-                favoriteTags.addObject(new Tag(name.toLowerCase()));
+        if (tagsHasFocus) {
+            if (!Strings.isNullOrEmpty(name)) {
+                favoriteTags.addObject(new Tag(name));
             } else {
-                this.favoriteName.set(name);
+                // NOTE: do not spam on auto fill in form
+                showEmptyToast();
             }
         } else {
-            showEmptyToast();
+            this.favoriteName.set(name);
         }
     }
 
@@ -289,6 +297,11 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         for (String tag : tags) {
             favoriteTags.addObject(new Tag(tag));
         }
+    }
+
+    @Override
+    public SyncState getFavoriteSyncState() {
+        return favoriteSyncState;
     }
 
     private void showEmptyToast() {
