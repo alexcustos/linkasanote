@@ -3,6 +3,7 @@ package com.bytesforge.linkasanote.sync.operations.nextcloud;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
@@ -28,10 +29,11 @@ public class GetServerInfoOperation extends RemoteOperation {
     }
 
     @Override
-    protected RemoteOperationResult run(OwnCloudClient client) {
-        GetRemoteStatusOperation status = new GetRemoteStatusOperation(context);
-        RemoteOperationResult result = status.execute(client);
-
+    protected RemoteOperationResult run(OwnCloudClient ocClient) {
+        GetRemoteStatusOperation statusOperation = new GetRemoteStatusOperation(context);
+        RemoteOperationResult result =
+                CloudDataSource.executeRemoteOperation(statusOperation, ocClient)
+                        .blockingGet();
         if (result.isSuccess()) {
             serverInfo.version = (OwnCloudVersion) result.getData().get(0);
             serverInfo.isSecure = (result.getCode() == RemoteOperationResult.ResultCode.OK_SSL);
@@ -45,6 +47,7 @@ public class GetServerInfoOperation extends RemoteOperation {
     }
 
     public static class ServerInfo {
+
         public OwnCloudVersion version = null;
         public String baseUrl = null;
         public boolean isSecure = false;

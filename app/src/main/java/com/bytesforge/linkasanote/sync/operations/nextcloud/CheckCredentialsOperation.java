@@ -2,6 +2,7 @@ package com.bytesforge.linkasanote.sync.operations.nextcloud;
 
 import android.os.Bundle;
 
+import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.OwnCloudCredentials;
 import com.owncloud.android.lib.common.OwnCloudCredentialsFactory;
@@ -30,17 +31,18 @@ public class CheckCredentialsOperation extends RemoteOperation {
     }
 
     @Override
-    protected RemoteOperationResult run(OwnCloudClient client) {
+    protected RemoteOperationResult run(OwnCloudClient ocClient) {
         OwnCloudCredentials credentials =
                 OwnCloudCredentialsFactory.newBasicCredentials(username, password);
-        client.setCredentials(credentials);
-        client.setOwnCloudVersion(serverVersion);
-        client.setFollowRedirects(true);
+        ocClient.setCredentials(credentials);
+        ocClient.setOwnCloudVersion(serverVersion);
+        ocClient.setFollowRedirects(true);
 
         ExistenceCheckRemoteOperation checkOperation =
                 new ExistenceCheckRemoteOperation(ROOT_PATH, false);
-        RemoteOperationResult result = checkOperation.execute(client);
-
+        RemoteOperationResult result =
+                CloudDataSource.executeRemoteOperation(checkOperation, ocClient)
+                        .blockingGet();
         if (checkOperation.wasRedirected()) {
             RedirectionPath path = checkOperation.getRedirectionPath();
             String location = path.getLastPermanentLocation();
@@ -49,7 +51,7 @@ public class CheckCredentialsOperation extends RemoteOperation {
         if (result.isSuccess()) {
             // NOTE: user display name is updated during synchronization
             GetRemoteUserInfoOperation infoOperation = new GetRemoteUserInfoOperation();
-            result = infoOperation.execute(client);
+            result = CloudDataSource.executeRemoteOperation(infoOperation, ocClient).blockingGet();
         }
         if (result.isSuccess()) {
             result.getData().add(credentials);

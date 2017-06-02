@@ -295,6 +295,10 @@ public class LaanoActivity extends AppCompatActivity implements
 
     // Public
 
+    public int getActiveTab() {
+        return activeTab;
+    }
+
     public void setCurrentTab(int tab) {
         ViewPager viewPager = binding.laanoViewPager;
         viewPager.setCurrentItem(tab);
@@ -445,9 +449,7 @@ public class LaanoActivity extends AppCompatActivity implements
             } else if (status == SyncNotifications.STATUS_DOWNLOADED) {
                 laanoUiManager.incDownloaded(tabPosition);
             }
-            if (tabPosition == activeTab) {
-                laanoUiManager.updateTitle(activeTab);
-            }
+            laanoUiManager.updateTitle(tabPosition);
         }
     }
 
@@ -492,8 +494,8 @@ public class LaanoActivity extends AppCompatActivity implements
                 if (activeTab != position) {
                     notifyTabDeselected(activeTab);
                     notifyTabSelected(position);
-                    laanoUiManager.updateTitle(position);
                     activeTab = position;
+                    laanoUiManager.updateTitle(position);
                 }
             }
 

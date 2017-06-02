@@ -16,6 +16,7 @@ import android.util.Log;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
+import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.manageaccounts.AccountItem;
 import com.owncloud.android.lib.common.OwnCloudAccount;
 import com.owncloud.android.lib.common.OwnCloudClient;
@@ -137,7 +138,9 @@ public final class CloudUtils {
     public static void updateUserProfile(
             Account account, OwnCloudClient ocClient, AccountManager accountManager) {
         GetRemoteUserInfoOperation operation = new GetRemoteUserInfoOperation();
-        RemoteOperationResult result = operation.execute(ocClient);
+        RemoteOperationResult result =
+                CloudDataSource.executeRemoteOperation(operation, ocClient)
+                        .blockingGet();
         if (result.isSuccess()) {
             UserInfo userInfo = (UserInfo) result.getData().get(0);
             accountManager.setUserData(
@@ -158,5 +161,12 @@ public final class CloudUtils {
             accountItem.setDisplayName(getAccountUsername(account.name));
         }
         return accountItem;
+    }
+
+    public static boolean isNetworkError(RemoteOperationResult.ResultCode code) {
+        // RemoteOperationResult.ResultCode.HOST_NOT_AVAILABLE
+        // RemoteOperationResult.ResultCode.TIMEOUT
+        // NOTE: it seems it is some sort of bug which is disappeared after retry
+        return code == RemoteOperationResult.ResultCode.SSL_ERROR;
     }
 }

@@ -19,6 +19,7 @@
     <string name="toast_restore_success">Восстановлена</string>
     <string name="toast_conflict_resolved">Конфликт разрешён</string>
     <string name="toast_tags_duplicate_removed">Дубликат</string>
+    <string name="toast_empty">Пустой</string>
     <string name="validation_error_tags_invalid_char">Здесь разрешены только буквы цифры и пробелы, запятая используется как разделитель</string>
     <string name="drawer_actions_settings">Настройки</string>
     <string name="drawer_actions_about">О приложении</string>

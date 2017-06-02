@@ -163,7 +163,17 @@ public class AddEditLinkViewModel extends BaseObservable implements
     public void onAddButtonClick() {
         linkTags.performCompletion();
         // NOTE: there is no way to pass these values directly to the presenter
-        presenter.saveLink(linkLink.get(), linkName.get(), linkDisabled.get(), linkTags.getObjects());
+        String link = linkLink.get();
+        if (link != null) {
+            link = link.trim();
+            linkLink.set(link);
+        }
+        String name = linkName.get();
+        if (name != null) {
+            name = name.trim();
+            linkName.set(name);
+        }
+        presenter.saveLink(link, name, linkDisabled.get(), linkTags.getObjects());
     }
 
     @Override
@@ -256,15 +266,15 @@ public class AddEditLinkViewModel extends BaseObservable implements
 
     @Override
     public void setLinkName(String linkName) {
-        if (Strings.isNullOrEmpty(linkName)) {
-            this.linkName.set(null);
-        } else {
-            String name = CommonUtils.strFirstLine(linkName);
+        String name = CommonUtils.strFirstLine(linkName); // trimmed
+        if (!Strings.isNullOrEmpty(name)) {
             if (tagsHasFocus) {
-                linkTags.addObject(new Tag(name));
+                linkTags.addObject(new Tag(name.toLowerCase()));
             } else {
                 this.linkName.set(name);
             }
+        } else {
+            showEmptyToast();
         }
     }
 
@@ -295,5 +305,9 @@ public class AddEditLinkViewModel extends BaseObservable implements
     @Override
     public void showTagsDuplicateRemovedToast() {
         Toast.makeText(context, R.string.toast_tags_duplicate_removed, Toast.LENGTH_SHORT).show();
+    }
+
+    private void showEmptyToast() {
+        Toast.makeText(context, R.string.toast_empty, Toast.LENGTH_SHORT).show();
     }
 }

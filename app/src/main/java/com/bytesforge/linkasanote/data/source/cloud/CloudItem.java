@@ -96,7 +96,9 @@ public class CloudItem<T extends Item> {
             final String remotePath = getRemotePath(item.getId());
             final JsonFile jsonFile = new JsonFile(localPath, remotePath);
             UploadFileOperation operation = new UploadFileOperation(jsonFile);
-            RemoteOperationResult result = operation.execute(currentOcClient);
+            RemoteOperationResult result =
+                    CloudDataSource.executeRemoteOperation(operation, currentOcClient)
+                            .blockingGet();
             if (!localFile.delete()) {
                 Log.e(TAG, "Temporary file was not deleted [" + localFile.getName() + "]");
             }
@@ -126,7 +128,9 @@ public class CloudItem<T extends Item> {
 
             DownloadRemoteFileOperation operation =
                     new DownloadRemoteFileOperation(remotePath, localDirectory);
-            RemoteOperationResult result = operation.execute(currentOcClient);
+            RemoteOperationResult result =
+                    CloudDataSource.executeRemoteOperation(operation, currentOcClient)
+                            .blockingGet();
             if (result.isSuccess()) {
                 File localFile = new File(localPath);
                 String jsonString = null;
@@ -172,7 +176,9 @@ public class CloudItem<T extends Item> {
 
             final String remotePath = getRemotePath(itemId);
             RemoveRemoteFileOperation operation = new RemoveRemoteFileOperation(remotePath);
-            RemoteOperationResult result = operation.execute(currentOcClient);
+            RemoteOperationResult result =
+                    CloudDataSource.executeRemoteOperation(operation, currentOcClient)
+                            .blockingGet();
             if (result.isSuccess()
                     || result.getCode() == RemoteOperationResult.ResultCode.FILE_NOT_FOUND) {
                 return new RemoteOperationResult(RemoteOperationResult.ResultCode.OK);
@@ -200,7 +206,9 @@ public class CloudItem<T extends Item> {
 
             final String remotePath = getRemotePath(itemId);
             final ReadRemoteFileOperation operation = new ReadRemoteFileOperation(remotePath);
-            final RemoteOperationResult result = operation.execute(currentOcClient);
+            final RemoteOperationResult result =
+                    CloudDataSource.executeRemoteOperation(operation, currentOcClient)
+                            .blockingGet();
             if (result.isSuccess()) {
                 return (RemoteFile) result.getData().get(0);
             } else if (result.getCode() == RemoteOperationResult.ResultCode.FILE_NOT_FOUND) {

@@ -222,7 +222,7 @@ public class ClipboardService extends Service {
                 .observeOn(schedulerProvider.ui())
                 .subscribe(document -> {
                     normalizedClipboard = normalizeUrl(document.location());
-                    String title = document.title();
+                    String title = document.title(); // trimmed
                     linkTitle = Strings.isNullOrEmpty(title) ? null : title;
                     linkDescription = selectMeta(document, "description");
                     String keywords = selectMeta(document, "keywords");
@@ -274,7 +274,7 @@ public class ClipboardService extends Service {
         checkNotNull(document);
         checkNotNull(metaName);
         Element metaElement = document.select("meta[name=" + metaName + "]").first();
-        String metaValue = metaElement == null ? null : metaElement.attr("content");
+        String metaValue = (metaElement == null ? null : metaElement.attr("content"));
         if (metaValue == null) return null;
 
         metaValue = metaValue.trim();

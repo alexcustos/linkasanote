@@ -23,6 +23,7 @@ import com.bytesforge.linkasanote.manageaccounts.AccountItem;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CloudUtils;
+import com.bytesforge.linkasanote.utils.CommonUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -139,10 +140,13 @@ public class LaanoUiManager {
     }
 
     private void setNormalTitle(int position, String normalTitle) {
-        normalTitles.put(position, normalTitle);
+        String title = CommonUtils.strFirstLine(normalTitle);
+        normalTitles.put(position, title);
     }
 
     public void updateTitle(int position) {
+        if (position != laanoActivity.getActiveTab()) return;
+
         String title;
         if (pagerAdapter.getState(position) == LaanoFragmentPagerAdapter.STATE_SYNC) {
             title = syncTitles.get(position);

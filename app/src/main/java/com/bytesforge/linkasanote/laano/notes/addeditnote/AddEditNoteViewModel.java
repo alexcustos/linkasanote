@@ -168,7 +168,12 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public void onAddButtonClick() {
         noteTags.performCompletion();
         // NOTE: there is no way to pass these values directly to the presenter
-        presenter.saveNote(noteNote.get(), noteTags.getObjects());
+        String note = noteNote.get();
+        if (note != null) {
+            note = note.trim();
+            noteNote.set(note);
+        }
+        presenter.saveNote(note, noteTags.getObjects());
     }
 
     @Override
@@ -268,9 +273,13 @@ public class AddEditNoteViewModel extends BaseObservable implements
 
     @Override
     public void setNoteNote(String noteNote) {
-        if (tagsHasFocus && !Strings.isNullOrEmpty(noteNote)) {
-            String tag = CommonUtils.strFirstLine(noteNote);
-            noteTags.addObject(new Tag(tag));
+        if (tagsHasFocus) {
+            String tag = CommonUtils.strFirstLine(noteNote); // trimmed
+            if (!Strings.isNullOrEmpty(tag)) {
+                noteTags.addObject(new Tag(tag.toLowerCase()));
+            } else {
+                showEmptyToast();
+            }
         } else {
             this.noteNote.set(noteNote);
         }
@@ -298,5 +307,9 @@ public class AddEditNoteViewModel extends BaseObservable implements
     @Override
     public void showTagsDuplicateRemovedToast() {
         Toast.makeText(context, R.string.toast_tags_duplicate_removed, Toast.LENGTH_SHORT).show();
+    }
+
+    private void showEmptyToast() {
+        Toast.makeText(context, R.string.toast_empty, Toast.LENGTH_SHORT).show();
     }
 }

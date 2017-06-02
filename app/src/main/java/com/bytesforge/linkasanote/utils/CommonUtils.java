@@ -94,7 +94,6 @@ public final class CommonUtils {
         checkNotNull(array);
         final T[] newArray = Arrays.copyOf(array, array.length + 1);
         newArray[newArray.length - 1] = element;
-
         return newArray;
     }
 
@@ -103,7 +102,6 @@ public final class CommonUtils {
 
         final char[] buffer = new char[repeat];
         Arrays.fill(buffer, ch);
-
         return new String(buffer);
     }
 
@@ -134,10 +132,11 @@ public final class CommonUtils {
     }
 
     public static String strFirstLine(String str) {
+        str = (str == null ? null : str.trim());
         if (Strings.isNullOrEmpty(str)) return null;
 
         String separator = System.getProperty("line.separator");
-        return str.split(separator, 2)[0];
+        return str.split(separator, 2)[0].trim();
     }
 
     public static String formatDateTime(@NonNull Context context, @NonNull Date date) {

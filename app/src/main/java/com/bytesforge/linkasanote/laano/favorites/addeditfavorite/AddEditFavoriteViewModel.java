@@ -156,8 +156,12 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     public void onAddButtonClick() {
         favoriteTags.performCompletion();
         // NOTE: there is no way to pass these values directly to the presenter
-        presenter.saveFavorite(
-                favoriteName.get(), favoriteAndGate.get(), favoriteTags.getObjects());
+        String name = favoriteName.get();
+        if (name != null) {
+            name = name.trim();
+            favoriteName.set(name);
+        }
+        presenter.saveFavorite(name, favoriteAndGate.get(), favoriteTags.getObjects());
     }
 
     @Override
@@ -256,15 +260,15 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
 
     @Override
     public void setFavoriteName(String favoriteName) {
-        if (Strings.isNullOrEmpty(favoriteName)) {
-            this.favoriteName.set(null);
-        } else {
-            String name = CommonUtils.strFirstLine(favoriteName);
+        String name = CommonUtils.strFirstLine(favoriteName); // trimmed
+        if (!Strings.isNullOrEmpty(name)) {
             if (tagsHasFocus) {
-                favoriteTags.addObject(new Tag(name));
+                favoriteTags.addObject(new Tag(name.toLowerCase()));
             } else {
                 this.favoriteName.set(name);
             }
+        } else {
+            showEmptyToast();
         }
     }
 
@@ -285,5 +289,9 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         for (String tag : tags) {
             favoriteTags.addObject(new Tag(tag));
         }
+    }
+
+    private void showEmptyToast() {
+        Toast.makeText(context, R.string.toast_empty, Toast.LENGTH_SHORT).show();
     }
 }

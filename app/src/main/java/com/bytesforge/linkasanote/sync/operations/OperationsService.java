@@ -18,6 +18,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.CheckCredentialsOperation;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation;
 import com.google.common.base.Objects;
@@ -51,7 +52,7 @@ public class OperationsService extends Service {
     private final IBinder binder = new OperationsBinder();
     private OperationsHandler operationsHandler;
 
-    private OwnCloudClient client; // Cache
+    private OwnCloudClient ocClient; // Cache
     private final ConcurrentLinkedQueue<OperationItem> pendingOperations =
             new ConcurrentLinkedQueue<>();
 
@@ -160,10 +161,10 @@ public class OperationsService extends Service {
                     } else {
                         account = new OwnCloudAccount(lastTarget.serverUrl, null);
                     }
-                    client = OwnCloudClientManagerFactory.getDefaultSingleton()
+                    ocClient = OwnCloudClientManagerFactory.getDefaultSingleton()
                             .getClientFor(account, service);
                 }
-                result = operation.execute(client);
+                result = CloudDataSource.executeRemoteOperation(operation, ocClient).blockingGet();
             } catch (AccountsException | IOException e) {
                 result = new RemoteOperationResult(e);
             }

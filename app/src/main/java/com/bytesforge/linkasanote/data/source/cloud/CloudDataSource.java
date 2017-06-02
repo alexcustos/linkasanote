@@ -15,7 +15,9 @@ import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
+import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.owncloud.android.lib.common.OwnCloudClient;
+import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import com.owncloud.android.lib.resources.files.CreateRemoteFolderOperation;
 import com.owncloud.android.lib.resources.files.ReadRemoteFileOperation;
@@ -332,7 +334,9 @@ public class CloudDataSource {
             final OwnCloudClient ocClient, final String remotePath) {
         return Observable.generate(() -> {
             ReadRemoteFolderOperation operation = new ReadRemoteFolderOperation(remotePath);
-            RemoteOperationResult result = operation.execute(ocClient);
+            RemoteOperationResult result =
+                    CloudDataSource.executeRemoteOperation(operation, ocClient)
+                            .blockingGet();
             if (!result.isSuccess()) return null;
 
             ArrayList<Object> dataSourceContent = result.getData();
@@ -360,22 +364,8 @@ public class CloudDataSource {
         checkNotNull(dataSourceDirectory);
         final ReadRemoteFileOperation readOperation =
                 new ReadRemoteFileOperation(dataSourceDirectory);
-        final AtomicInteger retryCount = new AtomicInteger(0);
-        RemoteOperationResult result = Single.fromCallable(() -> readOperation.execute(ocClient))
-                .flatMap(r -> {
-                    if (retryCount.getAndAdd(1) < Settings.GLOBAL_RETRY_ON_NETWORK_ERROR) {
-                        RemoteOperationResult.ResultCode code = r.getCode();
-                        if (code == RemoteOperationResult.ResultCode.HOST_NOT_AVAILABLE
-                                || code == RemoteOperationResult.ResultCode.SSL_ERROR
-                                || code == RemoteOperationResult.ResultCode.TIMEOUT) {
-                            Log.e(TAG, "Retry on Network error [" + retryCount.get() + ":" + code.name()  + "]");
-                            return Single.error(new NetworkErrorException());
-                        }
-                    }
-                    return Single.just(r);
-                })
-                .retry(Settings.GLOBAL_RETRY_ON_NETWORK_ERROR)
-                .blockingGet();
+        RemoteOperationResult result =
+                executeRemoteOperation(readOperation, ocClient).blockingGet();
         if (result.isSuccess()) {
             RemoteFile file = (RemoteFile) result.getData().get(0);
             return file.getEtag();
@@ -383,7 +373,7 @@ public class CloudDataSource {
                 && createDataSource) {
             CreateRemoteFolderOperation writeOperation =
                     new CreateRemoteFolderOperation(dataSourceDirectory, true);
-            result = writeOperation.execute(ocClient);
+            result = executeRemoteOperation(writeOperation, ocClient).blockingGet();
             if (result.isSuccess()) {
                 Log.d(TAG, "New folder has been created");
                 // NOTE: recursion, but with !createDataSource
@@ -412,5 +402,24 @@ public class CloudDataSource {
             }
         }, throwable -> { /* skip the corrupted files */ });
         return dataSourceMap;
+    }
+
+    public static Single<RemoteOperationResult> executeRemoteOperation(
+            @NonNull final RemoteOperation operation, @NonNull final OwnCloudClient ocClient) {
+        checkNotNull(operation);
+        checkNotNull(ocClient);
+        final AtomicInteger retryCount = new AtomicInteger(0);
+        return Single.fromCallable(() -> operation.execute(ocClient))
+                .flatMap(result -> {
+                    if (retryCount.getAndAdd(1) < Settings.GLOBAL_RETRY_ON_NETWORK_ERROR) {
+                        RemoteOperationResult.ResultCode code = result.getCode();
+                        if (CloudUtils.isNetworkError(code)) {
+                            Log.e(TAG, "Retry on Network error [" + retryCount.get() + ":" + code.name()  + "]");
+                            return Single.error(new NetworkErrorException());
+                        }
+                    }
+                    return Single.just(result);
+                })
+                .retry(Settings.GLOBAL_RETRY_ON_NETWORK_ERROR);
     }
 }

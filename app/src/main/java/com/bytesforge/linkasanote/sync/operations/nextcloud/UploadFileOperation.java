@@ -3,6 +3,7 @@ package com.bytesforge.linkasanote.sync.operations.nextcloud;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
@@ -38,18 +39,17 @@ public class UploadFileOperation extends RemoteOperation {
     }
 
     @Override
-    protected RemoteOperationResult run(OwnCloudClient client) {
+    protected RemoteOperationResult run(OwnCloudClient ocClient) {
         File localFile = new File(file.getLocalPath());
         if (!localFile.exists()) {
             return new RemoteOperationResult(RemoteOperationResult.ResultCode.LOCAL_FILE_NOT_FOUND);
         }
-        RemoteOperationResult result = createRemoteParent(file.getRemotePath(), client);
+        RemoteOperationResult result = createRemoteParent(file.getRemotePath(), ocClient);
         if (!result.isSuccess()) return result;
 
         EnhancedUploadRemoteFileOperation uploadOperation = new EnhancedUploadRemoteFileOperation(
                 file.getLocalPath(), file.getRemotePath(), file.getMimeType());
-
-        result = uploadOperation.execute(client);
+        result = CloudDataSource.executeRemoteOperation(uploadOperation, ocClient).blockingGet();
         ArrayList<Object> data = new ArrayList<>();
         data.add(file);
         result.setData(data);
@@ -63,23 +63,24 @@ public class UploadFileOperation extends RemoteOperation {
         return result;
     }
 
-    private RemoteOperationResult createRemoteParent(String remotePath, OwnCloudClient client) {
+    private RemoteOperationResult createRemoteParent(String remotePath, OwnCloudClient ocClient) {
         String remoteParent = new File(remotePath).getParent();
         ExistenceCheckRemoteOperation existenceOperation =
                 new ExistenceCheckRemoteOperation(remoteParent, false);
-        RemoteOperationResult result = existenceOperation.execute(client);
-
+        RemoteOperationResult result =
+                CloudDataSource.executeRemoteOperation(existenceOperation, ocClient)
+                        .blockingGet();
         if (result.getCode() == RemoteOperationResult.ResultCode.FILE_NOT_FOUND) {
             CreateRemoteFolderOperation createOperation =
                     new CreateRemoteFolderOperation(remoteParent, true);
-            result = createOperation.execute(client);
+            result = CloudDataSource.executeRemoteOperation(createOperation, ocClient).blockingGet();
         }
         return result;
     }
 
     private class EnhancedUploadRemoteFileOperation extends UploadRemoteFileOperation {
 
-        private OwnCloudClient client;
+        private OwnCloudClient ocClient;
         private String fileId;
         private String eTag;
 
@@ -106,7 +107,9 @@ public class UploadFileOperation extends RemoteOperation {
 
         private void requestNextcloudFileAttributes() {
             ReadRemoteFileOperation operation = new ReadRemoteFileOperation(this.mRemotePath);
-            RemoteOperationResult result = operation.execute(client);
+            RemoteOperationResult result =
+                    CloudDataSource.executeRemoteOperation(operation, ocClient)
+                            .blockingGet();
             if (result.isSuccess()) {
                 RemoteFile file = (RemoteFile) result.getData().get(0);
                 fileId = file.getRemoteId();
@@ -115,9 +118,9 @@ public class UploadFileOperation extends RemoteOperation {
         }
 
         @Override
-        public RemoteOperationResult execute(OwnCloudClient client) {
-            this.client = client;
-            RemoteOperationResult result = super.execute(client);
+        public RemoteOperationResult execute(OwnCloudClient ocClient) {
+            this.ocClient = ocClient;
+            RemoteOperationResult result = super.execute(ocClient);
             Map<String, String> nextcloudHeaders =
                     extractNextcloudResponseHeaders(this.mPutMethod.getResponseHeaders());
             if (nextcloudHeaders != null) {

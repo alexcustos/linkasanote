@@ -19,6 +19,7 @@
     <string name="toast_restore_success">Restored</string>
     <string name="toast_conflict_resolved">Resolved</string>
     <string name="toast_tags_duplicate_removed">Duplicate</string>
+    <string name="toast_empty">Empty</string>
     <string name="validation_error_tags_invalid_char">Only alphanumeric and spaces are allowed here, comma is used as the separator</string>
     <string name="drawer_actions_settings">Settings</string>
     <string name="drawer_actions_about">About</string>
