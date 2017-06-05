@@ -193,9 +193,12 @@ public class LaanoUiManager {
         } else {
             headerViewModel.showAppName();
         }
-        updateDrawerMenu();
+        updateNormalDrawerMenu();
     }
 
+    /**
+     * Update Navigation Drawer Header
+     */
     public void updateSyncStatus() {
         long lastSyncTime = settings.getLastSyncTime();
         int syncStatus = settings.getSyncStatus();
@@ -225,7 +228,7 @@ public class LaanoUiManager {
         Toast.makeText(laanoActivity, toastId, Toast.LENGTH_LONG).show();
     }
 
-    private void updateDrawerMenu() {
+    private void updateNormalDrawerMenu() {
         if (Settings.GLOBAL_MULTIACCOUNT_SUPPORT) {
             drawerMenu.findItem(R.id.add_account_menu_item).setVisible(true);
             drawerMenu.findItem(R.id.manage_accounts_menu_item).setVisible(true);
@@ -247,6 +250,9 @@ public class LaanoUiManager {
         }
     }
 
+    /**
+     * Set Navigation Drawer Menu to Normal state
+     */
     public void setNormalDrawerMenu() {
         syncState = false;
         drawerMenu.findItem(R.id.sync_menu_item).setTitle(R.string.drawer_actions_sync_start);
@@ -267,9 +273,5 @@ public class LaanoUiManager {
 
     public void showApplicationNotSyncableSnackbar() {
         Snackbar.make(tabLayout, R.string.laano_not_syncable, Snackbar.LENGTH_LONG).show();
-    }
-
-    public void loadLinks() {
-        laanoActivity.loadLinks();
     }
 }

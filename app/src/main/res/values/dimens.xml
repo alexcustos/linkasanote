@@ -66,9 +66,11 @@
     <dimen name="card_link_add_note_margin_start">4dp</dimen>
     <dimen name="card_notes_count_margin_horizontal">4dp</dimen>
 
-    <dimen name="sync_result_margin_top">4dp</dimen>
-    <dimen name="sync_result_started_margin_top">16dp</dimen>
-    <dimen name="sync_result_started_margin_bottom">8dp</dimen>
+    <dimen name="sync_result_padding_top">4dp</dimen>
+    <dimen name="sync_result_first_space_top">8dp</dimen>
+    <dimen name="sync_result_last_space_bottom">24dp</dimen>
+    <dimen name="sync_result_started_padding_top">16dp</dimen>
+    <dimen name="sync_result_started_padding_bottom">4dp</dimen>
 
     <dimen name="app_default_size_w">600dp</dimen>
     <dimen name="app_default_size_h">600dp</dimen>

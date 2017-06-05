@@ -108,14 +108,18 @@ public class SyncLogViewModel extends BaseObservable implements SyncLogContract.
         return listSize.get();
     }
 
-    public String getSyncResult(@NonNull SyncResult syncResult) {
+    public String getSyncResult(int position, @NonNull SyncResult syncResult) {
         checkNotNull(syncResult);
-        return syncResult.toString();
+        return position + ". " + syncResult.toString();
     }
 
     public String getStarted(long started) {
         Date date = new Date(started);
         return CommonUtils.formatDateTime(context, date);
+    }
+
+    public boolean isLast(int position) {
+        return (position + 1 >= getListSize());
     }
 
     /**

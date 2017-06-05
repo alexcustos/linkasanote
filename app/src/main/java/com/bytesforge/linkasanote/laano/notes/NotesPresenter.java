@@ -61,6 +61,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
     private boolean filterIsChanged = true;
     private boolean loadIsCompleted = true;
     private boolean loadIsDeferred = false;
+    private long lastSyncTime = 0;
 
     @Inject
     NotesPresenter(
@@ -109,16 +110,16 @@ public final class NotesPresenter extends BaseItemPresenter implements
     }
 
     @Override
-    public void loadNotes(final boolean checkSyncLog) {
-        loadNotes(checkSyncLog, true);
+    public void loadNotes(final boolean forceUpdate) {
+        loadNotes(forceUpdate, true);
     }
 
-    private void loadNotes(boolean checkSyncLog, final boolean showLoading) {
-        Log.d(TAG, "loadNotes() [" + checkSyncLog +
+    private void loadNotes(boolean forceUpdate, final boolean showLoading) {
+        final long syncTime = settings.getLastNotesSyncTime();
+        Log.d(TAG, "loadNotes() [" + (lastSyncTime == syncTime) +
                 ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
-        if (checkSyncLog) {
-            repository.checkNotesSyncLog();
-            //repository.refreshNotes();
+        if (forceUpdate) { // NOTE: for testing and for the future option to reload by swipe
+            repository.refreshLinks();
         }
         if (!loadIsCompleted) {
             loadIsDeferred = true;
@@ -127,11 +128,17 @@ public final class NotesPresenter extends BaseItemPresenter implements
         FilterType extendedFilter = updateFilter();
         if (!repository.isNoteCacheDirty()
                 && !filterIsChanged
-                && noteCacheSize == repository.getNoteCacheSize()) {
+                && noteCacheSize == repository.getNoteCacheSize()
+                && lastSyncTime == syncTime) {
             return;
         }
         compositeDisposable.clear();
         loadIsCompleted = false;
+        if (lastSyncTime != syncTime) {
+            lastSyncTime = syncTime;
+            repository.checkNotesSyncLog();
+            updateTabNormalState();
+        }
         if (showLoading) {
             viewModel.showProgressOverlay();
         }

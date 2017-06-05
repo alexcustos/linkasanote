@@ -5,7 +5,8 @@
 
         <import type="android.view.View" />
 
-        <variable name="showStarted" type="java.lang.Boolean" />
+        <variable name="showStarted" type="boolean" />
+        <variable name="position" type="int" />
         <variable name="syncResult" type="com.bytesforge.linkasanote.data.SyncResult" />
         <variable name="viewModel"
             type="com.bytesforge.linkasanote.synclog.SyncLogViewModel" />
@@ -14,27 +15,36 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="@dimen/recycler_view_text_margin_horizontal"
+        android:paddingEnd="@dimen/recycler_view_text_margin_horizontal">
 
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/sync_result_first_space_top"
+            android:visibility="@{position == 0 ? View.VISIBLE : View.GONE}" />
         <TextView
             android:id="@+id/sync_log_started"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="@dimen/sync_result_started_margin_top"
-            android:paddingBottom="@dimen/sync_result_started_margin_bottom"
+            android:paddingTop="@dimen/sync_result_started_padding_top"
+            android:paddingBottom="@dimen/sync_result_started_padding_bottom"
             android:gravity="center_horizontal"
             android:text="@{viewModel.getStarted(syncResult.started)}"
             android:visibility="@{showStarted ? View.VISIBLE : View.GONE}"
             style="@style/SyncLogText.DateTime" />
-
         <TextView
             android:id="@+id/sync_log_result"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="@dimen/sync_result_margin_top"
+            android:paddingTop="@dimen/sync_result_padding_top"
             android:gravity="start"
-            android:text="@{viewModel.getSyncResult(syncResult)}"
+            android:text="@{viewModel.getSyncResult(position, syncResult)}"
             style="@style/SyncLogText" />
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/sync_result_last_space_bottom"
+            android:visibility="@{viewModel.isLast(position) ? View.VISIBLE : View.GONE}" />
     </LinearLayout>
 </layout>
 

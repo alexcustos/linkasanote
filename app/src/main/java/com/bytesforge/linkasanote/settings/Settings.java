@@ -64,6 +64,9 @@ public class Settings {
     private static final String DEFAULT_CLIPBOARD_PARAMETER_WHITE_LIST = "id, page";
 
     private static final String SETTING_LAST_SYNC_TIME = "LAST_SYNC_TIME";
+    private static final String SETTING_LAST_LINKS_SYNC_TIME = "LAST_LINKS_SYNC_TIME";
+    private static final String SETTING_LAST_FAVORITES_SYNC_TIME = "LAST_FAVORITES_SYNC_TIME";
+    private static final String SETTING_LAST_NOTES_SYNC_TIME = "LAST_NOTES_SYNC_TIME";
     private static final String SETTING_SYNC_STATUS = "SYNC_STATUS";
     private static final String SETTING_LINK_FILTER_ID = "LINK_FILTER";
     private static final String SETTING_FAVORITE_FILTER_ID = "FAVORITE_FILTER";
@@ -265,6 +268,30 @@ public class Settings {
 
     private synchronized void updateLastSyncTime() {
         putLongSetting(SETTING_LAST_SYNC_TIME, currentTimeMillis());
+    }
+
+    public long getLastLinksSyncTime() {
+        return sharedPreferences.getLong(SETTING_LAST_LINKS_SYNC_TIME, DEFAULT_LAST_SYNC_TIME);
+    }
+
+    public synchronized void updateLastLinksSyncTime() {
+        putLongSetting(SETTING_LAST_LINKS_SYNC_TIME, currentTimeMillis());
+    }
+
+    public long getLastFavoritesSyncTime() {
+        return sharedPreferences.getLong(SETTING_LAST_FAVORITES_SYNC_TIME, DEFAULT_LAST_SYNC_TIME);
+    }
+
+    public synchronized void updateLastFavoritesSyncTime() {
+        putLongSetting(SETTING_LAST_FAVORITES_SYNC_TIME, currentTimeMillis());
+    }
+
+    public long getLastNotesSyncTime() {
+        return sharedPreferences.getLong(SETTING_LAST_NOTES_SYNC_TIME, DEFAULT_LAST_SYNC_TIME);
+    }
+
+    public synchronized void updateLastNotesSyncTime() {
+        putLongSetting(SETTING_LAST_NOTES_SYNC_TIME, currentTimeMillis());
     }
 
     public String getLastSyncedETag(@NonNull String key) {

@@ -63,7 +63,7 @@ public interface LinksContract {
     interface Presenter extends BaseItemPresenterInterface {
 
         void showAddLink();
-        void loadLinks(boolean checkSyncLog);
+        void loadLinks(final boolean forceUpdate);
 
         void onLinkClick(String linkId, boolean isConflicted, int numNotes);
         boolean onLinkLongClick(String linkId);

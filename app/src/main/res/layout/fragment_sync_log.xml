@@ -16,51 +16,42 @@
         android:layout_height="match_parent"
         bind:snackbarId="@{viewModel.snackbarId}">
 
-        <ScrollView
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true">
+            android:layout_height="match_parent">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_sync_log"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="vertical"
+                android:visibility="@{viewModel.listEmpty ? View.GONE : View.VISIBLE}" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/sync_log_empty_title"
+                android:visibility="@{viewModel.listEmpty ? View.VISIBLE : View.GONE}"
+                bind:drawableTopCompat="@{@drawable/ic_receipt_48dp}" />
 
             <FrameLayout
+                android:id="@+id/progress_overlay"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="match_parent"
+                android:animateLayoutChanges="true"
+                android:background="@android:color/black"
+                android:clickable="true"
+                android:alpha="0"
+                android:visibility="gone"
+                bind:progressOverlay="@{viewModel.progressOverlay}">
 
-                <android.support.v7.widget.RecyclerView
-                    android:id="@+id/rv_sync_log"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:paddingBottom="@dimen/recycler_view_text_margin_vertical"
-                    android:paddingStart="@dimen/recycler_view_text_margin_horizontal"
-                    android:paddingEnd="@dimen/recycler_view_text_margin_horizontal"
-                    android:scrollbars="vertical"
-                    android:visibility="@{viewModel.listEmpty ? View.GONE : View.VISIBLE}" />
-
-                <TextView
+                <ProgressBar
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="@string/sync_log_empty_title"
-                    android:visibility="@{viewModel.listEmpty ? View.VISIBLE : View.GONE}"
-                    bind:drawableTopCompat="@{@drawable/ic_receipt_48dp}" />
-
-                <FrameLayout
-                    android:id="@+id/progress_overlay"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:animateLayoutChanges="true"
-                    android:background="@android:color/black"
-                    android:clickable="true"
-                    android:alpha="0"
-                    android:visibility="gone"
-                    bind:progressOverlay="@{viewModel.progressOverlay}">
-
-                    <ProgressBar
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:indeterminate="true" />
-                </FrameLayout>
+                    android:indeterminate="true" />
             </FrameLayout>
-        </ScrollView>
+        </FrameLayout>
     </android.support.design.widget.CoordinatorLayout>
 </layout>

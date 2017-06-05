@@ -99,6 +99,7 @@ public class LaanoActivity extends AppCompatActivity implements
 
     private boolean doubleBackPressed = false;
     private int activeTab;
+    private long lastSyncTime = 0;
     private IntentFilter connectivityIntentFilter;
     private ConnectivityBroadcastReceiver connectivityBroadcastReceiver;
     private IntentFilter syncIntentFilter;
@@ -118,7 +119,12 @@ public class LaanoActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-
+        long synced = settings.getLastSyncTime();
+        if (lastSyncTime != synced) {
+            lastSyncTime = synced;
+            laanoUiManager.updateSyncStatus();
+            laanoUiManager.setNormalDrawerMenu();
+        }
         notifyTabSelected(activeTab);
         laanoUiManager.updateTitle(activeTab);
         registerReceiver(connectivityBroadcastReceiver, connectivityIntentFilter);
@@ -308,12 +314,6 @@ public class LaanoActivity extends AppCompatActivity implements
         viewPager.setCurrentItem(tab);
     }
 
-    public void loadLinks() {
-        if (linksPresenter != null) {
-            linksPresenter.loadLinks(false);
-        }
-    }
-
     // Get Accounts Permission
 
     public void checkGetAccountsPermissionAndLaunchActivity() {
@@ -425,23 +425,20 @@ public class LaanoActivity extends AppCompatActivity implements
                 case SyncNotifications.ACTION_SYNC_LINKS:
                     tabPosition = LaanoFragmentPagerAdapter.LINKS_TAB;
                     if (status == SyncNotifications.STATUS_SYNC_STOP) {
-                        linksPresenter.loadLinks(true);
-                        linksPresenter.updateTabNormalState();
+                        linksPresenter.loadLinks(false);
                     }
                     break;
                 case SyncNotifications.ACTION_SYNC_FAVORITES:
                     tabPosition = LaanoFragmentPagerAdapter.FAVORITES_TAB;
                     if (status == SyncNotifications.STATUS_SYNC_STOP) {
-                        favoritesPresenter.loadFavorites(true);
-                        favoritesPresenter.updateTabNormalState();
+                        favoritesPresenter.loadFavorites(false);
                     }
                     break;
                 case SyncNotifications.ACTION_SYNC_NOTES:
                     tabPosition = LaanoFragmentPagerAdapter.NOTES_TAB;
                     if (status == SyncNotifications.STATUS_SYNC_STOP) {
-                        notesPresenter.loadNotes(true);
-                        linksPresenter.loadLinks(true);
-                        notesPresenter.updateTabNormalState();
+                        notesPresenter.loadNotes(false);
+                        linksPresenter.loadLinks(false);
                     }
                     break;
                 default:
@@ -455,10 +452,11 @@ public class LaanoActivity extends AppCompatActivity implements
                 if (count >= 0) laanoUiManager.setDownloaded(tabPosition, count);
                 else laanoUiManager.incDownloaded(tabPosition);
             }
-            laanoUiManager.updateTitle(tabPosition);
-            // NOTE: if the first SYNC_START was missed
-            laanoUiManager.setSyncDrawerMenu();
-            laanoUiManager.setTabSyncState(tabPosition);
+            if (status != SyncNotifications.STATUS_SYNC_STOP) {
+                laanoUiManager.setTabSyncState(tabPosition);
+                laanoUiManager.setSyncDrawerMenu();
+                laanoUiManager.updateTitle(tabPosition);
+            }
         }
     }
 

@@ -37,7 +37,10 @@ public class SyncLogAdapter extends RecyclerView.Adapter<SyncLogAdapter.ViewHold
             this.binding = binding;
         }
 
-        public void bind(boolean showStarted, SyncResult syncResult, SyncLogViewModel viewModel) {
+        public void bind(
+                int position, boolean showStarted,
+                SyncResult syncResult, SyncLogViewModel viewModel) {
+            binding.setPosition(position);
             binding.setShowStarted(showStarted);
             binding.setSyncResult(syncResult);
             binding.setViewModel(viewModel); // NOTE: global viewModel for fragment and all items
@@ -65,7 +68,7 @@ public class SyncLogAdapter extends RecyclerView.Adapter<SyncLogAdapter.ViewHold
                 showStarted = true;
             }
         }
-        holder.bind(showStarted, syncResult, viewModel);
+        holder.bind(position, showStarted, syncResult, viewModel);
     }
 
     @Override

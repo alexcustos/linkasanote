@@ -117,6 +117,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 syncNotifications, SyncNotifications.ACTION_SYNC_FAVORITES,
                 settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal(), started);
         favoritesSyncResult = syncFavorites.sync();
+        settings.updateLastFavoritesSyncTime();
         syncNotifications.sendSyncBroadcast(
                 SyncNotifications.ACTION_SYNC_FAVORITES, SyncNotifications.STATUS_SYNC_STOP);
         fatalError = favoritesSyncResult.isFatal();
@@ -129,6 +130,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     syncNotifications, SyncNotifications.ACTION_SYNC_LINKS,
                     settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal(), started);
             linksSyncResult = syncLinks.sync();
+            settings.updateLastLinksSyncTime();
             syncNotifications.sendSyncBroadcast(
                     SyncNotifications.ACTION_SYNC_LINKS, SyncNotifications.STATUS_SYNC_STOP);
             fatalError = linksSyncResult.isFatal();
@@ -142,6 +144,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     syncNotifications, SyncNotifications.ACTION_SYNC_NOTES,
                     settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal(), started);
             notesSyncResult = syncNotes.sync();
+            settings.updateLastNotesSyncTime();
+            settings.updateLastLinksSyncTime(); // NOTE: because there are related links
             syncNotifications.sendSyncBroadcast(
                     SyncNotifications.ACTION_SYNC_NOTES, SyncNotifications.STATUS_SYNC_STOP);
             fatalError = notesSyncResult.isFatal();

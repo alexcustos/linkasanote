@@ -52,6 +52,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     private boolean filterIsChanged = true;
     private boolean loadIsCompleted = true;
     private boolean loadIsDeferred = false;
+    private long lastSyncTime = 0;
 
     @Inject
     FavoritesPresenter(
@@ -100,16 +101,16 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     }
 
     @Override
-    public void loadFavorites(final boolean checkSyncLog) {
-        loadFavorites(checkSyncLog, true);
+    public void loadFavorites(final boolean forceUpdate) {
+        loadFavorites(forceUpdate, true);
     }
 
-    private void loadFavorites(boolean checkSyncLog, final boolean showLoading) {
-        Log.d(TAG, "loadFavorites() [" + checkSyncLog +
+    private void loadFavorites(final boolean forceUpdate, final boolean showLoading) {
+        final long syncTime = settings.getLastFavoritesSyncTime();
+        Log.d(TAG, "loadFavorites() [" + (lastSyncTime == syncTime) +
                 ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
-        if (checkSyncLog) {
-            repository.checkFavoritesSyncLog();
-            //repository.refreshFavorites();
+        if (forceUpdate) { // NOTE: for testing and for the future option to reload by swipe
+            repository.refreshLinks();
         }
         if (!loadIsCompleted) {
             loadIsDeferred = true;
@@ -118,11 +119,17 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         updateFilter();
         if (!repository.isFavoriteCacheDirty()
                 && !filterIsChanged
-                && favoriteCacheSize == repository.getFavoriteCacheSize()) {
+                && favoriteCacheSize == repository.getFavoriteCacheSize()
+                && lastSyncTime == syncTime) {
             return;
         }
         compositeDisposable.clear();
         loadIsCompleted = false;
+        if (lastSyncTime != syncTime) {
+            lastSyncTime = syncTime;
+            repository.checkFavoritesSyncLog();
+            updateTabNormalState();
+        }
         if (showLoading) {
             viewModel.showProgressOverlay();
         }

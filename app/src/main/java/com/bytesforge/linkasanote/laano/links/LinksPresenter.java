@@ -63,6 +63,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
     private boolean filterIsChanged = true;
     private boolean loadIsCompleted = true;
     private boolean loadIsDeferred = false;
+    private long lastSyncTime = 0;
 
     @Inject
     LinksPresenter(
@@ -111,16 +112,16 @@ public final class LinksPresenter extends BaseItemPresenter implements
     }
 
     @Override
-    public void loadLinks(final boolean checkSyncLog) {
-        loadLinks(checkSyncLog, true);
+    public void loadLinks(final boolean forceUpdate) {
+        loadLinks(forceUpdate, true);
     }
 
-    private void loadLinks(boolean checkSyncLog, final boolean showLoading) {
-        Log.d(TAG, "loadLinks() [" + checkSyncLog +
+    private void loadLinks(final boolean forceUpdate, final boolean showLoading) {
+        final long syncTime = settings.getLastLinksSyncTime();
+        Log.d(TAG, "loadLinks() [" + (lastSyncTime == syncTime) +
                 ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
-        if (checkSyncLog) {
-            repository.checkLinksSyncLog();
-            //repository.refreshLinks();
+        if (forceUpdate) { // NOTE: for testing and for the future option to reload by swipe
+            repository.refreshLinks();
         }
         if (!loadIsCompleted) {
             loadIsDeferred = true;
@@ -129,11 +130,17 @@ public final class LinksPresenter extends BaseItemPresenter implements
         FilterType extendedFilter = updateFilter();
         if (!repository.isLinkCacheDirty()
                 && !filterIsChanged
-                && linkCacheSize == repository.getLinkCacheSize()) {
+                && linkCacheSize == repository.getLinkCacheSize()
+                && lastSyncTime == syncTime) {
             return;
         }
         compositeDisposable.clear();
         loadIsCompleted = false;
+        if (lastSyncTime != syncTime) {
+            lastSyncTime = syncTime;
+            repository.checkLinksSyncLog();
+            updateTabNormalState();
+        }
         if (showLoading) {
             viewModel.showProgressOverlay();
         }
