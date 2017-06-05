@@ -1,13 +1,14 @@
 package com.bytesforge.linkasanote.data.source.local;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.sync.SyncState;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
 
-public interface LocalItem<T> {
+public interface LocalItems<T> {
 
     Observable<T> getAll();
     Observable<T> getActive();
@@ -31,4 +32,9 @@ public interface LocalItem<T> {
     Single<Boolean> isUnsynced();
     Single<T> getMain(final String duplicatedKey);
     Single<Boolean> autoResolveConflict(final String linkId);
+    Single<Boolean> logSyncResult(
+            long started, @NonNull final String entryId,
+            @NonNull final LocalContract.SyncResultEntry.Result result);
+    Single<Integer> markSyncResultsAsApplied();
+    Observable<String> getSyncResultsIds();
 }

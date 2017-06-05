@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.NoteFactory;
+import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
@@ -21,20 +22,23 @@ import io.reactivex.Single;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class LocalNotes<T extends Item> implements LocalItem<T> {
+public class LocalNotes<T extends Item> implements LocalItems<T> {
 
     private static final String TAG = LocalNotes.class.getSimpleName();
 
     // NOTE: static fails Mockito to mock this class
     private final Uri NOTE_URI;
     private final ContentResolver contentResolver;
+    private final LocalSyncResults localSyncResults;
     private final LocalTags localTags;
     private final NoteFactory<T> factory;
 
     public LocalNotes(
             @NonNull ContentResolver contentResolver,
+            @NonNull LocalSyncResults localSyncResults,
             @NonNull LocalTags localTags, @NonNull NoteFactory<T> factory) {
         this.contentResolver = checkNotNull(contentResolver);
+        this.localSyncResults = checkNotNull(localSyncResults);
         this.localTags = checkNotNull(localTags);
         this.factory = checkNotNull(factory);
         NOTE_URI = LocalContract.NoteEntry.buildUri();
@@ -232,11 +236,37 @@ public class LocalNotes<T extends Item> implements LocalItem<T> {
 
     @Override
     public Single<T> getMain(final String duplicatedKey) {
-        throw new RuntimeException("getMain(): there is not duplicatedKey implementation available for the Notes");
+        throw new RuntimeException("getMain(): there is no duplicatedKey implementation available for the Notes");
     }
 
     @Override
     public Single<Boolean> autoResolveConflict(String noteId) {
         throw new RuntimeException("autoResolveConflict(): there is no Auto Conflict Resolution implementation available for the Notes");
+    }
+
+    @Override
+    public Single<Boolean> logSyncResult(
+            long started, @NonNull final String entryId,
+            @NonNull final LocalContract.SyncResultEntry.Result result) {
+        checkNotNull(entryId);
+        checkNotNull(result);
+        String entry;
+        if (result == LocalContract.SyncResultEntry.Result.RELATED) {
+            entry = LocalContract.LinkEntry.TABLE_NAME;
+        } else {
+            entry = LocalContract.NoteEntry.TABLE_NAME;
+        }
+        SyncResult syncResult = new SyncResult(started, entry, entryId, result);
+        return localSyncResults.log(syncResult);
+    }
+
+    @Override
+    public Single<Integer> markSyncResultsAsApplied() {
+        return localSyncResults.markAsApplied(LocalContract.NoteEntry.TABLE_NAME, 0L);
+    }
+
+    @Override
+    public Observable<String> getSyncResultsIds() {
+        return localSyncResults.getIds(LocalContract.NoteEntry.TABLE_NAME);
     }
 }

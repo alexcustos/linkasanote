@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.StringRes;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.bytesforge.linkasanote.R;
@@ -21,6 +22,7 @@ import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.data.source.local.LocalNotes;
+import com.bytesforge.linkasanote.data.source.local.LocalSyncResults;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.google.common.base.Joiner;
@@ -30,6 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Single;
+
+import static java.lang.System.currentTimeMillis;
 
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
@@ -46,6 +50,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private final Context context;
     private final Settings settings;
     private final SyncNotifications syncNotifications;
+    private final LocalSyncResults localSyncResults;
     private final LocalLinks<Link> localLinks;
     private final CloudItem<Link> cloudLinks;
     private final LocalFavorites<Favorite> localFavorites;
@@ -60,6 +65,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public SyncAdapter(
             Context context, Settings settings, boolean autoInitialize,
             AccountManager accountManager, SyncNotifications syncNotifications,
+            LocalSyncResults localSyncResults,
             LocalLinks<Link> localLinks, CloudItem<Link> cloudLinks,
             LocalFavorites<Favorite> localFavorites, CloudItem<Favorite> cloudFavorites,
             LocalNotes<Note> localNotes, CloudItem<Note> cloudNotes) {
@@ -68,6 +74,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         this.settings = settings;
         this.accountManager = accountManager;
         this.syncNotifications = syncNotifications;
+        this.localSyncResults = localSyncResults;
         this.localLinks = localLinks;
         this.cloudLinks = cloudLinks;
         this.localFavorites = localFavorites;
@@ -82,6 +89,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             Account account, Bundle extras, String authority,
             ContentProviderClient provider, SyncResult syncResult) {
         manualMode = extras.getBoolean(SYNC_MANUAL_MODE, false);
+        long started = currentTimeMillis();
         syncNotifications.setAccountName(CloudUtils.getAccountName(account));
 
         OwnCloudClient ocClient = CloudUtils.getOwnCloudClient(account, context);
@@ -96,6 +104,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         syncNotifications.sendSyncBroadcast(
                 SyncNotifications.ACTION_SYNC, SyncNotifications.STATUS_SYNC_START);
         CloudUtils.updateUserProfile(account, ocClient, accountManager);
+        int numRows = localSyncResults.cleanup().blockingGet();
+        Log.d(TAG, "onPerformSync(): cleanupSyncResults() [" + numRows + "]");
 
         boolean fatalError;
         SyncItemResult favoritesSyncResult, linksSyncResult = null, notesSyncResult = null;
@@ -105,7 +115,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 SyncNotifications.ACTION_SYNC_FAVORITES, SyncNotifications.STATUS_SYNC_START);
         SyncItem<Favorite> syncFavorites = new SyncItem<>(ocClient, localFavorites, cloudFavorites,
                 syncNotifications, SyncNotifications.ACTION_SYNC_FAVORITES,
-                settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal());
+                settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal(), started);
         favoritesSyncResult = syncFavorites.sync();
         syncNotifications.sendSyncBroadcast(
                 SyncNotifications.ACTION_SYNC_FAVORITES, SyncNotifications.STATUS_SYNC_STOP);
@@ -117,7 +127,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     SyncNotifications.ACTION_SYNC_LINKS, SyncNotifications.STATUS_SYNC_START);
             SyncItem<Link> syncLinks = new SyncItem<>(ocClient, localLinks, cloudLinks,
                     syncNotifications, SyncNotifications.ACTION_SYNC_LINKS,
-                    settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal());
+                    settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal(), started);
             linksSyncResult = syncLinks.sync();
             syncNotifications.sendSyncBroadcast(
                     SyncNotifications.ACTION_SYNC_LINKS, SyncNotifications.STATUS_SYNC_STOP);
@@ -130,7 +140,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     SyncNotifications.ACTION_SYNC_NOTES, SyncNotifications.STATUS_SYNC_START);
             SyncItem<Note> syncNotes = new SyncItem<>(ocClient, localNotes, cloudNotes,
                     syncNotifications, SyncNotifications.ACTION_SYNC_NOTES,
-                    settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal());
+                    settings.isSyncUploadToEmpty(), settings.isSyncProtectLocal(), started);
             notesSyncResult = syncNotes.sync();
             syncNotifications.sendSyncBroadcast(
                     SyncNotifications.ACTION_SYNC_NOTES, SyncNotifications.STATUS_SYNC_STOP);

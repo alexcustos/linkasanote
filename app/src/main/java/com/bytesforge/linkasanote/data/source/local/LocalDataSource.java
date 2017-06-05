@@ -9,6 +9,7 @@ import android.support.annotation.VisibleForTesting;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
+import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.sync.SyncState;
@@ -27,16 +28,17 @@ public class LocalDataSource {
 
     private static final String TAG = LocalDataSource.class.getSimpleName();
 
+    private final LocalSyncResults localSyncResults;
     private final LocalLinks<Link> localLinks;
     private final LocalFavorites<Favorite> localFavorites;
     private final LocalNotes<Note> localNotes;
     private final LocalTags localTags;
 
     public LocalDataSource(
-            @NonNull LocalLinks<Link> localLinks,
-            @NonNull LocalFavorites<Favorite> localFavorites,
-            @NonNull LocalNotes<Note> localNotes,
-            @NonNull LocalTags localTags) {
+            @NonNull LocalSyncResults localSyncResults,
+            @NonNull LocalLinks<Link> localLinks, @NonNull LocalFavorites<Favorite> localFavorites,
+            @NonNull LocalNotes<Note> localNotes, @NonNull LocalTags localTags) {
+        this.localSyncResults = checkNotNull(localSyncResults);
         this.localLinks = checkNotNull(localLinks);
         this.localFavorites = checkNotNull(localFavorites);
         this.localNotes = checkNotNull(localNotes);
@@ -104,6 +106,14 @@ public class LocalDataSource {
         return localLinks.resetSyncState();
     }
 
+    public Single<Integer> markLinksSyncResultsAsApplied() {
+        return localLinks.markSyncResultsAsApplied();
+    }
+
+    public Observable<String> getLinksSyncResultsIds() {
+        return localLinks.getSyncResultsIds();
+    }
+
     // Favorites
 
     public Observable<Favorite> getFavorites() {
@@ -163,6 +173,14 @@ public class LocalDataSource {
 
     public Single<Integer> resetFavoritesSyncState() {
         return localFavorites.resetSyncState();
+    }
+
+    public Single<Integer> markFavoritesSyncResultsAsApplied() {
+        return localFavorites.markSyncResultsAsApplied();
+    }
+
+    public Observable<String> getFavoritesSyncResultsIds() {
+        return localFavorites.getSyncResultsIds();
     }
 
     // Notes
@@ -227,6 +245,14 @@ public class LocalDataSource {
         return localNotes.resetSyncState();
     }
 
+    public Single<Integer> markNotesSyncResultsAsApplied() {
+        return localNotes.markSyncResultsAsApplied();
+    }
+
+    public Observable<String> getNotesSyncResultsIds() {
+        return localNotes.getSyncResultsIds();
+    }
+
     // Tags
 
     public Observable<Tag> getTags() {
@@ -244,6 +270,12 @@ public class LocalDataSource {
     @VisibleForTesting
     public void deleteAllTags() {
         localTags.deleteTags().blockingGet();
+    }
+
+    // SyncResults
+
+    public Observable<SyncResult> getFreshSyncResults() {
+        return localSyncResults.getFresh();
     }
 
     // Statics
@@ -285,7 +317,7 @@ public class LocalDataSource {
 
     public static Observable<String> getIds(
             final ContentResolver contentResolver, final Uri uri) {
-        String[] columns = new String[]{BaseEntry.COLUMN_NAME_ENTRY_ID};
+        final String[] columns = new String[]{BaseEntry.COLUMN_NAME_ENTRY_ID};
 
         return Observable.generate(() -> {
             return contentResolver.query(uri, columns, null, null, null);

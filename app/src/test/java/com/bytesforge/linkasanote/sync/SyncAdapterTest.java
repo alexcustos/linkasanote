@@ -12,9 +12,11 @@ import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.data.source.local.LocalNotes;
+import com.bytesforge.linkasanote.data.source.local.LocalSyncResults;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.utils.CloudUtils;
@@ -64,6 +66,9 @@ public class SyncAdapterTest {
 
     @Mock
     SyncNotifications syncNotifications;
+
+    @Mock
+    LocalSyncResults localSyncResults;
 
     @Mock
     LocalLinks<Link> localLinks;
@@ -120,7 +125,8 @@ public class SyncAdapterTest {
         when(localFavorites.isConflicted()).thenReturn(Single.just(false));
 
         syncAdapter = new SyncAdapter(context, settings, true, accountManager, syncNotifications,
-                localLinks, cloudLinks, localFavorites, cloudFavorites, localNotes, cloudNotes);
+                localSyncResults, localLinks, cloudLinks, localFavorites, cloudFavorites,
+                localNotes, cloudNotes);
     }
 
     @Test
@@ -144,6 +150,7 @@ public class SyncAdapterTest {
                 .thenReturn(Single.just(result));
         when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).upload(eq(favorite), eq(ownCloudClient));
@@ -170,6 +177,9 @@ public class SyncAdapterTest {
         when(cloudFavorites.download(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.just(cloudFavorite));
         when(localFavorites.save(eq(cloudFavorite))).thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
@@ -196,6 +206,9 @@ public class SyncAdapterTest {
                 .thenReturn(Single.just(cloudFavorite));
         when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
@@ -226,6 +239,9 @@ public class SyncAdapterTest {
         when(cloudFavorites.delete(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.just(result));
         when(localFavorites.delete(eq(favoriteId))).thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
@@ -253,6 +269,9 @@ public class SyncAdapterTest {
                 .thenReturn(Single.just(cloudFavorite));
         when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
@@ -279,6 +298,10 @@ public class SyncAdapterTest {
         when(cloudFavorites.download(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.just(cloudFavorite));
         when(localFavorites.save(eq(cloudFavorite))).thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
+
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
         verify(localFavorites).save(eq(cloudFavorite));
@@ -298,6 +321,9 @@ public class SyncAdapterTest {
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, Collections.emptyList());
         when(localFavorites.delete(eq(favoriteId))).thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(localFavorites).delete(eq(favoriteId));
@@ -323,6 +349,9 @@ public class SyncAdapterTest {
         when(cloudFavorites.delete(eq(favoriteId), eq(ownCloudClient)))
                 .thenReturn(Single.just(result));
         when(localFavorites.delete(eq(favoriteId))).thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).delete(eq(favoriteId), eq(ownCloudClient));
@@ -343,6 +372,9 @@ public class SyncAdapterTest {
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, Collections.emptyList());
         when(localFavorites.delete(eq(favoriteId))).thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(localFavorites).delete(eq(favoriteId));
@@ -363,6 +395,9 @@ public class SyncAdapterTest {
         setCloudFavorites(cloudFavorites, Collections.emptyList());
         when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
@@ -384,6 +419,9 @@ public class SyncAdapterTest {
         setLocalFavorites(localFavorites, singletonList(localFavorite));
         setCloudFavorites(cloudFavorites, Collections.emptyList());
         when(localFavorites.delete(eq(favoriteId))).thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(localFavorites).delete(eq(favoriteId));
@@ -417,6 +455,9 @@ public class SyncAdapterTest {
                 .thenReturn(Single.just(result));
         when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.just(true));
+        when(localSyncResults.cleanup()).thenReturn(Single.just(0));
+        when(localFavorites.logSyncResult(any(long.class), eq(favoriteId),
+                any(LocalContract.SyncResultEntry.Result.class))).thenReturn(Single.just(true));
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).upload(eq(localFavorite), eq(ownCloudClient));

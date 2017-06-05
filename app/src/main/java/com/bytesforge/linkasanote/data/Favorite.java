@@ -257,6 +257,11 @@ public final class Favorite implements Comparable<Favorite>, Item {
     }
 
     @Override
+    public String getRelatedId() {
+        return null; // NOTE: there is no related object
+    }
+
+    @Override
     @Nullable
     public List<Tag> getTags() {
         return tags;

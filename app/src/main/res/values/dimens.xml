@@ -21,6 +21,7 @@
     <dimen name="add_edit_account_url_form_space">16dp</dimen>
     <dimen name="item_manage_accounts_layout_height">72dp</dimen>
     <dimen name="recycler_view_left_icon_margin_start">16dp</dimen>
+    <dimen name="recycler_view_text_margin_vertical">16dp</dimen>
     <dimen name="recycler_view_text_margin_horizontal">16dp</dimen>
     <dimen name="recycler_view_left_checkbox_margin_start">8dp</dimen>
     <dimen name="recycler_view_text_to_button_margin_start">24dp</dimen>
@@ -64,6 +65,10 @@
     <dimen name="card_link_notes_bottom_spacer_height">8dp</dimen>
     <dimen name="card_link_add_note_margin_start">4dp</dimen>
     <dimen name="card_notes_count_margin_horizontal">4dp</dimen>
+
+    <dimen name="sync_result_margin_top">4dp</dimen>
+    <dimen name="sync_result_started_margin_top">16dp</dimen>
+    <dimen name="sync_result_started_margin_bottom">8dp</dimen>
 
     <dimen name="app_default_size_w">600dp</dimen>
     <dimen name="app_default_size_h">600dp</dimen>

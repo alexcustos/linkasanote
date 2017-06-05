@@ -63,6 +63,7 @@ public class RepositoryNoteTest {
         repository.noteCacheIsDirty = true;
         when(localDataSource.getNotes((String[]) isNull()))
                 .thenReturn(Observable.fromIterable(NOTES));
+        when(localDataSource.markNotesSyncResultsAsApplied()).thenReturn(Single.just(0));
         testNotesObserver = repository.getNotes().toList().test();
         testNotesObserver.assertValue(NOTES);
         assert repository.cachedNotes != null;
@@ -114,6 +115,7 @@ public class RepositoryNoteTest {
         // Cache
         when(localDataSource.getNotes((String[]) isNull()))
                 .thenReturn(Observable.fromIterable(NOTES));
+        when(localDataSource.markNotesSyncResultsAsApplied()).thenReturn(Single.just(0));
         testNotesObserver = repository.getNotes().toList().test();
         testNotesObserver.assertValue(NOTES);
         assert repository.cachedNotes != null;

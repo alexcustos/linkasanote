@@ -2,7 +2,7 @@
 
 ext {
     // NOTE: xxx.yy.zz; -SNAPSHOT; -RCxx
-    VERSION_NAME = "0.1.0-RC9"
+    VERSION_NAME = "0.2.0-RC1"
     SDK_VERSION = 25
     MIN_SDK_VERSION = 19
     BUILD_TOOL_VERSION = '25.0.3'
@@ -23,6 +23,7 @@ ext {
     nextcloudLibraryVersion = '1.0.18'
     uiAutomatorVersion = '2.1.2'
     jsoupVersion = '1.10.2'
+    stethoVersion = '1.5.0'
     // Resolve conflicts
     findbugsJsr305Version = '2.0.1'
 }

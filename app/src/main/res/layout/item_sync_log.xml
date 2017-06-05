@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable name="showStarted" type="java.lang.Boolean" />
+        <variable name="syncResult" type="com.bytesforge.linkasanote.data.SyncResult" />
+        <variable name="viewModel"
+            type="com.bytesforge.linkasanote.synclog.SyncLogViewModel" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/sync_log_started"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/sync_result_started_margin_top"
+            android:paddingBottom="@dimen/sync_result_started_margin_bottom"
+            android:gravity="center_horizontal"
+            android:text="@{viewModel.getStarted(syncResult.started)}"
+            android:visibility="@{showStarted ? View.VISIBLE : View.GONE}"
+            style="@style/SyncLogText.DateTime" />
+
+        <TextView
+            android:id="@+id/sync_log_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/sync_result_margin_top"
+            android:gravity="start"
+            android:text="@{viewModel.getSyncResult(syncResult)}"
+            style="@style/SyncLogText" />
+    </LinearLayout>
+</layout>
+

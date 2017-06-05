@@ -16,6 +16,7 @@ import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.data.source.local.LocalNotes;
+import com.bytesforge.linkasanote.data.source.local.LocalSyncResults;
 import com.bytesforge.linkasanote.data.source.local.LocalTags;
 import com.bytesforge.linkasanote.settings.Settings;
 
@@ -38,9 +39,11 @@ public class RepositoryModule {
     @Provides
     @Singleton
     public LocalLinks<Link> provideLocalLinks(
-            ContentResolver contentResolver, LocalTags localTags, LocalNotes<Note> localNotes) {
+            ContentResolver contentResolver, LocalSyncResults localSyncResults,
+            LocalTags localTags, LocalNotes<Note> localNotes) {
         LinkFactory<Link> linkFactory = Link.getFactory();
-        return new LocalLinks<>(contentResolver, localTags, localNotes, linkFactory);
+        return new LocalLinks<>(contentResolver, localSyncResults,
+                localTags, localNotes, linkFactory);
     }
 
     @Provides
@@ -55,9 +58,10 @@ public class RepositoryModule {
     @Provides
     @Singleton
     public LocalFavorites<Favorite> provideLocalFavorites(
-            ContentResolver contentResolver, LocalTags localTags) {
+            ContentResolver contentResolver,
+            LocalSyncResults localSyncResults, LocalTags localTags) {
         FavoriteFactory<Favorite> favoriteFactory = Favorite.getFactory();
-        return new LocalFavorites<>(contentResolver, localTags, favoriteFactory);
+        return new LocalFavorites<>(contentResolver, localSyncResults, localTags, favoriteFactory);
     }
 
     @Provides
@@ -72,9 +76,10 @@ public class RepositoryModule {
     @Provides
     @Singleton
     public LocalNotes<Note> provideLocalNotes(
-            ContentResolver contentResolver, LocalTags localTags) {
+            ContentResolver contentResolver,
+            LocalSyncResults localSyncResults, LocalTags localTags) {
         NoteFactory<Note> noteFactory = Note.getFactory();
-        return new LocalNotes<>(contentResolver, localTags, noteFactory);
+        return new LocalNotes<>(contentResolver, localSyncResults, localTags, noteFactory);
     }
 
     @Provides
@@ -88,10 +93,18 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
+    public LocalSyncResults provideLocalSyncResults(ContentResolver contentResolver) {
+        return new LocalSyncResults(contentResolver);
+    }
+
+    @Provides
+    @Singleton
     public LocalDataSource provideLocalDataSource(
+            LocalSyncResults localSyncResults,
             LocalLinks<Link> localLinks, LocalFavorites<Favorite> localFavorites,
             LocalNotes<Note> localNotes, LocalTags localTags) {
-        return new LocalDataSource(localLinks, localFavorites, localNotes, localTags);
+        return new LocalDataSource(
+                localSyncResults, localLinks, localFavorites, localNotes, localTags);
     }
 
     @Provides

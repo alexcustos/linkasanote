@@ -257,6 +257,11 @@ public final class Note implements Comparable<Note>, Item {
         throw new RuntimeException("Note does not have unique constraint for this option");
     }
 
+    @Override
+    public String getRelatedId() {
+        return getLinkId();
+    }
+
     @Nullable
     public String getTagsAsString() {
         if (tags != null) {

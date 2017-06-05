@@ -48,7 +48,7 @@ public interface FavoritesContract {
     interface Presenter extends BaseItemPresenterInterface {
 
         void showAddFavorite();
-        void loadFavorites(boolean forceUpdate);
+        void loadFavorites(boolean checkSyncLog);
 
         void onFavoriteClick(String favoriteId, boolean isConflicted);
         boolean onFavoriteLongClick(String favoriteId);

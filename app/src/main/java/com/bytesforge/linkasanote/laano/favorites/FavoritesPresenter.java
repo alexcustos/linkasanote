@@ -50,7 +50,8 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     private int favoriteCacheSize = -1;
     private FilterType filterType;
     private boolean filterIsChanged = true;
-    private boolean loadIsCompleted = false;
+    private boolean loadIsCompleted = true;
+    private boolean loadIsDeferred = false;
 
     @Inject
     FavoritesPresenter(
@@ -99,23 +100,28 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     }
 
     @Override
-    public void loadFavorites(final boolean forceUpdate) {
-        loadFavorites(forceUpdate, true);
+    public void loadFavorites(final boolean checkSyncLog) {
+        loadFavorites(checkSyncLog, true);
     }
 
-    private void loadFavorites(boolean forceUpdate, final boolean showLoading) {
-        Log.d(TAG, "loadFavorites() [" + forceUpdate + "]");
-        compositeDisposable.clear();
-        if (forceUpdate) {
-            repository.refreshFavorites();
+    private void loadFavorites(boolean checkSyncLog, final boolean showLoading) {
+        Log.d(TAG, "loadFavorites() [" + checkSyncLog +
+                ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
+        if (checkSyncLog) {
+            repository.checkFavoritesSyncLog();
+            //repository.refreshFavorites();
+        }
+        if (!loadIsCompleted) {
+            loadIsDeferred = true;
+            return;
         }
         updateFilter();
         if (!repository.isFavoriteCacheDirty()
                 && !filterIsChanged
-                && favoriteCacheSize == repository.getFavoriteCacheSize()
-                && loadIsCompleted) {
+                && favoriteCacheSize == repository.getFavoriteCacheSize()) {
             return;
         }
+        compositeDisposable.clear();
         loadIsCompleted = false;
         if (showLoading) {
             viewModel.showProgressOverlay();
@@ -149,15 +155,24 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     laanoUiManager.updateTitle(TAB);
                 })
                 .subscribe(favorites -> {
-                    view.showFavorites(favorites);
-                    selectFavoriteFilter();
+                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
                     filterIsChanged = false;
                     favoriteCacheSize = repository.getFavoriteCacheSize();
-                    loadIsCompleted = true;
+                    if (loadIsDeferred) {
+                        loadIsDeferred = false;
+                        loadFavorites(false, showLoading);
+                    } else {
+                        view.showFavorites(favorites);
+                        selectFavoriteFilter();
+                    }
                 }, throwable -> {
-                    // NullPointerException
-                    CommonUtils.logStackTrace(TAG, throwable);
-                    viewModel.showDatabaseErrorSnackbar();
+                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
+                    if (throwable instanceof IllegalStateException) {
+                        loadFavorites(false, showLoading);
+                    } else {
+                        CommonUtils.logStackTrace(TAG, throwable);
+                        viewModel.showDatabaseErrorSnackbar();
+                    }
                 });
         compositeDisposable.add(disposable);
     }

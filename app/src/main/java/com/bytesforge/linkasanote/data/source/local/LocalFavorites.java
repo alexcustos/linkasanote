@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.FavoriteFactory;
 import com.bytesforge.linkasanote.data.Item;
+import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
@@ -21,20 +22,23 @@ import io.reactivex.Single;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class LocalFavorites<T extends Item> implements LocalItem<T> {
+public class LocalFavorites<T extends Item> implements LocalItems<T> {
 
     private static final String TAG = LocalFavorites.class.getSimpleName();
 
     // NOTE: static fails Mockito to mock this class
     private final Uri FAVORITE_URI;
     private final ContentResolver contentResolver;
+    private final LocalSyncResults localSyncResults;
     private final LocalTags localTags;
     private final FavoriteFactory<T> factory;
 
     public LocalFavorites(
             @NonNull ContentResolver contentResolver,
+            @NonNull LocalSyncResults localSyncResults,
             @NonNull LocalTags localTags, @NonNull FavoriteFactory<T> factory) {
         this.contentResolver = checkNotNull(contentResolver);
+        this.localSyncResults = checkNotNull(localSyncResults);
         this.localTags = checkNotNull(localTags);
         this.factory = checkNotNull(factory);
         FAVORITE_URI = LocalContract.FavoriteEntry.buildUri();
@@ -286,5 +290,29 @@ public class LocalFavorites<T extends Item> implements LocalItem<T> {
                         return update(favoriteId, state).blockingGet();
                     }
                 });
+    }
+
+    @Override
+    public Single<Boolean> logSyncResult(
+            long started, @NonNull final String entryId,
+            @NonNull final LocalContract.SyncResultEntry.Result result) {
+        checkNotNull(entryId);
+        checkNotNull(result);
+        if (result == LocalContract.SyncResultEntry.Result.RELATED) {
+            throw new RuntimeException("logSyncResult(): there is no RELATED item implementation available for Favorites");
+        }
+        SyncResult syncResult = new SyncResult(
+                started, LocalContract.FavoriteEntry.TABLE_NAME, entryId, result);
+        return localSyncResults.log(syncResult);
+    }
+
+    @Override
+    public Single<Integer> markSyncResultsAsApplied() {
+        return localSyncResults.markAsApplied(LocalContract.FavoriteEntry.TABLE_NAME, 0L);
+    }
+
+    @Override
+    public Observable<String> getSyncResultsIds() {
+        return localSyncResults.getIds(LocalContract.FavoriteEntry.TABLE_NAME);
     }
 }

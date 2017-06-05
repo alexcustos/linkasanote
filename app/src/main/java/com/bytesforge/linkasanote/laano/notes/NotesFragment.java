@@ -252,8 +252,11 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     public void showNotes(@NonNull List<Note> notes) {
         checkNotNull(notes);
         adapter.swapItems(notes);
+        updateView();
+    }
 
-        boolean firstLoad = viewModel.setListSize(notes.size());
+    private void updateView() {
+        boolean firstLoad = viewModel.setListSize(adapter.getItemCount());
         if (firstLoad) {
             viewModel.setExpandByDefault(presenter.isExpandNotes());
         }

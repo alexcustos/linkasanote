@@ -27,6 +27,7 @@
     <string name="drawer_actions_add_account">Add account</string>
     <string name="drawer_actions_manage_accounts">Manage accounts</string>
     <string name="drawer_actions_sync_start">Start sync</string>
+    <string name="drawer_actions_sync_log">Sync log</string>
     <string name="drawer_actions_sync_in_progress">Sync in progress…</string>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
@@ -317,6 +318,8 @@
     <string name="fill_in_form_info_message">This operation is using the normalized and extended clipboard content to try filling in or replacing the form fields. The original clipboard content remain intact, so feel free to use it as well.</string>
     <string name="about_launch_google_play_error">Neither Google Play nor Browser are installed on this device</string>
 
+    <string name="sync_log_empty_title">Log is empty</string>
+
     <plurals name="count_favorites">
         <item quantity="one">%d Favorite</item>
         <item quantity="other">%d Favorites</item>
@@ -345,5 +348,9 @@
     <plurals name="settings_fragment_restore_backup_found">
         <item quantity="one">One backup is found</item>
         <item quantity="other">%d backups are found</item>
+    </plurals>
+    <plurals name="actionbar_title_sync_log">
+        <item quantity="one">Sync log for the day</item>
+        <item quantity="other">Sync log for %d days</item>
     </plurals>
 </resources>

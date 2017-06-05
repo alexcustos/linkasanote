@@ -15,6 +15,7 @@ import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.data.source.local.LocalNotes;
+import com.bytesforge.linkasanote.data.source.local.LocalSyncResults;
 import com.bytesforge.linkasanote.settings.Settings;
 
 import javax.inject.Inject;
@@ -33,6 +34,9 @@ public class SyncService extends Service {
 
     @Inject
     AccountManager accountManager;
+
+    @Inject
+    LocalSyncResults localSyncResults;
 
     @Inject
     LocalLinks<Link> localLinks;
@@ -63,6 +67,7 @@ public class SyncService extends Service {
                 SyncNotifications syncNotifications = new SyncNotifications(context);
                 syncAdapter = new SyncAdapter(
                         context, settings, true, accountManager, syncNotifications,
+                        localSyncResults,
                         localLinks, cloudLinks,
                         localFavorites, cloudFavorites,
                         localNotes, cloudNotes);

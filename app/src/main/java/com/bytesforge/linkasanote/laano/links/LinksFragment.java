@@ -238,8 +238,11 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     public void showLinks(@NonNull List<Link> links) {
         checkNotNull(links);
         adapter.swapItems(links);
+        updateView();
+    }
 
-        boolean firstLoad = viewModel.setListSize(links.size());
+    private void updateView() {
+        boolean firstLoad = viewModel.setListSize(adapter.getItemCount());
         if (firstLoad) {
             viewModel.setExpandByDefault(presenter.isExpandLinks());
         }

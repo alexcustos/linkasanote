@@ -53,19 +53,22 @@ public class LocalDataSourceTest {
     public void setupLocalDataSource() {
         FAVORITES = AndroidTestUtils.buildFavorites();
         LocalTags localTags = new LocalTags(contentResolver);
+        LocalSyncResults localSyncResults = new LocalSyncResults(contentResolver);
 
         NoteFactory<Note> noteFactory = Note.getFactory();
-        LocalNotes<Note> localNotes = new LocalNotes<>(contentResolver, localTags, noteFactory);
+        LocalNotes<Note> localNotes = new LocalNotes<>(contentResolver,
+                localSyncResults, localTags, noteFactory);
 
         LinkFactory<Link> linkFactory = Link.getFactory();
-        LocalLinks<Link> localLinks = new LocalLinks<>(
-                contentResolver, localTags, localNotes, linkFactory);
+        LocalLinks<Link> localLinks = new LocalLinks<>(contentResolver,
+                localSyncResults, localTags, localNotes, linkFactory);
 
         FavoriteFactory<Favorite> favoriteFactory = Favorite.getFactory();
-        LocalFavorites<Favorite> localFavorites = new LocalFavorites<>(
-                contentResolver, localTags, favoriteFactory);
+        LocalFavorites<Favorite> localFavorites = new LocalFavorites<>(contentResolver,
+                localSyncResults, localTags, favoriteFactory);
 
-        localDataSource = new LocalDataSource(localLinks, localFavorites, localNotes, localTags);
+        localDataSource = new LocalDataSource(localSyncResults,
+                localLinks, localFavorites, localNotes, localTags);
         cleanupLocalDataSource();
     }
 

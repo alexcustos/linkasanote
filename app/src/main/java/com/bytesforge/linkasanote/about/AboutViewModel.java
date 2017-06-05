@@ -33,7 +33,7 @@ public class AboutViewModel extends BaseObservable implements AboutContract.View
         ABOUT_LAUNCH_GOOGLE_PLAY_ERROR}
 
     public AboutViewModel(@NonNull Context context) {
-        resources = context.getResources();
+        resources = checkNotNull(context).getResources();
     }
 
     @Bindable

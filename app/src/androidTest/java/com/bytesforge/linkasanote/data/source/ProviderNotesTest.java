@@ -140,7 +140,7 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
         Uri newTagUri = contentResolver.insert(noteTagsUri, values);
         assertNotNull(newTagUri);
 
-        String newTagRowId = LocalContract.TagEntry.getIdFrom(newTagUri);
+        String newTagRowId = LocalContract.TagEntry.getNameFrom(newTagUri);
         assertNotNull(newTagRowId);
         assertTrue(Long.parseLong(newTagRowId) > 0);
         return newTagRowId;

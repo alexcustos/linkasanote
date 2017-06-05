@@ -13,11 +13,16 @@
             android:title="@string/drawer_actions_manage_accounts" />
     </group>
     <group android:id="@+id/sync_menu_group">
+
         <item
             android:id="@+id/sync_menu_item"
             android:icon="@drawable/ic_sync"
             android:title="@string/drawer_actions_sync_start"
             android:enabled="false" />
+        <item
+            android:id="@+id/sync_log_menu_item"
+            android:icon="@drawable/ic_receipt"
+            android:title="@string/drawer_actions_sync_log" />
     </group>
     <group android:id="@+id/application_menu_group">
 

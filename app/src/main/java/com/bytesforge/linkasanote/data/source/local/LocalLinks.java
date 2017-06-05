@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.LinkFactory;
 import com.bytesforge.linkasanote.data.Note;
+import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
@@ -22,22 +23,25 @@ import io.reactivex.Single;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class LocalLinks<T extends Item> implements LocalItem<T> {
+public class LocalLinks<T extends Item> implements LocalItems<T> {
 
     private static final String TAG = LocalLinks.class.getSimpleName();
 
     // NOTE: static fails Mockito to mock this class
     private final Uri LINK_URI;
     private final ContentResolver contentResolver;
+    private final LocalSyncResults localSyncResults;
     private final LocalTags localTags;
     private final LocalNotes<Note> localNotes;
     private final LinkFactory<T> factory;
 
     public LocalLinks(
             @NonNull ContentResolver contentResolver,
+            @NonNull LocalSyncResults localSyncResults,
             @NonNull LocalTags localTags, @NonNull LocalNotes<Note> localNotes,
             @NonNull LinkFactory<T> factory) {
         this.contentResolver = checkNotNull(contentResolver);
+        this.localSyncResults = checkNotNull(localSyncResults);
         this.localTags = checkNotNull(localTags);
         this.localNotes = checkNotNull(localNotes);
         this.factory = checkNotNull(factory);
@@ -74,7 +78,7 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
         String[] selectionArgs = {"0", "1"};
         final String sortOrder = LocalContract.LinkEntry.COLUMN_NAME_CREATED + " DESC";
 
-        int size = linkIds == null ? 0 : linkIds.length;
+        int size = (linkIds == null ? 0 : linkIds.length);
         if (size > 0) {
             selection = " (" + selection + ") AND " + LocalContract.LinkEntry.COLUMN_NAME_ENTRY_ID +
                     " IN (" + CommonUtils.strRepeat("?", size, ", ") + ")";
@@ -294,5 +298,29 @@ public class LocalLinks<T extends Item> implements LocalItem<T> {
                         return update(linkId, state).blockingGet();
                     }
                 });
+    }
+
+    @Override
+    public Single<Boolean> logSyncResult(
+            long started, @NonNull final String entryId,
+            @NonNull final LocalContract.SyncResultEntry.Result result) {
+        checkNotNull(entryId);
+        checkNotNull(result);
+        if (result == LocalContract.SyncResultEntry.Result.RELATED) {
+            throw new RuntimeException("logSyncResult(): there is no RELATED item implementation available for Links");
+        }
+        SyncResult syncResult = new SyncResult(
+                started, LocalContract.LinkEntry.TABLE_NAME, entryId, result);
+        return localSyncResults.log(syncResult);
+    }
+
+    @Override
+    public Single<Integer> markSyncResultsAsApplied() {
+        return localSyncResults.markAsApplied(LocalContract.LinkEntry.TABLE_NAME, 0L);
+    }
+
+    @Override
+    public Observable<String> getSyncResultsIds() {
+        return localSyncResults.getIds(LocalContract.LinkEntry.TABLE_NAME);
     }
 }

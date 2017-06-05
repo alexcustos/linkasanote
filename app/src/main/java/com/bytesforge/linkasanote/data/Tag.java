@@ -75,14 +75,12 @@ public final class Tag implements Serializable, Parcelable, Comparable<Tag> {
                 LocalContract.TagEntry.COLUMN_NAME_CREATED));
         String name = cursor.getString(cursor.getColumnIndexOrThrow(
                 LocalContract.TagEntry.COLUMN_NAME_NAME));
-
         return new Tag(created, name);
     }
 
     public static Tag from(ContentValues values) {
         long created = values.getAsLong(LocalContract.TagEntry.COLUMN_NAME_CREATED);
         String name = values.getAsString(LocalContract.TagEntry.COLUMN_NAME_NAME);
-
         return new Tag(created, name);
     }
 
@@ -99,10 +97,8 @@ public final class Tag implements Serializable, Parcelable, Comparable<Tag> {
 
     public ContentValues getContentValues() {
         ContentValues values = new ContentValues();
-
         values.put(LocalContract.TagEntry.COLUMN_NAME_CREATED, getCreated());
         values.put(LocalContract.TagEntry.COLUMN_NAME_NAME, getName());
-
         return values;
     }
 

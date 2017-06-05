@@ -43,6 +43,7 @@ public class LaanoApplication extends MultiDexApplication {
                 .build();
 
         if (BuildConfig.DEBUG && STRICT_MODE) {
+            //Stetho.initializeWithDefaults(this);
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                     .detectAll()
                     .penaltyLog()

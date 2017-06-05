@@ -55,8 +55,7 @@ public interface NotesContract {
     interface Presenter extends BaseItemPresenterInterface {
 
         void showAddNote();
-        void loadNotes(boolean forceUpdate);
-        void loadNotes(final boolean forceUpdate, final boolean refreshRelatedLinks);
+        void loadNotes(boolean checkSyncLog);
 
         void onNoteClick(String noteId, boolean isConflicted);
         boolean onNoteLongClick(String noteId);

@@ -16,10 +16,10 @@
         android:layout_height="wrap_content"
         android:text="@{note.note}"
         android:background="@{viewModel.getNoteReadingModeBackground(note.id, note.conflicted, viewModel.filterId)}"
-        android:paddingTop="@dimen/card_text_margin_vertical"
-        android:paddingBottom="@dimen/card_text_margin_vertical"
-        android:paddingStart="@dimen/card_text_margin_horizontal"
-        android:paddingEnd="@dimen/card_text_margin_horizontal"
+        android:paddingTop="@dimen/recycler_view_text_margin_vertical"
+        android:paddingBottom="@dimen/recycler_view_text_margin_vertical"
+        android:paddingStart="@dimen/recycler_view_text_margin_horizontal"
+        android:paddingEnd="@dimen/recycler_view_text_margin_horizontal"
         android:onClick="@{() -> presenter.onNoteClick(note.id, note.conflicted)}"
         style="@style/NotesText.Reading" />
 </layout>

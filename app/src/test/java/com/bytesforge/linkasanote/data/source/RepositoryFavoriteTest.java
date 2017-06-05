@@ -63,6 +63,7 @@ public class RepositoryFavoriteTest {
         repository.favoriteCacheIsDirty = true;
         when(localDataSource.getFavorites(isNull()))
                 .thenReturn(Observable.fromIterable(FAVORITES));
+        when(localDataSource.markFavoritesSyncResultsAsApplied()).thenReturn(Single.just(0));
         testFavoritesObserver = repository.getFavorites().toList().test();
         testFavoritesObserver.assertValue(FAVORITES);
         assert repository.cachedFavorites != null;
@@ -114,6 +115,7 @@ public class RepositoryFavoriteTest {
         // Cache
         when(localDataSource.getFavorites(isNull()))
                 .thenReturn(Observable.fromIterable(FAVORITES));
+        when(localDataSource.markFavoritesSyncResultsAsApplied()).thenReturn(Single.just(0));
         testFavoritesObserver = repository.getFavorites().toList().test();
         testFavoritesObserver.assertValue(FAVORITES);
         assert repository.cachedFavorites != null;

@@ -93,6 +93,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LocalContract.TagEntry.COLUMN_NAME_NAME + TEXT_TYPE + " UNIQUE" +
             ");";
 
+    private static final String SQL_CREATE_SYNC_RESULT_ENTRIES =
+            "CREATE TABLE " + LocalContract.SyncResultEntry.TABLE_NAME + " (" +
+                    LocalContract.SyncResultEntry._ID + INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT," +
+                    LocalContract.SyncResultEntry.COLUMN_NAME_CREATED + DATETIME_TYPE + "," +
+                    LocalContract.SyncResultEntry.COLUMN_NAME_STARTED + DATETIME_TYPE + "," +
+                    LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY + TEXT_TYPE + " NOT NULL," +
+                    LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY_ID + TEXT_TYPE + " NOT NULL," +
+                    LocalContract.SyncResultEntry.COLUMN_NAME_RESULT + TEXT_TYPE + " NOT NULL," +
+                    LocalContract.SyncResultEntry.COLUMN_NAME_APPLIED + BOOLEAN_TYPE +
+            ");";
+    private static final String SQL_CREATE_SYNC_RESULT_CREATED_INDEX = sqlCreateIndex(
+            LocalContract.SyncResultEntry.TABLE_NAME, LocalContract.SyncResultEntry.COLUMN_NAME_CREATED);
+    private static final String SQL_CREATE_SYNC_RESULT_STARTED_INDEX = sqlCreateIndex(
+            LocalContract.SyncResultEntry.TABLE_NAME, LocalContract.SyncResultEntry.COLUMN_NAME_STARTED);
+    private static final String SQL_CREATE_SYNC_RESULT_ENTRY_INDEX = sqlCreateIndex(
+            LocalContract.SyncResultEntry.TABLE_NAME, LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY);
+    private static final String SQL_CREATE_SYNC_RESULT_RESULT_INDEX = sqlCreateIndex(
+            LocalContract.SyncResultEntry.TABLE_NAME, LocalContract.SyncResultEntry.COLUMN_NAME_RESULT);
+    private static final String SQL_CREATE_SYNC_RESULT_APPLIED_INDEX = sqlCreateIndex(
+            LocalContract.SyncResultEntry.TABLE_NAME, LocalContract.SyncResultEntry.COLUMN_NAME_APPLIED);
+
     private static final String SQL_CREATE_LINK_TAG_ENTRIES =
             sqlCreateTableManyToManyWithTags(LocalContract.LinkEntry.TABLE_NAME);
     private static final String SQL_CREATE_LINK_TAG_LEFT_INDEX =
@@ -207,6 +228,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_FAVORITE_NAME_INDEX);
         db.execSQL(SQL_CREATE_FAVORITE_CREATED_INDEX);
         db.execSQL(SQL_CREATE_TAG_ENTRIES);
+        db.execSQL(SQL_CREATE_SYNC_RESULT_ENTRIES);
+        db.execSQL(SQL_CREATE_SYNC_RESULT_CREATED_INDEX);
+        db.execSQL(SQL_CREATE_SYNC_RESULT_STARTED_INDEX);
+        db.execSQL(SQL_CREATE_SYNC_RESULT_ENTRY_INDEX);
+        db.execSQL(SQL_CREATE_SYNC_RESULT_RESULT_INDEX);
+        db.execSQL(SQL_CREATE_SYNC_RESULT_APPLIED_INDEX);
 
         db.execSQL(SQL_CREATE_LINK_TAG_ENTRIES);
         db.execSQL(SQL_CREATE_LINK_TAG_LEFT_INDEX);
@@ -230,6 +257,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + LocalContract.NoteEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + LocalContract.FavoriteEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + LocalContract.TagEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + LocalContract.SyncResultEntry.TABLE_NAME);
 
         final String tagTable = LocalContract.TagEntry.TABLE_NAME;
         final String linkRefTable = LocalContract.LinkEntry.TABLE_NAME + "_" + tagTable;
@@ -247,6 +275,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(sqlDropIndex(LocalContract.NoteEntry.TABLE_NAME, LocalContract.NoteEntry.COLUMN_NAME_CREATED));
         db.execSQL(sqlDropEntryIdIndex(LocalContract.FavoriteEntry.TABLE_NAME));
         db.execSQL(sqlDropIndex(LocalContract.FavoriteEntry.TABLE_NAME, LocalContract.FavoriteEntry.COLUMN_NAME_CREATED));
+        db.execSQL(sqlDropIndex(LocalContract.SyncResultEntry.TABLE_NAME, LocalContract.SyncResultEntry.COLUMN_NAME_CREATED));
+        db.execSQL(sqlDropIndex(LocalContract.SyncResultEntry.TABLE_NAME, LocalContract.SyncResultEntry.COLUMN_NAME_STARTED));
+        db.execSQL(sqlDropIndex(LocalContract.SyncResultEntry.TABLE_NAME, LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY));
+        db.execSQL(sqlDropIndex(LocalContract.SyncResultEntry.TABLE_NAME, LocalContract.SyncResultEntry.COLUMN_NAME_RESULT));
+        db.execSQL(sqlDropIndex(LocalContract.SyncResultEntry.TABLE_NAME, LocalContract.SyncResultEntry.COLUMN_NAME_APPLIED));
 
         db.execSQL(sqlDropIndex(LocalContract.FavoriteEntry.TABLE_NAME, LocalContract.FavoriteEntry.COLUMN_NAME_NAME));
         db.execSQL(sqlDropLeftIndexWithTag(LocalContract.LinkEntry.TABLE_NAME));

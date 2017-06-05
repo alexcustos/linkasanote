@@ -141,4 +141,10 @@
         <item name="android:textColor">?android:textColorSecondary</item>
     </style>
     <style name="NotesText.LinkName" parent="TextAppearance.AppCompat.Subhead" />
+
+    <!-- SyncLog -->
+    <style name="SyncLogText" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textColor">?android:textColorSecondary</item>
+    </style>
+    <style name="SyncLogText.DateTime" parent="TextAppearance.AppCompat.Subhead" />
 </resources>

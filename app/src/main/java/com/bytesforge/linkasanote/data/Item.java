@@ -12,6 +12,7 @@ public interface Item {
 
     ContentValues getContentValues();
     String getDuplicatedKey();
+    String getRelatedId();
 
     long getRowId();
     @Nullable String getETag();

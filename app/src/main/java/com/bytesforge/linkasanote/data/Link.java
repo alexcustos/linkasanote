@@ -265,6 +265,11 @@ public final class Link implements Comparable<Link>, Item {
         return getLink();
     }
 
+    @Override
+    public String getRelatedId() {
+        return null; // NOTE: there is no related object
+    }
+
     @Nullable
     public String getName() {
         return name;

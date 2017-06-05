@@ -10,16 +10,16 @@
             type="com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteViewModel" />
     </data>
 
-    <ScrollView
+    <android.support.design.widget.CoordinatorLayout
+        android:id="@+id/snackbar_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        bind:snackbarId="@{viewModel.snackbarId}">
 
-        <android.support.design.widget.CoordinatorLayout
-            android:id="@+id/snackbar_layout"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            bind:snackbarId="@{viewModel.snackbarId}">
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -92,6 +92,6 @@
                     android:enabled="@{viewModel.addButton}"
                     android:onClick="@{() -> viewModel.onAddButtonClick()}" />
             </LinearLayout>
-        </android.support.design.widget.CoordinatorLayout>
-    </ScrollView>
+        </ScrollView>
+    </android.support.design.widget.CoordinatorLayout>
 </layout>

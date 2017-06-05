@@ -55,6 +55,7 @@ import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.settings.SettingsActivity;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.sync.SyncNotifications;
+import com.bytesforge.linkasanote.synclog.SyncLogActivity;
 import com.bytesforge.linkasanote.utils.AppBarLayoutOnStateChangeListener;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 
@@ -438,7 +439,8 @@ public class LaanoActivity extends AppCompatActivity implements
                 case SyncNotifications.ACTION_SYNC_NOTES:
                     tabPosition = LaanoFragmentPagerAdapter.NOTES_TAB;
                     if (status == SyncNotifications.STATUS_SYNC_STOP) {
-                        notesPresenter.loadNotes(true, true);
+                        notesPresenter.loadNotes(true);
+                        linksPresenter.loadLinks(true);
                         notesPresenter.updateTabNormalState();
                     }
                     break;
@@ -540,6 +542,11 @@ public class LaanoActivity extends AppCompatActivity implements
         startActivityForResult(manageAccountsIntent, ACTION_MANAGE_ACCOUNTS);
     }
 
+    private void startSyncLogActivity() {
+        Intent syncLogIntent = new Intent(this, SyncLogActivity.class);
+        startActivity(syncLogIntent);
+    }
+
     private void startSettingsActivity() {
         Intent settingsIntent = new Intent(this, SettingsActivity.class);
         settingsIntent.putExtra(SettingsActivity.EXTRA_ACCOUNT,
@@ -571,6 +578,9 @@ public class LaanoActivity extends AppCompatActivity implements
                             } else {
                                 triggerSync();
                             }
+                            break;
+                        case R.id.sync_log_menu_item:
+                            startSyncLogActivity();
                             break;
                         case R.id.settings_menu_item:
                             startSettingsActivity();

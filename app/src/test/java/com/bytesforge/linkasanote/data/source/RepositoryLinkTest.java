@@ -64,6 +64,7 @@ public class RepositoryLinkTest {
         repository.linkCacheIsDirty = true;
         when(localDataSource.getLinks(isNull()))
                 .thenReturn(Observable.fromIterable(LINKS));
+        when(localDataSource.markLinksSyncResultsAsApplied()).thenReturn(Single.just(0));
         testLinksObserver = repository.getLinks().toList().test();
         testLinksObserver.assertValue(LINKS);
         assert repository.cachedLinks != null;
@@ -115,6 +116,7 @@ public class RepositoryLinkTest {
         // Cache
         when(localDataSource.getLinks(isNull()))
                 .thenReturn(Observable.fromIterable(LINKS));
+        when(localDataSource.markLinksSyncResultsAsApplied()).thenReturn(Single.just(0));
         testLinksObserver = repository.getLinks().toList().test();
         testLinksObserver.assertValue(LINKS);
         assert repository.cachedLinks != null;

@@ -27,6 +27,7 @@
     <string name="drawer_actions_add_account">Добавить учётную запись</string>
     <string name="drawer_actions_manage_accounts">Учётные записи</string>
     <string name="drawer_actions_sync_start">Запустить синхронизацию</string>
+    <string name="drawer_actions_sync_log">Журнал синхронизации</string>
     <string name="drawer_actions_sync_in_progress">Синхронизируется…</string>
     <string name="drawer_open">Открыть навигационную секцию</string>
     <string name="drawer_close">Закрыть навигационную секцию</string>
@@ -311,6 +312,8 @@
     <string name="fill_in_form_info_message">Это действие предназначено для работы с нормализованным и дополненным буфером обмена. Если данные доступны они будут вставлены (с заменой) в соответствующие поля формы. Оригинальный буфер не был затронут, его можно использовать как обычно.</string>
     <string name="about_launch_google_play_error">Google Play и интернет обозреватель не найдены на этом устройстве</string>
 
+    <string name="sync_log_empty_title">Журнал пуст</string>
+
     <plurals name="count_favorites">
         <item quantity="one">%d избранное</item>
         <item quantity="few">%d избранных</item>
@@ -343,9 +346,13 @@
         <item quantity="many">Вы уверены, что хотите безвозвратно удалить %d выделенных заметок?</item>
     </plurals>
     <plurals name="settings_fragment_restore_backup_found">
-
         <item quantity="one">Найдена %d резервная копия</item>
         <item quantity="few">Найдены %d резервные копии</item>
         <item quantity="many">Найдено %d резервных копий</item>
+    </plurals>
+    <plurals name="actionbar_title_sync_log">
+        <item quantity="one">Журнал за %d день</item>
+        <item quantity="few">Журнал за %d дня</item>
+        <item quantity="many">Журнал за %d дней</item>
     </plurals>
 </resources>

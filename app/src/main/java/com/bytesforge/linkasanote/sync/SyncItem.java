@@ -7,7 +7,8 @@ import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
-import com.bytesforge.linkasanote.data.source.local.LocalItem;
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
+import com.bytesforge.linkasanote.data.source.local.LocalItems;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.owncloud.android.lib.common.OwnCloudClient;
@@ -24,13 +25,14 @@ public class SyncItem<T extends Item> {
 
     private static final String TAG = SyncItem.class.getSimpleName();
 
-    private final LocalItem<T> localItem;
+    private final LocalItems<T> localItems;
     private final CloudItem<T> cloudItem;
     private final SyncNotifications syncNotifications;
     private final OwnCloudClient ocClient;
     private final String notificationAction;
     private final boolean uploadToEmpty;
     private final boolean protectLocal;
+    private final long started;
 
     private int uploaded;
     private int downloaded;
@@ -39,16 +41,17 @@ public class SyncItem<T extends Item> {
 
     public SyncItem(
             @NonNull OwnCloudClient ocClient,
-            @NonNull LocalItem<T> localItem, @NonNull CloudItem<T> cloudItem,
+            @NonNull LocalItems<T> localItems, @NonNull CloudItem<T> cloudItem,
             @NonNull SyncNotifications syncNotifications, @NonNull String notificationAction,
-            boolean uploadToEmpty, boolean protectLocal) {
+            boolean uploadToEmpty, boolean protectLocal, long started) {
         this.ocClient = checkNotNull(ocClient);
-        this.localItem = checkNotNull(localItem);
+        this.localItems = checkNotNull(localItems);
         this.cloudItem = checkNotNull(cloudItem);
         this.syncNotifications = checkNotNull(syncNotifications);
         this.notificationAction = checkNotNull(notificationAction);
         this.uploadToEmpty = uploadToEmpty;
         this.protectLocal = protectLocal;
+        this.started = started;
         syncResult = new SyncItemResult(SyncItemResult.Status.FAILS_COUNT);
         uploaded = 0;
         downloaded = 0;
@@ -71,7 +74,7 @@ public class SyncItem<T extends Item> {
 
     private void syncItems(boolean isCloudChanged) {
         if (!isCloudChanged) {
-            localItem.getUnsynced()
+            localItems.getUnsynced()
                     .subscribe(
                             item -> syncItem(item, item.getETag()),
                             throwable -> setDbAccessError());
@@ -79,13 +82,13 @@ public class SyncItem<T extends Item> {
         }
         final Map<String, String> cloudDataSourceMap = cloudItem.getDataSourceMap(ocClient);
         if (cloudDataSourceMap.isEmpty() && uploadToEmpty) {
-            int numRows = localItem.resetSyncState().blockingGet();
+            int numRows = localItems.resetSyncState().blockingGet();
             if (numRows > 0) {
                 Log.d(TAG, "Cloud storage loss is detected, starting to upload [" + numRows + "]");
             }
         }
         // Sync Local
-        localItem.getAll()
+        localItems.getAll()
                 .subscribe(item -> {
                     String cloudETag = cloudDataSourceMap.get(item.getId());
                     syncItem(item, cloudETag);
@@ -97,7 +100,7 @@ public class SyncItem<T extends Item> {
 
         // OPTIMIZATION: Local Map can be taken from previous step
         final Set<String> localIds = new HashSet<>();
-        localItem.getIds()
+        localItems.getIds()
                 .subscribe(
                         localIds::add,
                         throwable -> setDbAccessError());
@@ -112,7 +115,6 @@ public class SyncItem<T extends Item> {
             }
             T cloudItem = download(cloudId);
             if (cloudItem == null) {
-                syncResult.incFailsCount();
                 continue;
             }
             syncNotifications.sendSyncBroadcast(notificationAction,
@@ -138,7 +140,7 @@ public class SyncItem<T extends Item> {
             if (item.isDeleted()) {
                 // DELETE local
                 Log.e(TAG, "The records never synced must be deleted immediately [" + itemId + "]");
-                notifyChanged = deleteLocal(itemId);
+                notifyChanged = deleteLocal(item);
                 statusChanged = SyncNotifications.STATUS_DELETED;
             } else { // synced is ignored (!synced)
                 // UPLOAD
@@ -150,7 +152,7 @@ public class SyncItem<T extends Item> {
             if (!item.isSynced()) {
                 if (item.isDeleted()) {
                     // DELETE cloud
-                    notifyChanged = deleteCloud(itemId);
+                    notifyChanged = deleteCloud(item);
                     statusChanged = SyncNotifications.STATUS_DELETED;
                 } else if (!item.isDuplicated()) {
                     // UPLOAD
@@ -162,21 +164,21 @@ public class SyncItem<T extends Item> {
                 if (protectLocal) {
                     // SET conflicted (as if it has been changed)
                     SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-                    notifyChanged = update(itemId, state);
+                    notifyChanged = update(item, state);
                 } else {
                     // DELETE local
-                    notifyChanged = deleteLocal(itemId);
+                    notifyChanged = deleteLocal(item);
                     statusChanged = SyncNotifications.STATUS_DELETED;
                 }
             } else {
                 if (item.isDeleted()) {
                     // DELETE local
-                    notifyChanged = deleteLocal(itemId);
+                    notifyChanged = deleteLocal(item);
                     statusChanged = SyncNotifications.STATUS_DELETED;
                 } else {
                     // SET conflicted
                     SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-                    notifyChanged = update(itemId, state);
+                    notifyChanged = update(item, state);
                 }
             }
         } else { // Was changed on cloud
@@ -193,7 +195,7 @@ public class SyncItem<T extends Item> {
                     if (item.equals(cloudItem)) {
                         if (item.isDeleted()) {
                             // DELETE cloud
-                            notifyChanged = deleteCloud(itemId);
+                            notifyChanged = deleteCloud(item);
                             statusChanged = SyncNotifications.STATUS_DELETED;
                         } else {
                             // UPDATE state
@@ -201,7 +203,7 @@ public class SyncItem<T extends Item> {
                             SyncState state = new SyncState(
                                     cloudItem.getETag(), SyncState.State.SYNCED);
                             // NOTE: record may be in conflicted state
-                            notifyChanged = update(itemId, state);
+                            notifyChanged = update(item, state);
                         }
                     } else {
                         // SET (or confirm) conflicted
@@ -211,11 +213,9 @@ public class SyncItem<T extends Item> {
                         } else {
                             state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
                         }
-                        notifyChanged = update(itemId, state);
+                        notifyChanged = update(item, state);
                     }
                 }
-            } else {
-                syncResult.incFailsCount();
             }
         }
         if (notifyChanged) {
@@ -224,78 +224,148 @@ public class SyncItem<T extends Item> {
     }
 
     // NOTE: any cloud item can violate the DB constraints
-    private boolean save(@NonNull final T item) {
+    private boolean save(@NonNull final T item) { // downloaded
         checkNotNull(item);
+        String itemId = item.getId();
         // Primary record
         try {
-            return localItem.save(item).blockingGet();
+            boolean success = localItems.save(item).blockingGet();
+            if (success) {
+                localItems.logSyncResult(started, itemId,
+                        LocalContract.SyncResultEntry.Result.DOWNLOADED).blockingGet();
+                String relatedId = item.getRelatedId();
+                if (relatedId != null) {
+                    localItems.logSyncResult(started, relatedId,
+                            LocalContract.SyncResultEntry.Result.RELATED).blockingGet();
+                }
+            }
+            return success;
         } catch (NullPointerException e) {
             syncResult.incFailsCount();
+            localItems.logSyncResult(started, itemId,
+                    LocalContract.SyncResultEntry.Result.ERROR).blockingGet();
             return false;
         } catch (SQLiteConstraintException e) {
             // NOTE: will try to resolve it further
         }
         // Duplicated record
         try {
-            return localItem.saveDuplicated(item).blockingGet();
+            boolean success = localItems.saveDuplicated(item).blockingGet();
+            if (success) {
+                localItems.logSyncResult(started, itemId,
+                        LocalContract.SyncResultEntry.Result.DOWNLOADED).blockingGet();
+                String relatedId = item.getRelatedId();
+                if (relatedId != null) {
+                    localItems.logSyncResult(started, relatedId,
+                            LocalContract.SyncResultEntry.Result.RELATED).blockingGet();
+                }
+            }
+            return success;
         } catch (NullPointerException | SQLiteConstraintException e) {
             syncResult.incFailsCount();
+            localItems.logSyncResult(started, itemId,
+                    LocalContract.SyncResultEntry.Result.ERROR).blockingGet();
         }
         return false;
     }
 
-    private boolean deleteLocal(@NonNull String itemId) {
-        checkNotNull(itemId);
-        Log.i(TAG, itemId + ": DELETE local");
-        return localItem.delete(itemId).blockingGet();
+    private boolean deleteLocal(@NonNull final T item) {
+        checkNotNull(item);
+        final String itemId = item.getId();
+        final String relatedId = item.getRelatedId();
+        Log.d(TAG, itemId + ": DELETE local");
+
+        boolean success = localItems.delete(itemId).blockingGet();
+        if (success) {
+            localItems.logSyncResult(started, itemId,
+                    LocalContract.SyncResultEntry.Result.DELETED).blockingGet();
+            if (relatedId != null) {
+                localItems.logSyncResult(started, relatedId,
+                        LocalContract.SyncResultEntry.Result.RELATED).blockingGet();
+            }
+        }
+        return success;
     }
 
-    private boolean deleteCloud(@NonNull String itemId) {
-        checkNotNull(itemId);
-        Log.i(TAG, itemId + ": DELETE cloud");
+    private boolean deleteCloud(@NonNull final T item) {
+        checkNotNull(item);
+        final String itemId = item.getId();
+        Log.d(TAG, itemId + ": DELETE cloud");
 
         RemoteOperationResult result = cloudItem.delete(itemId, ocClient).blockingGet();
-        return result.isSuccess() && deleteLocal(itemId);
+        return result.isSuccess() && deleteLocal(item);
     }
 
-    private boolean update(@NonNull String itemId, @NonNull SyncState state) {
-        checkNotNull(itemId);
+    private boolean update(@NonNull final T item, @NonNull final SyncState state) {
+        checkNotNull(item);
         checkNotNull(state);
-        Log.i(TAG, itemId + ": UPDATE");
-        return localItem.update(itemId, state).blockingGet();
+        final String itemId = item.getId();
+        final String relatedId = item.getRelatedId();
+        Log.d(TAG, itemId + ": UPDATE");
+
+        boolean success = localItems.update(itemId, state).blockingGet();
+        if (success) {
+            LocalContract.SyncResultEntry.Result result;
+            if (state.isConflicted()) {
+                result = LocalContract.SyncResultEntry.Result.CONFLICT;
+            } else {
+                result = LocalContract.SyncResultEntry.Result.SYNCED;
+            }
+            localItems.logSyncResult(started, itemId, result).blockingGet();
+            if (relatedId != null) {
+                localItems.logSyncResult(started, relatedId,
+                        LocalContract.SyncResultEntry.Result.RELATED).blockingGet();
+            }
+        }
+        return success;
     }
 
     private boolean upload(@NonNull final T item) {
         checkNotNull(item);
-        Log.i(TAG, item.getId() + ": UPLOAD");
+        final String itemId = item.getId();
+        final String relatedId = item.getRelatedId();
+        Log.d(TAG, item.getId() + ": UPLOAD");
 
-        boolean notifyChanged = false;
+        boolean success = false;
         RemoteOperationResult result = cloudItem.upload(item, ocClient).blockingGet();
         if (result == null) {
             syncResult.incFailsCount();
+            localItems.logSyncResult(started, itemId,
+                    LocalContract.SyncResultEntry.Result.ERROR).blockingGet();
             return false;
         }
-        String itemId = item.getId();
         if (result.isSuccess()) {
             syncNotifications.sendSyncBroadcast(notificationAction,
                     SyncNotifications.STATUS_UPLOADED, itemId, ++uploaded);
             JsonFile jsonFile = (JsonFile) result.getData().get(0);
             SyncState state = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-            localItem.update(itemId, state).blockingGet();
+            success = localItems.update(itemId, state).blockingGet();
+            if (success) {
+                localItems.logSyncResult(started, itemId,
+                        LocalContract.SyncResultEntry.Result.UPLOADED).blockingGet();
+                if (relatedId != null) {
+                    localItems.logSyncResult(started, relatedId,
+                            LocalContract.SyncResultEntry.Result.RELATED).blockingGet();
+                }
+            }
         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
             SyncState state = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-            notifyChanged = localItem.update(itemId, state).blockingGet();
+            success = update(item, state);
         }
-        return notifyChanged;
+        return success;
     }
 
     private T download(@NonNull String itemId) {
         checkNotNull(itemId);
-        Log.i(TAG, itemId + ": DOWNLOAD");
+        Log.d(TAG, itemId + ": DOWNLOAD");
 
         try {
+            // Note: will be logged in save() or update()
             return cloudItem.download(itemId, ocClient).blockingGet();
         } catch (NullPointerException | NoSuchElementException e) {
+            syncResult.incFailsCount();
+            localItems.logSyncResult(started, itemId,
+                    LocalContract.SyncResultEntry.Result.ERROR).blockingGet();
             return null; // NOTE: an unexpected error, file have to be in place here
         }
     }

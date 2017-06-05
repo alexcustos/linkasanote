@@ -61,7 +61,8 @@ public final class LinksPresenter extends BaseItemPresenter implements
     private int linkCacheSize = -1;
     private FilterType filterType;
     private boolean filterIsChanged = true;
-    private boolean loadIsCompleted = false;
+    private boolean loadIsCompleted = true;
+    private boolean loadIsDeferred = false;
 
     @Inject
     LinksPresenter(
@@ -110,23 +111,28 @@ public final class LinksPresenter extends BaseItemPresenter implements
     }
 
     @Override
-    public void loadLinks(final boolean forceUpdate) {
-        loadLinks(forceUpdate, true);
+    public void loadLinks(final boolean checkSyncLog) {
+        loadLinks(checkSyncLog, true);
     }
 
-    private void loadLinks(boolean forceUpdate, final boolean showLoading) {
-        Log.d(TAG, "loadLinks() [" + forceUpdate + "]");
-        compositeDisposable.clear();
-        if (forceUpdate) {
-            repository.refreshLinks();
+    private void loadLinks(boolean checkSyncLog, final boolean showLoading) {
+        Log.d(TAG, "loadLinks() [" + checkSyncLog +
+                ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
+        if (checkSyncLog) {
+            repository.checkLinksSyncLog();
+            //repository.refreshLinks();
+        }
+        if (!loadIsCompleted) {
+            loadIsDeferred = true;
+            return;
         }
         FilterType extendedFilter = updateFilter();
         if (!repository.isLinkCacheDirty()
                 && !filterIsChanged
-                && linkCacheSize == repository.getLinkCacheSize()
-                && loadIsCompleted) {
+                && linkCacheSize == repository.getLinkCacheSize()) {
             return;
         }
+        compositeDisposable.clear();
         loadIsCompleted = false;
         if (showLoading) {
             viewModel.showProgressOverlay();
@@ -252,15 +258,24 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     laanoUiManager.updateTitle(TAB);
                 })
                 .subscribe(links -> {
-                    view.showLinks(links);
-                    selectLinkFilter();
+                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
                     filterIsChanged = false;
                     linkCacheSize = repository.getLinkCacheSize();
-                    loadIsCompleted = true;
+                    if (loadIsDeferred) {
+                        loadIsDeferred = false;
+                        loadLinks(false, showLoading);
+                    } else {
+                        view.showLinks(links);
+                        selectLinkFilter();
+                    }
                 }, throwable -> {
-                    // NullPointerException
-                    CommonUtils.logStackTrace(TAG, throwable);
-                    viewModel.showDatabaseErrorSnackbar();
+                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
+                    if (throwable instanceof IllegalStateException) {
+                        loadLinks(false, showLoading);
+                    } else {
+                        CommonUtils.logStackTrace(TAG, throwable);
+                        viewModel.showDatabaseErrorSnackbar();
+                    }
                 });
         compositeDisposable.add(disposable);
     }

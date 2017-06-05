@@ -33,6 +33,8 @@ import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenterModule;
 import com.bytesforge.linkasanote.settings.SettingsFragment;
 import com.bytesforge.linkasanote.settings.SettingsModule;
 import com.bytesforge.linkasanote.sync.SyncService;
+import com.bytesforge.linkasanote.synclog.SyncLogComponent;
+import com.bytesforge.linkasanote.synclog.SyncLogPresenterModule;
 import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
 
 import javax.inject.Singleton;
@@ -74,4 +76,5 @@ public interface ApplicationComponent {
     NotesConflictResolutionComponent getNotesConflictResolutionComponent(
             NotesConflictResolutionPresenterModule notesConflictResolutionPresenterModule);
     AboutComponent getAboutComponent(AboutPresenterModule module);
+    SyncLogComponent getSyncLogComponent(SyncLogPresenterModule module);
 }

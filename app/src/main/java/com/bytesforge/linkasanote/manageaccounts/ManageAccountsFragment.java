@@ -107,18 +107,19 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
             @Nullable Bundle savedInstanceState) {
         binding = FragmentManageAccountsBinding.inflate(inflater, container, false);
         // RecyclerView
-        RecyclerView rvAccounts = binding.rvAccounts;
-        if (rvAccounts != null) {
-            List<AccountItem> accountItems = new ArrayList<>();
-            adapter = new AccountsAdapter((ManageAccountsPresenter) presenter, accountItems);
-            rvAccounts.setAdapter(adapter);
-            LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-            rvAccounts.setLayoutManager(layoutManager);
-            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
-                    rvAccounts.getContext(), layoutManager.getOrientation());
-            rvAccounts.addItemDecoration(dividerItemDecoration);
-        }
+        setupAccountsRecyclerView(binding.rvAccounts);
         return binding.getRoot();
+    }
+
+    private void setupAccountsRecyclerView(RecyclerView rvAccounts) {
+        List<AccountItem> accountItems = new ArrayList<>();
+        adapter = new AccountsAdapter((ManageAccountsPresenter) presenter, accountItems);
+        rvAccounts.setAdapter(adapter);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        rvAccounts.setLayoutManager(layoutManager);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
+                rvAccounts.getContext(), layoutManager.getOrientation());
+        rvAccounts.addItemDecoration(dividerItemDecoration);
     }
 
     @Override

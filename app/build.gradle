@@ -129,6 +129,9 @@ dependencies {
     compile "com.google.dagger:dagger:${daggerVersion}"
     provided "javax.annotation:jsr250-api:${jsr250ApiVersion}"
 
+    // Stetho
+    debugCompile "com.facebook.stetho:stetho:${stethoVersion}"
+
     // Local unit tests
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"

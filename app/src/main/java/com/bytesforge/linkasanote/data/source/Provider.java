@@ -17,6 +17,7 @@ import com.bytesforge.linkasanote.data.source.local.BaseEntry;
 import com.bytesforge.linkasanote.data.source.local.DatabaseHelper;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.google.common.base.Strings;
+import com.google.common.collect.ObjectArrays;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
@@ -38,9 +39,11 @@ public class Provider extends ContentProvider {
 
     private static final int TAG = 400;
     private static final int TAG_ITEM = 401;
-    private static final int TAG_LINK = 402;
-    private static final int TAG_NOTE = 403;
-    private static final int TAG_FAVORITE = 404;
+
+    private static final int SYNC_RESULT = 500;
+    private static final int SYNC_RESULT_LINK = 501;
+    private static final int SYNC_RESULT_NOTE = 502;
+    private static final int SYNC_RESULT_FAVORITE = 503;
 
     private static final UriMatcher uriMatcher = buildUriMatcher();
 
@@ -74,15 +77,17 @@ public class Provider extends ContentProvider {
 
         matcher.addURI(authority, LocalContract.TagEntry.TABLE_NAME, TAG);
         matcher.addURI(authority, LocalContract.TagEntry.TABLE_NAME + "/*", TAG_ITEM);
+
+        matcher.addURI(authority, LocalContract.SyncResultEntry.TABLE_NAME, SYNC_RESULT);
         matcher.addURI(authority,
-                LocalContract.TagEntry.TABLE_NAME + "/*/" +
-                LocalContract.LinkEntry.TABLE_NAME, TAG_LINK);
+                LocalContract.SyncResultEntry.TABLE_NAME + "/" +
+                LocalContract.LinkEntry.TABLE_NAME, SYNC_RESULT_LINK);
         matcher.addURI(authority,
-                LocalContract.TagEntry.TABLE_NAME + "/*/" +
-                LocalContract.NoteEntry.TABLE_NAME, TAG_NOTE);
+                LocalContract.SyncResultEntry.TABLE_NAME + "/" +
+                LocalContract.NoteEntry.TABLE_NAME, SYNC_RESULT_NOTE);
         matcher.addURI(authority,
-                LocalContract.TagEntry.TABLE_NAME + "/*/" +
-                LocalContract.FavoriteEntry.TABLE_NAME, TAG_FAVORITE);
+                LocalContract.SyncResultEntry.TABLE_NAME + "/" +
+                LocalContract.FavoriteEntry.TABLE_NAME, SYNC_RESULT_FAVORITE);
 
         return matcher;
     }
@@ -125,12 +130,14 @@ public class Provider extends ContentProvider {
                 return LocalContract.TagEntry.CONTENT_TYPE;
             case TAG_ITEM:
                 return LocalContract.TagEntry.CONTENT_ITEM_TYPE;
-            case TAG_LINK:
-                return LocalContract.TagEntry.CONTENT_TYPE;
-            case TAG_NOTE:
-                return LocalContract.TagEntry.CONTENT_TYPE;
-            case TAG_FAVORITE:
-                return LocalContract.TagEntry.CONTENT_TYPE;
+            case SYNC_RESULT:
+                return LocalContract.SyncResultEntry.CONTENT_TYPE;
+            case SYNC_RESULT_LINK:
+                return LocalContract.SyncResultEntry.CONTENT_TYPE;
+            case SYNC_RESULT_NOTE:
+                return LocalContract.SyncResultEntry.CONTENT_TYPE;
+            case SYNC_RESULT_FAVORITE:
+                return LocalContract.SyncResultEntry.CONTENT_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri [" + uri + "]");
         }
@@ -207,7 +214,37 @@ public class Provider extends ContentProvider {
             case TAG_ITEM:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
                 selection = LocalContract.TagEntry.COLUMN_NAME_NAME + " = ?";
-                selectionArgs = new String[]{LocalContract.TagEntry.getIdFrom(uri)};
+                selectionArgs = new String[]{LocalContract.TagEntry.getNameFrom(uri)};
+                break;
+            case SYNC_RESULT:
+                tableName = LocalContract.SyncResultEntry.TABLE_NAME;
+                break;
+            case SYNC_RESULT_LINK:
+                tableName = LocalContract.SyncResultEntry.TABLE_NAME;
+                String linkSelection = LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY + " = ?";
+                String[] linkSelectionArgs = new String[]{LocalContract.LinkEntry.TABLE_NAME};
+                selection = (selection == null ? linkSelection
+                        : "(" + selection + ") AND " + linkSelection);
+                selectionArgs = (selectionArgs == null ? linkSelectionArgs
+                        : ObjectArrays.concat(selectionArgs, linkSelectionArgs, String.class));
+                break;
+            case SYNC_RESULT_NOTE:
+                tableName = LocalContract.SyncResultEntry.TABLE_NAME;
+                String noteSelection = LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY + " = ?";
+                String[] noteSelectionArgs = new String[]{LocalContract.NoteEntry.TABLE_NAME};
+                selection = (selection == null ? noteSelection
+                        : "(" + selection + ") AND " + noteSelection);
+                selectionArgs = (selectionArgs == null ? noteSelectionArgs
+                        : ObjectArrays.concat(selectionArgs, noteSelectionArgs, String.class));
+                break;
+            case SYNC_RESULT_FAVORITE:
+                tableName = LocalContract.SyncResultEntry.TABLE_NAME;
+                String favoriteSelection = LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY + " = ?";
+                String[] favoriteSelectionArgs = new String[]{LocalContract.FavoriteEntry.TABLE_NAME};
+                selection = (selection == null ? favoriteSelection
+                        : "(" + selection + ") AND " + favoriteSelection);
+                selectionArgs = (selectionArgs == null ? favoriteSelectionArgs
+                        : ObjectArrays.concat(selectionArgs, favoriteSelectionArgs, String.class));
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown query uri [" + uri + "]");
@@ -296,6 +333,10 @@ public class Provider extends ContentProvider {
                     db.endTransaction();
                 }
                 break;
+            case SYNC_RESULT:
+                rowId = insertEntry(db, LocalContract.SyncResultEntry.TABLE_NAME, values);
+                returnUri = LocalContract.SyncResultEntry.buildUriWith(rowId);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown insert uri [" + uri + "]");
         }
@@ -335,6 +376,9 @@ public class Provider extends ContentProvider {
                 break;
             case TAG:
                 tableName = LocalContract.TagEntry.TABLE_NAME;
+                break;
+            case SYNC_RESULT:
+                tableName = LocalContract.SyncResultEntry.TABLE_NAME;
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown delete uri [" + uri + "]");
@@ -403,6 +447,35 @@ public class Provider extends ContentProvider {
                 } finally {
                     db.endTransaction();
                 }
+                break;
+            case SYNC_RESULT_LINK:
+                String linkSelection = LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY + " = ?";
+                String[] linkSelectionArgs = new String[]{LocalContract.LinkEntry.TABLE_NAME};
+                selection = (selection == null ? linkSelection
+                        : "(" + selection + ") AND " + linkSelection);
+                selectionArgs = (selectionArgs == null ? linkSelectionArgs
+                        : ObjectArrays.concat(selectionArgs, linkSelectionArgs, String.class));
+                numRows = db.update(LocalContract.SyncResultEntry.TABLE_NAME,
+                        values, selection, selectionArgs);
+                break;
+            case SYNC_RESULT_NOTE:
+                String noteSelection = LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY + " = ?";
+                String[] noteSelectionArgs = new String[]{LocalContract.NoteEntry.TABLE_NAME};
+                selection = (selection == null ? noteSelection
+                        : "(" + selection + ") AND " + noteSelection);
+                selectionArgs = (selectionArgs == null ? noteSelectionArgs
+                        : ObjectArrays.concat(selectionArgs, noteSelectionArgs, String.class));
+                numRows = db.update(LocalContract.SyncResultEntry.TABLE_NAME,
+                        values, selection, selectionArgs);
+            case SYNC_RESULT_FAVORITE:
+                String favoriteSelection = LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY + " = ?";
+                String[] favoriteSelectionArgs = new String[]{LocalContract.FavoriteEntry.TABLE_NAME};
+                selection = (selection == null ? favoriteSelection
+                        : "(" + selection + ") AND " + favoriteSelection);
+                selectionArgs = (selectionArgs == null ? favoriteSelectionArgs
+                        : ObjectArrays.concat(selectionArgs, favoriteSelectionArgs, String.class));
+                numRows = db.update(LocalContract.SyncResultEntry.TABLE_NAME,
+                        values, selection, selectionArgs);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown update uri [" + uri + "]");

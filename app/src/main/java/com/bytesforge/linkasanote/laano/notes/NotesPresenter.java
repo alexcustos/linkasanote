@@ -59,7 +59,8 @@ public final class NotesPresenter extends BaseItemPresenter implements
     private int noteCacheSize = -1;
     private FilterType filterType;
     private boolean filterIsChanged = true;
-    private boolean loadIsCompleted = false;
+    private boolean loadIsCompleted = true;
+    private boolean loadIsDeferred = false;
 
     @Inject
     NotesPresenter(
@@ -108,29 +109,28 @@ public final class NotesPresenter extends BaseItemPresenter implements
     }
 
     @Override
-    public void loadNotes(final boolean forceUpdate) {
-        loadNotes(forceUpdate, false, true);
+    public void loadNotes(final boolean checkSyncLog) {
+        loadNotes(checkSyncLog, true);
     }
 
-    @Override
-    public void loadNotes(final boolean forceUpdate, final boolean refreshRelatedLinks) {
-        loadNotes(forceUpdate, refreshRelatedLinks, true);
-    }
-
-    private void loadNotes(
-            boolean forceUpdate, final boolean refreshRelatedLinks, final boolean showLoading) {
-        Log.d(TAG, "loadNotes() [" + forceUpdate + "]");
-        compositeDisposable.clear();
-        if (forceUpdate) {
-            repository.refreshNotes();
+    private void loadNotes(boolean checkSyncLog, final boolean showLoading) {
+        Log.d(TAG, "loadNotes() [" + checkSyncLog +
+                ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
+        if (checkSyncLog) {
+            repository.checkNotesSyncLog();
+            //repository.refreshNotes();
+        }
+        if (!loadIsCompleted) {
+            loadIsDeferred = true;
+            return;
         }
         FilterType extendedFilter = updateFilter();
         if (!repository.isNoteCacheDirty()
                 && !filterIsChanged
-                && noteCacheSize == repository.getNoteCacheSize()
-                && loadIsCompleted) {
+                && noteCacheSize == repository.getNoteCacheSize()) {
             return;
         }
+        compositeDisposable.clear();
         loadIsCompleted = false;
         if (showLoading) {
             viewModel.showProgressOverlay();
@@ -194,10 +194,6 @@ public final class NotesPresenter extends BaseItemPresenter implements
         Disposable disposable = loadNotes
                 .subscribeOn(schedulerProvider.computation())
                 .filter(note -> {
-                    String relatedLinkId = note.getLinkId();
-                    if (refreshRelatedLinks && relatedLinkId != null) {
-                        repository.refreshLink(relatedLinkId);
-                    }
                     String searchText = viewModel.getSearchText();
                     if (!Strings.isNullOrEmpty(searchText)) {
                         searchText = searchText.toLowerCase();
@@ -247,20 +243,26 @@ public final class NotesPresenter extends BaseItemPresenter implements
                         viewModel.hideProgressOverlay();
                     }
                     laanoUiManager.updateTitle(TAB);
-                    if (refreshRelatedLinks) {
-                        laanoUiManager.loadLinks();
-                    }
                 })
                 .subscribe(notes -> {
-                    view.showNotes(notes);
-                    selectNoteFilter();
+                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
                     filterIsChanged = false;
                     noteCacheSize = repository.getNoteCacheSize();
-                    loadIsCompleted = true;
+                    if (loadIsDeferred) {
+                        loadIsDeferred = false;
+                        loadNotes(false, showLoading);
+                    } else {
+                        view.showNotes(notes);
+                        selectNoteFilter();
+                    }
                 }, throwable -> {
-                    // NullPointerException
-                    CommonUtils.logStackTrace(TAG, throwable);
-                    viewModel.showDatabaseErrorSnackbar();
+                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
+                    if (throwable instanceof IllegalStateException) {
+                        loadNotes(false, showLoading);
+                    } else {
+                        CommonUtils.logStackTrace(TAG, throwable);
+                        viewModel.showDatabaseErrorSnackbar();
+                    }
                 });
         compositeDisposable.add(disposable);
     }

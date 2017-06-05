@@ -42,6 +42,7 @@ public interface DataSource {
     Single<Boolean> autoResolveLinkConflict(@NonNull String linkId);
     void refreshLinks();
     void refreshLink(@NonNull String linkId);
+    void checkLinksSyncLog();
     void removeCachedLink(@NonNull String linkId);
     int getLinkCacheSize();
 
@@ -58,6 +59,7 @@ public interface DataSource {
     Single<Boolean> autoResolveFavoriteConflict(@NonNull String favoriteId);
     void refreshFavorites();
     void refreshFavorite(@NonNull String favoriteId);
+    void checkFavoritesSyncLog();
     void removeCachedFavorite(@NonNull String favoriteId);
     int getFavoriteCacheSize();
 
@@ -73,6 +75,7 @@ public interface DataSource {
     Single<Boolean> isUnsyncedNotes();
     void refreshNotes();
     void refreshNote(@NonNull String noteId);
+    void checkNotesSyncLog();
     void removeCachedNote(@NonNull String noteId);
     int getNoteCacheSize();
 

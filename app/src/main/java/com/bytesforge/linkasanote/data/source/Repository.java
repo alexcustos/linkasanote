@@ -9,6 +9,7 @@ import android.util.Log;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
+import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
@@ -36,9 +37,10 @@ public class Repository implements DataSource {
 
     private static final String TAG = Repository.class.getSimpleName();
 
+    private static final String SYNC_COMPLETE_TOKEN = ""; // NOTE: empty String
+
     private final LocalDataSource localDataSource;
     private final CloudDataSource cloudDataSource;
-
 
     @VisibleForTesting
     @Nullable
@@ -159,7 +161,13 @@ public class Repository implements DataSource {
             dirtyLinks = new HashSet<>();
         }
         dirtyLinks.clear();
-        return localDataSource.getLinks(null)
+        Observable<Link> markSyncResultsAsAppliedObservable =
+                localDataSource.markLinksSyncResultsAsApplied()
+                        .toObservable()
+                        .ignoreElements()
+                        .toObservable();
+        return Observable.concat(
+                markSyncResultsAsAppliedObservable, localDataSource.getLinks(null))
                 .doOnComplete(() -> linkCacheIsDirty = false)
                 .doOnNext(link -> {
                     String linkId = link.getId();
@@ -175,12 +183,34 @@ public class Repository implements DataSource {
         if (dirtyLinks == null) {
             dirtyLinks = new HashSet<>();
         }
-        final String[] linkIds = dirtyLinks.toArray(new String[dirtyLinks.size()]);
-        Observable<Link> refreshDirtyLinksObservable = localDataSource.getLinks(linkIds)
+        Observable<Link> refreshDirtyLinksObservable = Observable.fromIterable(dirtyLinks)
+                .flatMap(id -> {
+                    if (SYNC_COMPLETE_TOKEN.equals(id)) {
+                        dirtyLinks.remove(id);
+                        return localDataSource.getLinksSyncResultsIds();
+                    } else {
+                        return Observable.just(id);
+                    }
+                })
+                .toList()
+                .toObservable()
+                .flatMap(linkIds -> {
+                    int size = linkIds.size();
+                    if (size > 0) {
+                        String[] ids = linkIds.toArray(new String[size]);
+                        return localDataSource.getLinks(ids);
+                    } else {
+                        return Observable.empty();
+                    }
+                })
                 .doOnNext(link -> {
                     String linkId = link.getId();
                     Log.d(TAG, "refreshDirtyAndGetCachedLinks() -> doOnNext() [" + linkId + "]");
-                    cachedLinks.put(linkId, link);
+                    Link prevLink = cachedLinks.put(linkId, link);
+                    if (prevLink == null) {
+                        refreshLinks();
+                        throw new IllegalStateException("New item has been found, reload is required");
+                    }
                     dirtyLinks.remove(linkId);
                 })
                 .ignoreElements()
@@ -336,6 +366,10 @@ public class Repository implements DataSource {
             cachedLinks = new LinkedHashMap<>();
         }
         cachedLinks.clear();
+        if (dirtyLinks == null) {
+            dirtyLinks = new HashSet<>();
+        }
+        dirtyLinks.clear();
     }
 
     private Observable<ItemState> getDeleteLinkNotesObservable(
@@ -488,6 +522,15 @@ public class Repository implements DataSource {
     }
 
     @Override
+    public void checkLinksSyncLog() {
+        Log.d(TAG, "checkLinksSyncLog()");
+        if (dirtyLinks == null) {
+            dirtyLinks = new HashSet<>();
+        }
+        dirtyLinks.add(SYNC_COMPLETE_TOKEN);
+    }
+
+    @Override
     public void removeCachedLink(@NonNull String linkId) {
         checkNotNull(linkId);
         Log.d(TAG, "removeCachedLink() [" + linkId + "]");
@@ -574,7 +617,13 @@ public class Repository implements DataSource {
             dirtyFavorites = new HashSet<>();
         }
         dirtyFavorites.clear();
-        return localDataSource.getFavorites(null)
+        Observable<Favorite> markSyncResultsAsAppliedObservable =
+                localDataSource.markFavoritesSyncResultsAsApplied()
+                        .toObservable()
+                        .ignoreElements()
+                        .toObservable();
+        return Observable.concat(
+                markSyncResultsAsAppliedObservable, localDataSource.getFavorites(null))
                 .doOnComplete(() -> favoriteCacheIsDirty = false)
                 .doOnNext(favorite -> {
                     String favoriteId = favorite.getId();
@@ -590,12 +639,34 @@ public class Repository implements DataSource {
         if (dirtyFavorites == null) {
             dirtyFavorites = new HashSet<>();
         }
-        final String[] favoriteIds = dirtyFavorites.toArray(new String[dirtyFavorites.size()]);
-        Observable<Favorite> refreshDirtyFavoritesObservable = localDataSource.getFavorites(favoriteIds)
+        Observable<Favorite> refreshDirtyFavoritesObservable = Observable.fromIterable(dirtyFavorites)
+                .flatMap(id -> {
+                    if (SYNC_COMPLETE_TOKEN.equals(id)) {
+                        dirtyFavorites.remove(id);
+                        return localDataSource.getFavoritesSyncResultsIds();
+                    } else {
+                        return Observable.just(id);
+                    }
+                })
+                .toList()
+                .toObservable()
+                .flatMap(favoriteIds -> {
+                    int size = favoriteIds.size();
+                    if (size > 0) {
+                        String[] ids = favoriteIds.toArray(new String[size]);
+                        return localDataSource.getFavorites(ids);
+                    } else {
+                        return Observable.empty();
+                    }
+                })
                 .doOnNext(favorite -> {
                     String favoriteId = favorite.getId();
                     Log.d(TAG, "refreshDirtyAndGetCachedFavorites() -> doOnNext() [" + favoriteId + "]");
-                    cachedFavorites.put(favoriteId, favorite);
+                    Favorite prevFavorite = cachedFavorites.put(favoriteId, favorite);
+                    if (prevFavorite == null) {
+                        refreshFavorites();
+                        throw new IllegalStateException("New item has been found, reload is required");
+                    }
                     dirtyFavorites.remove(favoriteId);
                 })
                 .ignoreElements()
@@ -738,11 +809,14 @@ public class Repository implements DataSource {
     public void deleteAllFavorites() {
         localDataSource.deleteAllFavorites(); // blocking
         //cloudDataSource.deleteAllFavorites();
-
         if (cachedFavorites == null) {
             cachedFavorites = new LinkedHashMap<>();
         }
         cachedFavorites.clear();
+        if (dirtyFavorites == null) {
+            dirtyFavorites = new HashSet<>();
+        }
+        dirtyFavorites.clear();
     }
 
     @Override
@@ -840,6 +914,15 @@ public class Repository implements DataSource {
     }
 
     @Override
+    public void checkFavoritesSyncLog() {
+        Log.d(TAG, "checkFavoritesSyncLog()");
+        if (dirtyFavorites == null) {
+            dirtyFavorites = new HashSet<>();
+        }
+        dirtyFavorites.add(SYNC_COMPLETE_TOKEN);
+    }
+
+    @Override
     public void removeCachedFavorite(@NonNull String favoriteId) {
         checkNotNull(favoriteId);
         Log.d(TAG, "removeCachedFavorite() [" + favoriteId + "]");
@@ -926,7 +1009,13 @@ public class Repository implements DataSource {
             dirtyNotes = new HashSet<>();
         }
         dirtyNotes.clear();
-        return localDataSource.getNotes((String[]) null)
+        Observable<Note> markSyncResultsAsAppliedObservable =
+                localDataSource.markNotesSyncResultsAsApplied()
+                        .toObservable()
+                        .ignoreElements()
+                        .toObservable();
+        return Observable.concat(
+                markSyncResultsAsAppliedObservable, localDataSource.getNotes((String[]) null))
                 .doOnComplete(() -> noteCacheIsDirty = false)
                 .doOnNext(note -> {
                     String noteId = note.getId();
@@ -942,12 +1031,34 @@ public class Repository implements DataSource {
         if (dirtyNotes == null) {
             dirtyNotes = new HashSet<>();
         }
-        final String[] noteIds = dirtyNotes.toArray(new String[dirtyNotes.size()]);
-        Observable<Note> refreshDirtyNotesObservable = localDataSource.getNotes(noteIds)
+        Observable<Note> refreshDirtyNotesObservable = Observable.fromIterable(dirtyNotes)
+                .flatMap(id -> {
+                    if (SYNC_COMPLETE_TOKEN.equals(id)) {
+                        dirtyNotes.remove(id);
+                        return localDataSource.getNotesSyncResultsIds();
+                    } else {
+                        return Observable.just(id);
+                    }
+                })
+                .toList()
+                .toObservable()
+                .flatMap(noteIds -> {
+                    int size = noteIds.size();
+                    if (size > 0) {
+                        String[] ids = noteIds.toArray(new String[size]);
+                        return localDataSource.getNotes(ids);
+                    } else {
+                        return Observable.empty();
+                    }
+                })
                 .doOnNext(note -> {
                     String noteId = note.getId();
                     Log.d(TAG, "refreshDirtyAndGetCachedNotes() -> doOnNext() [" + noteId + "]");
-                    cachedNotes.put(noteId, note);
+                    Note prevNote = cachedNotes.put(noteId, note);
+                    if (prevNote == null) {
+                        refreshNotes();
+                        throw new IllegalStateException("New item has been found, reload is required");
+                    }
                     dirtyNotes.remove(noteId);
                 })
                 .ignoreElements()
@@ -1093,6 +1204,10 @@ public class Repository implements DataSource {
             cachedNotes = new LinkedHashMap<>();
         }
         cachedNotes.clear();
+        if (dirtyNotes == null) {
+            dirtyNotes = new HashSet<>();
+        }
+        dirtyNotes.clear();
     }
 
     public Observable<ItemState> deleteNote(@NonNull String noteId, boolean syncable) {
@@ -1179,6 +1294,15 @@ public class Repository implements DataSource {
             dirtyNotes = new HashSet<>();
         }
         dirtyNotes.add(noteId);
+    }
+
+    @Override
+    public void checkNotesSyncLog() {
+        Log.d(TAG, "checkNotesSyncLog()");
+        if (dirtyNotes == null) {
+            dirtyNotes = new HashSet<>();
+        }
+        dirtyNotes.add(SYNC_COMPLETE_TOKEN);
     }
 
     @Override
@@ -1303,5 +1427,9 @@ public class Repository implements DataSource {
                         .toObservable()
                         .doOnComplete(this::refreshNotes))
                 .count();
+    }
+
+    public Observable<SyncResult> getFreshSyncResults() {
+        return localDataSource.getFreshSyncResults();
     }
 }

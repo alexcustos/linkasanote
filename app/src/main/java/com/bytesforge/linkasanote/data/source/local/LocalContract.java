@@ -16,8 +16,7 @@ public final class LocalContract {
     public static final String CONTENT_SCHEME = "content://";
     public static final Uri BASE_CONTENT_URI = Uri.parse(CONTENT_SCHEME + CONTENT_AUTHORITY);
 
-
-    public static String[] SYNC_STATE_COLUMNS = new String[]{
+    public static final String[] SYNC_STATE_COLUMNS = new String[]{
             BaseEntry._ID,
             BaseEntry.COLUMN_NAME_ETAG,
             BaseEntry.COLUMN_NAME_DUPLICATED,
@@ -48,7 +47,7 @@ public final class LocalContract {
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(TABLE_NAME).build();
 
-        public static String[] LINK_COLUMNS = new String[]{
+        public static final String[] LINK_COLUMNS = new String[]{
                 LinkEntry._ID,
                 LinkEntry.COLUMN_NAME_ENTRY_ID,
                 LinkEntry.COLUMN_NAME_CREATED,
@@ -109,7 +108,7 @@ public final class LocalContract {
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendEncodedPath(TABLE_NAME).build();
 
-        public static String[] NOTE_COLUMNS = new String[]{
+        public static final String[] NOTE_COLUMNS = new String[]{
                 NoteEntry._ID,
                 NoteEntry.COLUMN_NAME_ENTRY_ID,
                 NoteEntry.COLUMN_NAME_CREATED,
@@ -164,7 +163,7 @@ public final class LocalContract {
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendEncodedPath(TABLE_NAME).build();
 
-        public static String[] FAVORITE_COLUMNS = new String[]{
+        public static final String[] FAVORITE_COLUMNS = new String[]{
                 FavoriteEntry._ID,
                 FavoriteEntry.COLUMN_NAME_ENTRY_ID,
                 FavoriteEntry.COLUMN_NAME_CREATED,
@@ -219,7 +218,7 @@ public final class LocalContract {
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendEncodedPath(TABLE_NAME).build();
 
-        public static String[] TAG_COLUMNS = new String[]{
+        public static final String[] TAG_COLUMNS = new String[]{
                 TABLE_NAME + "." + TagEntry._ID,
                 TABLE_NAME + "." + TagEntry.COLUMN_NAME_CREATED,
                 TABLE_NAME + "." + TagEntry.COLUMN_NAME_NAME};
@@ -236,8 +235,60 @@ public final class LocalContract {
             return CONTENT_URI.buildUpon().appendPath(name).build();
         }
 
-        public static String getIdFrom(@NonNull Uri uri) {
+        public static String getNameFrom(@NonNull Uri uri) {
             return checkNotNull(uri).getPathSegments().get(1);
+        }
+    }
+
+    public static abstract class SyncResultEntry implements BaseColumns {
+
+        public static final String TABLE_NAME = "sync_result";
+
+        public static final String COLUMN_NAME_CREATED = BaseEntry.COLUMN_NAME_CREATED;
+        public static final String COLUMN_NAME_STARTED = "started";
+        public static final String COLUMN_NAME_ENTRY = "entry";
+        public static final String COLUMN_NAME_ENTRY_ID = "entry_id";
+        public static final String COLUMN_NAME_RESULT = "result";
+        public static final String COLUMN_NAME_APPLIED = "applied";
+
+        public static final String CONTENT_TYPE =
+                "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + SyncResultEntry.TABLE_NAME;
+        public static final String CONTENT_ITEM_TYPE =
+                "vnd.android.cursor.item/" + CONTENT_AUTHORITY + SyncResultEntry.TABLE_NAME;
+
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendEncodedPath(TABLE_NAME).build();
+
+        public enum Result {
+            UPLOADED, DOWNLOADED, DELETED, SYNCED, RELATED, CONFLICT, ERROR}
+
+        public static final String[] SYNC_RESULT_COLUMNS = new String[]{
+                SyncResultEntry._ID,
+                SyncResultEntry.COLUMN_NAME_CREATED,
+                SyncResultEntry.COLUMN_NAME_STARTED,
+                SyncResultEntry.COLUMN_NAME_ENTRY,
+                SyncResultEntry.COLUMN_NAME_ENTRY_ID,
+                SyncResultEntry.COLUMN_NAME_RESULT,
+                SyncResultEntry.COLUMN_NAME_APPLIED};
+
+        public static Uri buildUri() {
+            return CONTENT_URI.buildUpon().build();
+        }
+
+        public static Uri buildUriWith(@NonNull String entry) {
+            return CONTENT_URI.buildUpon().appendPath(checkNotNull(entry)).build();
+        }
+
+        public static Uri buildUriWith(long rowId) {
+            return ContentUris.withAppendedId(CONTENT_URI, rowId);
+        }
+
+        public static String getEntryFrom(@NonNull Uri uri) {
+            return checkNotNull(uri).getPathSegments().get(1);
+        }
+
+        public static long getIdFrom(@NonNull Uri uri) {
+            return Long.parseLong(checkNotNull(uri).getPathSegments().get(1));
         }
     }
 }
