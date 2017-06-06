@@ -125,6 +125,7 @@ public class LinksConflictResolutionPresenterTest {
     public void duplicatedLinkWithNoMainRecord_resolvesConflictAutomatically() {
         SyncState state = new SyncState(E_TAGL, 1); // duplicated
         Link link = new Link(defaultLink, state);
+        String linkId = link.getId();
         when(localLinks.get(eq(linkId))).thenReturn(Single.just(link));
         when(localLinks.getMain(eq(link.getDuplicatedKey())))
                 .thenReturn(Single.error(new NoSuchElementException()));
@@ -132,7 +133,7 @@ public class LinksConflictResolutionPresenterTest {
         when(localLinks.update(eq(linkId), any(SyncState.class))).thenReturn(Single.just(true));
         presenter.subscribe();
         verify(viewModel).populateCloudLink(eq(link));
-        verify(repository).refreshLinks();
+        verify(repository).refreshLink(eq(linkId));
         verify(view).finishActivity();
     }
 }

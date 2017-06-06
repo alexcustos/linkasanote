@@ -385,13 +385,12 @@ public class Repository implements DataSource {
             deleteNotesObservable = Observable.fromIterable(notes)
                     .flatMap(note -> {
                         String noteId = note.getId();
-                        if (note.isDeleted()) {
+                        if (note.isDeleted() && !note.isConflicted()) {
                             return deleteNote(noteId, syncable);
                         } else {
                             SyncState state = new SyncState(note.getState(), SyncState.State.UNSYNCED);
-                            Note unboundNote = new Note(
-                                    note.getId(), note.getCreated(), note.getUpdated(),
-                                    note.getNote(), null, note.getTags(), state);
+                            Note unboundNote = new Note(note.getId(), note.getCreated(),
+                                    note.getUpdated(), note.getNote(), null, note.getTags(), state);
                             return saveNote(unboundNote, syncable);
                         }
                     });
@@ -431,9 +430,7 @@ public class Repository implements DataSource {
                                 cachedLinks = new LinkedHashMap<>();
                             }
                             removeCachedLink(linkId);
-                            // NOTE: the Note state can be implicitly changed to unbound
-                            // OPTIMIZATION: retrieve the Link's Notes and invalidate it (if !deleteNotes)
-                            refreshNotes();
+                            // NOTE: notes & it's cache will be updated in getDeleteLinkNotesObservable
                             break;
                         default:
                             throw new IllegalStateException("Unexpected state came from Local deleteLink()");
@@ -1212,6 +1209,16 @@ public class Repository implements DataSource {
 
     public Observable<ItemState> deleteNote(@NonNull String noteId, boolean syncable) {
         checkNotNull(noteId);
+        Observable<ItemState> refreshLinkObservable = localDataSource.getNote(noteId)
+                .toObservable()
+                .doOnNext(note -> {
+                    String linkId = note.getLinkId();
+                    if (linkId != null) {
+                        refreshLink(linkId);
+                    }
+                })
+                .ignoreElements()
+                .toObservable();
         Observable<ItemState> localDeletionObservable = localDataSource.deleteNote(noteId)
                 .doOnSuccess(itemState -> {
                     switch (itemState) {
@@ -1221,8 +1228,6 @@ public class Repository implements DataSource {
                                 cachedNotes = new LinkedHashMap<>();
                             }
                             removeCachedNote(noteId);
-                            // OPTIMIZATION: retrieve the Link the Note was bound and invalidate it
-                            refreshLinks();
                             break;
                         default:
                             throw new IllegalStateException("Unexpected state came from Local deleteNote()");
@@ -1242,7 +1247,8 @@ public class Repository implements DataSource {
         } else {
             cloudDeletionObservable = Observable.empty();
         }
-        return Observable.concat(localDeletionObservable, cloudDeletionObservable);
+        return Observable.concat(refreshLinkObservable, localDeletionObservable,
+                cloudDeletionObservable);
     }
 
     private Single<ItemState> getCloudDeleteNoteSingle(@NonNull final String noteId) {

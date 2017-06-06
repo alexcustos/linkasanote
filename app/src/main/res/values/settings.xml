@@ -27,6 +27,8 @@
     <string name="pref_key_clipboard_fill_in_forms" translatable="false">clipboard_fill_in_forms</string>
     <string name="pref_key_clipboard_parameter_white_list" translatable="false">parameter_white_list</string>
 
+    <string name="google_market" translatable="false">market://details?id=</string>
+    <string name="google_play" translatable="false">https://play.google.com/store/apps/details?id=</string>
     <string name="about_nextcloud_url" translatable="false">https://nextcloud.com/</string>
     <string name="libraries_apache_v2" translatable="false">
         <li>Android Open Source Project</li>\n

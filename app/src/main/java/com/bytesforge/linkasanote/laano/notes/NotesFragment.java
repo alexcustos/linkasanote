@@ -175,15 +175,14 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        boolean readingMode;
         switch (item.getItemId()) {
             case R.id.toolbar_notes_filter:
                 showFilteringPopupMenu();
                 break;
             case R.id.toolbar_notes_action_mode:
-                readingMode = presenter.isNotesLayoutModeReading();
+                boolean readingMode = presenter.isNotesLayoutModeReading();
                 if (readingMode) {
-                    readingMode = presenter.toggleNotesLayoutModeReading();
+                    readingMode = presenter.toggleNotesLayoutMode();
                     getActivity().invalidateOptionsMenu();
                     updateNotesAdapter(readingMode);
                 }
@@ -199,14 +198,20 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                 ActivityUtils.clearClipboard(getContext());
                 break;
             case R.id.toolbar_notes_layout_mode:
-                readingMode = presenter.toggleNotesLayoutModeReading();
-                getActivity().invalidateOptionsMenu();
-                updateNotesAdapter(readingMode);
+                toggleNotesLayoutMode();
                 break;
             default:
                 return super.onOptionsItemSelected(item);
         }
         return true;
+    }
+
+    private void toggleNotesLayoutMode() {
+        boolean readingMode = presenter.toggleNotesLayoutMode();
+        getActivity().invalidateOptionsMenu();
+        int firstVisibleItemPosition = rvLayoutManager.findFirstVisibleItemPosition();
+        updateNotesAdapter(readingMode);
+        rvLayoutManager.scrollToPosition(firstVisibleItemPosition);
     }
 
     @Override

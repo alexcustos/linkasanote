@@ -21,5 +21,6 @@
         android:paddingStart="@dimen/recycler_view_text_margin_horizontal"
         android:paddingEnd="@dimen/recycler_view_text_margin_horizontal"
         android:onClick="@{() -> presenter.onNoteClick(note.id, note.conflicted)}"
+        android:autoLink="web|email"
         style="@style/NotesText.Reading" />
 </layout>

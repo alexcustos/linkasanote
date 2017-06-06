@@ -156,9 +156,6 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                 .toList()
                 .observeOn(schedulerProvider.ui())
                 .doFinally(() -> {
-                    if (showLoading) {
-                        viewModel.hideProgressOverlay();
-                    }
                     laanoUiManager.updateTitle(TAB);
                 })
                 .subscribe(favorites -> {
@@ -171,6 +168,9 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     } else {
                         view.showFavorites(favorites);
                         selectFavoriteFilter();
+                        if (showLoading) {
+                            viewModel.hideProgressOverlay();
+                        }
                     }
                 }, throwable -> {
                     loadIsCompleted = true; // NOTE: must be set before loadLinks()
@@ -178,6 +178,9 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                         loadFavorites(false, showLoading);
                     } else {
                         CommonUtils.logStackTrace(TAG, throwable);
+                        if (showLoading) {
+                            viewModel.hideProgressOverlay();
+                        }
                         viewModel.showDatabaseErrorSnackbar();
                     }
                 });

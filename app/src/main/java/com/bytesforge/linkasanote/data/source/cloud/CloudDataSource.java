@@ -73,6 +73,7 @@ public class CloudDataSource {
         return localLinks.get(linkId)
                 .doOnSuccess(link -> {
                     if (link.isDeleted() || link.isConflicted()) {
+                        // TODO: sync error is not a good notification for this issue
                         throw new IllegalStateException(
                                 "The deleted or conflicted Link cannot be uploaded to the Cloud storage");
                     }

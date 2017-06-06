@@ -125,6 +125,7 @@ public class RepositoryNoteTest {
                 .thenReturn(Single.just(DataSource.ItemState.DEFERRED));
         when(cloudDataSource.deleteNote(eq(noteId)))
                 .thenReturn(Single.just(DataSource.ItemState.DELETED));
+        when(localDataSource.getNote(eq(noteId))).thenReturn(Single.just(note));
         // Test
         TestObserver<DataSource.ItemState> deleteNoteObserver =
                 repository.deleteNote(noteId, true).test();

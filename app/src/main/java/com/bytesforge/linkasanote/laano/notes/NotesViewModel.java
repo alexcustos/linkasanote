@@ -168,7 +168,6 @@ public class NotesViewModel extends BaseItemViewModel implements NotesContract.V
         return ContextCompat.getColor(context, android.R.color.transparent);
     }
 
-
     // Visibility
 
     @Override

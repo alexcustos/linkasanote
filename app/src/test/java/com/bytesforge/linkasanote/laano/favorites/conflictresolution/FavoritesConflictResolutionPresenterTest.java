@@ -123,6 +123,7 @@ public class FavoritesConflictResolutionPresenterTest {
     public void duplicatedFavoriteWithNoMainRecord_resolvesConflictAutomatically() {
         SyncState state = new SyncState(E_TAGL, 1); // duplicated
         Favorite favorite = new Favorite(defaultFavorite, state);
+        String favoriteId = favorite.getId();
         when(localFavorites.get(eq(favoriteId))).thenReturn(Single.just(favorite));
         when(localFavorites.getMain(eq(favorite.getDuplicatedKey())))
                 .thenReturn(Single.error(new NoSuchElementException()));
@@ -131,7 +132,7 @@ public class FavoritesConflictResolutionPresenterTest {
                 .thenReturn(Single.just(true));
         presenter.subscribe();
         verify(viewModel).populateCloudFavorite(eq(favorite));
-        verify(repository).refreshFavorites();
+        verify(repository).refreshFavorite(eq(favoriteId));
         verify(view).finishActivity();
     }
 }

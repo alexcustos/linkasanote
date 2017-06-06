@@ -5,10 +5,13 @@ import android.animation.AnimatorListenerAdapter;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.text.Html;
+import android.text.Spanned;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -114,5 +117,15 @@ public final class ActivityUtils {
         ClipData clipData = ClipData.newPlainText(null, null);
         clipboardManager.setPrimaryClip(clipData);
         Toast.makeText(context, R.string.toast_clipboard_cleared, Toast.LENGTH_SHORT).show();
+    }
+
+    public static Spanned fromHtmlCompat(@NonNull String source) {
+        checkNotNull(source);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return Html.fromHtml(source, Html.FROM_HTML_MODE_LEGACY);
+        } else {
+            //noinspection deprecation
+            return Html.fromHtml(source);
+        }
     }
 }

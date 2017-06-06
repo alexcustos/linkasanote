@@ -127,7 +127,7 @@ public final class FavoritesConflictResolutionPresenter implements
                             SyncState state = new SyncState(SyncState.State.SYNCED);
                             boolean success = localFavorites.update(favoriteId, state).blockingGet();
                             if (success) {
-                                repository.refreshFavorites();
+                                repository.refreshFavorite(favoriteId);
                                 view.finishActivity();
                             } else {
                                 view.cancelActivity();
@@ -286,7 +286,8 @@ public final class FavoritesConflictResolutionPresenter implements
                 .doFinally(viewModel::hideProgressOverlay)
                 .subscribe(success -> {
                     if (success) {
-                        repository.refreshFavorites();
+                        // NOTE: most likely the same Favorite was updated and position remain unchanged
+                        repository.refreshFavorite(favoriteId);
                         refreshFavoriteFilter(favoriteId);
                         view.finishActivity();
                     } else {

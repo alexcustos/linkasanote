@@ -10,14 +10,11 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.text.Html;
-import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +25,7 @@ import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.databinding.DialogAboutLicenseTermsBinding;
 import com.bytesforge.linkasanote.databinding.FragmentAboutBinding;
+import com.bytesforge.linkasanote.utils.ActivityUtils;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Charsets;
@@ -102,7 +100,9 @@ public class AboutFragment extends Fragment implements AboutContract.View {
 
     @Override
     public void showGooglePlay() {
-        final Uri uri = Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID);
+        Resources resources = getResources();
+        final Uri uri = Uri.parse(
+                resources.getString(R.string.google_market) + BuildConfig.APPLICATION_ID);
         final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         final List<ResolveInfo> apps =
                 getContext().getPackageManager().queryIntentActivities(intent, 0);
@@ -123,7 +123,7 @@ public class AboutFragment extends Fragment implements AboutContract.View {
         }
         if (!found) {
             Uri webUri = Uri.parse(
-                    "https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID);
+                    resources.getString(R.string.google_play) + BuildConfig.APPLICATION_ID);
             Intent webIntent = new Intent(Intent.ACTION_VIEW, webUri);
             try {
                 startActivity(webIntent);
@@ -186,7 +186,7 @@ public class AboutFragment extends Fragment implements AboutContract.View {
             binding = DialogAboutLicenseTermsBinding.inflate(inflater, null, false);
             Single.fromCallable(() -> getLicenseText(licenseAsset))
                     .subscribeOn(schedulerProvider.computation())
-                    .map(this::fromHtmlCompat)
+                    .map(ActivityUtils::fromHtmlCompat)
                     .observeOn(schedulerProvider.ui())
                     .subscribe(
                             binding.licenseTerms::setText,
@@ -216,16 +216,6 @@ public class AboutFragment extends Fragment implements AboutContract.View {
                 licenseText = resources.getString(R.string.about_fragment_error_license, assetName);
             }
             return licenseText;
-        }
-
-        private Spanned fromHtmlCompat(@NonNull String source) {
-            checkNotNull(source);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                return Html.fromHtml(source, Html.FROM_HTML_MODE_LEGACY);
-            } else {
-                //noinspection deprecation
-                return Html.fromHtml(source);
-            }
         }
     }
 }

@@ -219,7 +219,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         }
                         if (!found) return false;
                     }
-                    // OPTIMIZATION: query the filtered data set will be more efficient
+                    // OPTIMIZATION: query the filtered data set may be more efficient
                     switch (filterType) {
                         case CONFLICTED:
                             return link.isConflicted();
@@ -259,9 +259,6 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 .toList()
                 .observeOn(schedulerProvider.ui())
                 .doFinally(() -> {
-                    if (showLoading) {
-                        viewModel.hideProgressOverlay();
-                    }
                     laanoUiManager.updateTitle(TAB);
                 })
                 .subscribe(links -> {
@@ -274,6 +271,9 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     } else {
                         view.showLinks(links);
                         selectLinkFilter();
+                        if (showLoading) {
+                            viewModel.hideProgressOverlay();
+                        }
                     }
                 }, throwable -> {
                     loadIsCompleted = true; // NOTE: must be set before loadLinks()
@@ -281,6 +281,9 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         loadLinks(false, showLoading);
                     } else {
                         CommonUtils.logStackTrace(TAG, throwable);
+                        if (showLoading) {
+                            viewModel.hideProgressOverlay();
+                        }
                         viewModel.showDatabaseErrorSnackbar();
                     }
                 });

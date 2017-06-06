@@ -246,9 +246,6 @@ public final class NotesPresenter extends BaseItemPresenter implements
                 .toList()
                 .observeOn(schedulerProvider.ui())
                 .doFinally(() -> {
-                    if (showLoading) {
-                        viewModel.hideProgressOverlay();
-                    }
                     laanoUiManager.updateTitle(TAB);
                 })
                 .subscribe(notes -> {
@@ -261,6 +258,9 @@ public final class NotesPresenter extends BaseItemPresenter implements
                     } else {
                         view.showNotes(notes);
                         selectNoteFilter();
+                        if (showLoading) {
+                            viewModel.hideProgressOverlay();
+                        }
                     }
                 }, throwable -> {
                     loadIsCompleted = true; // NOTE: must be set before loadLinks()
@@ -268,6 +268,9 @@ public final class NotesPresenter extends BaseItemPresenter implements
                         loadNotes(false, showLoading);
                     } else {
                         CommonUtils.logStackTrace(TAG, throwable);
+                        if (showLoading) {
+                            viewModel.hideProgressOverlay();
+                        }
                         viewModel.showDatabaseErrorSnackbar();
                     }
                 });
@@ -640,7 +643,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
      * @return Return true if reading mode is set to Enabled
      */
     @Override
-    public boolean toggleNotesLayoutModeReading() {
+    public boolean toggleNotesLayoutMode() {
         boolean readingMode = !settings.isNotesLayoutModeReading();
         settings.setNotesLayoutModeReading(readingMode);
         return readingMode;
