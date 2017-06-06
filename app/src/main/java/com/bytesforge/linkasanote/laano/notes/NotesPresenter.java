@@ -92,6 +92,10 @@ public final class NotesPresenter extends BaseItemPresenter implements
     public void unsubscribe() {
         compositeDisposable.clear();
         repository.removeNotesCallback(this);
+        if (!loadIsCompleted) {
+            loadIsCompleted = true;
+            loadIsDeferred = true;
+        }
     }
 
     @Override
@@ -129,11 +133,13 @@ public final class NotesPresenter extends BaseItemPresenter implements
         if (!repository.isNoteCacheDirty()
                 && !filterIsChanged
                 && noteCacheSize == repository.getNoteCacheSize()
-                && lastSyncTime == syncTime) {
+                && lastSyncTime == syncTime
+                && !loadIsDeferred) {
             return;
         }
         compositeDisposable.clear();
         loadIsCompleted = false;
+        loadIsDeferred = false;
         if (lastSyncTime != syncTime) {
             lastSyncTime = syncTime;
             repository.checkNotesSyncLog();
@@ -249,11 +255,10 @@ public final class NotesPresenter extends BaseItemPresenter implements
                     laanoUiManager.updateTitle(TAB);
                 })
                 .subscribe(notes -> {
-                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
+                    loadIsCompleted = true; // NOTE: must be set before loadNotes()
                     filterIsChanged = false;
                     noteCacheSize = repository.getNoteCacheSize();
                     if (loadIsDeferred) {
-                        loadIsDeferred = false;
                         loadNotes(false, showLoading);
                     } else {
                         view.showNotes(notes);
@@ -263,7 +268,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
                         }
                     }
                 }, throwable -> {
-                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
+                    loadIsCompleted = true; // NOTE: must be set before loadNotes()
                     if (throwable instanceof IllegalStateException) {
                         loadNotes(false, showLoading);
                     } else {
@@ -381,10 +386,6 @@ public final class NotesPresenter extends BaseItemPresenter implements
     @Override
     public void syncSavedNote(final String linkId, @NonNull final String noteId) {
         checkNotNull(noteId);
-        if (linkId != null) {
-            // NOTE: repository do not control other Item's cache
-            repository.refreshLink(linkId); // saved
-        }
         boolean sync = settings.isSyncable() && settings.isOnline();
         if (!sync) {
             if (settings.isSyncable() || settings.getLastSyncTime() > 0) {

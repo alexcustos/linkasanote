@@ -284,7 +284,6 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
                 break;
             case REQUEST_ADD_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
-                    presenter.loadLinks(false);
                     String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
                     String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
                     presenter.syncSavedNote(linkId, noteId);

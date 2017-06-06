@@ -83,6 +83,10 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     public void unsubscribe() {
         compositeDisposable.clear();
         repository.removeFavoritesCallback(this);
+        if (!loadIsCompleted) {
+            loadIsCompleted = true;
+            loadIsDeferred = true;
+        }
     }
 
     @Override
@@ -120,11 +124,13 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         if (!repository.isFavoriteCacheDirty()
                 && !filterIsChanged
                 && favoriteCacheSize == repository.getFavoriteCacheSize()
-                && lastSyncTime == syncTime) {
+                && lastSyncTime == syncTime
+                && !loadIsDeferred) {
             return;
         }
         compositeDisposable.clear();
         loadIsCompleted = false;
+        loadIsDeferred = false;
         if (lastSyncTime != syncTime) {
             lastSyncTime = syncTime;
             repository.checkFavoritesSyncLog();
@@ -159,11 +165,10 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     laanoUiManager.updateTitle(TAB);
                 })
                 .subscribe(favorites -> {
-                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
+                    loadIsCompleted = true; // NOTE: must be set before loadFavorites()
                     filterIsChanged = false;
                     favoriteCacheSize = repository.getFavoriteCacheSize();
                     if (loadIsDeferred) {
-                        loadIsDeferred = false;
                         loadFavorites(false, showLoading);
                     } else {
                         view.showFavorites(favorites);
@@ -173,7 +178,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                         }
                     }
                 }, throwable -> {
-                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
+                    loadIsCompleted = true; // NOTE: must be set before loadFavorites()
                     if (throwable instanceof IllegalStateException) {
                         loadFavorites(false, showLoading);
                     } else {
@@ -310,6 +315,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
 
     @Override
     public void syncSavedFavorite(@NonNull final String favoriteId) {
+        checkNotNull(favoriteId);
         boolean sync = settings.isSyncable() && settings.isOnline();
         if (!sync) {
             if (settings.isSyncable() || settings.getLastSyncTime() > 0) {

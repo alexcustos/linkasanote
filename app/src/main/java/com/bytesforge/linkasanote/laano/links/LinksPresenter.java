@@ -94,6 +94,10 @@ public final class LinksPresenter extends BaseItemPresenter implements
     public void unsubscribe() {
         compositeDisposable.clear();
         repository.removeLinksCallback(this);
+        if (!loadIsCompleted) {
+            loadIsCompleted = true;
+            loadIsDeferred = true;
+        }
     }
 
     @Override
@@ -131,11 +135,13 @@ public final class LinksPresenter extends BaseItemPresenter implements
         if (!repository.isLinkCacheDirty()
                 && !filterIsChanged
                 && linkCacheSize == repository.getLinkCacheSize()
-                && lastSyncTime == syncTime) {
+                && lastSyncTime == syncTime
+                && !loadIsDeferred) {
             return;
         }
         compositeDisposable.clear();
         loadIsCompleted = false;
+        loadIsDeferred = false;
         if (lastSyncTime != syncTime) {
             lastSyncTime = syncTime;
             repository.checkLinksSyncLog();
@@ -266,7 +272,6 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     filterIsChanged = false;
                     linkCacheSize = repository.getLinkCacheSize();
                     if (loadIsDeferred) {
-                        loadIsDeferred = false;
                         loadLinks(false, showLoading);
                     } else {
                         view.showLinks(links);
@@ -473,8 +478,6 @@ public final class LinksPresenter extends BaseItemPresenter implements
     public void syncSavedNote(@NonNull final String linkId, @NonNull final String noteId) {
         checkNotNull(linkId);
         checkNotNull(noteId);
-        // NOTE: repository do not control other Item's cache
-        repository.refreshLink(linkId); // saved
         boolean sync = settings.isSyncable() && settings.isOnline();
         if (!sync) {
             if (settings.isSyncable()) {

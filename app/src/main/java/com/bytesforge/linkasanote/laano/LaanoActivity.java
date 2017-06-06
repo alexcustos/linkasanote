@@ -125,8 +125,13 @@ public class LaanoActivity extends AppCompatActivity implements
             laanoUiManager.updateSyncStatus();
             laanoUiManager.setNormalDrawerMenu();
         }
+        linksPresenter.updateTabNormalState();
+        favoritesPresenter.updateTabNormalState();
+        notesPresenter.updateTabNormalState();
+
         notifyTabSelected(activeTab);
         laanoUiManager.updateTitle(activeTab);
+
         registerReceiver(connectivityBroadcastReceiver, connectivityIntentFilter);
         registerReceiver(syncBroadcastReceiver, syncIntentFilter);
     }
@@ -194,10 +199,6 @@ public class LaanoActivity extends AppCompatActivity implements
         setupFabAdd(binding.fabAdd);
         // AppBar
         setupAppBarLayout(binding.appBarLayout, binding.fabAdd);
-        // UiManager
-        linksPresenter.updateTabNormalState();
-        favoritesPresenter.updateTabNormalState();
-        notesPresenter.updateTabNormalState();
         // Connectivity receiver
         connectivityIntentFilter = new IntentFilter();
         connectivityIntentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
