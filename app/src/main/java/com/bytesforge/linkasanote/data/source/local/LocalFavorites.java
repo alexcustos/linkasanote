@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import com.bytesforge.linkasanote.data.FavoriteFactory;
 import com.bytesforge.linkasanote.data.Item;
@@ -312,7 +313,7 @@ public class LocalFavorites<T extends Item> implements LocalItems<T> {
     }
 
     @Override
-    public Observable<String> getSyncResultsIds() {
+    public Observable<Pair<String, LocalContract.SyncResultEntry.Result>> getSyncResultsIds() {
         return localSyncResults.getIds(LocalContract.FavoriteEntry.TABLE_NAME);
     }
 }

@@ -2,6 +2,7 @@ package com.bytesforge.linkasanote.data.source.local;
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import com.bytesforge.linkasanote.sync.SyncState;
 
@@ -36,5 +37,5 @@ public interface LocalItems<T> {
             long started, @NonNull final String entryId,
             @NonNull final LocalContract.SyncResultEntry.Result result);
     Single<Integer> markSyncResultsAsApplied();
-    Observable<String> getSyncResultsIds();
+    Observable<Pair<String, LocalContract.SyncResultEntry.Result>> getSyncResultsIds();
 }

@@ -117,7 +117,10 @@ public final class LinksPresenter extends BaseItemPresenter implements
 
     @Override
     public void loadLinks(final boolean forceUpdate) {
-        loadLinks(forceUpdate, true);
+        int size = viewModel.getListSize();
+        // NOTE: for the initial load only
+        boolean showLoading = (size <= 0 || size == Integer.MAX_VALUE);
+        loadLinks(forceUpdate, showLoading);
     }
 
     private void loadLinks(final boolean forceUpdate, final boolean showLoading) {
@@ -276,9 +279,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     } else {
                         view.showLinks(links);
                         selectLinkFilter();
-                        if (showLoading) {
-                            viewModel.hideProgressOverlay();
-                        }
+                        viewModel.hideProgressOverlay();
                     }
                 }, throwable -> {
                     loadIsCompleted = true; // NOTE: must be set before loadLinks()
@@ -286,9 +287,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         loadLinks(false, showLoading);
                     } else {
                         CommonUtils.logStackTrace(TAG, throwable);
-                        if (showLoading) {
-                            viewModel.hideProgressOverlay();
-                        }
+                        viewModel.hideProgressOverlay();
                         viewModel.showDatabaseErrorSnackbar();
                     }
                 });

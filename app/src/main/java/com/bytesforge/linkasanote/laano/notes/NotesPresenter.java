@@ -115,7 +115,10 @@ public final class NotesPresenter extends BaseItemPresenter implements
 
     @Override
     public void loadNotes(final boolean forceUpdate) {
-        loadNotes(forceUpdate, true);
+        int size = viewModel.getListSize();
+        // NOTE: for the initial load only
+        boolean showLoading = (size <= 0 || size == Integer.MAX_VALUE);
+        loadNotes(forceUpdate, showLoading);
     }
 
     private void loadNotes(boolean forceUpdate, final boolean showLoading) {

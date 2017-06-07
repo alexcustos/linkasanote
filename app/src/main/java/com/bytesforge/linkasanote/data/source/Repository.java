@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
+import android.util.Pair;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
@@ -12,6 +13,7 @@ import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.sync.SyncState;
@@ -189,9 +191,17 @@ public class Repository implements DataSource {
                         dirtyLinks.remove(id);
                         return localDataSource.getLinksSyncResultsIds();
                     } else {
-                        return Observable.just(id);
+                        return Observable.just(Pair.create(id, null));
                     }
                 })
+                .filter(pair -> {
+                    if (pair.second == LocalContract.SyncResultEntry.Result.DELETED) {
+                        removeCachedLink(pair.first);
+                        return false;
+                    }
+                    return true;
+                })
+                .map(pair -> pair.first)
                 .toList()
                 .toObservable()
                 .flatMap(linkIds -> {
@@ -642,9 +652,17 @@ public class Repository implements DataSource {
                         dirtyFavorites.remove(id);
                         return localDataSource.getFavoritesSyncResultsIds();
                     } else {
-                        return Observable.just(id);
+                        return Observable.just(Pair.create(id, null));
                     }
                 })
+                .filter(pair -> {
+                    if (pair.second == LocalContract.SyncResultEntry.Result.DELETED) {
+                        removeCachedFavorite(pair.first);
+                        return false;
+                    }
+                    return true;
+                })
+                .map(pair -> pair.first)
                 .toList()
                 .toObservable()
                 .flatMap(favoriteIds -> {
@@ -1034,9 +1052,17 @@ public class Repository implements DataSource {
                         dirtyNotes.remove(id);
                         return localDataSource.getNotesSyncResultsIds();
                     } else {
-                        return Observable.just(id);
+                        return Observable.just(Pair.create(id, null));
                     }
                 })
+                .filter(pair -> {
+                    if (pair.second == LocalContract.SyncResultEntry.Result.DELETED) {
+                        removeCachedNote(pair.first);
+                        return false;
+                    }
+                    return true;
+                })
+                .map(pair -> pair.first)
                 .toList()
                 .toObservable()
                 .flatMap(noteIds -> {

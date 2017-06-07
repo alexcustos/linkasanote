@@ -106,7 +106,10 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
 
     @Override
     public void loadFavorites(final boolean forceUpdate) {
-        loadFavorites(forceUpdate, true);
+        int size = viewModel.getListSize();
+        // NOTE: for the initial load only
+        boolean showLoading = (size <= 0 || size == Integer.MAX_VALUE);
+        loadFavorites(forceUpdate, showLoading);
     }
 
     private void loadFavorites(final boolean forceUpdate, final boolean showLoading) {

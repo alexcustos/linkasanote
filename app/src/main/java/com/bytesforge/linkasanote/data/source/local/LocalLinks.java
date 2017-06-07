@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.LinkFactory;
@@ -320,7 +321,7 @@ public class LocalLinks<T extends Item> implements LocalItems<T> {
     }
 
     @Override
-    public Observable<String> getSyncResultsIds() {
+    public Observable<Pair<String, LocalContract.SyncResultEntry.Result>> getSyncResultsIds() {
         return localSyncResults.getIds(LocalContract.LinkEntry.TABLE_NAME);
     }
 }

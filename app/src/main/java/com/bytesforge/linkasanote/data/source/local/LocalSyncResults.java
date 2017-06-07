@@ -5,7 +5,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.util.Log;
+import android.util.Pair;
 
 import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.settings.Settings;
@@ -59,7 +59,8 @@ public class LocalSyncResults {
         }, Cursor::close);
     }
 
-    public Observable<String> getIds(@NonNull final String entry) {
+    public Observable<Pair<String, LocalContract.SyncResultEntry.Result>> getIds(
+            @NonNull final String entry) {
         checkNotNull(entry);
         final AtomicLong threshold = new AtomicLong();
         return getThreshold()
@@ -92,11 +93,12 @@ public class LocalSyncResults {
         });
     }
 
-    private Observable<String> getEntryIds(
+    private Observable<Pair<String, LocalContract.SyncResultEntry.Result>> getEntryIds(
             final Uri uri,
             final String selection, final String[] selectionArgs, final String sortOrder) {
         final String[] columns = new String[]{
-                "DISTINCT " + LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY_ID};
+                "DISTINCT " + LocalContract.SyncResultEntry.COLUMN_NAME_ENTRY_ID,
+                LocalContract.SyncResultEntry.COLUMN_NAME_RESULT};
         return Observable.generate(() -> {
             return contentResolver.query(uri, columns, selection, selectionArgs, sortOrder);
         }, (cursor, linkEmitter) -> {
@@ -105,7 +107,8 @@ public class LocalSyncResults {
                 return null;
             }
             if (cursor.moveToNext()) {
-                linkEmitter.onNext(cursor.getString(0));
+                linkEmitter.onNext(Pair.create(cursor.getString(0),
+                        LocalContract.SyncResultEntry.Result.valueOf(cursor.getString(1))));
             } else {
                 linkEmitter.onComplete();
             }

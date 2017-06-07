@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
+import android.util.Pair;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
@@ -110,7 +111,7 @@ public class LocalDataSource {
         return localLinks.markSyncResultsAsApplied();
     }
 
-    public Observable<String> getLinksSyncResultsIds() {
+    public Observable<Pair<String, LocalContract.SyncResultEntry.Result>> getLinksSyncResultsIds() {
         return localLinks.getSyncResultsIds();
     }
 
@@ -179,7 +180,7 @@ public class LocalDataSource {
         return localFavorites.markSyncResultsAsApplied();
     }
 
-    public Observable<String> getFavoritesSyncResultsIds() {
+    public Observable<Pair<String, LocalContract.SyncResultEntry.Result>> getFavoritesSyncResultsIds() {
         return localFavorites.getSyncResultsIds();
     }
 
@@ -249,7 +250,7 @@ public class LocalDataSource {
         return localNotes.markSyncResultsAsApplied();
     }
 
-    public Observable<String> getNotesSyncResultsIds() {
+    public Observable<Pair<String, LocalContract.SyncResultEntry.Result>> getNotesSyncResultsIds() {
         return localNotes.getSyncResultsIds();
     }
 
