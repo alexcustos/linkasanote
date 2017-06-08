@@ -472,7 +472,7 @@ public class Repository implements DataSource {
         checkNotNull(linkId);
         return cloudDataSource.deleteLink(linkId)
                 .doOnSuccess(itemState -> {
-                    // NOTE: flatMap -> return null: actually returns null to onSuccess, so NPE here is not normal but it is expected
+                    // NOTE: NPE here is expected, flatMap() -> return .map() -> null: actually returns null to onSuccess
                     switch (itemState) {
                         case DELETED: // visibility was not changed
                             break;
@@ -872,7 +872,7 @@ public class Repository implements DataSource {
         checkNotNull(favoriteId);
         return cloudDataSource.deleteFavorite(favoriteId)
                 .doOnSuccess(itemState -> {
-                    // NOTE: flatMap -> return null: actually returns null to onSuccess, so NPE here is not normal but it is expected
+                    // NOTE: NPE here is expected, flatMap() -> return .map() -> null: actually returns null to onSuccess
                     switch (itemState) {
                         case DELETED: // visibility was not changed
                             break;
@@ -1281,7 +1281,7 @@ public class Repository implements DataSource {
         checkNotNull(noteId);
         return cloudDataSource.deleteNote(noteId)
                 .doOnSuccess(itemState -> {
-                    // NOTE: flatMap -> return null: actually returns null to onSuccess, so NPE here is not normal but it is expected
+                    // NOTE: NPE here is expected, flatMap() -> return .map() -> null: actually returns null to onSuccess
                     switch (itemState) {
                         case DELETED: // visibility was not changed
                             break;

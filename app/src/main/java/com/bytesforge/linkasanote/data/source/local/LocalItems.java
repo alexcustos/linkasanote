@@ -31,6 +31,7 @@ public interface LocalItems<T> {
     Observable<String> getIds();
     Single<Boolean> isConflicted();
     Single<Boolean> isUnsynced();
+    Single<Integer> getNextDuplicated(final String duplicatedKey);
     Single<T> getMain(final String duplicatedKey);
     Single<Boolean> autoResolveConflict(final String linkId);
     Single<Boolean> logSyncResult(

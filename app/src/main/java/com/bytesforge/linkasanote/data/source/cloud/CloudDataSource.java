@@ -15,7 +15,6 @@ import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
-import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
@@ -28,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
@@ -138,13 +138,13 @@ public class CloudDataSource {
                     }).flatMap(result -> {
                         if (result.isSuccess()) {
                             // NOTE: success == false if unsynced item has been already deleted
-                            return localLinks.delete(linkId).map(
-                                    success -> DataSource.ItemState.DELETED);
+                            return localLinks.delete(linkId)
+                                    .map(success -> DataSource.ItemState.DELETED);
                         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                             SyncState conflictedState = new SyncState(
                                     state, SyncState.State.CONFLICTED_DELETE);
-                            return localLinks.update(linkId, conflictedState).map(
-                                    success -> success ? DataSource.ItemState.CONFLICTED : null);
+                            return localLinks.update(linkId, conflictedState)
+                                    .map(success -> success ? DataSource.ItemState.CONFLICTED : null);
                         }
                         return null;
                     });
@@ -227,13 +227,13 @@ public class CloudDataSource {
                     }).flatMap(result -> {
                         if (result.isSuccess()) {
                             // NOTE: success == false if unsynced item has been already deleted
-                            return localFavorites.delete(favoriteId).map(
-                                    success -> DataSource.ItemState.DELETED);
+                            return localFavorites.delete(favoriteId)
+                                    .map(success -> DataSource.ItemState.DELETED);
                         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                             SyncState conflictedState = new SyncState(
                                     state, SyncState.State.CONFLICTED_DELETE);
-                            return localFavorites.update(favoriteId, conflictedState).map(
-                                    success -> success ? DataSource.ItemState.CONFLICTED : null);
+                            return localFavorites.update(favoriteId, conflictedState)
+                                    .map(success -> success ? DataSource.ItemState.CONFLICTED : null);
                         }
                         return null;
                     });
@@ -316,13 +316,13 @@ public class CloudDataSource {
                     }).flatMap(result -> {
                         if (result.isSuccess()) {
                             // NOTE: success == false if unsynced item has been already deleted
-                            return localNotes.delete(noteId).map(
-                                    success -> DataSource.ItemState.DELETED);
+                            return localNotes.delete(noteId)
+                                    .map(success -> DataSource.ItemState.DELETED);
                         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                             SyncState conflictedState = new SyncState(
                                     state, SyncState.State.CONFLICTED_DELETE);
-                            return localNotes.update(noteId, conflictedState).map(
-                                    success -> success ? DataSource.ItemState.CONFLICTED : null);
+                            return localNotes.update(noteId, conflictedState)
+                                    .map(success -> success ? DataSource.ItemState.CONFLICTED : null);
                         }
                         return null;
                     });
@@ -414,13 +414,25 @@ public class CloudDataSource {
                 .flatMap(result -> {
                     if (retryCount.getAndAdd(1) < Settings.GLOBAL_RETRY_ON_NETWORK_ERROR) {
                         RemoteOperationResult.ResultCode code = result.getCode();
-                        if (CloudUtils.isNetworkError(code)) {
-                            Log.e(TAG, "Retry on Network error [" + retryCount.get() + ":" + code.name()  + "]");
-                            return Single.error(new NetworkErrorException());
+                        if (isNetworkError(code)) {
+                            Log.e(TAG, "Retry on Network error [" +
+                                    retryCount.get() + "/" + Settings.GLOBAL_RETRY_ON_NETWORK_ERROR +
+                                    "; code=" + code.name() +
+                                    "; delay=" + Settings.GLOBAL_DELAY_ON_NETWORK_ERROR_MILLIS + "ms]");
+                            return Single.timer(
+                                    Settings.GLOBAL_DELAY_ON_NETWORK_ERROR_MILLIS,
+                                    TimeUnit.MILLISECONDS).flatMap(
+                                            aLong -> Single.error(new NetworkErrorException()));
                         }
                     }
                     return Single.just(result);
                 })
                 .retry(Settings.GLOBAL_RETRY_ON_NETWORK_ERROR);
+    }
+
+    private static boolean isNetworkError(RemoteOperationResult.ResultCode code) {
+        // RemoteOperationResult.ResultCode.TIMEOUT
+        return code == RemoteOperationResult.ResultCode.SSL_ERROR // it seems it is some sort of bug
+                || code == RemoteOperationResult.ResultCode.HOST_NOT_AVAILABLE; // if connection is not ready yet
     }
 }

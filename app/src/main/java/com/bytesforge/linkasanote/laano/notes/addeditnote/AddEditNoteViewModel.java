@@ -13,7 +13,9 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.bytesforge.linkasanote.BR;
@@ -32,6 +34,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AddEditNoteViewModel extends BaseObservable implements
         AddEditNoteContract.ViewModel {
+
+    private static final String TAG = AddEditNoteViewModel.class.getSimpleName();
 
     private static final String STATE_NOTE_NOTE = "NOTE_NOTE";
     private static final String STATE_NOTE_SYNC_STATE = "NOTE_SYNC_STATE";
@@ -249,6 +253,14 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public void afterNoteChanged() {
         hideNoteError();
         checkAddButton();
+    }
+
+    public boolean onNoteTouch(View view, MotionEvent event) {
+        EditText editText = (EditText) view;
+        if (editText.getLineCount() > editText.getMaxLines()) {
+            view.getParent().requestDisallowInterceptTouchEvent(true);
+        }
+        return false;
     }
 
     public void onTagsFocusChange(View view, boolean hasFocus) {

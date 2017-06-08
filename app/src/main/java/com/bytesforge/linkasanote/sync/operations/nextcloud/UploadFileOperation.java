@@ -49,7 +49,7 @@ public class UploadFileOperation extends RemoteOperation {
 
         EnhancedUploadRemoteFileOperation uploadOperation = new EnhancedUploadRemoteFileOperation(
                 file.getLocalPath(), file.getRemotePath(), file.getMimeType());
-        result = CloudDataSource.executeRemoteOperation(uploadOperation, ocClient).blockingGet();
+        result = uploadOperation.execute(ocClient);
         ArrayList<Object> data = new ArrayList<>();
         data.add(file);
         result.setData(data);
@@ -67,13 +67,11 @@ public class UploadFileOperation extends RemoteOperation {
         String remoteParent = new File(remotePath).getParent();
         ExistenceCheckRemoteOperation existenceOperation =
                 new ExistenceCheckRemoteOperation(remoteParent, false);
-        RemoteOperationResult result =
-                CloudDataSource.executeRemoteOperation(existenceOperation, ocClient)
-                        .blockingGet();
+        RemoteOperationResult result = existenceOperation.execute(ocClient);
         if (result.getCode() == RemoteOperationResult.ResultCode.FILE_NOT_FOUND) {
             CreateRemoteFolderOperation createOperation =
                     new CreateRemoteFolderOperation(remoteParent, true);
-            result = CloudDataSource.executeRemoteOperation(createOperation, ocClient).blockingGet();
+            result = createOperation.execute(ocClient);
         }
         return result;
     }

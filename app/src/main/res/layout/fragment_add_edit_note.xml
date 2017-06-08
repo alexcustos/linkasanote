@@ -24,14 +24,13 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="@dimen/screen_edge_padding">
+                android:orientation="vertical">
 
                 <!-- NOTE: problem with ConstraintLayout: random vertical gaps when width=0dp & align to start/end=parent -->
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/screen_edge_padding"
+                    android:layout_marginTop="@dimen/screen_edge_padding"
                     android:background="@color/link_background"
                     android:padding="@dimen/screen_edge_padding"
                     android:visibility="@{viewModel.linkStatus != null || viewModel.linkName != null || viewModel.linkLink != null ? View.VISIBLE : View.GONE}">
@@ -72,6 +71,7 @@
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/screen_edge_padding"
                     android:paddingStart="@dimen/screen_edge_padding"
                     android:paddingEnd="@dimen/screen_edge_padding"
                     bind:noteError="@{viewModel.noteErrorText}">
@@ -88,7 +88,8 @@
                         android:maxLines="@integer/add_edit_note_lines"
                         android:scrollbars="vertical"
                         android:text="@={viewModel.noteNote}"
-                        android:afterTextChanged="@{() -> viewModel.afterNoteChanged()}" />
+                        android:afterTextChanged="@{() -> viewModel.afterNoteChanged()}"
+                        android:onTouch="@{viewModel::onNoteTouch}" />
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.design.widget.TextInputLayout
@@ -114,7 +115,8 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:padding="@dimen/main_button_padding"
-                    android:layout_marginTop="@dimen/main_button_margin_top"
+                    android:layout_marginTop="@dimen/main_button_margin_vertical"
+                    android:layout_marginBottom="@dimen/main_button_margin_vertical"
                     android:text="@{viewModel.addButtonText}"
                     android:enabled="@{viewModel.addButton}"
                     android:onClick="@{() -> viewModel.onAddButtonClick()}" />

@@ -162,11 +162,4 @@ public final class CloudUtils {
         }
         return accountItem;
     }
-
-    public static boolean isNetworkError(RemoteOperationResult.ResultCode code) {
-        // RemoteOperationResult.ResultCode.HOST_NOT_AVAILABLE
-        // RemoteOperationResult.ResultCode.TIMEOUT
-        // NOTE: it seems it is some sort of bug which is disappeared after retry
-        return code == RemoteOperationResult.ResultCode.SSL_ERROR;
-    }
 }

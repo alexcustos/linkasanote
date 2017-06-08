@@ -100,7 +100,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:padding="@dimen/main_button_padding"
-                    android:layout_marginTop="@dimen/main_button_margin_top"
+                    android:layout_marginTop="@dimen/main_button_margin_vertical"
                     android:text="@{viewModel.addButtonText}"
                     android:enabled="@{viewModel.addButton}"
                     android:onClick="@{() -> viewModel.onAddButtonClick()}" />

@@ -236,6 +236,11 @@ public class LocalNotes<T extends Item> implements LocalItems<T> {
     }
 
     @Override
+    public Single<Integer> getNextDuplicated(String duplicatedKey) {
+        throw new RuntimeException("getNextDuplicated(): there is no duplicatedKey implementation available for the Notes");
+    }
+
+    @Override
     public Single<T> getMain(final String duplicatedKey) {
         throw new RuntimeException("getMain(): there is no duplicatedKey implementation available for the Notes");
     }

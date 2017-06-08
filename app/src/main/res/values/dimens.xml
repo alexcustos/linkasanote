@@ -11,7 +11,7 @@
     <dimen name="add_edit_account_status_min_height">32dp</dimen>
     <dimen name="add_edit_account_status_icon_padding">8dp</dimen>
     <dimen name="add_edit_account_refresh_margin_bottom">12dp</dimen>
-    <dimen name="main_button_margin_top">16dp</dimen>
+    <dimen name="main_button_margin_vertical">16dp</dimen>
     <dimen name="main_button_padding">16dp</dimen>
     <dimen name="token_corners_radius">6dp</dimen>
     <dimen name="token_vertical_padding">4dp</dimen>

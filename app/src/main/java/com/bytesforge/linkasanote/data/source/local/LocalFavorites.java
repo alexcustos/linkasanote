@@ -234,7 +234,8 @@ public class LocalFavorites<T extends Item> implements LocalItems<T> {
         return LocalDataSource.isUnsynced(contentResolver, FAVORITE_URI);
     }
 
-    private Single<Integer> getNextDuplicated(final String duplicatedKey) {
+    @Override
+    public Single<Integer> getNextDuplicated(final String duplicatedKey) {
         final String[] columns = new String[]{
                 "MAX(" + LocalContract.FavoriteEntry.COLUMN_NAME_DUPLICATED + ") + 1"};
         final String selection = LocalContract.FavoriteEntry.COLUMN_NAME_NAME + " = ?";

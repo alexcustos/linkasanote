@@ -242,7 +242,8 @@ public class LocalLinks<T extends Item> implements LocalItems<T> {
         return LocalDataSource.isUnsynced(contentResolver, LINK_URI);
     }
 
-    private Single<Integer> getNextDuplicated(final String duplicatedKey) {
+    @Override
+    public Single<Integer> getNextDuplicated(final String duplicatedKey) {
         final String[] columns = new String[]{
                 "MAX(" + LocalContract.LinkEntry.COLUMN_NAME_DUPLICATED + ") + 1"};
         final String selection = LocalContract.LinkEntry.COLUMN_NAME_LINK + " = ?";

@@ -2,6 +2,7 @@ package com.bytesforge.linkasanote.data.source.local;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
@@ -78,16 +79,32 @@ public class LocalDataSource {
                 .flatMap(state -> {
                     boolean neverSynced = (!state.isSynced() && state.getETag() == null);
                     if (neverSynced) {
+                        // NOTE: it is not a problem if the item was absent
                         return localLinks.delete(linkId)
-                                .map(success -> success ? DataSource.ItemState.DELETED : null);
+                                .map(success -> DataSource.ItemState.DELETED);
                     } else {
                         SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
                         return localLinks.update(linkId, deletedState)
+                                .onErrorResumeNext(throwable -> throwable instanceof SQLiteConstraintException
+                                        ? deferLinkAsDuplicated(linkId, state) : null)
                                 .map(success -> success ? DataSource.ItemState.DEFERRED : null);
                     }
                 })
                 .onErrorReturn(throwable -> throwable instanceof NoSuchElementException
                         ? DataSource.ItemState.DELETED : null);
+    }
+
+    private Single<Boolean> deferLinkAsDuplicated(
+            final @NonNull String linkId, final @NonNull SyncState state) {
+        checkNotNull(linkId);
+        checkNotNull(state);
+        return localLinks.get(linkId)
+                .flatMap(link -> localLinks.getNextDuplicated(link.getDuplicatedKey())
+                        .map(duplicated -> {
+                            SyncState duplicatedState = new SyncState(state.getETag(), duplicated);
+                            return new SyncState(duplicatedState, SyncState.State.DELETED);
+                        })
+                        .flatMap(deletedState -> localLinks.update(linkId, deletedState)));
     }
 
     public Single<Boolean> isConflictedLinks() {
@@ -147,16 +164,32 @@ public class LocalDataSource {
                 .flatMap(state -> {
                     boolean neverSynced = (!state.isSynced() && state.getETag() == null);
                     if (neverSynced) {
+                        // NOTE: it is not a problem if the item was absent
                         return localFavorites.delete(favoriteId)
-                                .map(success -> success ? DataSource.ItemState.DELETED : null);
+                                .map(success -> DataSource.ItemState.DELETED);
                     } else {
                         SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
                         return localFavorites.update(favoriteId, deletedState)
+                                .onErrorResumeNext(throwable -> throwable instanceof SQLiteConstraintException
+                                        ? deferFavoriteAsDuplicated(favoriteId, state) : null)
                                 .map(success -> success ? DataSource.ItemState.DEFERRED : null);
                     }
                 })
                 .onErrorReturn(throwable -> throwable instanceof NoSuchElementException
                         ? DataSource.ItemState.DELETED : null);
+    }
+
+    private Single<Boolean> deferFavoriteAsDuplicated(
+            final @NonNull String favoriteId, final @NonNull SyncState state) {
+        checkNotNull(favoriteId);
+        checkNotNull(state);
+        return localFavorites.get(favoriteId)
+                .flatMap(favorite -> localFavorites.getNextDuplicated(favorite.getDuplicatedKey())
+                        .map(duplicated -> {
+                            SyncState duplicatedState = new SyncState(state.getETag(), duplicated);
+                            return new SyncState(duplicatedState, SyncState.State.DELETED);
+                        })
+                        .flatMap(deletedState -> localFavorites.update(favoriteId, deletedState)));
     }
 
     public Single<Boolean> isConflictedFavorites() {
@@ -222,8 +255,9 @@ public class LocalDataSource {
                 .flatMap(state -> {
                     boolean neverSynced = (!state.isSynced() && state.getETag() == null);
                     if (neverSynced) {
+                        // NOTE: it is not a problem if the item was absent
                         return localNotes.delete(noteId)
-                                .map(success -> success ? DataSource.ItemState.DELETED : null);
+                                .map(success -> DataSource.ItemState.DELETED);
                     } else {
                         SyncState deletedState = new SyncState(state, SyncState.State.DELETED);
                         return localNotes.update(noteId, deletedState)

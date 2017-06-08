@@ -2,7 +2,6 @@ package com.bytesforge.linkasanote.sync.operations.nextcloud;
 
 import android.os.Bundle;
 
-import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.OwnCloudCredentials;
 import com.owncloud.android.lib.common.OwnCloudCredentialsFactory;
@@ -40,9 +39,7 @@ public class CheckCredentialsOperation extends RemoteOperation {
 
         ExistenceCheckRemoteOperation checkOperation =
                 new ExistenceCheckRemoteOperation(ROOT_PATH, false);
-        RemoteOperationResult result =
-                CloudDataSource.executeRemoteOperation(checkOperation, ocClient)
-                        .blockingGet();
+        RemoteOperationResult result = checkOperation.execute(ocClient);
         if (checkOperation.wasRedirected()) {
             RedirectionPath path = checkOperation.getRedirectionPath();
             String location = path.getLastPermanentLocation();
@@ -51,7 +48,7 @@ public class CheckCredentialsOperation extends RemoteOperation {
         if (result.isSuccess()) {
             // NOTE: user display name is updated during synchronization
             GetRemoteUserInfoOperation infoOperation = new GetRemoteUserInfoOperation();
-            result = CloudDataSource.executeRemoteOperation(infoOperation, ocClient).blockingGet();
+            result = infoOperation.execute(ocClient);
         }
         if (result.isSuccess()) {
             result.getData().add(credentials);
