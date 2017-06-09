@@ -119,6 +119,7 @@
     <string name="add_edit_account_nextcloud_unknown_error">Произошла неизвестная ошибка!</string>
     <string name="add_edit_account_nextcloud_auth_status_wrong">Неверный пароль или пользователь</string>
     <string name="add_edit_account_nextcloud_auth_exists">Учётная запись для указанного пользователя и сервера уже существует</string>
+    <string name="add_edit_account_nextcloud_timeout">Сервер слишком долго не отвечает на запрос</string>
     <string name="add_edit_account_nextcloud_successful">Успешный доступ</string>
     <string name="add_edit_account_nextcloud_warning_no_permission">Требуемое разрешение не предоставлено</string>
     <string name="add_edit_account_nextcloud_warning_no_account">Данная учётная запись на устройстве не найдена</string>

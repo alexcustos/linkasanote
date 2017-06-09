@@ -198,23 +198,27 @@ public class NextcloudFragment extends Fragment implements
             // GetServerInfoOperation
             viewModel.showConnectionResultStatus(result.getCode());
             if (result.isSuccess()) {
-                presenter.setServerInfo(
-                        (GetServerInfoOperation.ServerInfo) result.getData().get(0));
+                GetServerInfoOperation.ServerInfo serverInfo =
+                        (GetServerInfoOperation.ServerInfo) result.getData().get(0);
+                presenter.setServerInfo(serverInfo);
                 viewModel.hideRefreshButton();
                 viewModel.checkLoginButton();
             } else {
                 presenter.setServerInfo(null);
                 viewModel.showRefreshButton();
+                viewModel.hideAuthStatus();
+                viewModel.disableLoginButton();
             }
         } else if (operation instanceof CheckCredentialsOperation) {
             // CheckCredentialsOperation
-            GetServerInfoOperation.ServerInfo serverInfo = presenter.getServerInfo();
-            if (serverInfo == null) { // NOTE: checked when operation is sent
-                viewModel.showAuthResultStatus(RemoteOperationResult.ResultCode.UNKNOWN_ERROR);
-                viewModel.enableLoginButton();
-                return;
-            }
-            if (result.isSuccess()) {
+            if (!presenter.isServerUrlValid()) { // NOTE: checked when operation is sent
+                viewModel.showConnectionResultStatus(result.getCode());
+                viewModel.showRefreshButton();
+                viewModel.hideAuthStatus();
+                viewModel.disableLoginButton();
+            } else if (result.isSuccess()) {
+                GetServerInfoOperation.ServerInfo serverInfo = presenter.getServerInfo();
+                assert serverInfo != null;
                 if (presenter.isNewAccount()) {
                     addAccount(result, serverInfo);
                 } else {
@@ -224,6 +228,7 @@ public class NextcloudFragment extends Fragment implements
                 presenter.setServerInfo(null);
                 viewModel.showConnectionResultStatus(result.getCode());
                 viewModel.showRefreshButton();
+                viewModel.hideAuthStatus();
                 viewModel.disableLoginButton();
             } else { // NOTE: it's wrong credentials or result.isException()
                 viewModel.showAuthResultStatus(result.getCode());
@@ -374,7 +379,7 @@ public class NextcloudFragment extends Fragment implements
     public boolean sendCheckCredentialsOperation(
             String username, String password,
             @Nullable GetServerInfoOperation.ServerInfo serverInfo) {
-        if (serverInfo == null) {
+        if (serverInfo == null || !serverInfo.isSet()) {
             throw new IllegalStateException(
                     "CheckCredentialsOperation must not be called before serverInfo is set");
         }

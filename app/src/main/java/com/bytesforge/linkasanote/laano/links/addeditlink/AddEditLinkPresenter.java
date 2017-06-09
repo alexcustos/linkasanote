@@ -29,6 +29,7 @@ public final class AddEditLinkPresenter implements
         AddEditLinkContract.Presenter, TokenCompleteTextView.TokenListener<Tag> {
 
     private static final String TAG = AddEditLinkPresenter.class.getSimpleName();
+    private static final String TAG_E = AddEditLinkPresenter.class.getCanonicalName();
 
     private final Repository repository;
     private final AddEditLinkContract.View view;
@@ -85,7 +86,7 @@ public final class AddEditLinkPresenter implements
                 .toList()
                 .observeOn(schedulerProvider.ui())
                 .subscribe(view::swapTagsCompletionViewItems, throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     view.swapTagsCompletionViewItems(new ArrayList<>());
                 });
         tagsDisposable.add(disposable);
@@ -163,7 +164,7 @@ public final class AddEditLinkPresenter implements
                     if (throwable instanceof SQLiteConstraintException) {
                         viewModel.showDuplicateKeyError();
                     } else {
-                        CommonUtils.logStackTrace(TAG, throwable);
+                        CommonUtils.logStackTrace(TAG_E, throwable);
                         viewModel.showDatabaseErrorSnackbar();
                     }
                 });

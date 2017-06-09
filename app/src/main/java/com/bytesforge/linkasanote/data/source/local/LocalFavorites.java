@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class LocalFavorites<T extends Item> implements LocalItems<T> {
 
     private static final String TAG = LocalFavorites.class.getSimpleName();
+    private static final String TAG_E = LocalFavorites.class.getCanonicalName();
 
     // NOTE: static fails Mockito to mock this class
     private final Uri FAVORITE_URI;
@@ -148,7 +149,7 @@ public class LocalFavorites<T extends Item> implements LocalItems<T> {
                 .count()
                 .map(count -> count == tags.size())
                 .onErrorReturn(throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     return false;
                 });
     }

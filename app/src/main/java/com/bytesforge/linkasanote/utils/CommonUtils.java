@@ -119,11 +119,15 @@ public final class CommonUtils {
         return checkNotNull(context).getCacheDir().getAbsolutePath();
     }
 
-    public static void logStackTrace(@NonNull String tag, @NonNull Throwable throwable) {
-        checkNotNull(tag);
+    public static void logStackTrace(@NonNull String tag_e, @NonNull Throwable throwable) {
+        checkNotNull(tag_e);
         checkNotNull(throwable);
         StringWriter sw = new StringWriter();
         throwable.printStackTrace(new PrintWriter(sw));
+        String tag = tag_e.substring(tag_e.lastIndexOf(".") + 1);
+        if (!tag_e.equals(tag)) {
+            Log.e(tag, "Stack trace: " + tag_e);
+        }
         Log.e(tag, sw.toString());
     }
 

@@ -67,6 +67,7 @@ public interface NextcloudContract {
         void showGetAccountsPermissionDeniedWarning();
         void showNormalizedUrlSnackbar();
         void showSomethingWrongSnackbar();
+        void hideAuthStatus();
     }
 
     interface Presenter extends BasePresenter {

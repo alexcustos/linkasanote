@@ -42,6 +42,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ClipboardService extends Service {
 
     private static final String TAG = ClipboardService.class.getSimpleName();
+    private static final String TAG_E = ClipboardService.class.getCanonicalName();
     // NOTE: when text is copied from Chrome browser onPrimaryClipChanged is called twice
     private static final long INVALIDATE_CACHE_IN_MILLIS = 200;
 
@@ -196,8 +197,8 @@ public class ClipboardService extends Service {
         // NOTE: fragment part is omitted
         Uri.Builder uriBuilder = new Uri.Builder()
                 .scheme(uri.getScheme())
-                .authority(uri.getAuthority())
-                .path(uri.getPath());
+                .encodedAuthority(uri.getAuthority())
+                .encodedPath(uri.getPath());
         for (String parameterName : settings.getClipboardParameterWhiteListArray()) {
             try {
                 String parameterValue = uri.getQueryParameter(parameterName);
@@ -251,7 +252,7 @@ public class ClipboardService extends Service {
                         Toast.makeText(ClipboardService.this, messageId, Toast.LENGTH_SHORT).show();
                     }
                 }, throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     normalizedClipboard = normalizeUrl(normalizedClipboard);
                     linkDisabled = true;
                     linkTitle = null;

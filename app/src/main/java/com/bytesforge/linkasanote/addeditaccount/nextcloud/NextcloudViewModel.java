@@ -227,7 +227,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
         }
     }
 
-    private void clearServerStatus() {
+    private void hideServerStatus() {
         setServerStatus(0, 0);
     }
 
@@ -244,8 +244,8 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
 
     public void afterServerUrlChanged(EditText view) {
         if (view.hasFocus()) {
-            if (isServerStatus()) clearServerStatus();
-            if (isAuthStatus()) clearAuthStatus();
+            if (isServerStatus()) hideServerStatus();
+            if (isAuthStatus()) hideAuthStatus();
             disableLoginButton();
             presenter.setServerInfo(null);
         }
@@ -277,7 +277,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     // Auth
 
     public void afterAccountCredentialsChanged() {
-        clearAuthStatus();
+        hideAuthStatus();
         checkLoginButton();
     }
 
@@ -288,7 +288,6 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
 
     private void setAuthStatus(int iconId, int textId) {
         boolean isChanged = false;
-
         if (authStatusIcon != iconId) {
             authStatusIcon = iconId;
             notifyPropertyChanged(BR.authStatusIcon);
@@ -297,13 +296,15 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
         if (authStatusText != textId) {
             authStatusText = textId;
             notifyPropertyChanged(BR.authStatusText);
+            isChanged = true;
         }
         if (isChanged) {
             notifyPropertyChanged(BR.authStatus);
         }
     }
 
-    private void clearAuthStatus() {
+    @Override
+    public void hideAuthStatus() {
         setAuthStatus(0, 0);
     }
 
@@ -462,6 +463,9 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
             case ACCOUNT_NOT_NEW:
                 text = R.string.add_edit_account_nextcloud_auth_exists;
                 break;
+            case TIMEOUT:
+                text = R.string.add_edit_account_nextcloud_timeout;
+                break;
             default:
                 RemoteOperationResult result = new RemoteOperationResult(resultCode);
                 Log.d(TAG, "showAuthResultStatus(): Unknown error [" + resultCode.name() +  "; message=" + result.getLogMessage() + "]");
@@ -475,6 +479,9 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     public void checkLoginButton() {
         String username = accountUsernameText.get();
         String password = accountPasswordText.get();
+        // NOTE: after orientation is changed the callback can't update this status for unknown reason,
+        //       so let the user to retry manually
+        hideAuthStatus();
         if (presenter.isServerUrlValid()
                 && !Strings.isNullOrEmpty(username)
                 && !Strings.isNullOrEmpty(password)) {

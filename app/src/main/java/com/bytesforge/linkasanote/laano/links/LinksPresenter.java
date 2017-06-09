@@ -1,6 +1,7 @@
 package com.bytesforge.linkasanote.laano.links;
 
 import android.net.Uri;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -40,6 +41,8 @@ public final class LinksPresenter extends BaseItemPresenter implements
         LinksContract.Presenter, DataSource.Callback {
 
     private static final String TAG = LinksPresenter.class.getSimpleName();
+    private static final String TAG_E = LinksPresenter.class.getCanonicalName();
+
     private static final int TAB = LaanoFragmentPagerAdapter.LINKS_TAB;
 
     public static final String SETTING_LINKS_FILTER_TYPE = "LINKS_FILTER_TYPE";
@@ -172,7 +175,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                             settings.setFavoriteFilterId(null);
                             settings.setFavoriteFilter(null);
                         } else {
-                            CommonUtils.logStackTrace(TAG, throwable);
+                            CommonUtils.logStackTrace(TAG_E, throwable);
                         }
                     }).onErrorResumeNext(throwable -> {
                         if (throwable instanceof NoSuchElementException) {
@@ -198,7 +201,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                             settings.setNoteFilterId(null);
                             settings.setNoteFilter(null);
                         } else {
-                            CommonUtils.logStackTrace(TAG, throwable);
+                            CommonUtils.logStackTrace(TAG_E, throwable);
                         }
                     }).onErrorResumeNext(throwable -> {
                         if (throwable instanceof NoSuchElementException) {
@@ -213,6 +216,13 @@ public final class LinksPresenter extends BaseItemPresenter implements
         }
         Disposable disposable = loadLinks
                 .subscribeOn(schedulerProvider.computation())
+                .retryWhen(throwableObservable -> throwableObservable.flatMap(throwable -> {
+                    if (throwable instanceof IllegalStateException) {
+                        Log.d(TAG, "loadLinks(): retry [" + repository.getLinkCacheSize() + "]");
+                        return Observable.just(new Object());
+                    }
+                    return Observable.error(throwable);
+                }))
                 .filter(link -> {
                     String searchText = viewModel.getSearchText();
                     if (!Strings.isNullOrEmpty(searchText)) {
@@ -275,21 +285,18 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     filterIsChanged = false;
                     linkCacheSize = repository.getLinkCacheSize();
                     if (loadIsDeferred) {
-                        loadLinks(false, showLoading);
+                        new Handler().postDelayed(() -> loadLinks(false, showLoading),
+                                Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
                     } else {
                         view.showLinks(links);
                         selectLinkFilter();
                         viewModel.hideProgressOverlay();
                     }
                 }, throwable -> {
-                    loadIsCompleted = true; // NOTE: must be set before loadLinks()
-                    if (throwable instanceof IllegalStateException) {
-                        loadLinks(false, showLoading);
-                    } else {
-                        CommonUtils.logStackTrace(TAG, throwable);
-                        viewModel.hideProgressOverlay();
-                        viewModel.showDatabaseErrorSnackbar();
-                    }
+                    loadIsCompleted = true;
+                    CommonUtils.logStackTrace(TAG_E, throwable);
+                    viewModel.hideProgressOverlay();
+                    viewModel.showDatabaseErrorSnackbar();
                 });
         compositeDisposable.add(disposable);
     }
@@ -391,7 +398,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     Uri uri = Uri.parse(link.getLink());
                     view.openLink(uri);
                 }, throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     viewModel.showOpenLinkErrorSnackbar();
                 });
     }
@@ -470,7 +477,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                             laanoUiManager.showShortToast(R.string.toast_sync_success);
                             break;
                     }
-                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+                }, throwable -> CommonUtils.logStackTrace(TAG_E, throwable));
     }
 
     @Override
@@ -510,7 +517,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                             laanoUiManager.showShortToast(R.string.toast_sync_success);
                             break;
                     }
-                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+                }, throwable -> CommonUtils.logStackTrace(TAG_E, throwable));
     }
 
     @Override
@@ -568,7 +575,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     }
                     loadLinks(false);
                     updateTabNormalState();
-                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+                }, throwable -> CommonUtils.logStackTrace(TAG_E, throwable));
     }
 
     @Override
@@ -587,7 +594,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     settings.setSyncStatus(syncStatus);
                     laanoUiManager.updateSyncStatus();
                 }, throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     viewModel.showDatabaseErrorSnackbar();
                 });
     }
@@ -729,7 +736,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 .subscribe(
                         conflicted -> laanoUiManager.setTabNormalState(TAB, conflicted),
                         throwable -> {
-                            CommonUtils.logStackTrace(TAG, throwable);
+                            CommonUtils.logStackTrace(TAG_E, throwable);
                             viewModel.showDatabaseErrorSnackbar();
                         });
     }
@@ -742,7 +749,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         conflicted -> laanoUiManager.setTabNormalState(
                                 LaanoFragmentPagerAdapter.NOTES_TAB, conflicted),
                         throwable -> {
-                            CommonUtils.logStackTrace(TAG, throwable);
+                            CommonUtils.logStackTrace(TAG_E, throwable);
                             viewModel.showDatabaseErrorSnackbar();
                         });
     }

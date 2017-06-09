@@ -38,6 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Repository implements DataSource {
 
     private static final String TAG = Repository.class.getSimpleName();
+    private static final String TAG_E = Repository.class.getCanonicalName();
 
     private static final String SYNC_COMPLETE_TOKEN = ""; // NOTE: empty String
 
@@ -140,18 +141,20 @@ public class Repository implements DataSource {
 
     @Override
     public Observable<Link> getLinks() {
-        Log.d(TAG, "getLinks() [" + linkCacheIsDirty + "; cached=" +
-                (cachedLinks == null ? "NULL" : cachedLinks.size()) +  "; dirty=" +
-                (dirtyLinks == null ? "NULL" : dirtyLinks.size()) + "]");
-        boolean needRefresh = dirtyLinks != null && !dirtyLinks.isEmpty();
-        if (!linkCacheIsDirty && cachedLinks != null && !needRefresh) {
-            return Observable.fromIterable(cachedLinks.values());
-        }
-        if (needRefresh && !linkCacheIsDirty) {
-            return refreshDirtyAndGetCachedLinks();
-        } else {
-            return getAndCacheLocalLinks();
-        }
+        return Observable.just(dirtyLinks != null && !dirtyLinks.isEmpty())
+                .flatMap(needRefresh -> {
+                    Log.d(TAG, "getLinks() [" + linkCacheIsDirty + "; cached=" +
+                            (cachedLinks == null ? "NULL" : cachedLinks.size()) +  "; dirty=" +
+                            (dirtyLinks == null ? "NULL" : dirtyLinks.size()) + "]");
+                    if (!linkCacheIsDirty && cachedLinks != null && !needRefresh) {
+                        return Observable.fromIterable(cachedLinks.values());
+                    }
+                    if (needRefresh && !linkCacheIsDirty) {
+                        return refreshDirtyAndGetCachedLinks();
+                    } else {
+                        return getAndCacheLocalLinks();
+                    }
+                });
     }
 
     private Observable<Link> getAndCacheLocalLinks() {
@@ -316,7 +319,7 @@ public class Repository implements DataSource {
                     if (throwable instanceof SQLiteConstraintException) {
                         itemState = ItemState.DUPLICATED;
                     } else {
-                        CommonUtils.logStackTrace(TAG, throwable);
+                        CommonUtils.logStackTrace(TAG_E, throwable);
                         itemState = ItemState.ERROR_LOCAL;
                     }
                     return itemState;
@@ -355,7 +358,7 @@ public class Repository implements DataSource {
                 })
                 .onErrorReturn(throwable -> {
                     // NOTE: all errors include the local to retrieve and update the item state
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     ItemState itemState = ItemState.ERROR_CLOUD;
                     notifyLinksSaveCallbacks(linkId, itemState);
                     return itemState;
@@ -419,7 +422,7 @@ public class Repository implements DataSource {
                     return Observable.empty();
                 })
                 .onErrorReturn(throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     ItemState itemState = ItemState.ERROR_EXTRA;
                     notifyLinksDeleteCallbacks(linkId, itemState);
                     return itemState;
@@ -448,7 +451,7 @@ public class Repository implements DataSource {
                     notifyLinksDeleteCallbacks(linkId, itemState);
                 })
                 .onErrorReturn(throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     ItemState itemState = ItemState.ERROR_LOCAL;
                     notifyLinksDeleteCallbacks(linkId, itemState);
                     return itemState;
@@ -486,7 +489,7 @@ public class Repository implements DataSource {
                 })
                 .onErrorReturn(throwable -> {
                     // NOTE: all errors include the local to retrieve and update the item state
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     ItemState itemState = ItemState.ERROR_CLOUD;
                     notifyLinksDeleteCallbacks(linkId, itemState);
                     return itemState;
@@ -601,18 +604,20 @@ public class Repository implements DataSource {
 
     @Override
     public Observable<Favorite> getFavorites() {
-        Log.d(TAG, "getFavorites() [" + favoriteCacheIsDirty + "; cached=" +
-                (cachedFavorites == null ? "NULL" : cachedFavorites.size()) +  "; dirty=" +
-                (dirtyFavorites == null ? "NULL" : dirtyFavorites.size()) + "]");
-        boolean needRefresh = dirtyFavorites != null && !dirtyFavorites.isEmpty();
-        if (!favoriteCacheIsDirty && cachedFavorites != null && !needRefresh) {
-            return Observable.fromIterable(cachedFavorites.values());
-        }
-        if (needRefresh && !favoriteCacheIsDirty) {
-            return refreshDirtyAndGetCachedFavorites();
-        } else {
-            return getAndCacheLocalFavorites();
-        }
+        return Observable.just(dirtyFavorites != null && !dirtyFavorites.isEmpty())
+                .flatMap(needRefresh -> {
+                    Log.d(TAG, "getFavorites() [" + favoriteCacheIsDirty + "; cached=" +
+                            (cachedFavorites == null ? "NULL" : cachedFavorites.size()) + "; dirty=" +
+                            (dirtyFavorites == null ? "NULL" : dirtyFavorites.size()) + "]");
+                    if (!favoriteCacheIsDirty && cachedFavorites != null && !needRefresh) {
+                        return Observable.fromIterable(cachedFavorites.values());
+                    }
+                    if (needRefresh && !favoriteCacheIsDirty) {
+                        return refreshDirtyAndGetCachedFavorites();
+                    } else {
+                        return getAndCacheLocalFavorites();
+                    }
+                });
     }
 
     private Observable<Favorite> getAndCacheLocalFavorites() {
@@ -768,7 +773,7 @@ public class Repository implements DataSource {
                     if (throwable instanceof SQLiteConstraintException) {
                         itemState = ItemState.DUPLICATED;
                     } else {
-                        CommonUtils.logStackTrace(TAG, throwable);
+                        CommonUtils.logStackTrace(TAG_E, throwable);
                         itemState = ItemState.ERROR_LOCAL;
                     }
                     return itemState;
@@ -807,7 +812,7 @@ public class Repository implements DataSource {
                 })
                 .onErrorReturn(throwable -> {
                     // NOTE: all errors include the local to retrieve and update the item state
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     ItemState itemState = ItemState.ERROR_CLOUD;
                     notifyFavoritesSaveCallbacks(favoriteId, itemState);
                     return itemState;
@@ -853,7 +858,7 @@ public class Repository implements DataSource {
                     notifyFavoritesDeleteCallbacks(favoriteId, itemState);
                 })
                 .onErrorReturn(throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     ItemState itemState = ItemState.ERROR_LOCAL;
                     notifyFavoritesDeleteCallbacks(favoriteId, itemState);
                     return itemState;
@@ -886,7 +891,7 @@ public class Repository implements DataSource {
                 })
                 .onErrorReturn(throwable -> {
                     // NOTE: all errors include the local to retrieve and update the item state
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     ItemState itemState = ItemState.ERROR_CLOUD;
                     notifyFavoritesDeleteCallbacks(favoriteId, itemState);
                     return itemState;
@@ -1001,18 +1006,20 @@ public class Repository implements DataSource {
 
     @Override
     public Observable<Note> getNotes() {
-        Log.d(TAG, "getNotes() [" + noteCacheIsDirty + "; cached=" +
-                (cachedNotes == null ? "NULL" : cachedNotes.size()) +  "; dirty=" +
-                (dirtyNotes == null ? "NULL" : dirtyNotes.size()) + "]");
-        boolean needRefresh = dirtyNotes != null && !dirtyNotes.isEmpty();
-        if (!noteCacheIsDirty && cachedNotes != null && !needRefresh) {
-            return Observable.fromIterable(cachedNotes.values());
-        }
-        if (needRefresh && !noteCacheIsDirty) {
-            return refreshDirtyAndGetCachedNotes();
-        } else {
-            return getAndCacheLocalNotes();
-        }
+        return Observable.just(dirtyNotes != null && !dirtyNotes.isEmpty())
+                .flatMap(needRefresh -> {
+                    Log.d(TAG, "getNotes() [" + noteCacheIsDirty + "; cached=" +
+                            (cachedNotes == null ? "NULL" : cachedNotes.size()) + "; dirty=" +
+                            (dirtyNotes == null ? "NULL" : dirtyNotes.size()) + "]");
+                    if (!noteCacheIsDirty && cachedNotes != null && !needRefresh) {
+                        return Observable.fromIterable(cachedNotes.values());
+                    }
+                    if (needRefresh && !noteCacheIsDirty) {
+                        return refreshDirtyAndGetCachedNotes();
+                    } else {
+                        return getAndCacheLocalNotes();
+                    }
+                });
     }
 
     private Observable<Note> getAndCacheLocalNotes() {
@@ -1206,7 +1213,7 @@ public class Repository implements DataSource {
                 })
                 .onErrorReturn(throwable -> {
                     // NOTE: all errors include the local to retrieve and update the item state
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     ItemState itemState = ItemState.ERROR_CLOUD;
                     notifyNotesSaveCallbacks(noteId, itemState);
                     return itemState;
@@ -1261,7 +1268,7 @@ public class Repository implements DataSource {
                     notifyNotesDeleteCallbacks(noteId, itemState);
                 })
                 .onErrorReturn(throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     ItemState itemState = ItemState.ERROR_LOCAL;
                     notifyNotesDeleteCallbacks(noteId, itemState);
                     return itemState;
@@ -1295,7 +1302,7 @@ public class Repository implements DataSource {
                 })
                 .onErrorReturn(throwable -> {
                     // NOTE: all errors include the local to retrieve and update the item state
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     ItemState itemState = ItemState.ERROR_CLOUD;
                     notifyNotesDeleteCallbacks(noteId, itemState);
                     return itemState;

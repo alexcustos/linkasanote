@@ -25,6 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class ApplicationBackup {
 
     private static final String TAG = ApplicationBackup.class.getSimpleName();
+    private static final String TAG_E = ApplicationBackup.class.getCanonicalName();
 
     private static final String BACKUP_DIRECTORY =
             Settings.GLOBAL_APPLICATION_DIRECTORY + File.separator + "backups";
@@ -56,7 +57,7 @@ public final class ApplicationBackup {
             src.close();
             dst.close();
         } catch (IOException e) {
-            logStackTrace(TAG, e);
+            logStackTrace(TAG_E, e);
             return null;
         }
         return backupFile;
@@ -80,7 +81,7 @@ public final class ApplicationBackup {
             src.close();
             dst.close();
         } catch (IOException e) {
-            logStackTrace(TAG, e);
+            logStackTrace(TAG_E, e);
             return false;
         }
         return true;

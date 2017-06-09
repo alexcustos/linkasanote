@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.laano.notes;
 
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -38,6 +39,8 @@ public final class NotesPresenter extends BaseItemPresenter implements
         NotesContract.Presenter, DataSource.Callback {
 
     private static final String TAG = NotesPresenter.class.getSimpleName();
+    private static final String TAG_E = NotesPresenter.class.getCanonicalName();
+
     private static final int TAB = LaanoFragmentPagerAdapter.NOTES_TAB;
 
     public static final String SETTING_NOTES_FILTER_TYPE = "NOTES_FILTER_TYPE";
@@ -169,7 +172,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
                             favoriteFilterId = null;
                             settings.setFavoriteFilterId(null);
                         } else {
-                            CommonUtils.logStackTrace(TAG, throwable);
+                            CommonUtils.logStackTrace(TAG_E, throwable);
                         }
                     }).onErrorResumeNext(throwable -> {
                         if (throwable instanceof NoSuchElementException) {
@@ -194,7 +197,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
                             linkFilterId = null;
                             settings.setLinkFilterId(null);
                         } else {
-                            CommonUtils.logStackTrace(TAG, throwable);
+                            CommonUtils.logStackTrace(TAG_E, throwable);
                         }
                     }).onErrorResumeNext(throwable -> {
                         if (throwable instanceof NoSuchElementException) {
@@ -209,6 +212,13 @@ public final class NotesPresenter extends BaseItemPresenter implements
         }
         Disposable disposable = loadNotes
                 .subscribeOn(schedulerProvider.computation())
+                .retryWhen(throwableObservable -> throwableObservable.flatMap(throwable -> {
+                    if (throwable instanceof IllegalStateException) {
+                        Log.d(TAG, "loadNotes(): retry [" + repository.getNoteCacheSize() + "]");
+                        return Observable.just(new Object());
+                    }
+                    return Observable.error(throwable);
+                }))
                 .filter(note -> {
                     String searchText = viewModel.getSearchText();
                     if (!Strings.isNullOrEmpty(searchText)) {
@@ -262,25 +272,18 @@ public final class NotesPresenter extends BaseItemPresenter implements
                     filterIsChanged = false;
                     noteCacheSize = repository.getNoteCacheSize();
                     if (loadIsDeferred) {
-                        loadNotes(false, showLoading);
+                        new Handler().postDelayed(() -> loadNotes(false, showLoading),
+                                Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
                     } else {
                         view.showNotes(notes);
                         selectNoteFilter();
-                        if (showLoading) {
-                            viewModel.hideProgressOverlay();
-                        }
+                        viewModel.hideProgressOverlay();
                     }
                 }, throwable -> {
-                    loadIsCompleted = true; // NOTE: must be set before loadNotes()
-                    if (throwable instanceof IllegalStateException) {
-                        loadNotes(false, showLoading);
-                    } else {
-                        CommonUtils.logStackTrace(TAG, throwable);
-                        if (showLoading) {
-                            viewModel.hideProgressOverlay();
-                        }
-                        viewModel.showDatabaseErrorSnackbar();
-                    }
+                    loadIsCompleted = true;
+                    CommonUtils.logStackTrace(TAG_E, throwable);
+                    viewModel.hideProgressOverlay();
+                    viewModel.showDatabaseErrorSnackbar();
                 });
         compositeDisposable.add(disposable);
     }
@@ -425,7 +428,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
                             laanoUiManager.showShortToast(R.string.toast_sync_success);
                             break;
                     }
-                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+                }, throwable -> CommonUtils.logStackTrace(TAG_E, throwable));
     }
 
     @Override
@@ -477,7 +480,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
                     }
                     loadNotes(false);
                     updateTabNormalState();
-                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+                }, throwable -> CommonUtils.logStackTrace(TAG_E, throwable));
     }
 
     @Override

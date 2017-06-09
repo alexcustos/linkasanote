@@ -185,7 +185,7 @@ public final class Link implements Comparable<Link>, Item {
                 return null;
             }
         } catch (JSONException e) {
-            Log.v(TAG, "Exception while processing Link JSON object");
+            Log.w(TAG, "Exception while processing Link JSON object [" + e.getMessage() + "]");
             return null;
         }
     }

@@ -29,6 +29,7 @@ public final class AddEditNotePresenter implements
         AddEditNoteContract.Presenter, TokenCompleteTextView.TokenListener<Tag> {
 
     private static final String TAG = AddEditNotePresenter.class.getSimpleName();
+    private static final String TAG_E = AddEditNotePresenter.class.getCanonicalName();
 
     private final Repository repository;
     private final AddEditNoteContract.View view;
@@ -94,7 +95,7 @@ public final class AddEditNotePresenter implements
                 .toList()
                 .observeOn(schedulerProvider.ui())
                 .subscribe(view::swapTagsCompletionViewItems, throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     view.swapTagsCompletionViewItems(new ArrayList<>());
                 });
         tagsDisposable.add(disposable);
@@ -198,7 +199,7 @@ public final class AddEditNotePresenter implements
                             break;
                     }
                 }, throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     viewModel.showDatabaseErrorSnackbar();
                 });
     }

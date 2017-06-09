@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class SyncItem<T extends Item> {
 
     private static final String TAG = SyncItem.class.getSimpleName();
+    private static final String TAG_E = SyncItem.class.getCanonicalName();
 
     private final LocalItems<T> localItems;
     private final CloudItem<T> cloudItem;
@@ -93,7 +94,7 @@ public class SyncItem<T extends Item> {
                     String cloudETag = cloudDataSourceMap.get(item.getId());
                     syncItem(item, cloudETag);
                 }, throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     setDbAccessError();
                 });
         if (syncResult.isDbAccessError()) return;

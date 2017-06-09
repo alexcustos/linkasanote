@@ -31,6 +31,7 @@ public final class NotesConflictResolutionPresenter implements
         NotesConflictResolutionContract.Presenter {
 
     private static final String TAG = NotesConflictResolutionPresenter .class.getSimpleName();
+    private static final String TAG_E = NotesConflictResolutionPresenter .class.getCanonicalName();
 
     private final Repository repository; // NOTE: for cache control
     private final Settings settings;
@@ -140,7 +141,7 @@ public final class NotesConflictResolutionPresenter implements
                                     if (throwable instanceof NoSuchElementException) {
                                         return true;
                                     } else {
-                                        CommonUtils.logStackTrace(TAG, throwable);
+                                        CommonUtils.logStackTrace(TAG_E, throwable);
                                         // NOTE: treat it as normal if it is sill possible
                                         return false;
                                     }

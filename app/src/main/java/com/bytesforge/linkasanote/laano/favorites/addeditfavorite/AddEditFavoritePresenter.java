@@ -29,6 +29,7 @@ public final class AddEditFavoritePresenter implements
         AddEditFavoriteContract.Presenter, TokenCompleteTextView.TokenListener<Tag> {
 
     private static final String TAG = AddEditFavoritePresenter.class.getSimpleName();
+    private static final String TAG_E = AddEditFavoritePresenter.class.getCanonicalName();
 
     private final Repository repository;
     private final AddEditFavoriteContract.View view;
@@ -86,7 +87,7 @@ public final class AddEditFavoritePresenter implements
                 .toList()
                 .observeOn(schedulerProvider.ui())
                 .subscribe(view::swapTagsCompletionViewItems, throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     view.swapTagsCompletionViewItems(new ArrayList<>());
                 });
         tagsDisposable.add(disposable);
@@ -161,7 +162,7 @@ public final class AddEditFavoritePresenter implements
                     if (throwable instanceof SQLiteConstraintException) {
                         viewModel.showDuplicateKeyError();
                     } else {
-                        CommonUtils.logStackTrace(TAG, throwable);
+                        CommonUtils.logStackTrace(TAG_E, throwable);
                         viewModel.showDatabaseErrorSnackbar();
                     }
                 });

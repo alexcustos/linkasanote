@@ -166,7 +166,7 @@ public final class Favorite implements Comparable<Favorite>, Item {
                 return null;
             }
         } catch (JSONException e) {
-            Log.v(TAG, "Exception while processing Favorite JSON object");
+            Log.w(TAG, "Exception while processing Favorite JSON object [" + e.getMessage() + "]");
             return null;
         }
     }

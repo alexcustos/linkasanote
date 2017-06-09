@@ -53,6 +53,7 @@ public class Settings {
     public static final int GLOBAL_RETRY_ON_NETWORK_ERROR = 1;
     public static final int GLOBAL_DELAY_ON_NETWORK_ERROR_MILLIS = 1000;
     public static final int GLOBAL_SYNC_LOG_KEEPING_PERIOD_DAYS = 7;
+    public static final int GLOBAL_DEFER_RELOAD_DELAY_MILLIS = 100;
 
     private static final boolean DEFAULT_EXPAND_LINKS = false;
     private static final boolean DEFAULT_EXPAND_NOTES = true;

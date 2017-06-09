@@ -412,8 +412,8 @@ public class CloudDataSource {
         final AtomicInteger retryCount = new AtomicInteger(0);
         return Single.fromCallable(() -> operation.execute(ocClient))
                 .flatMap(result -> {
+                    RemoteOperationResult.ResultCode code = result.getCode();
                     if (retryCount.getAndAdd(1) < Settings.GLOBAL_RETRY_ON_NETWORK_ERROR) {
-                        RemoteOperationResult.ResultCode code = result.getCode();
                         if (isNetworkError(code)) {
                             Log.e(TAG, "Retry on Network error [" +
                                     retryCount.get() + "/" + Settings.GLOBAL_RETRY_ON_NETWORK_ERROR +
@@ -424,6 +424,9 @@ public class CloudDataSource {
                                     TimeUnit.MILLISECONDS).flatMap(
                                             aLong -> Single.error(new NetworkErrorException()));
                         }
+                    }
+                    if (isNetworkError(code)) {
+                        Log.e(TAG, "An unrecoverable Network error [" + code.name() + "]");
                     }
                     return Single.just(result);
                 })

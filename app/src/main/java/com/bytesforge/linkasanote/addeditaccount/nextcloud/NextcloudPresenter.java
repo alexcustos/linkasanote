@@ -11,6 +11,7 @@ import android.util.Patterns;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.base.Strings;
+import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -125,7 +126,12 @@ public final class NextcloudPresenter implements NextcloudContract.Presenter {
     @Override
     public void checkAuth(String username, String password) {
         viewModel.disableLoginButton();
-        if (view.sendCheckCredentialsOperation(username, password, serverInfo)) {
+        if (!isServerUrlValid()) {
+            viewModel.showConnectionResultStatus(RemoteOperationResult.ResultCode.UNKNOWN_ERROR);
+            viewModel.showRefreshButton();
+            viewModel.hideAuthStatus();
+            viewModel.disableLoginButton();
+        } else if (view.sendCheckCredentialsOperation(username, password, serverInfo)) {
             viewModel.showTestingAuthStatus();
         } else {
             viewModel.showCheckAuthWaitingForServiceStatus();

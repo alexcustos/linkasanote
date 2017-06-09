@@ -14,6 +14,7 @@ import io.reactivex.disposables.Disposable;
 public final class SyncLogPresenter implements SyncLogContract.Presenter {
 
     private static final String TAG = SyncLogPresenter.class.getSimpleName();
+    private static final String TAG_E = SyncLogPresenter.class.getCanonicalName();
 
     private final Repository repository;
     private final SyncLogContract.View view;
@@ -66,7 +67,7 @@ public final class SyncLogPresenter implements SyncLogContract.Presenter {
                     }
                 })
                 .subscribe(view::showSyncResults, throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     viewModel.showDatabaseErrorSnackbar();
                 });
         compositeDisposable.add(disposable);

@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class LocalNotes<T extends Item> implements LocalItems<T> {
 
     private static final String TAG = LocalNotes.class.getSimpleName();
+    private static final String TAG_E = LocalNotes.class.getCanonicalName();
 
     // NOTE: static fails Mockito to mock this class
     private final Uri NOTE_URI;
@@ -148,7 +149,7 @@ public class LocalNotes<T extends Item> implements LocalItems<T> {
                 .count()
                 .map(count -> count == tags.size())
                 .onErrorReturn(throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     return false;
                 });
     }

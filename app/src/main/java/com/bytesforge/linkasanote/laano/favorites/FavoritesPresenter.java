@@ -1,5 +1,6 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -33,6 +34,8 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         FavoritesContract.Presenter, DataSource.Callback {
 
     private static final String TAG = FavoritesPresenter.class.getSimpleName();
+    private static final String TAG_E = FavoritesPresenter.class.getCanonicalName();
+
     private static final int TAB = LaanoFragmentPagerAdapter.FAVORITES_TAB;
 
     public static final String SETTING_FAVORITES_FILTER_TYPE = "FAVORITES_FILTER_TYPE";
@@ -144,6 +147,13 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         }
         Disposable disposable = repository.getFavorites()
                 .subscribeOn(schedulerProvider.computation())
+                .retryWhen(throwableObservable -> throwableObservable.flatMap(throwable -> {
+                    if (throwable instanceof IllegalStateException) {
+                        Log.d(TAG, "loadFavorites(): retry [" + repository.getFavoriteCacheSize() + "]");
+                        return Observable.just(new Object());
+                    }
+                    return Observable.error(throwable);
+                }))
                 .filter(favorite -> {
                     String searchText = viewModel.getSearchText();
                     if (!Strings.isNullOrEmpty(searchText)) {
@@ -172,25 +182,18 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     filterIsChanged = false;
                     favoriteCacheSize = repository.getFavoriteCacheSize();
                     if (loadIsDeferred) {
-                        loadFavorites(false, showLoading);
+                        new Handler().postDelayed(() -> loadFavorites(false, showLoading),
+                                Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
                     } else {
                         view.showFavorites(favorites);
                         selectFavoriteFilter();
-                        if (showLoading) {
-                            viewModel.hideProgressOverlay();
-                        }
+                        viewModel.hideProgressOverlay();
                     }
                 }, throwable -> {
-                    loadIsCompleted = true; // NOTE: must be set before loadFavorites()
-                    if (throwable instanceof IllegalStateException) {
-                        loadFavorites(false, showLoading);
-                    } else {
-                        CommonUtils.logStackTrace(TAG, throwable);
-                        if (showLoading) {
-                            viewModel.hideProgressOverlay();
-                        }
-                        viewModel.showDatabaseErrorSnackbar();
-                    }
+                    loadIsCompleted = true;
+                    CommonUtils.logStackTrace(TAG_E, throwable);
+                    viewModel.hideProgressOverlay();
+                    viewModel.showDatabaseErrorSnackbar();
                 });
         compositeDisposable.add(disposable);
     }
@@ -349,7 +352,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                             laanoUiManager.showShortToast(R.string.toast_sync_success);
                             break;
                     }
-                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+                }, throwable -> CommonUtils.logStackTrace(TAG_E, throwable));
     }
 
     @Override
@@ -402,7 +405,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     }
                     loadFavorites(false);
                     updateTabNormalState();
-                }, throwable -> CommonUtils.logStackTrace(TAG, throwable));
+                }, throwable -> CommonUtils.logStackTrace(TAG_E, throwable));
     }
 
     @Override
@@ -421,7 +424,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     settings.setSyncStatus(syncStatus);
                     laanoUiManager.updateSyncStatus();
                 }, throwable -> {
-                    CommonUtils.logStackTrace(TAG, throwable);
+                    CommonUtils.logStackTrace(TAG_E, throwable);
                     viewModel.showDatabaseErrorSnackbar();
                 });
     }

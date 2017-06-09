@@ -45,6 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AboutFragment extends Fragment implements AboutContract.View {
 
     private static final String TAG = AboutFragment.class.getSimpleName();
+    private static final String TAG_E = AboutFragment.class.getCanonicalName();
 
     private static final String GOOGLE_PLAY_PACKAGE_NAME = "com.android.vending";
 
@@ -190,7 +191,7 @@ public class AboutFragment extends Fragment implements AboutContract.View {
                     .observeOn(schedulerProvider.ui())
                     .subscribe(
                             binding.licenseTerms::setText,
-                            throwable -> CommonUtils.logStackTrace(TAG, throwable));
+                            throwable -> CommonUtils.logStackTrace(TAG_E, throwable));
             return new AlertDialog.Builder(context)
                     .setView(binding.getRoot())
                     .setPositiveButton(resources.getString(R.string.dialog_button_ok), null)

@@ -54,6 +54,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
         FragmentCompat.OnRequestPermissionsResultCallback {
 
     private static final String TAG = SettingsFragment.class.getSimpleName();
+    private static final String TAG_E = SettingsFragment.class.getCanonicalName();
 
     private static final int REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE = 0;
     private static final String PERMISSION_WRITE_EXTERNAL_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -135,7 +136,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                                     }
                                 },
                                 throwable -> {
-                                    CommonUtils.logStackTrace(TAG, throwable);
+                                    CommonUtils.logStackTrace(TAG_E, throwable);
                                     if (isActive()) {
                                         refreshBackupEntries();
                                         showSnackbar(resources.getString(
@@ -295,7 +296,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                 try {
                     backupDate = dateFormat.parse(fileExtension);
                 } catch (ParseException e) {
-                    CommonUtils.logStackTrace(TAG, e);
+                    CommonUtils.logStackTrace(TAG_E, e);
                     continue;
                 }
                 backupEntries.put(CommonUtils.formatDateTime(context, backupDate), fileName);

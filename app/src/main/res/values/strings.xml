@@ -119,6 +119,7 @@
     <string name="add_edit_account_nextcloud_unknown_error">Unknown error occurred!</string>
     <string name="add_edit_account_nextcloud_auth_status_wrong">Wrong username or password</string>
     <string name="add_edit_account_nextcloud_auth_exists">An account for the same user and server already exists</string>
+    <string name="add_edit_account_nextcloud_timeout">The server is taking to long to respond</string>
     <string name="add_edit_account_nextcloud_successful">Successful access</string>
     <string name="add_edit_account_nextcloud_warning_no_permission">Required permission was not granted</string>
     <string name="add_edit_account_nextcloud_warning_no_account">The account does not exist in the device</string>
