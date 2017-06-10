@@ -22,6 +22,9 @@ public interface NotesContract {
         void startAddNoteActivity(String noteId);
         void showEditNote(@NonNull String noteId);
         void showNotes(@NonNull List<Note> notes);
+        void addNotes(@NonNull List<Note> notes);
+        void clearNotes();
+        void updateView();
         void enableActionMode();
         void finishActionMode();
         void selectionChanged(@NonNull String id);

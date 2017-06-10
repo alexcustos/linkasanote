@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -66,7 +67,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
     private boolean filterIsChanged = true;
     private boolean loadIsCompleted = true;
     private boolean loadIsDeferred = false;
-    private long lastSyncTime = 0;
+    private long lastSyncTime;
 
     @Inject
     LinksPresenter(
@@ -80,6 +81,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
         this.laanoUiManager = laanoUiManager;
         this.settings = settings;
         compositeDisposable = new CompositeDisposable();
+        lastSyncTime = settings.getLastLinksSyncTime();
     }
 
     @Inject
@@ -120,15 +122,12 @@ public final class LinksPresenter extends BaseItemPresenter implements
 
     @Override
     public void loadLinks(final boolean forceUpdate) {
-        int size = viewModel.getListSize();
-        // NOTE: for the initial load only
-        boolean showLoading = (size <= 0 || size == Integer.MAX_VALUE);
-        loadLinks(forceUpdate, showLoading);
+        loadLinks(forceUpdate, false);
     }
 
-    private void loadLinks(final boolean forceUpdate, final boolean showLoading) {
+    private void loadLinks(final boolean forceUpdate, final boolean forceShowLoading) {
         final long syncTime = settings.getLastLinksSyncTime();
-        Log.d(TAG, "loadLinks() [" + (lastSyncTime == syncTime) +
+        Log.d(TAG, "loadLinks() [synced=" + (lastSyncTime == syncTime) +
                 ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
         if (forceUpdate) { // NOTE: for testing and for the future option to reload by swipe
             repository.refreshLinks();
@@ -138,7 +137,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
             return;
         }
         FilterType extendedFilter = updateFilter();
-        if (!repository.isLinkCacheDirty()
+        if (!repository.isLinkCacheNeedRefresh()
                 && !filterIsChanged
                 && linkCacheSize == repository.getLinkCacheSize()
                 && lastSyncTime == syncTime
@@ -152,9 +151,6 @@ public final class LinksPresenter extends BaseItemPresenter implements
             lastSyncTime = syncTime;
             repository.checkLinksSyncLog();
             updateTabNormalState();
-        }
-        if (showLoading) {
-            viewModel.showProgressOverlay();
         }
         Observable<Link> loadLinks = null;
         if (extendedFilter == FilterType.FAVORITE) {
@@ -214,12 +210,23 @@ public final class LinksPresenter extends BaseItemPresenter implements
         if (loadLinks == null) {
             loadLinks = repository.getLinks();
         }
+        boolean loadByChunk = repository.isLinkCacheDirty();
+        boolean showProgress = (!loadByChunk && repository.getLinkCacheSize() == 0)
+                || forceShowLoading;
+        if (loadByChunk) view.clearLinks();
+        if (showProgress) viewModel.showProgressOverlay();
+        Log.d(TAG, "loadLinks(): getLinks() [showProgress=" + showProgress + ", loadByChunk=" + loadByChunk + "]");
         Disposable disposable = loadLinks
                 .subscribeOn(schedulerProvider.computation())
                 .retryWhen(throwableObservable -> throwableObservable.flatMap(throwable -> {
                     if (throwable instanceof IllegalStateException) {
                         Log.d(TAG, "loadLinks(): retry [" + repository.getLinkCacheSize() + "]");
-                        return Observable.just(new Object());
+                        // NOTE: it seems the system is too busy to update UI properly while Sync in progress,
+                        //       so it needles to switch loading to by chunk mode
+                        return Observable.just(new Object()).compose(
+                                upstream -> showProgress
+                                        ? upstream.delay(25, TimeUnit.MILLISECONDS)
+                                        : upstream);
                     }
                     return Observable.error(throwable);
                 }))
@@ -275,27 +282,37 @@ public final class LinksPresenter extends BaseItemPresenter implements
                             return true;
                     }
                 })
-                .toList()
+                .compose(upstream -> loadByChunk
+                        ? upstream.buffer(Settings.GLOBAL_QUERY_CHUNK_SIZE)
+                        : upstream.toList().toObservable())
                 .observeOn(schedulerProvider.ui())
-                .doFinally(() -> {
-                    laanoUiManager.updateTitle(TAB);
-                })
-                .subscribe(links -> {
+                .doOnComplete(() -> {
                     loadIsCompleted = true; // NOTE: must be set before loadLinks()
                     filterIsChanged = false;
                     linkCacheSize = repository.getLinkCacheSize();
-                    if (loadIsDeferred) {
-                        new Handler().postDelayed(() -> loadLinks(false, showLoading),
-                                Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
-                    } else {
-                        view.showLinks(links);
-                        selectLinkFilter();
-                        viewModel.hideProgressOverlay();
+                    if (view.isActive()) {
+                        view.updateView();
                     }
-                }, throwable -> {
-                    loadIsCompleted = true;
-                    CommonUtils.logStackTrace(TAG_E, throwable);
+                    selectLinkFilter();
+                    if (loadIsDeferred) {
+                        new Handler().postDelayed(() -> loadLinks(false, forceShowLoading),
+                                Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
+                    }
+                })
+                .doFinally(() -> {
+                    laanoUiManager.updateTitle(TAB);
                     viewModel.hideProgressOverlay();
+                })
+                .subscribe(links -> {
+                    Log.d(TAG, "loadLinks(): subscribe() [" + links.size() + "]");
+                    if (loadByChunk) view.addLinks(links);
+                    else view.showLinks(links);
+
+                    laanoUiManager.updateTitle(TAB);
+                    viewModel.hideProgressOverlay();
+                }, throwable -> {
+                    CommonUtils.logStackTrace(TAG_E, throwable);
+                    loadIsCompleted = true;
                     viewModel.showDatabaseErrorSnackbar();
                 });
         compositeDisposable.add(disposable);

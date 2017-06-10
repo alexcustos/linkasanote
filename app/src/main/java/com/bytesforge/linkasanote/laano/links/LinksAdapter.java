@@ -23,7 +23,10 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
     private final LinksContract.Presenter presenter;
     private final LinksViewModel viewModel;
 
+    @NonNull
     private List<Link> links;
+
+    @NonNull
     private List<String> linkIds;
 
     public LinksAdapter(
@@ -32,6 +35,7 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
         this.links = checkNotNull(links);
         this.presenter = checkNotNull(presenter);
         this.viewModel = checkNotNull(viewModel);
+        linkIds = new ArrayList<>(links.size());
         updateIds();
         setHasStableIds(true);
     }
@@ -67,7 +71,6 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         ItemLinksBinding binding = ItemLinksBinding.inflate(inflater, parent, false);
-
         return new ViewHolder(binding);
     }
 
@@ -100,10 +103,26 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
     }
 
     public void swapItems(@NonNull List<Link> links) {
-        checkNotNull(links);
-        this.links = links;
+        this.links = checkNotNull(links);
         updateIds();
         notifyDataSetChanged();
+    }
+
+    public synchronized  void addItem(@NonNull Link link) {
+        checkNotNull(link);
+        links.add(link);
+        linkIds.add(link.getId());
+        notifyItemInserted(links.size() - 1);
+    }
+
+    public synchronized void addItems(@NonNull List<Link> links) {
+        checkNotNull(links);
+        final int start = this.links.size();
+        this.links.addAll(links);
+        for (Link link : links) {
+            linkIds.add(link.getId());
+        }
+        notifyItemRangeInserted(start, links.size());
     }
 
     @Nullable
@@ -130,10 +149,15 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
         return position;
     }
 
+    public synchronized void clear() {
+        links.clear();
+        linkIds.clear();
+        notifyDataSetChanged();
+    }
+
     public int getPosition(@Nullable String linkId) {
-        if (linkId == null) {
-            return -1;
-        }
+        if (linkId == null) return -1;
+
         return linkIds.indexOf(linkId);
     }
 
@@ -154,13 +178,8 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
     }
 
     private synchronized void updateIds() {
-        int size = links.size();
-        if (linkIds == null) {
-            linkIds = new ArrayList<>(size);
-        } else {
-            linkIds.clear();
-        }
-        for (int i = 0; i < size; i++) {
+        linkIds.clear();
+        for (int i = 0; i < links.size(); i++) {
             Link link = links.get(i);
             linkIds.add(i, link.getId());
         }

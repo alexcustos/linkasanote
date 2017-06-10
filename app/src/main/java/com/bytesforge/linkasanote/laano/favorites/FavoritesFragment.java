@@ -198,10 +198,22 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     public void showFavorites(@NonNull List<Favorite> favorites) {
         checkNotNull(favorites);
         adapter.swapItems(favorites);
-        updateView();
     }
 
-    private void updateView() {
+    @Override
+    public void addFavorites(@NonNull List<Favorite> favorites) {
+        checkNotNull(favorites);
+        adapter.addItems(favorites);
+    }
+
+    @Override
+    public void clearFavorites() {
+        // NOTE: viewModel's listSize must not be nulled here
+        adapter.clear();
+    }
+
+    @Override
+    public void updateView() {
         viewModel.setListSize(adapter.getItemCount());
         if (viewModel.isActionMode()) {
             enableActionMode();

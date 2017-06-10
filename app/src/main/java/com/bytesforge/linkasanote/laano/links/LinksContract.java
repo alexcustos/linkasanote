@@ -26,6 +26,9 @@ public interface LinksContract {
         void showAddNote(@NonNull String linkId);
         void showEditLink(@NonNull String linkId);
         void showLinks(@NonNull List<Link> links);
+        void addLinks(@NonNull List<Link> links);
+        void clearLinks();
+        void updateView();
         void enableActionMode();
         void finishActionMode();
         void selectionChanged(@NonNull String id);

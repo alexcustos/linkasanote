@@ -150,7 +150,16 @@ public class Provider extends ContentProvider {
             String selection, String[] selectionArgs, String sortOrder) {
         final SQLiteDatabase db = databaseHelper.getReadableDatabase();
         String tableName;
-
+        String paramLimit = uri.getQueryParameter(LocalContract.QUERY_PARAMETER_LIMIT);
+        String paramOffset = uri.getQueryParameter(LocalContract.QUERY_PARAMETER_OFFSET);
+        String limit = null;
+        if (paramLimit != null) {
+            if (paramOffset != null) {
+                limit = paramOffset + "," + paramLimit;
+            } else {
+                limit = paramLimit;
+            }
+        }
         switch (uriMatcher.match(uri)) {
             case LINK:
                 tableName = LocalContract.LinkEntry.TABLE_NAME;
@@ -250,7 +259,7 @@ public class Provider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown query uri [" + uri + "]");
         }
         Cursor returnCursor = db.query(
-                tableName, projection, selection, selectionArgs, null, null, sortOrder);
+                tableName, projection, selection, selectionArgs, null, null, sortOrder, limit);
         returnCursor.setNotificationUri(contentResolver, uri);
         return returnCursor;
     }

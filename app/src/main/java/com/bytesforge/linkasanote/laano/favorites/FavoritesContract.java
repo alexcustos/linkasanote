@@ -23,6 +23,9 @@ public interface FavoritesContract {
         void startAddFavoriteActivity();
         void showEditFavorite(@NonNull String favoriteId);
         void showFavorites(@NonNull List<Favorite> favorites);
+        void addFavorites(@NonNull List<Favorite> favorites);
+        void clearFavorites();
+        void updateView();
         void enableActionMode();
         void finishActionMode();
         void selectionChanged(@NonNull String id);

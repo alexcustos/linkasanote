@@ -109,6 +109,9 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         FragmentLaanoNotesBinding binding =
                 FragmentLaanoNotesBinding.inflate(inflater, container, false);
         viewModel.setInstanceState(savedInstanceState);
+        if (savedInstanceState == null) {
+            viewModel.setExpandByDefault(presenter.isExpandNotes());
+        }
         setRvLayoutState(savedInstanceState);
         binding.setViewModel((NotesViewModel) viewModel);
         // RecyclerView
@@ -257,14 +260,23 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     public void showNotes(@NonNull List<Note> notes) {
         checkNotNull(notes);
         adapter.swapItems(notes);
-        updateView();
     }
 
-    private void updateView() {
-        boolean firstLoad = viewModel.setListSize(adapter.getItemCount());
-        if (firstLoad) {
-            viewModel.setExpandByDefault(presenter.isExpandNotes());
-        }
+    @Override
+    public void addNotes(@NonNull List<Note> notes) {
+        checkNotNull(notes);
+        adapter.addItems(notes);
+    }
+
+    @Override
+    public void clearNotes() {
+        // NOTE: viewModel's listSize must not be nulled here
+        adapter.clear();
+    }
+
+    @Override
+    public void updateView() {
+        viewModel.setListSize(adapter.getItemCount());
         if (viewModel.isActionMode()) {
             enableActionMode();
         }

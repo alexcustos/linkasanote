@@ -22,6 +22,8 @@ public abstract class NotesAdapterBase<VH extends RecyclerView.ViewHolder> exten
 
     @NonNull
     protected List<Note> notes;
+
+    @NonNull
     private List<String> noteIds;
 
     public NotesAdapterBase(
@@ -31,6 +33,7 @@ public abstract class NotesAdapterBase<VH extends RecyclerView.ViewHolder> exten
         this.notes = checkNotNull(notes);
         this.presenter = checkNotNull(presenter);
         this.viewModel = checkNotNull(viewModel);
+        noteIds = new ArrayList<>(notes.size());
         updateIds();
         setHasStableIds(true);
     }
@@ -50,10 +53,26 @@ public abstract class NotesAdapterBase<VH extends RecyclerView.ViewHolder> exten
     }
 
     public void swapItems(@NonNull List<Note> notes) {
-        checkNotNull(notes);
-        this.notes = notes;
+        this.notes = checkNotNull(notes);
         updateIds();
         notifyDataSetChanged();
+    }
+
+    public synchronized  void addItem(@NonNull Note note) {
+        checkNotNull(note);
+        notes.add(note);
+        noteIds.add(note.getId());
+        notifyItemInserted(notes.size() - 1);
+    }
+
+    public synchronized void addItems(@NonNull List<Note> notes) {
+        checkNotNull(notes);
+        final int start = this.notes.size();
+        this.notes.addAll(notes);
+        for (Note note : notes) {
+            noteIds.add(note.getId());
+        }
+        notifyItemRangeInserted(start, notes.size());
     }
 
     @Nullable
@@ -80,10 +99,15 @@ public abstract class NotesAdapterBase<VH extends RecyclerView.ViewHolder> exten
         return position;
     }
 
+    public synchronized void clear() {
+        notes.clear();
+        noteIds.clear();
+        notifyDataSetChanged();
+    }
+
     public int getPosition(@Nullable String noteId) {
-        if (noteId == null) {
-            return -1;
-        }
+        if (noteId == null) return -1;
+
         return noteIds.indexOf(noteId);
     }
 
@@ -104,13 +128,8 @@ public abstract class NotesAdapterBase<VH extends RecyclerView.ViewHolder> exten
     }
 
     private synchronized void updateIds() {
-        int size = notes.size();
-        if (noteIds == null) {
-            noteIds = new ArrayList<>(size);
-        } else {
-            noteIds.clear();
-        }
-        for (int i = 0; i < size; i++) {
+        noteIds.clear();
+        for (int i = 0; i < notes.size(); i++) {
             Note note = notes.get(i);
             noteIds.add(i, note.getId());
         }

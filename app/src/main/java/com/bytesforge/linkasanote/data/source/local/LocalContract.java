@@ -15,6 +15,8 @@ public final class LocalContract {
     public static final String CONTENT_AUTHORITY = BuildConfig.APPLICATION_ID + ".provider";
     public static final String CONTENT_SCHEME = "content://";
     public static final Uri BASE_CONTENT_URI = Uri.parse(CONTENT_SCHEME + CONTENT_AUTHORITY);
+    public static final String QUERY_PARAMETER_LIMIT = "limit";
+    public static final String QUERY_PARAMETER_OFFSET = "offset";
 
     public static final String[] SYNC_STATE_COLUMNS = new String[]{
             BaseEntry._ID,
@@ -67,6 +69,13 @@ public final class LocalContract {
 
         public static Uri buildUriWith(long rowId) {
             return ContentUris.withAppendedId(CONTENT_URI, rowId);
+        }
+
+        public static Uri appendUriWith(Uri uri, int limit, long offset) {
+            return uri.buildUpon()
+                    .appendQueryParameter(QUERY_PARAMETER_LIMIT, String.valueOf(limit))
+                    .appendQueryParameter(QUERY_PARAMETER_OFFSET, String.valueOf(offset))
+                    .build();
         }
 
         public static Uri buildUriWith(String id) {
@@ -129,6 +138,13 @@ public final class LocalContract {
             return ContentUris.withAppendedId(CONTENT_URI, rowId);
         }
 
+        public static Uri appendUriWith(Uri uri, int limit, long offset) {
+            return uri.buildUpon()
+                    .appendQueryParameter(QUERY_PARAMETER_LIMIT, String.valueOf(limit))
+                    .appendQueryParameter(QUERY_PARAMETER_OFFSET, String.valueOf(offset))
+                    .build();
+        }
+
         public static Uri buildUriWith(String id) {
             return CONTENT_URI.buildUpon().appendPath(id).build();
         }
@@ -186,6 +202,13 @@ public final class LocalContract {
 
         public static Uri buildUriWith(String id) {
             return CONTENT_URI.buildUpon().appendPath(id).build();
+        }
+
+        public static Uri appendUriWith(Uri uri, int limit, long offset) {
+            return uri.buildUpon()
+                    .appendQueryParameter(QUERY_PARAMETER_LIMIT, String.valueOf(limit))
+                    .appendQueryParameter(QUERY_PARAMETER_OFFSET, String.valueOf(offset))
+                    .build();
         }
 
         public static Uri buildTagsDirUriWith(long rowId) {

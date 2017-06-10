@@ -135,8 +135,13 @@ public class Repository implements DataSource {
 
     @Override
     public boolean isLinkCacheDirty() {
+        return linkCacheIsDirty || cachedLinks == null;
+    }
+
+    @Override
+    public boolean isLinkCacheNeedRefresh() {
         boolean needRefresh = dirtyLinks != null && !dirtyLinks.isEmpty();
-        return linkCacheIsDirty || cachedLinks == null || needRefresh;
+        return isLinkCacheDirty() || needRefresh;
     }
 
     @Override
@@ -598,8 +603,13 @@ public class Repository implements DataSource {
 
     @Override
     public boolean isFavoriteCacheDirty() {
+        return favoriteCacheIsDirty || cachedFavorites == null;
+    }
+
+    @Override
+    public boolean isFavoriteCacheNeedRefresh() {
         boolean needRefresh = dirtyFavorites != null && !dirtyFavorites.isEmpty();
-        return favoriteCacheIsDirty || cachedFavorites == null || needRefresh;
+        return isFavoriteCacheDirty() || needRefresh;
     }
 
     @Override
@@ -1000,8 +1010,13 @@ public class Repository implements DataSource {
 
     @Override
     public boolean isNoteCacheDirty() {
+        return noteCacheIsDirty || cachedNotes == null;
+    }
+
+    @Override
+    public boolean isNoteCacheNeedRefresh() {
         boolean needRefresh = dirtyNotes != null && !dirtyNotes.isEmpty();
-        return noteCacheIsDirty || cachedNotes == null || needRefresh;
+        return isNoteCacheDirty() || needRefresh;
     }
 
     @Override

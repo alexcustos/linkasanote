@@ -100,15 +100,10 @@ public abstract class BaseItemViewModel extends BaseObservable implements
         return listSize.get();
     }
 
-    /**
-     * @return Returns true if listSize has never been set before
-     */
     @Override
-    public boolean setListSize(int listSize) {
-        boolean firstLoad = (this.listSize.get() == Integer.MAX_VALUE);
+    public void setListSize(int listSize) {
         this.listSize.set(listSize);
         notifyPropertyChanged(BR.listEmpty);
-        return firstLoad;
     }
 
     @Override

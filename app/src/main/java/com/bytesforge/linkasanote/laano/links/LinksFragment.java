@@ -113,6 +113,9 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         FragmentLaanoLinksBinding binding =
                 FragmentLaanoLinksBinding.inflate(inflater, container, false);
         viewModel.setInstanceState(savedInstanceState);
+        if (savedInstanceState == null) {
+            viewModel.setExpandByDefault(presenter.isExpandLinks());
+        }
         setRvLayoutState(savedInstanceState);
         binding.setViewModel((LinksViewModel) viewModel);
         // RecyclerView
@@ -238,14 +241,23 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     public void showLinks(@NonNull List<Link> links) {
         checkNotNull(links);
         adapter.swapItems(links);
-        updateView();
     }
 
-    private void updateView() {
-        boolean firstLoad = viewModel.setListSize(adapter.getItemCount());
-        if (firstLoad) {
-            viewModel.setExpandByDefault(presenter.isExpandLinks());
-        }
+    @Override
+    public void addLinks(@NonNull List<Link> links) {
+        checkNotNull(links);
+        adapter.addItems(links);
+    }
+
+    @Override
+    public void clearLinks() {
+        // NOTE: viewModel's listSize must not be nulled here
+        adapter.clear();
+    }
+
+    @Override
+    public void updateView() {
+        viewModel.setListSize(adapter.getItemCount());
         if (viewModel.isActionMode()) {
             enableActionMode();
         }

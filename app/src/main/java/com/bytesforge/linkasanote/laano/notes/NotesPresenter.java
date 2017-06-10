@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -64,7 +65,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
     private boolean filterIsChanged = true;
     private boolean loadIsCompleted = true;
     private boolean loadIsDeferred = false;
-    private long lastSyncTime = 0;
+    private long lastSyncTime;
 
     @Inject
     NotesPresenter(
@@ -77,6 +78,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
         this.schedulerProvider = schedulerProvider;
         this.laanoUiManager = laanoUiManager;
         this.settings = settings;
+        lastSyncTime = settings.getLastNotesSyncTime();
         compositeDisposable = new CompositeDisposable();
     }
 
@@ -118,15 +120,12 @@ public final class NotesPresenter extends BaseItemPresenter implements
 
     @Override
     public void loadNotes(final boolean forceUpdate) {
-        int size = viewModel.getListSize();
-        // NOTE: for the initial load only
-        boolean showLoading = (size <= 0 || size == Integer.MAX_VALUE);
-        loadNotes(forceUpdate, showLoading);
+        loadNotes(forceUpdate, false);
     }
 
-    private void loadNotes(boolean forceUpdate, final boolean showLoading) {
+    private void loadNotes(boolean forceUpdate, final boolean forceShowLoading) {
         final long syncTime = settings.getLastNotesSyncTime();
-        Log.d(TAG, "loadNotes() [" + (lastSyncTime == syncTime) +
+        Log.d(TAG, "loadNotes() [synced=" + (lastSyncTime == syncTime) +
                 ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
         if (forceUpdate) { // NOTE: for testing and for the future option to reload by swipe
             repository.refreshLinks();
@@ -136,7 +135,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
             return;
         }
         FilterType extendedFilter = updateFilter();
-        if (!repository.isNoteCacheDirty()
+        if (!repository.isNoteCacheNeedRefresh()
                 && !filterIsChanged
                 && noteCacheSize == repository.getNoteCacheSize()
                 && lastSyncTime == syncTime
@@ -150,9 +149,6 @@ public final class NotesPresenter extends BaseItemPresenter implements
             lastSyncTime = syncTime;
             repository.checkNotesSyncLog();
             updateTabNormalState();
-        }
-        if (showLoading) {
-            viewModel.showProgressOverlay();
         }
         Observable<Note> loadNotes = null;
         if (extendedFilter == FilterType.FAVORITE) {
@@ -210,12 +206,23 @@ public final class NotesPresenter extends BaseItemPresenter implements
         if (loadNotes == null) {
             loadNotes = repository.getNotes();
         }
+        boolean loadByChunk = repository.isNoteCacheDirty();
+        boolean showProgress = (!loadByChunk && repository.getNoteCacheSize() == 0)
+                || forceShowLoading;
+        if (loadByChunk) view.clearNotes();
+        if (showProgress) viewModel.showProgressOverlay();
+        Log.d(TAG, "loadNotes(): getNotes() [showProgress=" + showProgress + ", loadByChunk=" + loadByChunk + "]");
         Disposable disposable = loadNotes
                 .subscribeOn(schedulerProvider.computation())
                 .retryWhen(throwableObservable -> throwableObservable.flatMap(throwable -> {
                     if (throwable instanceof IllegalStateException) {
                         Log.d(TAG, "loadNotes(): retry [" + repository.getNoteCacheSize() + "]");
-                        return Observable.just(new Object());
+                        // NOTE: it seems the system is too busy to update UI properly while Sync in progress,
+                        //       so it needles to switch loading to by chunk mode
+                        return Observable.just(new Object()).compose(
+                                upstream -> showProgress
+                                        ? upstream.delay(25, TimeUnit.MILLISECONDS)
+                                        : upstream);
                     }
                     return Observable.error(throwable);
                 }))
@@ -262,27 +269,37 @@ public final class NotesPresenter extends BaseItemPresenter implements
                             return true;
                     }
                 })
-                .toList()
+                .compose(upstream -> loadByChunk
+                        ? upstream.buffer(Settings.GLOBAL_QUERY_CHUNK_SIZE)
+                        : upstream.toList().toObservable())
                 .observeOn(schedulerProvider.ui())
-                .doFinally(() -> {
-                    laanoUiManager.updateTitle(TAB);
-                })
-                .subscribe(notes -> {
+                .doOnComplete(() -> {
                     loadIsCompleted = true; // NOTE: must be set before loadNotes()
                     filterIsChanged = false;
                     noteCacheSize = repository.getNoteCacheSize();
-                    if (loadIsDeferred) {
-                        new Handler().postDelayed(() -> loadNotes(false, showLoading),
-                                Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
-                    } else {
-                        view.showNotes(notes);
-                        selectNoteFilter();
-                        viewModel.hideProgressOverlay();
+                    if (view.isActive()) {
+                        view.updateView();
                     }
-                }, throwable -> {
-                    loadIsCompleted = true;
-                    CommonUtils.logStackTrace(TAG_E, throwable);
+                    selectNoteFilter();
+                    if (loadIsDeferred) {
+                        new Handler().postDelayed(() -> loadNotes(false, forceShowLoading),
+                                Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
+                    }
+                })
+                .doFinally(() -> {
+                    laanoUiManager.updateTitle(TAB);
                     viewModel.hideProgressOverlay();
+                })
+                .subscribe(notes -> {
+                    Log.d(TAG, "loadNotes(): subscribe() [" + notes.size() + "]");
+                    if (loadByChunk) view.addNotes(notes);
+                    else view.showNotes(notes);
+
+                    laanoUiManager.updateTitle(TAB);
+                    viewModel.hideProgressOverlay();
+                }, throwable -> {
+                    CommonUtils.logStackTrace(TAG_E, throwable);
+                    loadIsCompleted = true;
                     viewModel.showDatabaseErrorSnackbar();
                 });
         compositeDisposable.add(disposable);

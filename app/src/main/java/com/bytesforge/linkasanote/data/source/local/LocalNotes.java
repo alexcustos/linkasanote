@@ -11,6 +11,7 @@ import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.NoteFactory;
 import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.collect.ObjectArrays;
@@ -78,7 +79,7 @@ public class LocalNotes<T extends Item> implements LocalItems<T> {
                     " IN (" + CommonUtils.strRepeat("?", size, ", ") + ")";
             selectionArgs = ObjectArrays.concat(selectionArgs, noteIds, String.class);
         }
-        return get(NOTE_URI, selection, selectionArgs, sortOrder);
+        return getByChunk(NOTE_URI, selection, selectionArgs, sortOrder);
     }
 
     @Override
@@ -116,6 +117,20 @@ public class LocalNotes<T extends Item> implements LocalItems<T> {
             return cursor;
         }, Cursor::close);
         return notesGenerator.flatMap(note -> buildNote(note).toObservable());
+    }
+
+    private Observable<T> getByChunk(
+            final Uri uri,
+            final String selection, final String[] selectionArgs, final String sortOrder) {
+        final int chunkSize = Settings.GLOBAL_QUERY_CHUNK_SIZE;
+        return LocalDataSource.getCount(contentResolver, uri, null, null)
+                .toObservable()
+                .flatMap(numRows -> Observable.rangeLong(0, numRows / chunkSize + 1))
+                .flatMap(chunk -> {
+                    Uri uriChunk = LocalContract.NoteEntry.appendUriWith(
+                            uri, chunkSize, chunk * chunkSize);
+                    return get(uriChunk, selection, selectionArgs, sortOrder);
+                });
     }
 
     @Override

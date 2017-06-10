@@ -21,8 +21,11 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     private final FavoritesContract.Presenter presenter;
     private final FavoritesViewModel viewModel;
 
+    @NonNull
     private List<Favorite> favorites;
-    private List<String> favoritesIds;
+
+    @NonNull
+    private List<String> favoriteIds;
 
     public FavoritesAdapter(
             @NonNull List<Favorite> favorites,
@@ -31,6 +34,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         this.favorites = checkNotNull(favorites);
         this.presenter = checkNotNull(presenter);
         this.viewModel = checkNotNull(viewModel);
+        favoriteIds = new ArrayList<>(favorites.size());
         updateIds();
         setHasStableIds(true);
     }
@@ -59,7 +63,6 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         ItemFavoritesBinding binding = ItemFavoritesBinding.inflate(inflater, parent, false);
-
         return new ViewHolder(binding);
     }
 
@@ -88,14 +91,30 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
 
     @NonNull
     public String[] getIds() {
-        return favoritesIds.toArray(new String[favoritesIds.size()]);
+        return favoriteIds.toArray(new String[favoriteIds.size()]);
     }
 
     public void swapItems(@NonNull List<Favorite> favorites) {
-        checkNotNull(favorites);
-        this.favorites = favorites;
+        this.favorites = checkNotNull(favorites);
         updateIds();
         notifyDataSetChanged();
+    }
+
+    public synchronized  void addItem(@NonNull Favorite favorite) {
+        checkNotNull(favorite);
+        favorites.add(favorite);
+        favoriteIds.add(favorite.getId());
+        notifyItemInserted(favorites.size() - 1);
+    }
+
+    public synchronized void addItems(@NonNull List<Favorite> favorites) {
+        checkNotNull(favorites);
+        final int start = this.favorites.size();
+        this.favorites.addAll(favorites);
+        for (Favorite favorite : favorites) {
+            favoriteIds.add(favorite.getId());
+        }
+        notifyItemRangeInserted(start, favorites.size());
     }
 
     @Nullable
@@ -106,7 +125,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
-        favoritesIds.remove(position);
+        favoriteIds.remove(position);
         notifyItemRemoved(position);
         return favorite;
     }
@@ -117,16 +136,21 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         if (position < 0) return -1;
 
         favorites.remove(position);
-        favoritesIds.remove(position);
+        favoriteIds.remove(position);
         notifyItemRemoved(position);
         return position;
     }
 
+    public synchronized void clear() {
+        favorites.clear();
+        favoriteIds.clear();
+        notifyDataSetChanged();
+    }
+
     public int getPosition(@Nullable String favoriteId) {
-        if (favoriteId == null) {
-            return -1;
-        }
-        return favoritesIds.indexOf(favoriteId);
+        if (favoriteId == null) return -1;
+
+        return favoriteIds.indexOf(favoriteId);
     }
 
     public void notifyItemChanged(String favoriteId) {
@@ -146,15 +170,10 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     }
 
     private synchronized void updateIds() {
-        int size = favorites.size();
-        if (favoritesIds == null) {
-            favoritesIds = new ArrayList<>(size);
-        } else {
-            favoritesIds.clear();
-        }
-        for (int i = 0; i < size; i++) {
+        favoriteIds.clear();
+        for (int i = 0; i < favorites.size(); i++) {
             Favorite favorite = favorites.get(i);
-            favoritesIds.add(i, favorite.getId());
+            favoriteIds.add(i, favorite.getId());
         }
     }
 }

@@ -32,6 +32,7 @@ public interface DataSource {
     void addLinksCallback(@NonNull DataSource.Callback callback);
     void removeLinksCallback(@NonNull DataSource.Callback callback);
     boolean isLinkCacheDirty();
+    boolean isLinkCacheNeedRefresh();
     Observable<Link> getLinks();
     Single<Link> getLink(@NonNull String linkId);
     Observable<ItemState> saveLink(@NonNull Link link, boolean syncable);
@@ -49,6 +50,7 @@ public interface DataSource {
     void addFavoritesCallback(@NonNull DataSource.Callback callback);
     void removeFavoritesCallback(@NonNull DataSource.Callback callback);
     boolean isFavoriteCacheDirty();
+    boolean isFavoriteCacheNeedRefresh();
     Observable<Favorite> getFavorites();
     Single<Favorite> getFavorite(@NonNull String favoriteId);
     Observable<ItemState> saveFavorite(@NonNull Favorite favorite, boolean syncable);
@@ -66,6 +68,7 @@ public interface DataSource {
     void addNotesCallback(@NonNull DataSource.Callback callback);
     void removeNotesCallback(@NonNull DataSource.Callback callback);
     boolean isNoteCacheDirty();
+    boolean isNoteCacheNeedRefresh();
     Observable<Note> getNotes();
     Single<Note> getNote(@NonNull String noteId);
     Observable<ItemState> saveNote(@NonNull Note note, boolean syncable);

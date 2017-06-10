@@ -16,6 +16,7 @@ import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.DataSource;
 import com.bytesforge.linkasanote.sync.SyncState;
 
+import java.security.InvalidParameterException;
 import java.util.NoSuchElementException;
 
 import javax.inject.Singleton;
@@ -392,20 +393,27 @@ public class LocalDataSource {
                 .map(count -> count > 0);
     }
 
-    private static Single<Long> getCount(
+    public static Single<Long> getCount(
             final ContentResolver contentResolver, final Uri uri,
-            @NonNull final String column, @NonNull final String value) {
-        checkNotNull(column);
-        checkNotNull(value);
+            final String column, final String value) {
         final String[] columns = new String[]{"COUNT(" + BaseEntry._ID + ")"};
-        final String selection = column + " = ?";
-        final String[] selectionArgs = {value};
-
+        final String selection;
+        final String[] selectionArgs;
+        if (column == null ^ value == null) {
+            throw new InvalidParameterException("getCount(): 'column' and 'value' both must be specified or both must be null");
+        }
+        if (column == null) {
+            selection = null;
+            selectionArgs = null;
+        } else {
+            selection = column + " = ?";
+            selectionArgs = new String[]{value};
+        }
         return Single.fromCallable(() -> {
             try (Cursor cursor = contentResolver.query(
                     uri, columns, selection, selectionArgs, null)) {
                 if (cursor == null) {
-                    return null; // NOTE: NullPointerException
+                    return null; // NullPointerException
                 }
                 return cursor.moveToLast() ? cursor.getLong(0) : 0L;
             }

@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.util.Pair;
 
 import com.bytesforge.linkasanote.data.Item;
@@ -12,6 +13,7 @@ import com.bytesforge.linkasanote.data.LinkFactory;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.data.Tag;
+import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.google.common.collect.ObjectArrays;
@@ -86,7 +88,7 @@ public class LocalLinks<T extends Item> implements LocalItems<T> {
                     " IN (" + CommonUtils.strRepeat("?", size, ", ") + ")";
             selectionArgs = ObjectArrays.concat(selectionArgs, linkIds, String.class);
         }
-        return get(LINK_URI, selection, selectionArgs, sortOrder);
+        return getByChunk(LINK_URI, selection, selectionArgs, sortOrder);
     }
 
     @Override
@@ -124,6 +126,20 @@ public class LocalLinks<T extends Item> implements LocalItems<T> {
             return cursor;
         }, Cursor::close);
         return linksGenerator.flatMap(link -> buildLink(link).toObservable());
+    }
+
+    private Observable<T> getByChunk(
+            final Uri uri,
+            final String selection, final String[] selectionArgs, final String sortOrder) {
+        final int chunkSize = Settings.GLOBAL_QUERY_CHUNK_SIZE;
+        return LocalDataSource.getCount(contentResolver, uri, null, null)
+                .toObservable()
+                .flatMap(numRows -> Observable.rangeLong(0, numRows / chunkSize + 1))
+                .flatMap(chunk -> {
+                    Uri uriChunk = LocalContract.LinkEntry.appendUriWith(
+                            uri, chunkSize, chunk * chunkSize);
+                    return get(uriChunk, selection, selectionArgs, sortOrder);
+                });
     }
 
     @Override

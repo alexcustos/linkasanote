@@ -21,6 +21,7 @@ import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Strings;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -55,7 +56,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     private boolean filterIsChanged = true;
     private boolean loadIsCompleted = true;
     private boolean loadIsDeferred = false;
-    private long lastSyncTime = 0;
+    private long lastSyncTime;
 
     @Inject
     FavoritesPresenter(
@@ -68,6 +69,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         this.schedulerProvider = schedulerProvider;
         this.laanoUiManager = laanoUiManager;
         this.settings = settings;
+        lastSyncTime = settings.getLastFavoritesSyncTime();
         compositeDisposable = new CompositeDisposable();
     }
 
@@ -109,15 +111,12 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
 
     @Override
     public void loadFavorites(final boolean forceUpdate) {
-        int size = viewModel.getListSize();
-        // NOTE: for the initial load only
-        boolean showLoading = (size <= 0 || size == Integer.MAX_VALUE);
-        loadFavorites(forceUpdate, showLoading);
+        loadFavorites(forceUpdate, false);
     }
 
-    private void loadFavorites(final boolean forceUpdate, final boolean showLoading) {
+    private void loadFavorites(final boolean forceUpdate, final boolean forceShowLoading) {
         final long syncTime = settings.getLastFavoritesSyncTime();
-        Log.d(TAG, "loadFavorites() [" + (lastSyncTime == syncTime) +
+        Log.d(TAG, "loadFavorites() [synced=" + (lastSyncTime == syncTime) +
                 ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
         if (forceUpdate) { // NOTE: for testing and for the future option to reload by swipe
             repository.refreshLinks();
@@ -127,7 +126,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
             return;
         }
         updateFilter();
-        if (!repository.isFavoriteCacheDirty()
+        if (!repository.isFavoriteCacheNeedRefresh()
                 && !filterIsChanged
                 && favoriteCacheSize == repository.getFavoriteCacheSize()
                 && lastSyncTime == syncTime
@@ -142,15 +141,23 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
             repository.checkFavoritesSyncLog();
             updateTabNormalState();
         }
-        if (showLoading) {
-            viewModel.showProgressOverlay();
-        }
+        boolean loadByChunk = repository.isFavoriteCacheDirty();
+        boolean showProgress = (!loadByChunk && repository.getFavoriteCacheSize() == 0)
+                || forceShowLoading;
+        if (loadByChunk) view.clearFavorites();
+        if (showProgress) viewModel.showProgressOverlay();
+        Log.d(TAG, "loadFavorites(): getFavorites() [showProgress=" + showProgress + ", loadByChunk=" + loadByChunk + "]");
         Disposable disposable = repository.getFavorites()
                 .subscribeOn(schedulerProvider.computation())
                 .retryWhen(throwableObservable -> throwableObservable.flatMap(throwable -> {
                     if (throwable instanceof IllegalStateException) {
                         Log.d(TAG, "loadFavorites(): retry [" + repository.getFavoriteCacheSize() + "]");
-                        return Observable.just(new Object());
+                        // NOTE: it seems the system is too busy to update UI properly while Sync in progress,
+                        //       so it needles to switch loading to by chunk mode
+                        return Observable.just(new Object()).compose(
+                                upstream -> showProgress
+                                        ? upstream.delay(25, TimeUnit.MILLISECONDS)
+                                        : upstream);
                     }
                     return Observable.error(throwable);
                 }))
@@ -172,27 +179,37 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                             return true;
                     }
                 })
-                .toList()
+                .compose(upstream -> loadByChunk
+                        ? upstream.buffer(Settings.GLOBAL_QUERY_CHUNK_SIZE)
+                        : upstream.toList().toObservable())
                 .observeOn(schedulerProvider.ui())
-                .doFinally(() -> {
-                    laanoUiManager.updateTitle(TAB);
-                })
-                .subscribe(favorites -> {
+                .doOnComplete(() -> {
                     loadIsCompleted = true; // NOTE: must be set before loadFavorites()
                     filterIsChanged = false;
                     favoriteCacheSize = repository.getFavoriteCacheSize();
-                    if (loadIsDeferred) {
-                        new Handler().postDelayed(() -> loadFavorites(false, showLoading),
-                                Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
-                    } else {
-                        view.showFavorites(favorites);
-                        selectFavoriteFilter();
-                        viewModel.hideProgressOverlay();
+                    if (view.isActive()) {
+                        view.updateView();
                     }
-                }, throwable -> {
-                    loadIsCompleted = true;
-                    CommonUtils.logStackTrace(TAG_E, throwable);
+                    selectFavoriteFilter();
+                    if (loadIsDeferred) {
+                        new Handler().postDelayed(() -> loadFavorites(false, forceShowLoading),
+                                Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
+                    }
+                })
+                .doFinally(() -> {
+                    laanoUiManager.updateTitle(TAB);
                     viewModel.hideProgressOverlay();
+                })
+                .subscribe(favorites -> {
+                    Log.d(TAG, "loadFavorites(): subscribe() [" + favorites.size() + "]");
+                    if (loadByChunk) view.addFavorites(favorites);
+                    else view.showFavorites(favorites);
+
+                    laanoUiManager.updateTitle(TAB);
+                    viewModel.hideProgressOverlay();
+                }, throwable -> {
+                    CommonUtils.logStackTrace(TAG_E, throwable);
+                    loadIsCompleted = true;
                     viewModel.showDatabaseErrorSnackbar();
                 });
         compositeDisposable.add(disposable);
