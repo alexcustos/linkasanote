@@ -417,6 +417,7 @@ public class CloudDataSource {
                         if (isNetworkError(code)) {
                             Log.e(TAG, "Retry on Network error [" +
                                     retryCount.get() + "/" + Settings.GLOBAL_RETRY_ON_NETWORK_ERROR +
+                                    "; operation=" + operation.getClass().getSimpleName() +
                                     "; code=" + code.name() +
                                     "; delay=" + Settings.GLOBAL_DELAY_ON_NETWORK_ERROR_MILLIS + "ms]");
                             return Single.timer(

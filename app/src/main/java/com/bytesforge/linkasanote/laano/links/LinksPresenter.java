@@ -293,7 +293,6 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     if (view.isActive()) {
                         view.updateView();
                     }
-                    selectLinkFilter();
                     if (loadIsDeferred) {
                         new Handler().postDelayed(() -> loadLinks(false, forceShowLoading),
                                 Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
@@ -308,6 +307,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     if (loadByChunk) view.addLinks(links);
                     else view.showLinks(links);
 
+                    selectLinkFilter();
                     laanoUiManager.updateTitle(TAB);
                     viewModel.hideProgressOverlay();
                 }, throwable -> {

@@ -4,8 +4,12 @@ import android.databinding.BindingAdapter;
 import android.databinding.BindingConversion;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -13,9 +17,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.utils.ActionViewClickableSpan;
 import com.bytesforge.linkasanote.utils.ActivityUtils;
+import com.bytesforge.linkasanote.utils.CommonUtils;
+
+import java.util.regex.Matcher;
 
 public class LaanoBindingAdapters {
+
+    private static final String TAG = LaanoBindingAdapters.class.getSimpleName();
 
     private LaanoBindingAdapters() {
     }
@@ -89,5 +99,24 @@ public class LaanoBindingAdapters {
         Drawable drawable = view.getDrawable();
         Drawable wrap = DrawableCompat.wrap(drawable);
         DrawableCompat.setTint(wrap, color);
+    }
+
+    @BindingAdapter({"webUrlText"})
+    public static void setWebEmailText(TextView view, String text) {
+        SpannableString spannableString = new SpannableString(text);
+        // NOTE: the WEB_URL pattern depends on API and/or device firmware
+        Matcher webUrlMatcher = Patterns.WEB_URL.matcher(text);
+        while (webUrlMatcher.find()) {
+            String webUrl = webUrlMatcher.group(0);
+            if (webUrl != null && (webUrl.startsWith(CommonUtils.HTTP_PROTOCOL)
+                    || webUrl.startsWith(CommonUtils.HTTPS_PROTOCOL))) {
+                int start = webUrlMatcher.start(0);
+                int end = webUrlMatcher.end(0);
+                Uri uri = Uri.parse(webUrl);
+                spannableString.setSpan(new ActionViewClickableSpan(uri), start, end, 0);
+            }
+        }
+        view.setText(spannableString);
+        view.setMovementMethod(new LinkMovementMethod());
     }
 }

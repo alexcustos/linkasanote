@@ -190,7 +190,6 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     if (view.isActive()) {
                         view.updateView();
                     }
-                    selectFavoriteFilter();
                     if (loadIsDeferred) {
                         new Handler().postDelayed(() -> loadFavorites(false, forceShowLoading),
                                 Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
@@ -205,6 +204,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     if (loadByChunk) view.addFavorites(favorites);
                     else view.showFavorites(favorites);
 
+                    selectFavoriteFilter();
                     laanoUiManager.updateTitle(TAB);
                     viewModel.hideProgressOverlay();
                 }, throwable -> {
