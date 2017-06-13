@@ -6,6 +6,8 @@ import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
+import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +28,7 @@ import io.reactivex.observers.TestObserver;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -55,7 +58,8 @@ public class RepositoryFavoriteTest {
     public void setupRepository() {
         MockitoAnnotations.initMocks(this);
         PowerMockito.mockStatic(Log.class);
-        repository = new Repository(localDataSource, cloudDataSource);
+        BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
+        repository = new Repository(localDataSource, cloudDataSource, schedulerProvider);
     }
 
     @Test
@@ -123,11 +127,11 @@ public class RepositoryFavoriteTest {
         // Preconditions
         when(localDataSource.deleteFavorite(eq(favoriteId)))
                 .thenReturn(Single.just(DataSource.ItemState.DEFERRED));
-        when(cloudDataSource.deleteFavorite(eq(favoriteId)))
+        when(cloudDataSource.deleteFavorite(eq(favoriteId), any(long.class)))
                 .thenReturn(Single.just(DataSource.ItemState.DELETED));
         // Test
         TestObserver<DataSource.ItemState> deleteFavoriteObserver =
-                repository.deleteFavorite(favoriteId, true).test();
+                repository.deleteFavorite(favoriteId, true, 0).test();
         deleteFavoriteObserver.assertValues(
                 DataSource.ItemState.DEFERRED, DataSource.ItemState.DELETED);
         assertThat(repository.favoriteCacheIsDirty, is(false));

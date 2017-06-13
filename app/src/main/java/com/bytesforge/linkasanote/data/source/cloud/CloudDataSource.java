@@ -9,6 +9,7 @@ import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.DataSource;
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.data.source.local.LocalFavorites;
 import com.bytesforge.linkasanote.data.source.local.LocalLinks;
 import com.bytesforge.linkasanote.data.source.local.LocalNotes;
@@ -36,6 +37,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
 
 @Singleton
 public class CloudDataSource {
@@ -95,19 +97,42 @@ public class CloudDataSource {
                         if (result.isSuccess()) {
                             JsonFile jsonFile = (JsonFile) result.getData().get(0);
                             SyncState syncState = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                            return localLinks.update(linkId, syncState).map(
-                                    success -> success ? DataSource.ItemState.SAVED : null);
+                            return localLinks.update(linkId, syncState)
+                                    .map(success -> success
+                                            ? DataSource.ItemState.SAVED
+                                            : DataSource.ItemState.ERROR_LOCAL);
                         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                             SyncState syncState = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-                            return localLinks.update(linkId, syncState).map(
-                                    success -> success ? DataSource.ItemState.CONFLICTED : null);
+                            return localLinks.update(linkId, syncState)
+                                    .map(success -> success
+                                            ? DataSource.ItemState.CONFLICTED
+                                            : DataSource.ItemState.ERROR_LOCAL);
                         }
-                        return null;
+                        return Single.just(DataSource.ItemState.ERROR_CLOUD);
                     });
+                }).flatMap(itemState -> {
+                    LocalContract.SyncResultEntry.Result result;
+                    switch (itemState) {
+                        case SAVED:
+                            result = LocalContract.SyncResultEntry.Result.UPLOADED;
+                            break;
+                        case CONFLICTED:
+                            result = LocalContract.SyncResultEntry.Result.CONFLICT;
+                            break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            result = LocalContract.SyncResultEntry.Result.ERROR;
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected state from Cloud saveLink()");
+                    }
+                    Single<Boolean> logSingle = localLinks.logSyncResult(
+                            currentTimeMillis(), linkId, result, true);
+                    return Single.zip(Single.just(itemState), logSingle, (ret, success) -> ret);
                 });
     }
 
-    public Single<DataSource.ItemState> deleteLink(@NonNull String linkId) {
+    public Single<DataSource.ItemState> deleteLink(@NonNull String linkId, long started) {
         checkNotNull(linkId);
         return localLinks.getSyncState(linkId)
                 .doOnSuccess(state -> {
@@ -144,10 +169,31 @@ public class CloudDataSource {
                             SyncState conflictedState = new SyncState(
                                     state, SyncState.State.CONFLICTED_DELETE);
                             return localLinks.update(linkId, conflictedState)
-                                    .map(success -> success ? DataSource.ItemState.CONFLICTED : null);
+                                    .map(success -> success
+                                            ? DataSource.ItemState.CONFLICTED
+                                            : DataSource.ItemState.ERROR_LOCAL);
                         }
-                        return null;
+                        return Single.just(DataSource.ItemState.ERROR_CLOUD);
                     });
+                }).flatMap(itemState -> {
+                    LocalContract.SyncResultEntry.Result result;
+                    switch (itemState) {
+                        case DELETED:
+                            result = LocalContract.SyncResultEntry.Result.DELETED;
+                            break;
+                        case CONFLICTED:
+                            result = LocalContract.SyncResultEntry.Result.CONFLICT;
+                            break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            result = LocalContract.SyncResultEntry.Result.ERROR;
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected state from Cloud deleteLink()");
+                    }
+                    Single<Boolean> logSingle = localLinks.logSyncResult(
+                            started, linkId, result, true);
+                    return Single.zip(Single.just(itemState), logSingle, (ret, success) -> ret);
                 });
     }
 
@@ -184,19 +230,42 @@ public class CloudDataSource {
                         if (result.isSuccess()) {
                             JsonFile jsonFile = (JsonFile) result.getData().get(0);
                             SyncState syncState = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                            return localFavorites.update(favoriteId, syncState).map(
-                                    success -> success ? DataSource.ItemState.SAVED : null);
+                            return localFavorites.update(favoriteId, syncState)
+                                    .map(success -> success
+                                            ? DataSource.ItemState.SAVED
+                                            : DataSource.ItemState.ERROR_LOCAL);
                         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                             SyncState syncState = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-                            return localFavorites.update(favoriteId, syncState).map(
-                                    success -> success ? DataSource.ItemState.CONFLICTED : null);
+                            return localFavorites.update(favoriteId, syncState)
+                                    .map(success -> success
+                                            ? DataSource.ItemState.CONFLICTED
+                                            : DataSource.ItemState.ERROR_LOCAL);
                         }
-                        return null;
+                        return Single.just(DataSource.ItemState.ERROR_CLOUD);
                     });
+                }).flatMap(itemState -> {
+                    LocalContract.SyncResultEntry.Result result;
+                    switch (itemState) {
+                        case SAVED:
+                            result = LocalContract.SyncResultEntry.Result.UPLOADED;
+                            break;
+                        case CONFLICTED:
+                            result = LocalContract.SyncResultEntry.Result.CONFLICT;
+                            break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            result = LocalContract.SyncResultEntry.Result.ERROR;
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected state from Cloud saveFavorite()");
+                    }
+                    Single<Boolean> logSingle = localFavorites.logSyncResult(
+                            currentTimeMillis(), favoriteId, result, true);
+                    return Single.zip(Single.just(itemState), logSingle, (ret, success) -> ret);
                 });
     }
 
-    public Single<DataSource.ItemState> deleteFavorite(@NonNull String favoriteId) {
+    public Single<DataSource.ItemState> deleteFavorite(@NonNull String favoriteId, long started) {
         checkNotNull(favoriteId);
         return localFavorites.getSyncState(favoriteId)
                 .doOnSuccess(state -> {
@@ -233,10 +302,31 @@ public class CloudDataSource {
                             SyncState conflictedState = new SyncState(
                                     state, SyncState.State.CONFLICTED_DELETE);
                             return localFavorites.update(favoriteId, conflictedState)
-                                    .map(success -> success ? DataSource.ItemState.CONFLICTED : null);
+                                    .map(success -> success
+                                            ? DataSource.ItemState.CONFLICTED
+                                            : DataSource.ItemState.ERROR_LOCAL);
                         }
-                        return null;
+                        return Single.just(DataSource.ItemState.ERROR_CLOUD);
                     });
+                }).flatMap(itemState -> {
+                    LocalContract.SyncResultEntry.Result result;
+                    switch (itemState) {
+                        case DELETED:
+                            result = LocalContract.SyncResultEntry.Result.DELETED;
+                            break;
+                        case CONFLICTED:
+                            result = LocalContract.SyncResultEntry.Result.CONFLICT;
+                            break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            result = LocalContract.SyncResultEntry.Result.ERROR;
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected state from Cloud deleteFavorite()");
+                    }
+                    Single<Boolean> logSingle = localFavorites.logSyncResult(
+                            started, favoriteId, result, true);
+                    return Single.zip(Single.just(itemState), logSingle, (ret, success) -> ret);
                 });
     }
 
@@ -273,19 +363,42 @@ public class CloudDataSource {
                         if (result.isSuccess()) {
                             JsonFile jsonFile = (JsonFile) result.getData().get(0);
                             SyncState syncState = new SyncState(jsonFile.getETag(), SyncState.State.SYNCED);
-                            return localNotes.update(noteId, syncState).map(
-                                    success -> success ? DataSource.ItemState.SAVED : null);
+                            return localNotes.update(noteId, syncState)
+                                    .map(success -> success
+                                            ? DataSource.ItemState.SAVED
+                                            : DataSource.ItemState.ERROR_LOCAL);
                         } else if (result.getCode() == RemoteOperationResult.ResultCode.SYNC_CONFLICT) {
                             SyncState syncState = new SyncState(SyncState.State.CONFLICTED_UPDATE);
-                            return localNotes.update(noteId, syncState).map(
-                                    success -> success ? DataSource.ItemState.CONFLICTED : null);
+                            return localNotes.update(noteId, syncState)
+                                    .map(success -> success
+                                            ? DataSource.ItemState.CONFLICTED
+                                            : DataSource.ItemState.ERROR_LOCAL);
                         }
-                        return null;
+                        return Single.just(DataSource.ItemState.ERROR_CLOUD);
                     });
+                }).flatMap(itemState -> {
+                    LocalContract.SyncResultEntry.Result result;
+                    switch (itemState) {
+                        case SAVED:
+                            result = LocalContract.SyncResultEntry.Result.UPLOADED;
+                            break;
+                        case CONFLICTED:
+                            result = LocalContract.SyncResultEntry.Result.CONFLICT;
+                            break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            result = LocalContract.SyncResultEntry.Result.ERROR;
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected state from Cloud saveNote()");
+                    }
+                    Single<Boolean> logSingle = localNotes.logSyncResult(
+                            currentTimeMillis(), noteId, result, true);
+                    return Single.zip(Single.just(itemState), logSingle, (ret, success) -> ret);
                 });
     }
 
-    public Single<DataSource.ItemState> deleteNote(@NonNull String noteId) {
+    public Single<DataSource.ItemState> deleteNote(@NonNull String noteId, long started) {
         checkNotNull(noteId);
         return localNotes.getSyncState(noteId)
                 .doOnSuccess(state -> {
@@ -322,10 +435,31 @@ public class CloudDataSource {
                             SyncState conflictedState = new SyncState(
                                     state, SyncState.State.CONFLICTED_DELETE);
                             return localNotes.update(noteId, conflictedState)
-                                    .map(success -> success ? DataSource.ItemState.CONFLICTED : null);
+                                    .map(success -> success
+                                            ? DataSource.ItemState.CONFLICTED
+                                            : DataSource.ItemState.ERROR_LOCAL);
                         }
-                        return null;
+                        return Single.just(DataSource.ItemState.ERROR_CLOUD);
                     });
+                }).flatMap(itemState -> {
+                    LocalContract.SyncResultEntry.Result result;
+                    switch (itemState) {
+                        case DELETED:
+                            result = LocalContract.SyncResultEntry.Result.DELETED;
+                            break;
+                        case CONFLICTED:
+                            result = LocalContract.SyncResultEntry.Result.CONFLICT;
+                            break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            result = LocalContract.SyncResultEntry.Result.ERROR;
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected state from Cloud deleteNote()");
+                    }
+                    Single<Boolean> logSingle = localNotes.logSyncResult(
+                            started, noteId, result, true);
+                    return Single.zip(Single.just(itemState), logSingle, (ret, success) -> ret);
                 });
     }
 

@@ -144,7 +144,8 @@ public final class AddEditFavoritePresenter implements
         }
         final String favoriteId = favorite.getId();
         repository.saveFavorite(favorite, false) // sync after save
-                .subscribeOn(schedulerProvider.io())
+                // NOTE: Sync will be concatenated on .io() scheduler
+                .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(itemState -> {
                     switch (itemState) {

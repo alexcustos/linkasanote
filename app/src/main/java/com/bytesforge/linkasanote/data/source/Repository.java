@@ -18,6 +18,7 @@ import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
 import java.security.InvalidParameterException;
 import java.util.HashSet;
@@ -44,6 +45,7 @@ public class Repository implements DataSource {
 
     private final LocalDataSource localDataSource;
     private final CloudDataSource cloudDataSource;
+    private final BaseSchedulerProvider schedulerProvider;
 
     @VisibleForTesting
     @Nullable
@@ -87,9 +89,12 @@ public class Repository implements DataSource {
     private Set<DataSource.Callback> notesCallbacks;
 
     //@Inject NOTE: @Provides is needed for testing to mock Repository
-    public Repository(LocalDataSource localDataSource, CloudDataSource cloudDataSource) {
+    public Repository(
+            LocalDataSource localDataSource, CloudDataSource cloudDataSource,
+            BaseSchedulerProvider schedulerProvider) {
         this.localDataSource = localDataSource;
         this.cloudDataSource = cloudDataSource;
+        this.schedulerProvider = schedulerProvider;
     }
 
     // Links
@@ -193,7 +198,8 @@ public class Repository implements DataSource {
         if (dirtyLinks == null) {
             dirtyLinks = new HashSet<>();
         }
-        Observable<Link> refreshDirtyLinksObservable = Observable.fromIterable(dirtyLinks)
+        HashSet<String> dirty = new HashSet<>(dirtyLinks);
+        Observable<Link> refreshDirtyLinksObservable = Observable.fromIterable(dirty)
                 .flatMap(id -> {
                     if (SYNC_COMPLETE_TOKEN.equals(id)) {
                         dirtyLinks.remove(id);
@@ -338,7 +344,9 @@ public class Repository implements DataSource {
                 .toObservable();
         Observable<ItemState> cloudSavingObservable;
         if (syncable) {
-            cloudSavingObservable = getCloudSaveLinkSingle(linkId).toObservable();
+            cloudSavingObservable = getCloudSaveLinkSingle(linkId)
+                    .subscribeOn(schedulerProvider.io())
+                    .toObservable();
         } else {
             cloudSavingObservable = Observable.empty();
         }
@@ -356,8 +364,12 @@ public class Repository implements DataSource {
                         case CONFLICTED:
                             refreshLink(linkId);
                             break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            refreshLink(linkId);
+                            break;
                         default:
-                            throw new IllegalStateException("Unexpected state came from Cloud saveLink()");
+                            throw new IllegalStateException("Unexpected state from Cloud saveLink()");
                     }
                     notifyLinksSaveCallbacks(linkId, itemState);
                 })
@@ -392,19 +404,19 @@ public class Repository implements DataSource {
 
     private Observable<ItemState> getDeleteLinkNotesObservable(
             @NonNull final String linkId, @NonNull List<Note> notes,
-            final boolean syncable, final boolean deleteNotes) {
+            final boolean syncable, final long started, final boolean deleteNotes) {
         Observable<ItemState> deleteNotesObservable;
         if (deleteNotes) {
             // Delete
             deleteNotesObservable = Observable.fromIterable(notes)
-                    .flatMap(note -> deleteNote(note.getId(), syncable));
+                    .flatMap(note -> deleteNote(note.getId(), syncable, started));
         } else {
             // Sync
             deleteNotesObservable = Observable.fromIterable(notes)
                     .flatMap(note -> {
                         String noteId = note.getId();
                         if (note.isDeleted() && !note.isConflicted()) {
-                            return deleteNote(noteId, syncable);
+                            return deleteNote(noteId, syncable, started);
                         } else {
                             SyncState state = new SyncState(note.getState(), SyncState.State.UNSYNCED);
                             Note unboundNote = new Note(note.getId(), note.getCreated(),
@@ -436,7 +448,8 @@ public class Repository implements DataSource {
 
     @Override
     public Observable<ItemState> deleteLink(
-            @NonNull final String linkId, final boolean syncable, final boolean deleteNotes) {
+            @NonNull final String linkId, final boolean syncable,
+            final long started, final boolean deleteNotes) {
         checkNotNull(linkId);
         // NOTE: it is unnecessary to maintain integrity from this point
         Observable<ItemState> localDeletionObservable = localDataSource.deleteLink(linkId)
@@ -464,7 +477,9 @@ public class Repository implements DataSource {
                 .toObservable();
         Observable<ItemState> cloudDeletionObservable;
         if (syncable) {
-            cloudDeletionObservable = getCloudDeleteLinkSingle(linkId).toObservable();
+            cloudDeletionObservable = getCloudDeleteLinkSingle(linkId, started)
+                    .subscribeOn(schedulerProvider.io())
+                    .toObservable();
         } else {
             cloudDeletionObservable = Observable.empty();
         }
@@ -473,19 +488,23 @@ public class Repository implements DataSource {
                 .toObservable()
                 .flatMap(notes -> Observable.mergeDelayError(
                         Observable.concat(localDeletionObservable, cloudDeletionObservable),
-                        getDeleteLinkNotesObservable(linkId, notes, syncable, deleteNotes)));
+                        getDeleteLinkNotesObservable(linkId, notes, syncable, started, deleteNotes)));
     }
 
-    private Single<ItemState> getCloudDeleteLinkSingle(@NonNull final String linkId) {
+    private Single<ItemState> getCloudDeleteLinkSingle(
+            @NonNull final String linkId, long started) {
         checkNotNull(linkId);
-        return cloudDataSource.deleteLink(linkId)
+        return cloudDataSource.deleteLink(linkId, started)
                 .doOnSuccess(itemState -> {
-                    // NOTE: NPE here is expected, flatMap() -> return .map() -> null: actually returns null to onSuccess
+                    // NOTE: flatMap() -> return .map() -> null: actually returns null to onSuccess
                     switch (itemState) {
                         case DELETED: // visibility was not changed
                             break;
                         case CONFLICTED:
                             refreshLinks(); // need to be shown again
+                            break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
                             break;
                         default:
                             throw new IllegalStateException("Unexpected state came from Cloud deleteLink()");
@@ -661,7 +680,8 @@ public class Repository implements DataSource {
         if (dirtyFavorites == null) {
             dirtyFavorites = new HashSet<>();
         }
-        Observable<Favorite> refreshDirtyFavoritesObservable = Observable.fromIterable(dirtyFavorites)
+        HashSet<String> dirty = new HashSet<>(dirtyFavorites);
+        Observable<Favorite> refreshDirtyFavoritesObservable = Observable.fromIterable(dirty)
                 .flatMap(id -> {
                     if (SYNC_COMPLETE_TOKEN.equals(id)) {
                         dirtyFavorites.remove(id);
@@ -797,7 +817,9 @@ public class Repository implements DataSource {
                 .toObservable();
         Observable<ItemState> cloudSavingObservable;
         if (syncable) {
-            cloudSavingObservable = getCloudSaveFavoriteSingle(favoriteId).toObservable();
+            cloudSavingObservable = getCloudSaveFavoriteSingle(favoriteId)
+                    .subscribeOn(schedulerProvider.io())
+                    .toObservable();
         } else {
             cloudSavingObservable = Observable.empty();
         }
@@ -815,8 +837,12 @@ public class Repository implements DataSource {
                         case CONFLICTED:
                             refreshFavorite(favoriteId);
                             break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            refreshFavorite(favoriteId);
+                            break;
                         default:
-                            throw new IllegalStateException("Unexpected state came from Cloud saveFavorite()");
+                            throw new IllegalStateException("Unexpected state from Cloud saveFavorite()");
                     }
                     notifyFavoritesSaveCallbacks(favoriteId, itemState);
                 })
@@ -850,7 +876,8 @@ public class Repository implements DataSource {
     }
 
     @Override
-    public Observable<ItemState> deleteFavorite(@NonNull String favoriteId, boolean syncable) {
+    public Observable<ItemState> deleteFavorite(
+            @NonNull String favoriteId, boolean syncable, long started) {
         checkNotNull(favoriteId);
         Observable<ItemState> localDeletionObservable = localDataSource.deleteFavorite(favoriteId)
                 .doOnSuccess(itemState -> {
@@ -876,26 +903,32 @@ public class Repository implements DataSource {
                 .toObservable();
         Observable<ItemState> cloudDeletionObservable;
         if (syncable) {
-            cloudDeletionObservable = getCloudDeleteFavoriteSingle(favoriteId).toObservable();
+            cloudDeletionObservable = getCloudDeleteFavoriteSingle(favoriteId, started)
+                    .subscribeOn(schedulerProvider.io())
+                    .toObservable();
         } else {
             cloudDeletionObservable = Observable.empty();
         }
         return Observable.concat(localDeletionObservable, cloudDeletionObservable);
     }
 
-    private Single<ItemState> getCloudDeleteFavoriteSingle(@NonNull final String favoriteId) {
+    private Single<ItemState> getCloudDeleteFavoriteSingle(
+            @NonNull final String favoriteId, long started) {
         checkNotNull(favoriteId);
-        return cloudDataSource.deleteFavorite(favoriteId)
+        return cloudDataSource.deleteFavorite(favoriteId, started)
                 .doOnSuccess(itemState -> {
-                    // NOTE: NPE here is expected, flatMap() -> return .map() -> null: actually returns null to onSuccess
+                    // NOTE: flatMap() -> return .map() -> null: actually returns null to onSuccess
                     switch (itemState) {
                         case DELETED: // visibility was not changed
                             break;
                         case CONFLICTED:
                             refreshFavorites(); // need to be shown again
                             break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            break;
                         default:
-                            throw new IllegalStateException("Unexpected state came from Cloud deleteFavorite()");
+                            throw new IllegalStateException("Unexpected state from Cloud deleteFavorite()");
                     }
                     notifyFavoritesDeleteCallbacks(favoriteId, itemState);
                 })
@@ -1068,7 +1101,8 @@ public class Repository implements DataSource {
         if (dirtyNotes == null) {
             dirtyNotes = new HashSet<>();
         }
-        Observable<Note> refreshDirtyNotesObservable = Observable.fromIterable(dirtyNotes)
+        HashSet<String> dirty = new HashSet<>(dirtyNotes);
+        Observable<Note> refreshDirtyNotesObservable = Observable.fromIterable(dirty)
                 .flatMap(id -> {
                     if (SYNC_COMPLETE_TOKEN.equals(id)) {
                         dirtyNotes.remove(id);
@@ -1201,7 +1235,9 @@ public class Repository implements DataSource {
                 .toObservable();
         Observable<ItemState> cloudSavingObservable;
         if (syncable) {
-            cloudSavingObservable = getCloudSaveNoteSingle(noteId).toObservable();
+            cloudSavingObservable = getCloudSaveNoteSingle(noteId)
+                    .subscribeOn(schedulerProvider.io())
+                    .toObservable();
         } else {
             cloudSavingObservable = Observable.empty();
         }
@@ -1212,17 +1248,20 @@ public class Repository implements DataSource {
         checkNotNull(noteId);
         return cloudDataSource.saveNote(noteId)
                 .doOnSuccess(itemState -> {
+                    // NOTE: let the presenter to update related state
                     switch (itemState) {
                         case SAVED:
                             refreshNote(noteId);
-                            // NOTE: let the presenter to update related state
                             break;
                         case CONFLICTED:
                             refreshNote(noteId);
-                            // NOTE: let the presenter to update related state
+                            break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            refreshNote(noteId);
                             break;
                         default:
-                            throw new IllegalStateException("Unexpected state came from Cloud saveNote()");
+                            throw new IllegalStateException("Unexpected state from Cloud saveNote()");
                     }
                     notifyNotesSaveCallbacks(noteId, itemState);
                 })
@@ -1255,7 +1294,9 @@ public class Repository implements DataSource {
         dirtyNotes.clear();
     }
 
-    public Observable<ItemState> deleteNote(@NonNull String noteId, boolean syncable) {
+    @Override
+    public Observable<ItemState> deleteNote(
+            @NonNull String noteId, boolean syncable, long started) {
         checkNotNull(noteId);
         Observable<ItemState> refreshLinkObservable = localDataSource.getNote(noteId)
                 .toObservable()
@@ -1291,7 +1332,9 @@ public class Repository implements DataSource {
                 .toObservable();
         Observable<ItemState> cloudDeletionObservable;
         if (syncable) {
-            cloudDeletionObservable = getCloudDeleteNoteSingle(noteId).toObservable();
+            cloudDeletionObservable = getCloudDeleteNoteSingle(noteId, started)
+                    .subscribeOn(schedulerProvider.io())
+                    .toObservable();
         } else {
             cloudDeletionObservable = Observable.empty();
         }
@@ -1299,19 +1342,23 @@ public class Repository implements DataSource {
                 cloudDeletionObservable);
     }
 
-    private Single<ItemState> getCloudDeleteNoteSingle(@NonNull final String noteId) {
+    private Single<ItemState> getCloudDeleteNoteSingle(
+            @NonNull final String noteId, long started) {
         checkNotNull(noteId);
-        return cloudDataSource.deleteNote(noteId)
+        return cloudDataSource.deleteNote(noteId, started)
                 .doOnSuccess(itemState -> {
-                    // NOTE: NPE here is expected, flatMap() -> return .map() -> null: actually returns null to onSuccess
+                    // NOTE: flatMap() -> return .map() -> null: actually returns null to onSuccess
                     switch (itemState) {
                         case DELETED: // visibility was not changed
                             break;
                         case CONFLICTED:
                             refreshNotes(); // need to be shown again
                             break;
+                        case ERROR_LOCAL:
+                        case ERROR_CLOUD:
+                            break;
                         default:
-                            throw new IllegalStateException("Unexpected state came from Cloud deleteNote()");
+                            throw new IllegalStateException("Unexpected state from Cloud deleteNote()");
                     }
                     notifyNotesDeleteCallbacks(noteId, itemState);
                 })

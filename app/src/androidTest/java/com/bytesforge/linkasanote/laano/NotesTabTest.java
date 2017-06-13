@@ -22,6 +22,7 @@ import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.laano.notes.NotesFragment;
 import com.bytesforge.linkasanote.settings.SettingsModule;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
 
 import org.hamcrest.Matchers;
@@ -110,7 +111,8 @@ public class NotesTabTest {
 
                     @Override
                     public Repository provideRepository(
-                            LocalDataSource localDataSource, CloudDataSource cloudDataSource) {
+                            LocalDataSource localDataSource, CloudDataSource cloudDataSource,
+                            BaseSchedulerProvider schedulerProvider) {
                         return repository;
                     }
                 })

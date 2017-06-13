@@ -526,10 +526,12 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
     @Override
     public void removeNote(@NonNull String noteId) {
-        viewModel.removeSelection(noteId);
-        adapter.removeItem(noteId);
-        selectionChanged(noteId);
-        viewModel.setListSize(adapter.getItemCount());
+        int position = adapter.removeItem(noteId);
+        if (position >= 0) {
+            viewModel.removeSelection(noteId);
+            selectionChanged(noteId);
+            viewModel.setListSize(adapter.getItemCount());
+        }
     }
 
     @Override

@@ -51,7 +51,7 @@ public class Settings {
     public static final long GLOBAL_JSON_MAX_BODY_SIZE_BYTES = 10 * 1024;
     public static final String GLOBAL_APPLICATION_DIRECTORY = "LaaNo";
     public static final int GLOBAL_RETRY_ON_NETWORK_ERROR = 2;
-    public static final int GLOBAL_DELAY_ON_NETWORK_ERROR_MILLIS = 1000;
+    public static final int GLOBAL_DELAY_ON_NETWORK_ERROR_MILLIS = 2000;
     public static final int GLOBAL_SYNC_LOG_KEEPING_PERIOD_DAYS = 7;
     public static final int GLOBAL_DEFER_RELOAD_DELAY_MILLIS = 100;
     public static final int GLOBAL_QUERY_CHUNK_SIZE = 20;

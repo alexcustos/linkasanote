@@ -29,8 +29,8 @@ public final class SyncResult {
 
     public SyncResult(
             long started, @NonNull String entry, @NonNull String entryId,
-            @NonNull LocalContract.SyncResultEntry.Result result) {
-        this(-1, currentTimeMillis(), started, entry, entryId, result, false);
+            @NonNull LocalContract.SyncResultEntry.Result result, boolean applied) {
+        this(-1, currentTimeMillis(), started, entry, entryId, result, applied);
     }
 
     public SyncResult(

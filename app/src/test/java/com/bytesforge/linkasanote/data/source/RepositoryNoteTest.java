@@ -6,6 +6,8 @@ import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
+import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +28,7 @@ import io.reactivex.observers.TestObserver;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -55,7 +58,8 @@ public class RepositoryNoteTest {
     public void setupRepository() {
         MockitoAnnotations.initMocks(this);
         PowerMockito.mockStatic(Log.class);
-        repository = new Repository(localDataSource, cloudDataSource);
+        BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
+        repository = new Repository(localDataSource, cloudDataSource, schedulerProvider);
     }
 
     @Test
@@ -123,12 +127,12 @@ public class RepositoryNoteTest {
         // Preconditions
         when(localDataSource.deleteNote(eq(noteId)))
                 .thenReturn(Single.just(DataSource.ItemState.DEFERRED));
-        when(cloudDataSource.deleteNote(eq(noteId)))
+        when(cloudDataSource.deleteNote(eq(noteId), any(long.class)))
                 .thenReturn(Single.just(DataSource.ItemState.DELETED));
         when(localDataSource.getNote(eq(noteId))).thenReturn(Single.just(note));
         // Test
         TestObserver<DataSource.ItemState> deleteNoteObserver =
-                repository.deleteNote(noteId, true).test();
+                repository.deleteNote(noteId, true, 0).test();
         deleteNoteObserver.assertValues(
                 DataSource.ItemState.DEFERRED, DataSource.ItemState.DELETED);
         assertThat(repository.noteCacheIsDirty, is(false));

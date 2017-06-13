@@ -37,6 +37,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
 
 public final class LinksPresenter extends BaseItemPresenter implements
         LinksContract.Presenter, DataSource.Callback {
@@ -129,6 +130,10 @@ public final class LinksPresenter extends BaseItemPresenter implements
         final long syncTime = settings.getLastLinksSyncTime();
         Log.d(TAG, "loadLinks() [synced=" + (lastSyncTime == syncTime) +
                 ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
+        if (!view.isActive()) {
+            Log.d(TAG, "loadLinks(): View is not active");
+            return;
+        }
         if (forceUpdate) { // NOTE: for testing and for the future option to reload by swipe
             repository.refreshLinks();
         }
@@ -542,18 +547,20 @@ public final class LinksPresenter extends BaseItemPresenter implements
             @NonNull final ArrayList<String> selectedIds, final boolean deleteNotes) {
         checkNotNull(selectedIds);
         boolean sync = settings.isSyncable() && settings.isOnline();
+        long started = currentTimeMillis();
         Observable.fromIterable(selectedIds)
                 .flatMap(linkId -> {
-                    Log.d(TAG, "deleteLinks(): [" + linkId + "]");
-                    return repository.deleteLink(linkId, sync, deleteNotes)
-                            .subscribeOn(schedulerProvider.io())
+                    return repository.deleteLink(linkId, sync, started, deleteNotes)
+                            // NOTE: Sync will be concatenated on .io() scheduler
+                            .subscribeOn(schedulerProvider.computation())
                             .observeOn(schedulerProvider.ui())
                             .doOnNext(itemState -> {
-                                Log.d(TAG, "deleteLink() -> doOnNext(): [" + itemState.name() + "]");
                                 if (itemState == DataSource.ItemState.DELETED
                                         || itemState == DataSource.ItemState.DEFERRED) {
                                     // NOTE: can be called twice
-                                    view.removeLink(linkId);
+                                    if (view.isActive()) {
+                                        view.removeLink(linkId);
+                                    }
                                     settings.resetLinkFilterId(linkId);
                                 }
                             });
@@ -572,7 +579,6 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     }
                 })
                 .subscribe(itemStates -> {
-                    Log.d(TAG, "deleteLinks(): Completed [" + itemStates.toString() + "]");
                     if (itemStates.isEmpty()) {
                         // DELETED or DEFERRED if sync is disabled
                         //viewModel.showDeleteSuccessSnackbar();
@@ -587,7 +593,6 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         settings.setSyncStatus(SyncAdapter.SYNC_STATUS_ERROR);
                         laanoUiManager.showLongToast(R.string.toast_sync_error);
                     } else if (itemStates.contains(DataSource.ItemState.ERROR_EXTRA)) {
-                        // TODO: remove error_extra and treat the extra as a normal Link
                         laanoUiManager.showLongToast(R.string.toast_error);
                     }
                     loadLinks(false);

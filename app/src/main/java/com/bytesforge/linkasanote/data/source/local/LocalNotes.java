@@ -269,7 +269,7 @@ public class LocalNotes<T extends Item> implements LocalItems<T> {
     @Override
     public Single<Boolean> logSyncResult(
             long started, @NonNull final String entryId,
-            @NonNull final LocalContract.SyncResultEntry.Result result) {
+            @NonNull final LocalContract.SyncResultEntry.Result result, boolean applied) {
         checkNotNull(entryId);
         checkNotNull(result);
         String entry;
@@ -278,8 +278,15 @@ public class LocalNotes<T extends Item> implements LocalItems<T> {
         } else {
             entry = LocalContract.NoteEntry.TABLE_NAME;
         }
-        SyncResult syncResult = new SyncResult(started, entry, entryId, result);
+        SyncResult syncResult = new SyncResult(started, entry, entryId, result, applied);
         return localSyncResults.log(syncResult);
+    }
+
+    @Override
+    public Single<Boolean> logSyncResult(
+            long started, @NonNull final String entryId,
+            @NonNull final LocalContract.SyncResultEntry.Result result) {
+        return logSyncResult(started, entryId, result, false);
     }
 
     @Override

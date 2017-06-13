@@ -313,15 +313,22 @@ public class LocalFavorites<T extends Item> implements LocalItems<T> {
     @Override
     public Single<Boolean> logSyncResult(
             long started, @NonNull final String entryId,
-            @NonNull final LocalContract.SyncResultEntry.Result result) {
+            @NonNull final LocalContract.SyncResultEntry.Result result, boolean applied) {
         checkNotNull(entryId);
         checkNotNull(result);
         if (result == LocalContract.SyncResultEntry.Result.RELATED) {
             throw new RuntimeException("logSyncResult(): there is no RELATED item implementation available for Favorites");
         }
         SyncResult syncResult = new SyncResult(
-                started, LocalContract.FavoriteEntry.TABLE_NAME, entryId, result);
+                started, LocalContract.FavoriteEntry.TABLE_NAME, entryId, result, applied);
         return localSyncResults.log(syncResult);
+    }
+
+    @Override
+    public Single<Boolean> logSyncResult(
+            long started, @NonNull final String entryId,
+            @NonNull final LocalContract.SyncResultEntry.Result result) {
+        return logSyncResult(started, entryId, result, false);
     }
 
     @Override

@@ -37,6 +37,9 @@ public interface LocalItems<T> {
     Single<Boolean> logSyncResult(
             long started, @NonNull final String entryId,
             @NonNull final LocalContract.SyncResultEntry.Result result);
+    Single<Boolean> logSyncResult(
+            long started, @NonNull final String entryId,
+            @NonNull final LocalContract.SyncResultEntry.Result result, boolean applied);
     Single<Integer> markSyncResultsAsApplied();
     Observable<Pair<String, LocalContract.SyncResultEntry.Result>> getSyncResultsIds();
 }

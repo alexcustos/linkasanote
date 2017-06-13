@@ -6,6 +6,8 @@ import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
+import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +29,7 @@ import io.reactivex.observers.TestObserver;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -56,7 +59,8 @@ public class RepositoryLinkTest {
     public void setupRepository() {
         MockitoAnnotations.initMocks(this);
         PowerMockito.mockStatic(Log.class);
-        repository = new Repository(localDataSource, cloudDataSource);
+        BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
+        repository = new Repository(localDataSource, cloudDataSource, schedulerProvider);
     }
 
     @Test
@@ -126,11 +130,11 @@ public class RepositoryLinkTest {
                 .thenReturn(Single.just(DataSource.ItemState.DEFERRED));
         when(localDataSource.getNotes(eq(linkId)))
                 .thenReturn(Observable.fromIterable(Collections.emptyList()));
-        when(cloudDataSource.deleteLink(eq(linkId)))
+        when(cloudDataSource.deleteLink(eq(linkId), any(long.class)))
                 .thenReturn(Single.just(DataSource.ItemState.DELETED));
         // Test
         TestObserver<DataSource.ItemState> deleteLinkObserver =
-                repository.deleteLink(linkId, true, false).test();
+                repository.deleteLink(linkId, true, 0, false).test();
         deleteLinkObserver.assertValues(
                 DataSource.ItemState.DEFERRED, DataSource.ItemState.DELETED);
         assertThat(repository.linkCacheIsDirty, is(false));

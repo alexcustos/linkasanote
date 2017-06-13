@@ -33,8 +33,11 @@ public class LocalSyncResults {
     public Observable<SyncResult> getFresh() {
         final String selection =
                 "datetime(" + LocalContract.SyncResultEntry.COLUMN_NAME_STARTED + " / 1000, 'unixepoch')" +
-                        " > datetime('now', ?)";
-        final String[] selectionArgs = {"-" + Settings.GLOBAL_SYNC_LOG_KEEPING_PERIOD_DAYS + " day"};
+                        " > datetime('now', ?) AND " +
+                        LocalContract.SyncResultEntry.COLUMN_NAME_RESULT + " <> ?";
+        final String[] selectionArgs = {
+                "-" + Settings.GLOBAL_SYNC_LOG_KEEPING_PERIOD_DAYS + " day",
+                LocalContract.SyncResultEntry.Result.RELATED.name()};
         final String sortOrder = LocalContract.SyncResultEntry.COLUMN_NAME_CREATED + " ASC";
         return get(SYNC_RESULT_URI, selection, selectionArgs, sortOrder);
     }

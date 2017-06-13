@@ -19,6 +19,7 @@ import com.bytesforge.linkasanote.data.source.local.LocalNotes;
 import com.bytesforge.linkasanote.data.source.local.LocalSyncResults;
 import com.bytesforge.linkasanote.data.source.local.LocalTags;
 import com.bytesforge.linkasanote.settings.Settings;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Singleton;
 
@@ -121,9 +122,10 @@ public class RepositoryModule {
     @Provides
     @Singleton
     public Repository provideRepository(
-            LocalDataSource localDataSource, CloudDataSource cloudDataSource) {
+            LocalDataSource localDataSource, CloudDataSource cloudDataSource,
+            BaseSchedulerProvider schedulerProvider) {
         if (repository == null) {
-            repository = new Repository(localDataSource, cloudDataSource);
+            repository = new Repository(localDataSource, cloudDataSource, schedulerProvider);
         }
         return repository;
     }

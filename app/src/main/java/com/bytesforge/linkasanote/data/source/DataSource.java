@@ -37,7 +37,8 @@ public interface DataSource {
     Single<Link> getLink(@NonNull String linkId);
     Observable<ItemState> saveLink(@NonNull Link link, boolean syncable);
     Single<ItemState> syncSavedLink(@NonNull String linkId);
-    Observable<ItemState> deleteLink(@NonNull String linkId, boolean syncable, boolean deleteNotes);
+    Observable<ItemState> deleteLink(
+            @NonNull String linkId, boolean syncable, long started, boolean deleteNotes);
     Single<Boolean> isConflictedLinks();
     Single<Boolean> isUnsyncedLinks();
     Single<Boolean> autoResolveLinkConflict(@NonNull String linkId);
@@ -55,7 +56,8 @@ public interface DataSource {
     Single<Favorite> getFavorite(@NonNull String favoriteId);
     Observable<ItemState> saveFavorite(@NonNull Favorite favorite, boolean syncable);
     Single<ItemState> syncSavedFavorite(@NonNull String favoriteId);
-    Observable<ItemState> deleteFavorite(@NonNull String favoriteId, boolean syncable);
+    Observable<ItemState> deleteFavorite(
+            @NonNull String favoriteId, boolean syncable, long started);
     Single<Boolean> isConflictedFavorites();
     Single<Boolean> isUnsyncedFavorites();
     Single<Boolean> autoResolveFavoriteConflict(@NonNull String favoriteId);
@@ -73,7 +75,7 @@ public interface DataSource {
     Single<Note> getNote(@NonNull String noteId);
     Observable<ItemState> saveNote(@NonNull Note note, boolean syncable);
     Single<ItemState> syncSavedNote(@NonNull String noteId);
-    Observable<ItemState> deleteNote(@NonNull String noteId, boolean syncable);
+    Observable<ItemState> deleteNote(@NonNull String noteId, boolean syncable, long started);
     Single<Boolean> isConflictedNotes();
     Single<Boolean> isUnsyncedNotes();
     void refreshNotes();

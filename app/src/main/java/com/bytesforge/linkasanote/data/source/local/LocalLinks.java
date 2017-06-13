@@ -5,7 +5,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.util.Pair;
 
 import com.bytesforge.linkasanote.data.Item;
@@ -322,15 +321,22 @@ public class LocalLinks<T extends Item> implements LocalItems<T> {
     @Override
     public Single<Boolean> logSyncResult(
             long started, @NonNull final String entryId,
-            @NonNull final LocalContract.SyncResultEntry.Result result) {
+            @NonNull final LocalContract.SyncResultEntry.Result result, boolean applied) {
         checkNotNull(entryId);
         checkNotNull(result);
         if (result == LocalContract.SyncResultEntry.Result.RELATED) {
             throw new RuntimeException("logSyncResult(): there is no RELATED item implementation available for Links");
         }
         SyncResult syncResult = new SyncResult(
-                started, LocalContract.LinkEntry.TABLE_NAME, entryId, result);
+                started, LocalContract.LinkEntry.TABLE_NAME, entryId, result, applied);
         return localSyncResults.log(syncResult);
+    }
+
+    @Override
+    public Single<Boolean> logSyncResult(
+            long started, @NonNull final String entryId,
+            @NonNull final LocalContract.SyncResultEntry.Result result) {
+        return logSyncResult(started, entryId, result, false);
     }
 
     @Override

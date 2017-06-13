@@ -181,7 +181,8 @@ public final class AddEditNotePresenter implements
         }
         final String noteId = note.getId();
         repository.saveNote(note, false) // sync after save
-                .subscribeOn(schedulerProvider.io())
+                // NOTE: Sync will be concatenated on .io() scheduler
+                .subscribeOn(schedulerProvider.computation())
                 .observeOn(schedulerProvider.ui())
                 .subscribe(itemState -> {
                     switch (itemState) {

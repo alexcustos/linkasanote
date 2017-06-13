@@ -3,6 +3,8 @@ package com.bytesforge.linkasanote.data.source;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
+import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
+import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +50,8 @@ public class RepositoryTagTest {
     @Before
     public void setupRepository() {
         MockitoAnnotations.initMocks(this);
-        repository = new Repository(localDataSource, cloudDataSource);
+        BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
+        repository = new Repository(localDataSource, cloudDataSource, schedulerProvider);
     }
 
     @Test

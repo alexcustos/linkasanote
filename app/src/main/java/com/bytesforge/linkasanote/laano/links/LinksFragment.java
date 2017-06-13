@@ -486,10 +486,12 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
 
     @Override
     public void removeLink(@NonNull String linkId) {
-        viewModel.removeSelection(linkId);
-        adapter.removeItem(linkId);
-        selectionChanged(linkId);
-        viewModel.setListSize(adapter.getItemCount());
+        int position = adapter.removeItem(linkId);
+        if (position >= 0) {
+            viewModel.removeSelection(linkId);
+            selectionChanged(linkId);
+            viewModel.setListSize(adapter.getItemCount());
+        }
     }
 
     @Override

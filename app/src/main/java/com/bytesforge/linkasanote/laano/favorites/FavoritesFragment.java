@@ -404,10 +404,12 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
 
     @Override
     public void removeFavorite(@NonNull String favoriteId) {
-        viewModel.removeSelection(favoriteId);
-        adapter.removeItem(favoriteId);
-        selectionChanged(favoriteId);
-        viewModel.setListSize(adapter.getItemCount());
+        int position = adapter.removeItem(favoriteId);
+        if (position >= 0) {
+            viewModel.removeSelection(favoriteId);
+            selectionChanged(favoriteId);
+            viewModel.setListSize(adapter.getItemCount());
+        }
     }
 
     @Override

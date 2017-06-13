@@ -30,6 +30,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
 
 public final class FavoritesPresenter extends BaseItemPresenter implements
         FavoritesContract.Presenter, DataSource.Callback {
@@ -118,6 +119,10 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         final long syncTime = settings.getLastFavoritesSyncTime();
         Log.d(TAG, "loadFavorites() [synced=" + (lastSyncTime == syncTime) +
                 ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
+        if (!view.isActive()) {
+            Log.d(TAG, "loadFavorites(): View is not active");
+            return;
+        }
         if (forceUpdate) { // NOTE: for testing and for the future option to reload by swipe
             repository.refreshLinks();
         }
@@ -376,18 +381,20 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     public void deleteFavorites(@NonNull ArrayList<String> selectedIds) {
         checkNotNull(selectedIds);
         boolean sync = settings.isSyncable() && settings.isOnline();
+        long started = currentTimeMillis();
         Observable.fromIterable(selectedIds)
                 .flatMap(favoriteId -> {
-                    Log.d(TAG, "deleteFavorites(): [" + favoriteId + "]");
-                    return repository.deleteFavorite(favoriteId, sync)
-                            .subscribeOn(schedulerProvider.io())
+                    return repository.deleteFavorite(favoriteId, sync, started)
+                            // NOTE: Sync will be concatenated on .io() scheduler
+                            .subscribeOn(schedulerProvider.computation())
                             .observeOn(schedulerProvider.ui())
                             .doOnNext(itemState -> {
-                                Log.d(TAG, "deleteFavorites() -> doOnNext(): [" + itemState.name() + "]");
                                 if (itemState == DataSource.ItemState.DELETED
                                         || itemState == DataSource.ItemState.DEFERRED) {
                                     // NOTE: can be called twice
-                                    view.removeFavorite(favoriteId);
+                                    if (view.isActive()) {
+                                        view.removeFavorite(favoriteId);
+                                    }
                                     settings.resetFavoriteFilterId(favoriteId);
                                 }
                             });
@@ -405,7 +412,6 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     }
                 })
                 .subscribe(itemStates -> {
-                    Log.d(TAG, "deleteFavorites(): Completed [" + itemStates.toString() + "]");
                     if (itemStates.isEmpty()) {
                         // DELETED or DEFERRED if sync is disabled
                         //viewModel.showDeleteSuccessSnackbar();

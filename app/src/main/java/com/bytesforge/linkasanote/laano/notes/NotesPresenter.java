@@ -35,6 +35,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
 
 public final class NotesPresenter extends BaseItemPresenter implements
         NotesContract.Presenter, DataSource.Callback {
@@ -127,6 +128,10 @@ public final class NotesPresenter extends BaseItemPresenter implements
         final long syncTime = settings.getLastNotesSyncTime();
         Log.d(TAG, "loadNotes() [synced=" + (lastSyncTime == syncTime) +
                 ", loadIsComplete=" + loadIsCompleted + ", loadIsDeferred=" + loadIsDeferred + "]");
+        if (!view.isActive()) {
+            Log.d(TAG, "loadNotes(): View is not active");
+            return;
+        }
         if (forceUpdate) { // NOTE: for testing and for the future option to reload by swipe
             repository.refreshLinks();
         }
@@ -451,18 +456,20 @@ public final class NotesPresenter extends BaseItemPresenter implements
     @Override
     public void deleteNotes(ArrayList<String> selectedIds) {
         boolean sync = settings.isSyncable() && settings.isOnline();
+        long started = currentTimeMillis();
         Observable.fromIterable(selectedIds)
                 .flatMap(noteId -> {
-                    Log.d(TAG, "deleteNotes(): [" + noteId + "]");
-                    return repository.deleteNote(noteId, sync)
-                            .subscribeOn(schedulerProvider.io())
+                    return repository.deleteNote(noteId, sync, started)
+                            // NOTE: Sync will be concatenated on .io() scheduler
+                            .subscribeOn(schedulerProvider.computation())
                             .observeOn(schedulerProvider.ui())
                             .doOnNext(itemState -> {
-                                Log.d(TAG, "deleteNotes() -> doOnNext(): [" + itemState.name() + "]");
                                 if (itemState == DataSource.ItemState.DELETED
                                         || itemState == DataSource.ItemState.DEFERRED) {
                                     // NOTE: can be called twice
-                                    view.removeNote(noteId);
+                                    if (view.isActive()) {
+                                        view.removeNote(noteId);
+                                    }
                                     settings.resetNoteFilterId(noteId);
                                 }
                             });
@@ -480,7 +487,6 @@ public final class NotesPresenter extends BaseItemPresenter implements
                     }
                 })
                 .subscribe(itemStates -> {
-                    Log.d(TAG, "deleteNotes(): Completed [" + itemStates.toString() + "]");
                     if (itemStates.isEmpty()) {
                         // DELETED or DEFERRED if sync is disabled
                         //viewModel.showDeleteSuccessSnackbar();
