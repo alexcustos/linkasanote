@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
@@ -218,7 +219,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
         boolean loadByChunk = repository.isLinkCacheDirty();
         boolean showProgress = (!loadByChunk && repository.getLinkCacheSize() == 0)
                 || forceShowLoading;
-        if (loadByChunk) view.clearLinks();
+        final AtomicBoolean firstChunk = new AtomicBoolean(true);
         if (showProgress) viewModel.showProgressOverlay();
         Log.d(TAG, "loadLinks(): getLinks() [showProgress=" + showProgress + ", loadByChunk=" + loadByChunk + "]");
         Disposable disposable = loadLinks
@@ -309,9 +310,12 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 })
                 .subscribe(links -> {
                     Log.d(TAG, "loadLinks(): subscribe() [" + links.size() + "]");
-                    if (loadByChunk) view.addLinks(links);
-                    else view.showLinks(links);
-
+                    // NOTE: just to be logical
+                    if (loadByChunk && !firstChunk.getAndSet(false)) {
+                        view.addLinks(links);
+                    } else {
+                        view.showLinks(links);
+                    }
                     selectLinkFilter();
                     laanoUiManager.updateTitle(TAB);
                     viewModel.hideProgressOverlay();

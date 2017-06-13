@@ -141,13 +141,13 @@ public class LaanoFragmentPagerAdapter extends FragmentPagerAdapter {
         }
         tabTitle = (TextView) tabView.findViewById(android.R.id.text1);
         @DrawableRes int pageIconId = getPageIcon(position, state);
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             tabTitle.setCompoundDrawablesWithIntrinsicBounds(pageIconId, 0, 0, 0);
         } else {
-            ColorStateList colors = ContextCompat.getColorStateList(
-                    context, R.color.tab_icon_tint);
-            Drawable drawable = VectorDrawableCompat.create(
-                    resources, pageIconId, context.getTheme());
+            ColorStateList colors =
+                    ContextCompat.getColorStateList(context, R.color.tab_icon_tint);
+            Drawable drawable =
+                    VectorDrawableCompat.create(resources, pageIconId, context.getTheme());
             if (drawable != null) {
                 Drawable drawableCompat = DrawableCompat.wrap(drawable);
                 DrawableCompat.setTintList(drawableCompat, colors);

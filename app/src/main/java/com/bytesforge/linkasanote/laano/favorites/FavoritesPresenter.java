@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
@@ -149,7 +150,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
         boolean loadByChunk = repository.isFavoriteCacheDirty();
         boolean showProgress = (!loadByChunk && repository.getFavoriteCacheSize() == 0)
                 || forceShowLoading;
-        if (loadByChunk) view.clearFavorites();
+        final AtomicBoolean firstChunk = new AtomicBoolean(true);
         if (showProgress) viewModel.showProgressOverlay();
         Log.d(TAG, "loadFavorites(): getFavorites() [showProgress=" + showProgress + ", loadByChunk=" + loadByChunk + "]");
         Disposable disposable = repository.getFavorites()
@@ -206,9 +207,12 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                 })
                 .subscribe(favorites -> {
                     Log.d(TAG, "loadFavorites(): subscribe() [" + favorites.size() + "]");
-                    if (loadByChunk) view.addFavorites(favorites);
-                    else view.showFavorites(favorites);
-
+                    // NOTE: just to be logical
+                    if (loadByChunk && !firstChunk.getAndSet(false)) {
+                        view.addFavorites(favorites);
+                    } else {
+                        view.showFavorites(favorites);
+                    }
                     selectFavoriteFilter();
                     laanoUiManager.updateTitle(TAB);
                     viewModel.hideProgressOverlay();

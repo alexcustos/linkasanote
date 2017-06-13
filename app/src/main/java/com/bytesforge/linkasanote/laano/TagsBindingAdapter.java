@@ -31,7 +31,7 @@ public class TagsBindingAdapter {
 
         view.getLayoutParams().height = ViewGroup.LayoutParams.WRAP_CONTENT;
         // NOTE: it's to prevent the view to be changed from empty to filled when adapter rebind the item
-        if (tagsViewWidths.get(view.getId()) > 0 && view.getLineCount() > 0) {
+        if (tagsViewWidths.get(view.getId()) > 0) {
             setTagsTextView(view, tags);
         } else {
             ViewTreeObserver observer = view.getViewTreeObserver();
@@ -65,7 +65,7 @@ public class TagsBindingAdapter {
             noteTags.append(tagBuilder);
         }
         view.setText(noteTags);
-        if (view.getLineCount() == 1) {
+        if (tags.size() == 1) {
             view.getLayoutParams().height = spanHeight;
         }
     }

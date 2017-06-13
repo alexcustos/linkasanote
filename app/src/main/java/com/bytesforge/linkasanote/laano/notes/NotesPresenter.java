@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
@@ -214,7 +215,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
         boolean loadByChunk = repository.isNoteCacheDirty();
         boolean showProgress = (!loadByChunk && repository.getNoteCacheSize() == 0)
                 || forceShowLoading;
-        if (loadByChunk) view.clearNotes();
+        final AtomicBoolean firstChunk = new AtomicBoolean(true);
         if (showProgress) viewModel.showProgressOverlay();
         Log.d(TAG, "loadNotes(): getNotes() [showProgress=" + showProgress + ", loadByChunk=" + loadByChunk + "]");
         Disposable disposable = loadNotes
@@ -296,9 +297,12 @@ public final class NotesPresenter extends BaseItemPresenter implements
                 })
                 .subscribe(notes -> {
                     Log.d(TAG, "loadNotes(): subscribe() [" + notes.size() + "]");
-                    if (loadByChunk) view.addNotes(notes);
-                    else view.showNotes(notes);
-
+                    // NOTE: just to be logical
+                    if (loadByChunk && !firstChunk.getAndSet(false)) {
+                        view.addNotes(notes);
+                    } else {
+                        view.showNotes(notes);
+                    }
                     selectNoteFilter();
                     laanoUiManager.updateTitle(TAB);
                     viewModel.hideProgressOverlay();

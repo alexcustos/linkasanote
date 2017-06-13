@@ -781,8 +781,19 @@ public class Repository implements DataSource {
                             if (cachedFavorites == null) {
                                 cachedFavorites = new LinkedHashMap<>();
                             }
-                            // NOTE: new Favorite has no rowId to bind to RecyclerView and it position is unknown
-                            refreshFavorites();
+                            // NOTE: new Favorite has no rowId to bind to RecyclerView
+                            Favorite cachedFavorite = cachedFavorites.get(favoriteId);
+                            if (cachedFavorite != null) {
+                                String cachedFavoriteName = cachedFavorite.getName();
+                                if (cachedFavoriteName != null
+                                        && cachedFavoriteName.equals(favorite.getName())) {
+                                    refreshFavorite(favoriteId);
+                                } else {
+                                    refreshFavorites(); // NOTE: new Favorite's position is unknown
+                                }
+                            } else {
+                                refreshFavorites(); // NOTE: new Favorite's position is unknown
+                            }
                             // Tags
                             if (cachedTags == null) {
                                 cachedTags = new LinkedHashMap<>();
