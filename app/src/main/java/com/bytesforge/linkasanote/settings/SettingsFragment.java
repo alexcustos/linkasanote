@@ -230,8 +230,11 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                         Snackbar.LENGTH_LONG);
                 return false;
             }
-            prefSyncDirectory.setSummary(newSyncDirectory);
-            return true;
+            settings.setSyncDirectory(newSyncDirectory);
+            String normalizedSyncDirectory = settings.getSyncDirectory();
+            prefSyncDirectory.setSummary(normalizedSyncDirectory);
+            prefSyncDirectory.setText(normalizedSyncDirectory);
+            return false;
         });
 
         prefSyncInterval = (ListPreference) findPreference(

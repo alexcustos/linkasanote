@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">LaaNo</string>
+    <string name="app_name_full">LaaNo: Link as a Note</string>
     <string name="placeholder_title">placeholder</string>
     <string name="placeholder_text">This is a placeholder</string>
     <string name="error_database">Cannot access the database, please reinstall the application</string>

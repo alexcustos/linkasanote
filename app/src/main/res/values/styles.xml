@@ -90,7 +90,7 @@
         <item name="android:textStyle">bold</item>
     </style>
     <style name="DrawerText.AppName" parent="DrawerText">
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">18sp</item>
     </style>
     <style name="DrawerText.LastSynced" parent="DrawerText">
         <item name="android:textSize">12sp</item>

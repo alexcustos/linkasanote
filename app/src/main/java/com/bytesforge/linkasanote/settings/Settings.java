@@ -206,11 +206,28 @@ public class Settings {
     }
 
     public String getSyncDirectory() {
-        String syncDirectory = sharedPreferences.getString(
-                resources.getString(R.string.pref_key_sync_directory), DEFAULT_SYNC_DIRECTORY);
-        return syncDirectory.startsWith(JsonFile.PATH_SEPARATOR)
-                ? syncDirectory
-                : JsonFile.PATH_SEPARATOR + syncDirectory;
+        String prefKey = resources.getString(R.string.pref_key_sync_directory);
+        return sharedPreferences.getString(prefKey, DEFAULT_SYNC_DIRECTORY);
+    }
+
+    public synchronized void setSyncDirectory(String syncDirectory) {
+        String oldValue = getSyncDirectory();
+        String prefKey = resources.getString(R.string.pref_key_sync_directory);
+        String normalizedSyncDirectory = normalizeSyncDirectory(syncDirectory);
+        if (!oldValue.equals(normalizedSyncDirectory)) {
+            putStringSetting(prefKey, normalizedSyncDirectory);
+            resetSyncState();
+        }
+    }
+
+    private String normalizeSyncDirectory(String syncDirectory) {
+        if (Strings.isNullOrEmpty(syncDirectory)) {
+            return DEFAULT_SYNC_DIRECTORY;
+        } else {
+            return syncDirectory.startsWith(JsonFile.PATH_SEPARATOR)
+                    ? syncDirectory
+                    : JsonFile.PATH_SEPARATOR + syncDirectory;
+        }
     }
 
     @NonNull

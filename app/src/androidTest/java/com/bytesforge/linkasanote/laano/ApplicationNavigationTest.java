@@ -140,7 +140,7 @@ public class ApplicationNavigationTest {
                 .perform(DrawerActions.open());
         onView(withId(R.id.nav_view)).perform(navigateTo(R.id.add_account_menu_item));
         AndroidTestUtils.sleep(150);
-        onView(withId(R.id.application_logo)).check(matches(withText(R.string.app_name)));
+        onView(withId(R.id.application_logo)).check(matches(withText(R.string.app_name_full)));
 
     }
 

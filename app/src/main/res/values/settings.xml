@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_url" translatable="false">https://www.laano.net</string>
+    <string name="app_url" translatable="false">https://laano.net</string>
     <string name="app_author" translatable="false">Aleksandr Borisenko</string>
     <string name="app_was_created_year" translatable="false">2017</string>
     <string name="authenticator_account_type" translatable="false">linkasanote</string>

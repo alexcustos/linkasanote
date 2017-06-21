@@ -30,7 +30,8 @@
                 android:id="@+id/application_logo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/app_name"
+                android:layout_marginTop="@dimen/add_edit_account_logo_margin_top"
+                android:text="@string/app_name_full"
                 android:textSize="@dimen/add_edit_account_title_text_size" />
 
             <TextView
