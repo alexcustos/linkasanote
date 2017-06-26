@@ -203,7 +203,7 @@
     <string name="dialog_favorite_save_success">Favorite has been saved</string>
     <string name="dialog_favorite_delete_success">Selected Favorites have been deleted</string>
     <string name="drawer_header_status_icon_description">Status of the last synchronization</string>
-    <string name="drawer_header_last_synced_label">Last synced:</string>
+    <string name="drawer_header_last_synced_label">Last synced: %s</string>
     <string name="drawer_header_last_synced_never">never</string>
     <string name="drawer_header_status_synced">Synced</string>
     <string name="drawer_header_status_unsynced">Unsynced</string>

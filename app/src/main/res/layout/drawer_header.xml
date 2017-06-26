@@ -50,26 +50,18 @@
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/drawer_header_status_icon_description"
                 android:layout_alignParentStart="true"
-                android:layout_marginEnd="12dp"
+                android:layout_marginEnd="@dimen/drawer_header_status_icon_margin_end"
                 app:srcCompat="@drawable/ic_sync_circle_white_36dp"
                 bind:tintCompat="@{viewModel.statusIconTint}" />
             <TextView
                 android:id="@+id/drawer_last_synced_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/drawer_header_last_synced_label"
-                android:textAppearance="@style/DrawerText.LastSynced"
-                android:layout_toEndOf="@+id/drawer_status_icon"
-                android:layout_marginEnd="4dp" />
-            <TextView
-                android:id="@+id/drawer_last_synced"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:text="@{viewModel.lastSyncedText}"
                 android:maxLines="1"
                 android:ellipsize="end"
-                android:text="@{viewModel.lastSyncedText}"
                 android:textAppearance="@style/DrawerText.LastSynced"
-                android:layout_toEndOf="@+id/drawer_last_synced_label" />
+                android:layout_toEndOf="@+id/drawer_status_icon" />
             <TextView
                 android:id="@+id/drawer_status"
                 android:layout_width="wrap_content"

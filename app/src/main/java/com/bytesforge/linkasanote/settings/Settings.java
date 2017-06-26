@@ -66,7 +66,6 @@ public class Settings {
     public static final int GLOBAL_LINK_MAX_KEYWORDS = 10;
     public static final int GLOBAL_LINK_MAX_BODY_SIZE_BYTES = 10 * 1024;
     public static final boolean GLOBAL_CLIPBOARD_LINK_UPDATED_TOAST = true;
-    // TODO: this settings should be 3 way switch: on app start; on addEdit start; off
     public static final boolean GLOBAL_CLIPBOARD_MONITOR_ON_START = true;
     public static final long GLOBAL_JSON_MAX_BODY_SIZE_BYTES = 10 * 1024;
     public static final String GLOBAL_APPLICATION_DIRECTORY = "LaaNo";

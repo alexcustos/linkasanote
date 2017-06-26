@@ -21,6 +21,7 @@
 package com.bytesforge.linkasanote.laano;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.databinding.ObservableBoolean;
@@ -28,7 +29,6 @@ import android.databinding.ObservableField;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
 import android.support.v4.content.ContextCompat;
 
 import com.bytesforge.linkasanote.BR;
@@ -62,12 +62,14 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
     public final ObservableBoolean accountName = new ObservableBoolean();
 
     private final Context context;
+    private final Resources resources;
 
     @Bindable
     public int statusIconTint;
 
     public LaanoDrawerHeaderViewModel(Context context) {
         this.context = checkNotNull(context);
+        resources = context.getResources();
     }
 
     public void setInstanceState(@Nullable Bundle savedInstanceState) {
@@ -120,17 +122,13 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
         return defaultState;
     }
 
-    private String getString(@StringRes int string) {
-        return context.getResources().getString(string);
-    }
-
     public void showAppName() {
         usernameText.set(null);
         accountNameText.set(null);
         appName.set(true);
         username.set(false);
         accountName.set(false);
-        statusText.set(getString(R.string.drawer_header_status_no_account));
+        statusText.set(resources.getString(R.string.drawer_header_status_no_account));
     }
 
     public void showAccount(@NonNull AccountItem accountItem) {
@@ -140,38 +138,39 @@ public class LaanoDrawerHeaderViewModel extends BaseObservable {
         appName.set(false);
         username.set(true);
         accountName.set(true);
-        statusText.set(getString(R.string.drawer_header_status_ready));
+        statusText.set(resources.getString(R.string.drawer_header_status_ready));
     }
 
     public void showSyncStatus(long lastSyncTime, int syncStatus) {
         if (lastSyncTime == 0) {
-            lastSyncedText.set(getString(R.string.drawer_header_last_synced_never));
+            lastSyncedText.set(resources.getString(R.string.drawer_header_last_synced_label,
+                    resources.getString(R.string.drawer_header_last_synced_never)));
             statusIconTint = ContextCompat.getColor(context, R.color.sync_state_neutral);
             notifyPropertyChanged(BR.statusIconTint);
             return;
         }
         Date date = new Date(lastSyncTime);
         String dateTime = CommonUtils.formatDateTime(context, date);
-        lastSyncedText.set(dateTime);
+        lastSyncedText.set(resources.getString(R.string.drawer_header_last_synced_label, dateTime));
         switch (syncStatus) {
             case SyncAdapter.SYNC_STATUS_SYNCED:
-                statusText.set(getString(R.string.drawer_header_status_synced));
+                statusText.set(resources.getString(R.string.drawer_header_status_synced));
                 statusIconTint = ContextCompat.getColor(context, R.color.sync_state_success);
                 break;
             case SyncAdapter.SYNC_STATUS_UNSYNCED:
-                statusText.set(getString(R.string.drawer_header_status_unsynced));
+                statusText.set(resources.getString(R.string.drawer_header_status_unsynced));
                 statusIconTint = ContextCompat.getColor(context, R.color.sync_state_neutral);
                 break;
             case SyncAdapter.SYNC_STATUS_ERROR:
-                statusText.set(getString(R.string.drawer_header_status_error));
+                statusText.set(resources.getString(R.string.drawer_header_status_error));
                 statusIconTint = ContextCompat.getColor(context, R.color.sync_state_error);
                 break;
             case SyncAdapter.SYNC_STATUS_CONFLICT:
-                statusText.set(getString(R.string.drawer_header_status_conflict));
+                statusText.set(resources.getString(R.string.drawer_header_status_conflict));
                 statusIconTint = ContextCompat.getColor(context, R.color.sync_state_conflict);
                 break;
             default:
-                statusText.set(getString(R.string.drawer_header_status_unknown));
+                statusText.set(resources.getString(R.string.drawer_header_status_unknown));
                 statusIconTint = ContextCompat.getColor(context, R.color.sync_state_neutral);
         }
         notifyPropertyChanged(BR.statusIconTint);

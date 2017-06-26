@@ -236,9 +236,18 @@ public final class LinksPresenter extends BaseItemPresenter implements
         if (loadLinks == null) {
             loadLinks = repository.getLinks();
         }
+        final String searchText;
+        String text = viewModel.getSearchText();
+        if (!Strings.isNullOrEmpty(text)) {
+            searchText = text.toLowerCase();
+        } else {
+            searchText = null;
+        }
+        boolean filterIsActive = (searchText != null || filterType != FilterType.ALL);
         boolean loadByChunk = repository.isLinkCacheDirty();
-        boolean showProgress = (!loadByChunk && repository.getLinkCacheSize() == 0)
-                || forceShowLoading;
+        // TODO: replace progress layout with SwipeRefreshLayout and remove this condition
+        boolean showProgress = ((!loadByChunk || filterIsActive)
+                && repository.getLinkCacheSize() == 0) || forceShowLoading;
         final AtomicBoolean firstChunk = new AtomicBoolean(true);
         if (showProgress) viewModel.showProgressOverlay();
         Log.d(TAG, "loadLinks(): getLinks() [showProgress=" + showProgress + ", loadByChunk=" + loadByChunk + "]");
@@ -257,10 +266,8 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     return Observable.error(throwable);
                 }))
                 .filter(link -> {
-                    String searchText = viewModel.getSearchText();
-                    if (!Strings.isNullOrEmpty(searchText)) {
+                    if (searchText != null) {
                         boolean found = false;
-                        searchText = searchText.toLowerCase();
                         String linkName = link.getName();
                         if (linkName != null && linkName.toLowerCase().contains(searchText)) {
                             found = true;

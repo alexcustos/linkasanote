@@ -86,31 +86,33 @@
                     app:layout_constraintStart_toStartOf="@id/link_open_button"
                     app:layout_constraintEnd_toEndOf="@+id/link_open_button" />
 
-                <TextView
-                    android:id="@+id/link_filter_prefix"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@{viewModel.getFilterPrefix()}"
-                    android:textAppearance="@style/LinksText.Prefix"
                     android:layout_marginStart="@dimen/card_text_to_button_margin_start"
-                    android:layout_marginEnd="@dimen/card_prefix_to_text_margin_end"
+                    android:layout_marginEnd="@dimen/card_nearby_button_margin_end"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/link_open_button"
-                    app:layout_constraintEnd_toStartOf="@+id/link_name" />
+                    app:layout_constraintEnd_toStartOf="@+id/link_to_notes">
 
-                <TextView
-                    android:id="@+id/link_name"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/card_nearby_button_margin_end"
-                    android:text="@{link.name ?? link.link}"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textAppearance="@style/LinksText.Name"
-                    app:layout_constraintBaseline_toBaselineOf="@+id/link_filter_prefix"
-                    app:layout_constraintStart_toEndOf="@+id/link_filter_prefix"
-                    app:layout_constraintEnd_toStartOf="@+id/link_to_notes" />
+                    <TextView
+                        android:id="@+id/link_filter_prefix"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/card_prefix_to_text_margin_end"
+                        android:text="@{viewModel.getFilterPrefix()}"
+                        android:textAppearance="@style/LinksText.Prefix" />
+
+                    <TextView
+                        android:id="@+id/link_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{link.name ?? link.link}"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:textAppearance="@style/LinksText.Name" />
+                </LinearLayout>
 
                 <!-- bind:imageButtonEnabled="@{!link.conflicted}" -->
                 <ImageButton

@@ -105,7 +105,6 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':tokenautocomplete')
     compile project(':androidutils')
-    //compile project(':nextcloud')
 
     compile "com.android.support:multidex:${multidexVersion}"
     compile "com.android.support:appcompat-v7:${supportLibraryVersion}"

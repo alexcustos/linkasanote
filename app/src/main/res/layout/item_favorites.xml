@@ -82,33 +82,34 @@
                 app:layout_constraintStart_toStartOf="@+id/favorite_to_links"
                 app:layout_constraintEnd_toEndOf="@+id/favorite_to_links" />
 
-            <TextView
-                android:id="@+id/favorite_filter_prefix"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@{viewModel.getFilterPrefix(favorite.andGate)}"
-                android:textAppearance="@style/FavoritesText.Prefix"
-                android:layout_marginStart="@dimen/recycler_view_text_to_button_margin_start"
-                android:layout_marginEnd="@dimen/recycler_view_prefix_to_text_margin_end"
-                app:layout_constraintHorizontal_chainStyle="spread"
-                app:layout_constraintBaseline_toBaselineOf="@+id/favorite_name"
-                app:layout_constraintStart_toEndOf="@+id/favorite_to_links"
-                app:layout_constraintEnd_toStartOf="@+id/favorite_name" />
-
-            <TextView
-                android:id="@+id/favorite_name"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@{favorite.name}"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textAppearance="@style/FavoritesText.Name"
+                android:layout_marginStart="@dimen/recycler_view_text_to_button_margin_start"
                 android:layout_marginEnd="@dimen/recycler_view_nearby_button_margin_end"
                 app:layout_constraintVertical_chainStyle="packed"
                 app:layout_constraintTop_toTopOf="@+id/favorite_to_links"
                 app:layout_constraintBottom_toBottomOf="@+id/favorite_to_links"
-                app:layout_constraintStart_toEndOf="@+id/favorite_filter_prefix"
-                app:layout_constraintEnd_toStartOf="@+id/favorite_to_notes" />
+                app:layout_constraintStart_toEndOf="@+id/favorite_to_links"
+                app:layout_constraintEnd_toStartOf="@+id/favorite_to_notes">
+
+                <TextView
+                    android:id="@+id/favorite_filter_prefix"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/recycler_view_prefix_to_text_margin_end"
+                    android:text="@{viewModel.getFilterPrefix(favorite.andGate)}"
+                    android:textAppearance="@style/FavoritesText.Prefix" />
+
+                <TextView
+                    android:id="@+id/favorite_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@{favorite.name}"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAppearance="@style/FavoritesText.Name" />
+            </LinearLayout>
 
             <ImageButton
                 android:id="@+id/favorite_to_notes"
