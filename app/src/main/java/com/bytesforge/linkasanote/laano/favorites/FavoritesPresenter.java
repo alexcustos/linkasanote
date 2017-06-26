@@ -167,9 +167,17 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
             repository.checkFavoritesSyncLog();
             updateTabNormalState();
         }
+        final String searchText;
+        String text = viewModel.getSearchText();
+        if (!Strings.isNullOrEmpty(text)) {
+            searchText = text.toLowerCase();
+        } else {
+            searchText = null;
+        }
+        boolean filterIsActive = (searchText != null || filterType != FilterType.ALL);
         boolean loadByChunk = repository.isFavoriteCacheDirty();
-        boolean showProgress = (!loadByChunk && repository.getFavoriteCacheSize() == 0)
-                || forceShowLoading;
+        boolean showProgress = ((!loadByChunk || filterIsActive)
+                && repository.getFavoriteCacheSize() == 0) || forceShowLoading;
         final AtomicBoolean firstChunk = new AtomicBoolean(true);
         if (showProgress) viewModel.showProgressOverlay();
         Log.d(TAG, "loadFavorites(): getFavorites() [showProgress=" + showProgress + ", loadByChunk=" + loadByChunk + "]");
@@ -188,12 +196,10 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                     return Observable.error(throwable);
                 }))
                 .filter(favorite -> {
-                    String searchText = viewModel.getSearchText();
-                    if (!Strings.isNullOrEmpty(searchText)) {
-                        searchText = searchText.toLowerCase();
+                    if (searchText != null) {
                         String favoriteName = favorite.getName();
-                        if (favoriteName != null
-                                && !favoriteName.toLowerCase().contains(searchText)) {
+                        if (favoriteName == null
+                                || !favoriteName.toLowerCase().contains(searchText)) {
                             return false;
                         }
                     }

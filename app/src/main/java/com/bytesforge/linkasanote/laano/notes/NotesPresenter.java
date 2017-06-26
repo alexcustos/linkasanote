@@ -232,9 +232,17 @@ public final class NotesPresenter extends BaseItemPresenter implements
         if (loadNotes == null) {
             loadNotes = repository.getNotes();
         }
+        final String searchText;
+        String text = viewModel.getSearchText();
+        if (!Strings.isNullOrEmpty(text)) {
+            searchText = text.toLowerCase();
+        } else {
+            searchText = null;
+        }
+        boolean filterIsActive = (searchText != null || filterType != FilterType.ALL);
         boolean loadByChunk = repository.isNoteCacheDirty();
-        boolean showProgress = (!loadByChunk && repository.getNoteCacheSize() == 0)
-                || forceShowLoading;
+        boolean showProgress = ((!loadByChunk || filterIsActive)
+                && repository.getNoteCacheSize() == 0) || forceShowLoading;
         final AtomicBoolean firstChunk = new AtomicBoolean(true);
         if (showProgress) viewModel.showProgressOverlay();
         Log.d(TAG, "loadNotes(): getNotes() [showProgress=" + showProgress + ", loadByChunk=" + loadByChunk + "]");
@@ -253,11 +261,10 @@ public final class NotesPresenter extends BaseItemPresenter implements
                     return Observable.error(throwable);
                 }))
                 .filter(note -> {
-                    String searchText = viewModel.getSearchText();
-                    if (!Strings.isNullOrEmpty(searchText)) {
-                        searchText = searchText.toLowerCase();
+                    if (searchText != null) {
                         String noteNote = note.getNote();
-                        if (noteNote != null && !noteNote.toLowerCase().contains(searchText)) {
+                        if (noteNote == null
+                                || !noteNote.toLowerCase().contains(searchText)) {
                             return false;
                         }
                     }
