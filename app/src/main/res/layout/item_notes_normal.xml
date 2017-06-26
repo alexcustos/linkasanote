@@ -87,31 +87,33 @@
                     app:layout_constraintStart_toStartOf="@id/note_to_links"
                     app:layout_constraintEnd_toEndOf="@+id/note_to_links" />
 
-                <TextView
-                    android:id="@+id/note_filter_prefix"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@{viewModel.getFilterPrefix()}"
-                    android:textAppearance="@style/NotesText.Prefix"
                     android:layout_marginStart="@dimen/card_text_to_button_margin_start"
-                    android:layout_marginEnd="@dimen/card_prefix_to_text_margin_end"
+                    android:layout_marginEnd="@dimen/card_nearby_button_margin_end"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/note_to_links"
-                    app:layout_constraintEnd_toStartOf="@+id/note_note_caption" />
+                    app:layout_constraintEnd_toStartOf="@+id/note_toggle">
 
-                <TextView
-                    android:id="@+id/note_note_caption"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/card_nearby_button_margin_end"
-                    android:text="@{note.note}"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textAppearance="@style/NotesText.Note"
-                    app:layout_constraintBaseline_toBaselineOf="@+id/note_filter_prefix"
-                    app:layout_constraintStart_toEndOf="@+id/note_filter_prefix"
-                    app:layout_constraintEnd_toStartOf="@+id/note_toggle" />
+                    <TextView
+                        android:id="@+id/note_filter_prefix"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/card_prefix_to_text_margin_end"
+                        android:text="@{viewModel.getFilterPrefix()}"
+                        android:textAppearance="@style/NotesText.Prefix" />
+
+                    <TextView
+                        android:id="@+id/note_note_caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{note.note}"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:textAppearance="@style/NotesText.Note" />
+                </LinearLayout>
 
                 <ImageButton
                     android:id="@+id/note_toggle"

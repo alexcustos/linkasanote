@@ -25,6 +25,7 @@
     <dimen name="drawer_header_status_margin_top">4dp</dimen>
     <dimen name="drawer_header_padding">16dp</dimen>
     <dimen name="drawer_header_subtitle_height">56dp</dimen>
+    <dimen name="drawer_header_status_icon_margin_end">12dp</dimen>
     <dimen name="screen_edge_padding">16dp</dimen>
     <dimen name="add_edit_account_logo_margin_top">8sp</dimen>
     <dimen name="add_edit_account_title_text_size">24sp</dimen>

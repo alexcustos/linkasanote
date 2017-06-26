@@ -203,7 +203,7 @@
     <string name="dialog_favorite_save_success">Избранное успешно сохранено</string>
     <string name="dialog_favorite_delete_success">Выделенные избранные удалены</string>
     <string name="drawer_header_status_icon_description">Статус последней синхронизации</string>
-    <string name="drawer_header_last_synced_label">Завершено:</string>
+    <string name="drawer_header_last_synced_label">Завершено: %s</string>
     <string name="drawer_header_last_synced_never">никогда</string>
     <string name="drawer_header_status_synced">Синхронизировано</string>
     <string name="drawer_header_status_unsynced">Не синхронизировано</string>

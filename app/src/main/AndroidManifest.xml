@@ -123,5 +123,7 @@
             android:value="true" />
         <meta-data android:name="com.samsung.android.sdk.multiwindow.penwindow.enable"
             android:value="true" />
+
+        <meta-data android:name="android.max_aspect" android:value="3.0" />
     </application>
 </manifest>
