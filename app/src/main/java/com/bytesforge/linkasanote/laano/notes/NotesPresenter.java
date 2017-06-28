@@ -487,6 +487,9 @@ public final class NotesPresenter extends BaseItemPresenter implements
     @Override
     public void deleteNotes(ArrayList<String> selectedIds) {
         boolean sync = settings.isSyncable() && settings.isOnline();
+        if (sync) {
+            laanoUiManager.setSyncDrawerMenu();
+        }
         long started = currentTimeMillis();
         Observable.fromIterable(selectedIds)
                 .flatMap(noteId -> {
@@ -495,6 +498,9 @@ public final class NotesPresenter extends BaseItemPresenter implements
                             .subscribeOn(schedulerProvider.computation())
                             .observeOn(schedulerProvider.ui())
                             .doOnNext(itemState -> {
+                                if (sync) {
+                                    laanoUiManager.setSyncDrawerMenu();
+                                }
                                 if (itemState == DataSource.ItemState.DELETED
                                         || itemState == DataSource.ItemState.DEFERRED) {
                                     // NOTE: can be called twice
@@ -512,6 +518,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
                 .doFinally(() -> {
                     if (sync) {
                         this.updateSyncStatus();
+                        laanoUiManager.setNormalDrawerMenu();
                     } else if (settings.isSyncable()) {
                         settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
                         laanoUiManager.updateSyncStatus();
