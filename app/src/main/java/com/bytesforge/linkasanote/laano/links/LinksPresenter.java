@@ -449,7 +449,9 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 .observeOn(schedulerProvider.ui())
                 .subscribe(link -> {
                     Uri uri = Uri.parse(link.getLink());
-                    view.openLink(uri);
+                    if (view.isActive()) {
+                        view.openLink(uri);
+                    }
                 }, throwable -> {
                     CommonUtils.logStackTrace(TAG_E, throwable);
                     viewModel.showOpenLinkErrorSnackbar();
