@@ -449,7 +449,9 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 .observeOn(schedulerProvider.ui())
                 .subscribe(link -> {
                     Uri uri = Uri.parse(link.getLink());
-                    view.openLink(uri);
+                    if (view.isActive()) {
+                        view.openLink(uri);
+                    }
                 }, throwable -> {
                     CommonUtils.logStackTrace(TAG_E, throwable);
                     viewModel.showOpenLinkErrorSnackbar();
@@ -578,6 +580,9 @@ public final class LinksPresenter extends BaseItemPresenter implements
             @NonNull final ArrayList<String> selectedIds, final boolean deleteNotes) {
         checkNotNull(selectedIds);
         boolean sync = settings.isSyncable() && settings.isOnline();
+        if (sync) {
+            laanoUiManager.setSyncDrawerMenu();
+        }
         long started = currentTimeMillis();
         Observable.fromIterable(selectedIds)
                 .flatMap(linkId -> {
@@ -586,6 +591,9 @@ public final class LinksPresenter extends BaseItemPresenter implements
                             .subscribeOn(schedulerProvider.computation())
                             .observeOn(schedulerProvider.ui())
                             .doOnNext(itemState -> {
+                                if (sync) {
+                                    laanoUiManager.setSyncDrawerMenu();
+                                }
                                 if (itemState == DataSource.ItemState.DELETED
                                         || itemState == DataSource.ItemState.DEFERRED) {
                                     // NOTE: can be called twice
@@ -604,6 +612,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                 .doFinally(() -> {
                     if (sync) {
                         this.updateSyncStatus();
+                        laanoUiManager.setNormalDrawerMenu();
                     } else if (settings.isSyncable()) {
                         settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
                         laanoUiManager.updateSyncStatus();

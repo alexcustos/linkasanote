@@ -22,6 +22,7 @@ package com.bytesforge.linkasanote.laano.links;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -517,7 +518,11 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     @Override
     public void openLink(@NonNull Uri uri) {
         Intent intent = new Intent(Intent.ACTION_VIEW, checkNotNull(uri));
-        startActivity(intent);
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            viewModel.showOpenLinkErrorSnackbar();
+        }
     }
 
     @Override

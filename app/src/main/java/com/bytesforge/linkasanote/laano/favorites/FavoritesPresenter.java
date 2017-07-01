@@ -411,6 +411,9 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
     public void deleteFavorites(@NonNull ArrayList<String> selectedIds) {
         checkNotNull(selectedIds);
         boolean sync = settings.isSyncable() && settings.isOnline();
+        if (sync) {
+            laanoUiManager.setSyncDrawerMenu();
+        }
         long started = currentTimeMillis();
         Observable.fromIterable(selectedIds)
                 .flatMap(favoriteId -> {
@@ -419,6 +422,9 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                             .subscribeOn(schedulerProvider.computation())
                             .observeOn(schedulerProvider.ui())
                             .doOnNext(itemState -> {
+                                if (sync) {
+                                    laanoUiManager.setSyncDrawerMenu();
+                                }
                                 if (itemState == DataSource.ItemState.DELETED
                                         || itemState == DataSource.ItemState.DEFERRED) {
                                     // NOTE: can be called twice
@@ -436,6 +442,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                 .doFinally(() -> {
                     if (sync) {
                         this.updateSyncStatus();
+                        laanoUiManager.setNormalDrawerMenu();
                     } else if (settings.isSyncable()) {
                         settings.setSyncStatus(SyncAdapter.SYNC_STATUS_UNSYNCED);
                         laanoUiManager.updateSyncStatus();
