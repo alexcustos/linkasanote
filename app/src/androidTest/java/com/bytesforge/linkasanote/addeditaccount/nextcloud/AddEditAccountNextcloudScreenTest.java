@@ -111,7 +111,8 @@ public class AddEditAccountNextcloudScreenTest {
         onView(withId(R.id.account_password)).perform(clearText());
 
         onView(withId(R.id.server_status)).check(
-                matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
+                matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)));
+        onView(withId(R.id.server_status)).check(matches(withDrawable(R.drawable.ic_warning)));
         onView(withId(R.id.host_url_refresh_button)).check(
                 matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
         onView(withId(R.id.auth_status)).check(
