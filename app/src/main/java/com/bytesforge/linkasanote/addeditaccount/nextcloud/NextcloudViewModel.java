@@ -297,6 +297,9 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
     // Auth
 
     public void afterAccountCredentialsChanged() {
+        if (serverStatusText == 0) {
+            presenter.validateServerUrlText(serverUrlText.get());
+        }
         hideAuthStatus();
         checkLoginButton();
     }

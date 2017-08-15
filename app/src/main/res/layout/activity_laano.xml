@@ -48,12 +48,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
+                <!--|snap-->
                 <android.support.v7.widget.Toolbar
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
                     android:theme="@style/Laano.Toolbar"
-                    app:layout_scrollFlags="scroll|enterAlways|snap"
+                    app:layout_scrollFlags="scroll|enterAlways"
                     app:popupTheme="@style/Laano.Popup" />
 
                 <android.support.design.widget.TabLayout
