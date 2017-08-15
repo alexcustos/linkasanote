@@ -103,8 +103,8 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile project(':tokenautocomplete')
     compile project(':androidutils')
+    compile 'com.github.alexcustos:TokenAutoComplete:2.1.0'
 
     compile "com.android.support:multidex:${multidexVersion}"
     compile "com.android.support:appcompat-v7:${supportLibraryVersion}"

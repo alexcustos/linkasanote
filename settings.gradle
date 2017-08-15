@@ -1,6 +1,4 @@
 include ':app'
-include ':tokenautocomplete'
 include ':androidutils'
 
-project(':tokenautocomplete').projectDir = new File(settingsDir, 'third_party/tokenautocomplete')
 project(':androidutils').projectDir = new File(settingsDir, 'third_party/androidutils')
