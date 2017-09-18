@@ -2,13 +2,13 @@
 
 ext {
     // NOTE: xxx.yy.zz; -SNAPSHOT; -RCxx
-    VERSION_NAME = "0.2.9"
+    VERSION_NAME = "0.3.0"
     SDK_VERSION = 26
     MIN_SDK_VERSION = 19
     BUILD_TOOL_VERSION = '26.0.1'
 
     multidexVersion = '1.0.2'
-    supportLibraryVersion = '26.0.2'
+    supportLibraryVersion = '26.1.0'
     constraintLayoutVersion = '1.0.2'
     junitVersion = '4.12'
     espressoVersion = '2.2.2'
@@ -56,7 +56,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0-beta5'
+        classpath 'com.android.tools.build:gradle:3.0.0-beta6'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }

@@ -8,7 +8,7 @@ build/
 # Local configuration
 local.properties
 /app/sign*.properties
-/app/*.apk
+/app/prod/
 
 # External auxiliary files, directory will be mounted
 /cloud/
