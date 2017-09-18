@@ -122,7 +122,7 @@ public class AddEditAccountNextcloudScreenTest {
 
     @Test
     public void lostFocusOnEmptyUrlField_showsEmptyUrlWarning() {
-        onView(withId(R.id.server_url)).perform(clearText());
+        onView(withId(R.id.server_url)).perform(click(), clearText());
         onView(withId(R.id.server_status)).check(
                 matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
 
