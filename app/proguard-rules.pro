@@ -26,6 +26,8 @@
 
 -optimizationpasses 5
 -verbose
+-renamesourcefileattribute SourceFile
+-keepattributes SourceFile,LineNumberTable
 #-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*
 
 #-assumenosideeffects class com.bytesforge.linkasanote.utils.CommonUtils  {
@@ -53,5 +55,8 @@
 -dontwarn javax.lang.model.element.Modifier
 
 -dontwarn android.util.Pair
+
+-dontwarn afu.org.checkerframework.**
+-dontwarn org.checkerframework.**
 
 -keep class android.support.v7.** { *; }
