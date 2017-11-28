@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.contrib.RecyclerViewActions;
-import android.support.test.espresso.core.deps.guava.collect.Lists;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -41,6 +40,7 @@ import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
 import com.bytesforge.linkasanote.laano.links.LinksFragment;
 import com.bytesforge.linkasanote.laano.notes.NotesFragment;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
