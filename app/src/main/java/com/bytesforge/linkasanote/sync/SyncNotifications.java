@@ -21,15 +21,19 @@
 package com.bytesforge.linkasanote.sync;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
 import com.bytesforge.linkasanote.BuildConfig;
 import com.bytesforge.linkasanote.R;
@@ -37,6 +41,9 @@ import com.bytesforge.linkasanote.R;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SyncNotifications {
+    private static final String TAG = SyncNotifications.class.getSimpleName();
+
+    private static final String CHANNEL_NAME_SYNC = "sync_channel";
 
     public static final String ACTION_SYNC = BuildConfig.APPLICATION_ID + ".ACTION_SYNC";
     public static final String ACTION_SYNC_LINKS =
@@ -68,6 +75,7 @@ public class SyncNotifications {
     public SyncNotifications(Context context) {
         this.context = context;
         notificationManager = NotificationManagerCompat.from(context);
+        initChannels(this.context);
     }
 
     public void sendSyncBroadcast(String action, int status) {
@@ -94,6 +102,23 @@ public class SyncNotifications {
         notifyFailedSynchronization(null, text);
     }
 
+    private void initChannels(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+
+        NotificationManager notificationManager =
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager == null) {
+            Log.e(TAG, "Error while retrieving Notification Service");
+            return;
+        }
+        NotificationChannel channel = new NotificationChannel(
+                CHANNEL_NAME_SYNC,
+                context.getString(R.string.sync_adapter_sync_channel_name),
+                NotificationManager.IMPORTANCE_DEFAULT);
+        channel.setDescription(context.getString(R.string.sync_adapter_sync_channel_description));
+        notificationManager.createNotificationChannel(channel);
+    }
+
     public void notifyFailedSynchronization(String title, @NonNull String text) {
         checkNotNull(text);
         //notificationManager.cancel(NOTIFICATION_SYNC);
@@ -101,7 +126,7 @@ public class SyncNotifications {
         String notificationTitle = title == null ? defaultTitle : defaultTitle + ": " + title;
 
         int color = ContextCompat.getColor(context, R.color.color_primary);
-        Notification notification = new NotificationCompat.Builder(context)
+        Notification notification = new NotificationCompat.Builder(context, CHANNEL_NAME_SYNC)
                 .setSmallIcon(R.drawable.ic_error_white)
                 .setLargeIcon(getLauncherBitmap())
                 .setColor(color)

@@ -155,19 +155,25 @@ public final class CloudUtils {
         return null;
     }
 
-    public static void updateUserProfile(
+    public static boolean updateUserProfile(
             Account account, OwnCloudClient ocClient, AccountManager accountManager) {
         GetRemoteUserInfoOperation operation = new GetRemoteUserInfoOperation();
-        RemoteOperationResult result =
-                CloudDataSource.executeRemoteOperation(operation, ocClient)
-                        .blockingGet();
+        RemoteOperationResult result;
+        try {
+            result = CloudDataSource.executeRemoteOperation(operation, ocClient).blockingGet();
+        } catch (RuntimeException e) {
+            Log.e(TAG, "Exception while retrieving user info from server [" + e.getMessage() + "]");
+            return false;
+        }
         if (result.isSuccess()) {
             UserInfo userInfo = (UserInfo) result.getData().get(0);
             accountManager.setUserData(
                     account, AccountUtils.Constants.KEY_DISPLAY_NAME, userInfo.getDisplayName());
         } else {
             Log.e(TAG, "Error while retrieving user info from server [" + result.getCode().name() + "]");
+            return false;
         }
+        return true;
     }
 
     public static AccountItem getAccountItem(@NonNull Account account, @NonNull Context context) {
