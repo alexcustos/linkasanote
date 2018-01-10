@@ -175,8 +175,11 @@
     <string name="sync_adapter_title_failed_database">переустановите приложение</string>
     <string name="sync_adapter_text_failed_database">База данных повреждена, пожалуйста, переустановите приложение</string>
     <string name="sync_adapter_title_failed_cloud">проверьте облачное хранилище</string>
-    <string name="sync_adapter_text_failed_cloud">Ошибка подключения к облачному хранилищу, пожалуйста, убедитесь, что оно работает</string>
+    <string name="sync_adapter_text_failed_cloud_access">Ошибка подключения к облачному хранилищу, пожалуйста, убедитесь, что оно работает</string>
+    <string name="sync_adapter_text_failed_cloud_profile">Ошибка доступа к данным профайла, пожалуйста, проверьте облачное хранилище</string>
     <string name="sync_adapter_text_failed">Проблемы в облачном хранилище с: %s</string>
+    <string name="sync_adapter_sync_channel_name">Канал синхронизации</string>
+    <string name="sync_adapter_sync_channel_description">Сообщения о синхронизации с облачным хранилищем</string>
     <string name="laano_actionbar_manager_sync_title">Выг: %1$d / заг: %2$d</string>
     <string name="toolbar_favorites_item_action_mode">Включить режим редактирования</string>
     <string name="toolbar_favorites_item_clear_clipboard">Очистить буфер обмена</string>

@@ -123,7 +123,13 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         //Start
         syncNotifications.sendSyncBroadcast(
                 SyncNotifications.ACTION_SYNC, SyncNotifications.STATUS_SYNC_START);
-        CloudUtils.updateUserProfile(account, ocClient, accountManager);
+        boolean updated = CloudUtils.updateUserProfile(account, ocClient, accountManager);
+        if (!updated) {
+            syncNotifications.notifyFailedSynchronization(
+                    resources.getString(R.string.sync_adapter_title_failed_cloud),
+                    resources.getString(R.string.sync_adapter_text_failed_cloud_profile));
+            return;
+        }
         int numRows = localSyncResults.cleanup().blockingGet();
         Log.d(TAG, "onPerformSync(): cleanupSyncResults() [" + numRows + "]");
 
@@ -191,7 +197,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             } else if (fatalResult.isSourceNotReady()) {
                 syncNotifications.notifyFailedSynchronization(
                         resources.getString(R.string.sync_adapter_title_failed_cloud),
-                        resources.getString(R.string.sync_adapter_text_failed_cloud));
+                        resources.getString(R.string.sync_adapter_text_failed_cloud_access));
             }
         } else {
             // Fail

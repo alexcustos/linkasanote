@@ -175,8 +175,11 @@
     <string name="sync_adapter_title_failed_database">reinstall the application</string>
     <string name="sync_adapter_text_failed_database">Database is corrupted, please reinstall the application</string>
     <string name="sync_adapter_title_failed_cloud">check Cloud storage</string>
-    <string name="sync_adapter_text_failed_cloud">Cannot access the Cloud storage, please check if it works</string>
+    <string name="sync_adapter_text_failed_cloud_access">Cannot access the Cloud storage, please check if it works</string>
+    <string name="sync_adapter_text_failed_cloud_profile">Cannot retrieve profile data, please check Cloud storage</string>
     <string name="sync_adapter_text_failed">Problem on the Cloud storage with: %s</string>
+    <string name="sync_adapter_sync_channel_name">Sync channel</string>
+    <string name="sync_adapter_sync_channel_description">Notifications regarding sync with Cloud storage</string>
     <string name="laano_actionbar_manager_sync_title">Up: %1$d / dl: %2$d</string>
     <string name="toolbar_favorites_item_action_mode">Switch to Edit mode</string>
     <string name="toolbar_favorites_item_clear_clipboard">Clear clipboard</string>
