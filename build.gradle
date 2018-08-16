@@ -2,14 +2,14 @@
 
 ext {
     // NOTE: xxx.yy.zz; -SNAPSHOT; -RCxx
-    VERSION_NAME = "0.3.2"
+    VERSION_NAME = "0.3.3"
     SDK_VERSION = 27
     MIN_SDK_VERSION = 19
-    BUILD_TOOL_VERSION = '27.0.3'
+    BUILD_TOOL_VERSION = '28.0.2'
 
-    multidexVersion = '1.0.2'
-    supportLibraryVersion = '27.0.2'
-    constraintLayoutVersion = '1.0.2'
+    multidexVersion = '1.0.3'
+    supportLibraryVersion = '27.1.1'
+    constraintLayoutVersion = '1.1.2'
     junitVersion = '4.12'
     espressoVersion = '3.0.1'
     guavaVersion = '23.5'
@@ -20,10 +20,11 @@ ext {
     powermockVersion = '1.7.3'
     rxjavaVersion = '2.1.7'
     rxandroidVersion = '2.0.1'
-    nextcloudLibraryVersion = '1.0.32'
+    nextcloudLibraryVersion = '1.0.33' // TODO: 1.0.34 breaks request permissions
     uiAutomatorVersion = '2.1.2'
     jsoupVersion = '1.11.2'
     stethoVersion = '1.5.0'
+    slf4jVersion = '1.7.25'
     // Resolve conflicts
     findbugsJsr305Version = '3.0.2'
 }
@@ -54,9 +55,10 @@ ext {
 buildscript {
     repositories {
         jcenter()
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath 'com.android.tools.build:gradle:3.1.4'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
