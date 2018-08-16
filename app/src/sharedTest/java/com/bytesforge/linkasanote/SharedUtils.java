@@ -63,13 +63,13 @@ public class SharedUtils {
     private static final List<Note> NOTES = new ArrayList<Note>() {{
         add(new Note(KEY_PREFIX + 'I', "Simple Note which is not bound to any Link", null, TAGS));
         add(new Note(KEY_PREFIX + 'G', "Multiline Note\n" +
-                "Line two of this note to confirm binding to the first Link\n" +
+                "Line number two of this note confirms binding to the first Link\n" +
                 "\n" +
                 "Forth line which is being followed the last one.\n" +
-                "The end", LINKS.get(0).getId(), TAGS2));
+                "The end.", LINKS.get(0).getId(), TAGS2));
         add(new Note(KEY_PREFIX + 'K', "Another Note which is bound to first Link", LINKS.get(0).getId(), TAGS3));
-        add(new Note(KEY_PREFIX + 'L', "This note is bound to the disabled Link\n" +
-                "and has second line", LINKS.get(1).getId(), TAGS2));
+        add(new Note(KEY_PREFIX + 'L', "This note is bound to the disabled Link and\n" +
+                "has this second line", LINKS.get(1).getId(), TAGS2));
     }};
 
     public static List<Favorite> buildFavorites() {

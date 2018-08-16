@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.clearText;
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
@@ -195,9 +196,9 @@ public class AddEditAccountNextcloudScreenTest {
         onView(withId(R.id.server_url)).perform(click());
         // Auth
         onView(withId(R.id.login_button)).check(matches(not(isEnabled())));
-        onView(withId(R.id.account_username)).perform(typeText(USERNAME));
+        onView(withId(R.id.account_username)).perform(scrollTo(), typeText(USERNAME));
         onView(withId(R.id.login_button)).check(matches(not(isEnabled())));
-        onView(withId(R.id.account_password)).perform(typeText(PASSWORD));
+        onView(withId(R.id.account_password)).perform(scrollTo(), typeText(PASSWORD));
         onView(withId(R.id.login_button)).check(matches(isEnabled()));
         //AndroidTestUtils.rotateOrientation(addEditAccountActivityTestRule);
         // Check
