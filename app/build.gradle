@@ -139,6 +139,8 @@ dependencies {
     // Espresso Testing
     androidTestImplementation "com.android.support.test.espresso:espresso-core:${espressoVersion}"
     androidTestImplementation "com.android.support.test.espresso:espresso-contrib:${espressoVersion}"
+    androidTestImplementation "com.android.support.test:runner:${testVersion}"
+    androidTestImplementation "com.android.support.test:rules:${testVersion}"
     androidTestImplementation "org.mockito:mockito-core:${mockitoVersion}"
     androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:${dexmakerVersion}"
     androidTestImplementation "com.android.support.test.uiautomator:uiautomator-v18:${uiAutomatorVersion}"
