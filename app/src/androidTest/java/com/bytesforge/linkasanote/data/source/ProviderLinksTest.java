@@ -29,6 +29,7 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.ProviderTestCase2;
 
+import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
@@ -77,6 +78,8 @@ public class ProviderLinksTest extends ProviderTestCase2<Provider> {
 
         contentResolver = getMockContentResolver();
         provider = getProvider();
+
+        AndroidTestUtils.cleanUpProvider(contentResolver);
     }
 
     @Test

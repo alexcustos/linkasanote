@@ -21,10 +21,12 @@
 package com.bytesforge.linkasanote;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
@@ -37,6 +39,8 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
+
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 
 import java.util.Collection;
 
@@ -130,5 +134,16 @@ public class AndroidTestUtils extends SharedUtils {
         } catch (UiObjectNotFoundException e) {
             System.out.println("There is not permissions dialog to interact with");
         }
+    }
+
+    public static void cleanUpProvider(ContentResolver contentResolver) {
+        final Uri favoriteUri = LocalContract.FavoriteEntry.buildUri();
+        contentResolver.delete(favoriteUri, null, null);
+
+        final Uri linkUri = LocalContract.LinkEntry.buildUri();
+        contentResolver.delete(linkUri, null, null);
+
+        final Uri tagUri = LocalContract.TagEntry.buildUri();
+        contentResolver.delete(tagUri, null, null);
     }
 }

@@ -68,8 +68,8 @@ public class SharedUtils {
                 "Forth line which is being followed the last one.\n" +
                 "The end.", LINKS.get(0).getId(), TAGS2));
         add(new Note(KEY_PREFIX + 'K', "Another Note which is bound to first Link", LINKS.get(0).getId(), TAGS3));
-        add(new Note(KEY_PREFIX + 'L', "This note is bound to the disabled Link and\n" +
-                "has this second line", LINKS.get(1).getId(), TAGS2));
+        add(new Note(KEY_PREFIX + 'L', "This note is bound to the disabled Link.\n" +
+                "It has the second line.", LINKS.get(1).getId(), TAGS2));
     }};
 
     public static List<Favorite> buildFavorites() {
