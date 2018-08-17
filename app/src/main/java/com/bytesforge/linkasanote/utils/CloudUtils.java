@@ -63,7 +63,8 @@ public final class CloudUtils {
         return LaanoApplication.getContext().getString(R.string.authenticator_account_type);
     }*/
 
-    public static String getAccountType(Context context) {
+    public static String getAccountType(@NonNull Context context) {
+        checkNotNull(context);
         return context.getString(R.string.authenticator_account_type);
     }
 

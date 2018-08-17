@@ -32,7 +32,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
-import android.support.v13.app.FragmentCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.preference.CheckBoxPreference;
 import android.support.v7.preference.EditTextPreference;
@@ -70,15 +69,15 @@ import javax.inject.Inject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class SettingsFragment extends PreferenceFragmentCompat implements
-        FragmentCompat.OnRequestPermissionsResultCallback {
+public class SettingsFragment extends PreferenceFragmentCompat {
 
     private static final String TAG = SettingsFragment.class.getSimpleName();
     private static final String TAG_E = SettingsFragment.class.getCanonicalName();
 
     private static final int REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE = 0;
     private static final String PERMISSION_WRITE_EXTERNAL_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-    private static String[] PERMISSIONS_WRITE_EXTERNAL_STORAGE = {PERMISSION_WRITE_EXTERNAL_STORAGE};
+    private static String[] PERMISSIONS_WRITE_EXTERNAL_STORAGE =
+            new String[]{PERMISSION_WRITE_EXTERNAL_STORAGE};
 
     private static final String ARGUMENT_SETTINGS_ACCOUNT = "ACCOUNT";
 
@@ -415,7 +414,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
     public void onRequestPermissionsResult(
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE) {
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 backup();
             } else {
                 showSnackbar(R.string.snackbar_no_permission, Snackbar.LENGTH_LONG);

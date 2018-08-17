@@ -34,6 +34,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
 import com.bytesforge.linkasanote.LaanoApplication;
@@ -55,7 +56,7 @@ public class AddEditAccountActivity extends AppCompatActivity implements
 
     private static final int REQUEST_PERMISSION_GET_ACCOUNTS = 0;
     private static final String PERMISSION_GET_ACCOUNTS = Manifest.permission.GET_ACCOUNTS;
-    private static String[] PERMISSIONS_GET_ACCOUNTS = {PERMISSION_GET_ACCOUNTS};
+    private static String[] PERMISSIONS_GET_ACCOUNTS = new String[]{PERMISSION_GET_ACCOUNTS};
 
     public static final String ARGUMENT_REQUEST_CODE = "REQUEST_CODE";
     public static final int REQUEST_ADD_NEXTCLOUD_ACCOUNT = 0;
@@ -118,7 +119,7 @@ public class AddEditAccountActivity extends AppCompatActivity implements
     // Get Accounts Permission
 
     public void checkGetAccountsPermission() {
-        if (ActivityCompat.checkSelfPermission(this, PERMISSION_GET_ACCOUNTS)
+        if (ContextCompat.checkSelfPermission(this, PERMISSION_GET_ACCOUNTS)
                 != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestGetAccountsPermission();
@@ -140,10 +141,12 @@ public class AddEditAccountActivity extends AppCompatActivity implements
                     R.string.add_edit_account_permission_get_accounts,
                     Snackbar.LENGTH_INDEFINITE)
                     .setAction(R.string.snackbar_button_ok, view ->
-                            requestPermissions(PERMISSIONS_GET_ACCOUNTS, REQUEST_PERMISSION_GET_ACCOUNTS))
+                            ActivityCompat.requestPermissions(
+                                    this, PERMISSIONS_GET_ACCOUNTS, REQUEST_PERMISSION_GET_ACCOUNTS))
                     .show();
         } else {
-            requestPermissions(PERMISSIONS_GET_ACCOUNTS, REQUEST_PERMISSION_GET_ACCOUNTS);
+            ActivityCompat.requestPermissions(
+                    this, PERMISSIONS_GET_ACCOUNTS, REQUEST_PERMISSION_GET_ACCOUNTS);
         }
     }
 
@@ -152,7 +155,7 @@ public class AddEditAccountActivity extends AppCompatActivity implements
     public void onRequestPermissionsResult(
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_PERMISSION_GET_ACCOUNTS) {
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (accountCanBeProcessed()) presenter.enableLayout();
                 else exitWithUnsupportedMultipleAccountsError();
             } else {
