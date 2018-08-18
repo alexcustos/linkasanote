@@ -22,13 +22,15 @@ package com.bytesforge.linkasanote.laano.favorites;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.view.MenuItemCompat;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
@@ -76,6 +78,9 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     private LinearLayoutManager rvLayoutManager;
     private Parcelable rvLayoutState;
     private FavoritesActionModeCallback favoritesActionModeCallback;
+    private FragmentActivity fragmentActivity;
+    private FragmentManager fragmentManager;
+    private Context context;
 
     public static FavoritesFragment newInstance() {
         return new FavoritesFragment();
@@ -111,13 +116,17 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        fragmentActivity = getActivity();
+        fragmentManager = getFragmentManager();
+        context = getContext();
+
         setHasOptionsMenu(true);
     }
 
     @Nullable
     @Override
     public View onCreateView(
-            LayoutInflater inflater, @Nullable ViewGroup container,
+            @NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         FragmentLaanoFavoritesBinding binding =
                 FragmentLaanoFavoritesBinding.inflate(inflater, container, false);
@@ -137,9 +146,9 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     }
 
     private void setSearchMenuItem(MenuItem item) {
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
-        MenuItemCompat.setOnActionExpandListener(
-                item, new MenuItemCompat.OnActionExpandListener() {
+        SearchView searchView = (SearchView) item.getActionView();
+        item.setOnActionExpandListener(
+                new MenuItem.OnActionExpandListener() {
 
                     @Override
                     public boolean onMenuItemActionExpand(MenuItem item) {
@@ -148,7 +157,9 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
 
                     @Override
                     public boolean onMenuItemActionCollapse(MenuItem item) {
-                        getActivity().supportInvalidateOptionsMenu();
+                        if (fragmentActivity != null) {
+                            fragmentActivity.invalidateOptionsMenu();
+                        }
                         viewModel.setSearchText(null);
                         presenter.setFilterIsChanged(true);
                         presenter.loadFavorites(false);
@@ -186,7 +197,8 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
                 enableActionMode();
                 break;
             case R.id.toolbar_favorites_clear_clipboard:
-                ActivityUtils.clearClipboard(getContext());
+                if (context != null)
+                    ActivityUtils.clearClipboard(context);
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -195,7 +207,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         viewModel.saveInstanceState(outState);
         saveRvLayoutState(outState);
@@ -203,13 +215,13 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
 
     @Override
     public void startAddFavoriteActivity() {
-        Intent intent = new Intent(getContext(), AddEditFavoriteActivity.class);
+        Intent intent = new Intent(context, AddEditFavoriteActivity.class);
         startActivityForResult(intent, REQUEST_ADD_FAVORITE);
     }
 
     @Override
     public void showEditFavorite(@NonNull String favoriteId) {
-        Intent intent = new Intent(getContext(), AddEditFavoriteActivity.class);
+        Intent intent = new Intent(context, AddEditFavoriteActivity.class);
         intent.putExtra(AddEditFavoriteFragment.ARGUMENT_FAVORITE_ID, favoriteId);
         startActivityForResult(intent, REQUEST_EDIT_FAVORITE);
     }
@@ -265,7 +277,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
                 if (resultCode == FavoritesConflictResolutionDialog.RESULT_OK) {
                     presenter.updateSyncStatus();
                     //viewModel.showConflictResolutionSuccessfulSnackbar();
-                    Toast.makeText(getContext(), R.string.toast_conflict_resolved,
+                    Toast.makeText(context, R.string.toast_conflict_resolved,
                             Toast.LENGTH_SHORT).show();
                 } else if (resultCode == FavoritesConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
@@ -280,7 +292,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         List<Favorite> favorites = new ArrayList<>(0);
         adapter = new FavoritesAdapter(favorites, presenter, (FavoritesViewModel) viewModel);
         rvFavorites.setAdapter(adapter);
-        rvLayoutManager = new LinearLayoutManager(getContext());
+        rvLayoutManager = new LinearLayoutManager(context);
         rvFavorites.setLayoutManager(rvLayoutManager);
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
                 rvFavorites.getContext(), rvLayoutManager.getOrientation());
@@ -309,8 +321,10 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     }
 
     private void showFilteringPopupMenu() {
+        if (context == null || fragmentActivity == null) return;
+
         PopupMenu popupMenu = new PopupMenu(
-                getContext(), getActivity().findViewById(R.id.toolbar_favorites_filter));
+                context, fragmentActivity.findViewById(R.id.toolbar_favorites_filter));
         Menu menu = popupMenu.getMenu();
         popupMenu.getMenuInflater().inflate(R.menu.filter, menu);
         popupMenu.setOnMenuItemClickListener(item -> {
@@ -348,9 +362,9 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         if (!viewModel.isActionMode()) {
             viewModel.enableActionMode();
         }
-        if (actionMode == null) {
+        if (actionMode == null && fragmentActivity != null) {
             favoritesActionModeCallback = new FavoritesActionModeCallback();
-            actionMode = ((AppCompatActivity) getActivity())
+            actionMode = ((AppCompatActivity) fragmentActivity)
                     .startSupportActionMode(favoritesActionModeCallback);
         }
         updateActionModeTitle();
@@ -401,9 +415,9 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     }
 
     private void updateActionModeTitle() {
-        if (actionMode == null) return;
+        if (actionMode == null || context == null) return;
 
-        actionMode.setTitle(getContext().getResources().getString(
+        actionMode.setTitle(context.getResources().getString(
                 R.string.laano_favorites_action_mode_selected,
                 viewModel.getSelectedCount(), adapter.getItemCount()));
         if (adapter.getItemCount() <= 0) {
@@ -437,7 +451,8 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         FavoriteRemovalConfirmationDialog dialog =
                 FavoriteRemovalConfirmationDialog.newInstance(selectedIds);
         dialog.setTargetFragment(this, FavoriteRemovalConfirmationDialog.DIALOG_REQUEST_CODE);
-        dialog.show(getFragmentManager(), FavoriteRemovalConfirmationDialog.DIALOG_TAG);
+        if (fragmentManager != null)
+            dialog.show(fragmentManager, FavoriteRemovalConfirmationDialog.DIALOG_TAG);
     }
 
     public void removeFavorites(ArrayList<String> selectedIds) {
@@ -451,7 +466,8 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         FavoritesConflictResolutionDialog dialog =
                 FavoritesConflictResolutionDialog.newInstance(favoriteId);
         dialog.setTargetFragment(this, REQUEST_FAVORITE_CONFLICT_RESOLUTION);
-        dialog.show(getFragmentManager(), FavoritesConflictResolutionDialog.DIALOG_TAG);
+        if (fragmentManager != null)
+            dialog.show(fragmentManager, FavoritesConflictResolutionDialog.DIALOG_TAG);
     }
 
     public class FavoritesActionModeCallback implements ActionMode.Callback {
@@ -527,20 +543,27 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            selectedIds = getArguments().getStringArrayList(ARGUMENT_SELECTED_IDS);
+            Bundle args = getArguments();
+            if (args != null)
+                selectedIds = args.getStringArrayList(ARGUMENT_SELECTED_IDS);
         }
 
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
+            Context dialogContext = getContext();
+            FavoritesFragment targetFragment = (FavoritesFragment) getTargetFragment();
+            if (dialogContext == null || targetFragment == null) {
+                throw new IllegalStateException("Unexpected state in onCreateDialog()");
+            }
             int length = selectedIds.size();
-            return new AlertDialog.Builder(getContext())
+            return new AlertDialog.Builder(dialogContext)
                     .setTitle(R.string.favorites_delete_confirmation_title)
                     .setMessage(getResources().getQuantityString(
                             R.plurals.favorites_delete_confirmation_message, length, length))
                     .setIcon(R.drawable.ic_warning)
                     .setPositiveButton(R.string.dialog_button_delete, (dialog, which) ->
-                            ((FavoritesFragment) getTargetFragment()).removeFavorites(selectedIds))
+                            targetFragment.removeFavorites(selectedIds))
                     .setNegativeButton(R.string.dialog_button_cancel, null)
                     .create();
         }
