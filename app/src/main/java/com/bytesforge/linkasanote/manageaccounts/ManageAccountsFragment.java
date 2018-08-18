@@ -37,6 +37,7 @@ import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -202,7 +203,9 @@ public class ManageAccountsFragment extends Fragment implements ManageAccountsCo
         AccountRemovalConfirmationDialog dialog =
                 AccountRemovalConfirmationDialog.newInstance(account);
         dialog.setTargetFragment(this, AccountRemovalConfirmationDialog.DIALOG_REQUEST_CODE);
-        dialog.show(getFragmentManager(), AccountRemovalConfirmationDialog.DIALOG_TAG);
+        FragmentManager fragmentManager = getFragmentManager();
+        if (fragmentManager != null)
+            dialog.show(fragmentManager, AccountRemovalConfirmationDialog.DIALOG_TAG);
     }
 
     public void removeAccount(Account account) {

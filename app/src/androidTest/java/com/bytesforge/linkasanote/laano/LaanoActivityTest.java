@@ -20,6 +20,7 @@
 
 package com.bytesforge.linkasanote.laano;
 
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.res.Resources;
 import android.support.test.InstrumentationRegistry;
@@ -39,6 +40,7 @@ import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
 import com.bytesforge.linkasanote.laano.links.LinksFragment;
 import com.bytesforge.linkasanote.laano.notes.NotesFragment;
+import com.bytesforge.linkasanote.utils.ActivityUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
@@ -70,7 +72,8 @@ import static org.hamcrest.Matchers.instanceOf;
 @LargeTest
 public class LaanoActivityTest {
 
-    private Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    private Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
+    private Context context = instrumentation.getTargetContext();
     private Repository repository;
 
     private final List<Favorite> FAVORITES;
@@ -86,7 +89,10 @@ public class LaanoActivityTest {
                     super.beforeActivityLaunched();
                     repository = ((LaanoApplication) context.getApplicationContext())
                             .getApplicationComponent().getRepository();
+                    // NOTE: it's also possible: AndroidTestUtils.cleanUpProvider with get context.getContentResolver()
                     cleanupRepository(repository);
+                    instrumentation.runOnMainSync(
+                            () -> ActivityUtils.clearClipboard(context, false));
                 }
             };
 

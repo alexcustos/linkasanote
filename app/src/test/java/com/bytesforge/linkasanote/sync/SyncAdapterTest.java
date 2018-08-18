@@ -139,6 +139,8 @@ public class SyncAdapterTest {
         when(context.getResources()).thenReturn(resources);
         when(CloudUtils.getOwnCloudClient(isNull(), any(Context.class))).thenReturn(ownCloudClient);
         when(CloudUtils.getAccountName(isNull())).thenReturn(ACCOUNT_NAME);
+        when(CloudUtils.updateUserProfile(
+                isNull(), any(OwnCloudClient.class), any(AccountManager.class))).thenReturn(true);
         when(cloudFavorites.getDataSourceETag(ownCloudClient)).thenReturn(E_TAGL);
         when(cloudFavorites.isCloudDataSourceChanged(E_TAGL)).thenReturn(true);
         when(localFavorites.resetSyncState()).thenReturn(Single.just(0));

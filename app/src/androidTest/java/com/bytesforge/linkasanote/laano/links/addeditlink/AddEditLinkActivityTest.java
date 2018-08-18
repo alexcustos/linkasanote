@@ -34,7 +34,7 @@ import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
@@ -77,11 +77,11 @@ public class AddEditLinkActivityTest {
     }
 
     private void fillLinkFields(String link, String name, boolean disabled, String tags) {
-        onView(withId(R.id.link_link)).perform(typeText(link), closeSoftKeyboard());
-        onView(withId(R.id.link_name)).perform(typeText(name), closeSoftKeyboard());
+        onView(withId(R.id.link_link)).perform(scrollTo(), typeText(link));
+        onView(withId(R.id.link_name)).perform(scrollTo(), typeText(name));
         if (disabled) {
-            onView(withId(R.id.checkbox_disabled)).perform(click());
+            onView(withId(R.id.checkbox_disabled)).perform(scrollTo(), click());
         }
-        onView(withId(R.id.link_tags)).perform(typeText(tags), closeSoftKeyboard());
+        onView(withId(R.id.link_tags)).perform(scrollTo(), typeText(tags));
     }
 }

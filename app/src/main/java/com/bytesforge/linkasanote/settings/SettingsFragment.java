@@ -32,7 +32,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
-import android.support.v13.app.FragmentCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.preference.CheckBoxPreference;
 import android.support.v7.preference.EditTextPreference;
@@ -70,15 +70,15 @@ import javax.inject.Inject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class SettingsFragment extends PreferenceFragmentCompat implements
-        FragmentCompat.OnRequestPermissionsResultCallback {
+public class SettingsFragment extends PreferenceFragmentCompat {
 
     private static final String TAG = SettingsFragment.class.getSimpleName();
     private static final String TAG_E = SettingsFragment.class.getCanonicalName();
 
     private static final int REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE = 0;
     private static final String PERMISSION_WRITE_EXTERNAL_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-    private static String[] PERMISSIONS_WRITE_EXTERNAL_STORAGE = {PERMISSION_WRITE_EXTERNAL_STORAGE};
+    private static String[] PERMISSIONS_WRITE_EXTERNAL_STORAGE =
+            new String[]{PERMISSION_WRITE_EXTERNAL_STORAGE};
 
     private static final String ARGUMENT_SETTINGS_ACCOUNT = "ACCOUNT";
 
@@ -115,10 +115,16 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
     public void onCreate(Bundle savedInstanceState) {
         context = getContext();
         resources = getResources();
-        account = getArguments().getParcelable(ARGUMENT_SETTINGS_ACCOUNT);
-        LaanoApplication application = (LaanoApplication) getActivity().getApplication();
-        application.getApplicationComponent().inject(this);
-
+        Bundle args = getArguments();
+        if (args != null)
+            account = args.getParcelable(ARGUMENT_SETTINGS_ACCOUNT);
+        else
+            account = null;
+        FragmentActivity fragmentActivity = getActivity();
+        if (fragmentActivity != null) {
+            LaanoApplication application = (LaanoApplication) fragmentActivity.getApplication();
+            application.getApplicationComponent().inject(this);
+        }
         super.onCreate(savedInstanceState);
     }
 
@@ -329,17 +335,22 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
         return backupEntries;
     }
 
+    @NonNull
     private Locale getCurrentLocaleCompat() {
+        if (context == null) throw new IllegalStateException("Context is needed at this point");
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            return getContext().getResources().getConfiguration().getLocales().get(0);
+            return context.getResources().getConfiguration().getLocales().get(0);
         } else {
             //noinspection deprecation
-            return getContext().getResources().getConfiguration().locale;
+            return context.getResources().getConfiguration().locale;
         }
     }
 
     private void backup() {
-        String backupFile = ApplicationBackup.backupDB(getContext());
+        if (context == null) throw new IllegalStateException("Context is needed at this point");
+
+        String backupFile = ApplicationBackup.backupDB(context);
         if (backupFile != null) {
             refreshBackupEntries();
             Toast.makeText(context, R.string.toast_backup_success, Toast.LENGTH_SHORT).show();
@@ -415,7 +426,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
     public void onRequestPermissionsResult(
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE) {
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 backup();
             } else {
                 showSnackbar(R.string.snackbar_no_permission, Snackbar.LENGTH_LONG);

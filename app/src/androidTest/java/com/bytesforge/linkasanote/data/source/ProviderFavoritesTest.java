@@ -66,6 +66,8 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
 
         contentResolver = getMockContentResolver();
         provider = getProvider();
+
+        AndroidTestUtils.cleanUpProvider(contentResolver);
     }
 
     @Test

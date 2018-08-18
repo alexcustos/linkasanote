@@ -22,6 +22,7 @@ package com.bytesforge.linkasanote.laano.notes;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -29,7 +30,8 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.view.MenuItemCompat;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
@@ -83,6 +85,9 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     private Parcelable rvLayoutState;
     private DividerItemDecoration dividerItemDecoration;
     private NotesActionModeCallback notesActionModeCallback;
+    private FragmentActivity fragmentActivity;
+    private FragmentManager fragmentManager;
+    private Context context;
 
     public static NotesFragment newInstance() {
         return new NotesFragment();
@@ -118,13 +123,17 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        fragmentActivity = getActivity();
+        fragmentManager = getFragmentManager();
+        context = getContext();
+
         setHasOptionsMenu(true);
     }
 
     @Nullable
     @Override
     public View onCreateView(
-            LayoutInflater inflater, @Nullable ViewGroup container,
+            @NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         FragmentLaanoNotesBinding binding =
                 FragmentLaanoNotesBinding.inflate(inflater, container, false);
@@ -149,9 +158,9 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     }
 
     private void setSearchMenuItem(MenuItem item) {
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
-        MenuItemCompat.setOnActionExpandListener(
-                item, new MenuItemCompat.OnActionExpandListener() {
+        SearchView searchView = (SearchView) item.getActionView();
+        item.setOnActionExpandListener(
+                new MenuItem.OnActionExpandListener() {
 
                     @Override
                     public boolean onMenuItemActionExpand(MenuItem item) {
@@ -160,7 +169,9 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
                     @Override
                     public boolean onMenuItemActionCollapse(MenuItem item) {
-                        getActivity().supportInvalidateOptionsMenu();
+                        if (fragmentActivity != null) {
+                            fragmentActivity.invalidateOptionsMenu();
+                        }
                         viewModel.setSearchText(null);
                         presenter.setFilterIsChanged(true);
                         presenter.loadNotes(false);
@@ -206,7 +217,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                 boolean readingMode = presenter.isNotesLayoutModeReading();
                 if (readingMode) {
                     readingMode = presenter.toggleNotesLayoutMode();
-                    getActivity().invalidateOptionsMenu();
+                    invalidateOptionsMenu();
                     updateNotesAdapter(readingMode);
                 }
                 enableActionMode();
@@ -218,7 +229,8 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                 collapseAllNotes();
                 break;
             case R.id.toolbar_notes_clear_clipboard:
-                ActivityUtils.clearClipboard(getContext());
+                if (context != null)
+                    ActivityUtils.clearClipboard(context);
                 break;
             case R.id.toolbar_notes_layout_mode:
                 toggleNotesLayoutMode();
@@ -229,16 +241,22 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         return true;
     }
 
+    private void invalidateOptionsMenu() {
+        if (fragmentActivity != null) {
+            fragmentActivity.invalidateOptionsMenu();
+        }
+    }
+
     private void toggleNotesLayoutMode() {
         boolean readingMode = presenter.toggleNotesLayoutMode();
-        getActivity().invalidateOptionsMenu();
+        invalidateOptionsMenu();
         int firstVisibleItemPosition = rvLayoutManager.findFirstVisibleItemPosition();
         updateNotesAdapter(readingMode);
         rvLayoutManager.scrollToPosition(firstVisibleItemPosition);
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         viewModel.saveInstanceState(outState);
         saveRvLayoutState(outState);
@@ -246,7 +264,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
     @Override
     public void startAddNoteActivity(String linkId) {
-        Intent intent = new Intent(getContext(), AddEditNoteActivity.class);
+        Intent intent = new Intent(context, AddEditNoteActivity.class);
         if (linkId != null) {
             intent.putExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID, linkId);
         }
@@ -255,7 +273,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
     @Override
     public void showEditNote(@NonNull String noteId) {
-        Intent intent = new Intent(getContext(), AddEditNoteActivity.class);
+        Intent intent = new Intent(context, AddEditNoteActivity.class);
         intent.putExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID, noteId);
         startActivityForResult(intent, REQUEST_EDIT_NOTE);
     }
@@ -329,7 +347,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
                 if (resultCode == NotesConflictResolutionDialog.RESULT_OK) {
                     presenter.updateSyncStatus();
                     //viewModel.showConflictResolutionSuccessfulSnackbar();
-                    Toast.makeText(getContext(), R.string.toast_conflict_resolved,
+                    Toast.makeText(context, R.string.toast_conflict_resolved,
                             Toast.LENGTH_SHORT).show();
                 } else if (resultCode == NotesConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
@@ -342,7 +360,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
     private void setupNotesRecyclerView(final RecyclerView rvNotes) {
         this.rvNotes = rvNotes;
-        rvLayoutManager = new LinearLayoutManager(getContext());
+        rvLayoutManager = new LinearLayoutManager(context);
         rvNotes.setLayoutManager(rvLayoutManager);
         dividerItemDecoration = new DividerItemDecoration(
                 rvNotes.getContext(), rvLayoutManager.getOrientation());
@@ -397,8 +415,10 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     }
 
     private void showFilteringPopupMenu() {
+        if (context == null || fragmentActivity == null) return;
+
         PopupMenu popupMenu = new PopupMenu(
-                getContext(), getActivity().findViewById(R.id.toolbar_notes_filter));
+                context, fragmentActivity.findViewById(R.id.toolbar_notes_filter));
         Menu menu = popupMenu.getMenu();
         popupMenu.getMenuInflater().inflate(R.menu.filter, menu);
         popupMenu.setOnMenuItemClickListener(item -> {
@@ -426,7 +446,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
             scrollToPosition(0);
             return true;
         });
-        Resources resources = getContext().getResources();
+        Resources resources = context.getResources();
         MenuItem filterNoteMenuItem = menu.findItem(R.id.filter_note);
         filterNoteMenuItem.setVisible(false);
 
@@ -463,9 +483,9 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         if (!viewModel.isActionMode()) {
             viewModel.enableActionMode();
         }
-        if (actionMode == null) {
+        if (actionMode == null && fragmentActivity != null) {
             notesActionModeCallback = new NotesActionModeCallback();
-            actionMode = ((AppCompatActivity) getActivity())
+            actionMode = ((AppCompatActivity) fragmentActivity)
                     .startSupportActionMode(notesActionModeCallback);
         }
         updateActionModeTitle();
@@ -523,9 +543,9 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     }
 
     private void updateActionModeTitle() {
-        if (actionMode == null) return;
+        if (actionMode == null || context == null) return;
 
-        actionMode.setTitle(getContext().getResources().getString(
+        actionMode.setTitle(context.getResources().getString(
                 R.string.laano_notes_action_mode_selected,
                 viewModel.getSelectedCount(), adapter.getItemCount()));
         if (adapter.getItemCount() <= 0) {
@@ -559,7 +579,8 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         NoteRemovalConfirmationDialog dialog =
                 NoteRemovalConfirmationDialog.newInstance(selectedIds);
         dialog.setTargetFragment(this, NoteRemovalConfirmationDialog.DIALOG_REQUEST_CODE);
-        dialog.show(getFragmentManager(), NoteRemovalConfirmationDialog.DIALOG_TAG);
+        if (fragmentManager != null)
+            dialog.show(fragmentManager, NoteRemovalConfirmationDialog.DIALOG_TAG);
     }
 
     public void removeNotes(ArrayList<String> selectedIds) {
@@ -573,7 +594,8 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         NotesConflictResolutionDialog dialog =
                 NotesConflictResolutionDialog.newInstance(noteId);
         dialog.setTargetFragment(this, REQUEST_NOTE_CONFLICT_RESOLUTION);
-        dialog.show(getFragmentManager(), NotesConflictResolutionDialog.DIALOG_TAG);
+        if (fragmentManager != null)
+            dialog.show(fragmentManager, NotesConflictResolutionDialog.DIALOG_TAG);
     }
 
     public class NotesActionModeCallback implements ActionMode.Callback {
@@ -649,20 +671,27 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            selectedIds = getArguments().getStringArrayList(ARGUMENT_SELECTED_IDS);
+            Bundle args = getArguments();
+            if (args != null)
+                selectedIds = args.getStringArrayList(ARGUMENT_SELECTED_IDS);
         }
 
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
+            Context dialogContext = getContext();
+            NotesFragment targetFragment = (NotesFragment) getTargetFragment();
+            if (dialogContext == null || targetFragment == null) {
+                throw new IllegalStateException("Unexpected state in onCreateDialog()");
+            }
             int length = selectedIds.size();
-            return new AlertDialog.Builder(getContext())
+            return new AlertDialog.Builder(dialogContext)
                     .setTitle(R.string.notes_delete_confirmation_title)
                     .setMessage(getResources().getQuantityString(
                             R.plurals.notes_delete_confirmation_message, length, length))
                     .setIcon(R.drawable.ic_warning)
                     .setPositiveButton(R.string.dialog_button_delete, (dialog, which) ->
-                            ((NotesFragment) getTargetFragment()).removeNotes(selectedIds))
+                            targetFragment.removeNotes(selectedIds))
                     .setNegativeButton(R.string.dialog_button_cancel, null)
                     .create();
         }

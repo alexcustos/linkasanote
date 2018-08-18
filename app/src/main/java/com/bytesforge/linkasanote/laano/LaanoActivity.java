@@ -47,6 +47,7 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -95,7 +96,7 @@ public class LaanoActivity extends AppCompatActivity implements
 
     private static final int REQUEST_GET_ACCOUNTS = 0;
     private static final String PERMISSION_GET_ACCOUNTS = Manifest.permission.GET_ACCOUNTS;
-    private static String[] PERMISSIONS_GET_ACCOUNTS = {PERMISSION_GET_ACCOUNTS};
+    private static String[] PERMISSIONS_GET_ACCOUNTS = new String[]{PERMISSION_GET_ACCOUNTS};
 
     private static final int ACTION_MANAGE_ACCOUNTS = 1;
 
@@ -338,7 +339,7 @@ public class LaanoActivity extends AppCompatActivity implements
     // Get Accounts Permission
 
     public void checkGetAccountsPermissionAndLaunchActivity() {
-        if (ActivityCompat.checkSelfPermission(this, PERMISSION_GET_ACCOUNTS)
+        if (ContextCompat.checkSelfPermission(this, PERMISSION_GET_ACCOUNTS)
                 != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestGetAccountsPermission();
@@ -357,10 +358,12 @@ public class LaanoActivity extends AppCompatActivity implements
                     R.string.laano_permission_get_accounts,
                     Snackbar.LENGTH_INDEFINITE)
                     .setAction(R.string.snackbar_button_ok, view ->
-                            requestPermissions(PERMISSIONS_GET_ACCOUNTS, REQUEST_GET_ACCOUNTS))
+                            ActivityCompat.requestPermissions(
+                                    this, PERMISSIONS_GET_ACCOUNTS, REQUEST_GET_ACCOUNTS))
                     .show();
         } else {
-            requestPermissions(PERMISSIONS_GET_ACCOUNTS, REQUEST_GET_ACCOUNTS);
+            ActivityCompat.requestPermissions(
+                    this, PERMISSIONS_GET_ACCOUNTS, REQUEST_GET_ACCOUNTS);
         }
     }
 
@@ -368,7 +371,7 @@ public class LaanoActivity extends AppCompatActivity implements
     public void onRequestPermissionsResult(
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_GET_ACCOUNTS) {
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startManageAccountsActivity();
             } else {
                 showPermissionDeniedSnackbar();

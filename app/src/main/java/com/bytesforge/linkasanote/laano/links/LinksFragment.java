@@ -32,7 +32,8 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.view.MenuItemCompat;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
@@ -88,6 +89,9 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     private LinearLayoutManager rvLayoutManager;
     private Parcelable rvLayoutState;
     private LinksActionModeCallback linksActionModeCallback;
+    private FragmentActivity fragmentActivity;
+    private FragmentManager fragmentManager;
+    private Context context;
 
     public static LinksFragment newInstance() {
         return new LinksFragment();
@@ -123,13 +127,17 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        fragmentActivity = getActivity();
+        fragmentManager = getFragmentManager();
+        context = getContext();
+
         setHasOptionsMenu(true);
     }
 
     @Nullable
     @Override
     public View onCreateView(
-            LayoutInflater inflater, @Nullable ViewGroup container,
+            @NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         FragmentLaanoLinksBinding binding =
                 FragmentLaanoLinksBinding.inflate(inflater, container, false);
@@ -152,9 +160,9 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     }
 
     private void setSearchMenuItem(MenuItem item) {
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
-        MenuItemCompat.setOnActionExpandListener(
-                item, new MenuItemCompat.OnActionExpandListener() {
+        SearchView searchView = (SearchView) item.getActionView();
+        item.setOnActionExpandListener(
+                new MenuItem.OnActionExpandListener() {
 
                     @Override
                     public boolean onMenuItemActionExpand(MenuItem item) {
@@ -163,7 +171,9 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
 
                     @Override
                     public boolean onMenuItemActionCollapse(MenuItem item) {
-                        getActivity().supportInvalidateOptionsMenu();
+                        if (fragmentActivity != null) {
+                            fragmentActivity.invalidateOptionsMenu();
+                        }
                         viewModel.setSearchText(null);
                         presenter.setFilterIsChanged(true);
                         presenter.loadLinks(false);
@@ -207,7 +217,8 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
                 collapseAllLinks();
                 break;
             case R.id.toolbar_links_clear_clipboard:
-                ActivityUtils.clearClipboard(getContext());
+                if (context != null)
+                    ActivityUtils.clearClipboard(context);
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -216,7 +227,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         viewModel.saveInstanceState(outState);
         saveRvLayoutState(outState);
@@ -224,20 +235,20 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
 
     @Override
     public void startAddLinkActivity() {
-        Intent intent = new Intent(getContext(), AddEditLinkActivity.class);
+        Intent intent = new Intent(context, AddEditLinkActivity.class);
         startActivityForResult(intent, REQUEST_ADD_LINK);
     }
 
     @Override
     public void showAddNote(@NonNull String linkId) {
-        Intent intent = new Intent(getContext(), AddEditNoteActivity.class);
+        Intent intent = new Intent(context, AddEditNoteActivity.class);
         intent.putExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID, linkId);
         startActivityForResult(intent, REQUEST_ADD_NOTE);
     }
 
     @Override
     public void showEditLink(@NonNull String linkId) {
-        Intent intent = new Intent(getContext(), AddEditLinkActivity.class);
+        Intent intent = new Intent(context, AddEditLinkActivity.class);
         intent.putExtra(AddEditLinkFragment.ARGUMENT_LINK_ID, linkId);
         startActivityForResult(intent, REQUEST_EDIT_LINK);
     }
@@ -309,7 +320,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
                 if (resultCode == LinksConflictResolutionDialog.RESULT_OK) {
                     presenter.updateSyncStatus();
                     //viewModel.showConflictResolutionSuccessfulSnackbar();
-                    Toast.makeText(getContext(), R.string.toast_conflict_resolved,
+                    Toast.makeText(context, R.string.toast_conflict_resolved,
                             Toast.LENGTH_SHORT).show();
                 } else if (resultCode == LinksConflictResolutionDialog.RESULT_FAILED){
                     viewModel.showConflictResolutionErrorSnackbar();
@@ -331,7 +342,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         List<Link> links = new ArrayList<>(0);
         adapter = new LinksAdapter(links, presenter, (LinksViewModel) viewModel);
         rvLinks.setAdapter(adapter);
-        rvLayoutManager = new LinearLayoutManager(getContext());
+        rvLayoutManager = new LinearLayoutManager(context);
         rvLinks.setLayoutManager(rvLayoutManager);
         ((SimpleItemAnimator) rvLinks.getItemAnimator()).setSupportsChangeAnimations(false);
     }
@@ -357,8 +368,10 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     }
 
     private void showFilteringPopupMenu() {
+        if (context == null || fragmentActivity == null) return;
+
         PopupMenu popupMenu = new PopupMenu(
-                getContext(), getActivity().findViewById(R.id.toolbar_links_filter));
+                context, fragmentActivity.findViewById(R.id.toolbar_links_filter));
         Menu menu = popupMenu.getMenu();
         popupMenu.getMenuInflater().inflate(R.menu.filter, menu);
         popupMenu.setOnMenuItemClickListener(item -> {
@@ -383,7 +396,7 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
             scrollToPosition(0);
             return true;
         });
-        Resources resources = getContext().getResources();
+        Resources resources = context.getResources();
         MenuItem filterLinkMenuItem = menu.findItem(R.id.filter_link);
         filterLinkMenuItem.setVisible(false);
 
@@ -423,9 +436,9 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         if (!viewModel.isActionMode()) {
             viewModel.enableActionMode();
         }
-        if (actionMode == null) {
+        if (actionMode == null && fragmentActivity != null) {
             linksActionModeCallback = new LinksActionModeCallback();
-            actionMode = ((AppCompatActivity) getActivity())
+            actionMode = ((AppCompatActivity) fragmentActivity)
                     .startSupportActionMode(linksActionModeCallback);
         }
         updateActionModeTitle();
@@ -484,9 +497,9 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
     }
 
     private void updateActionModeTitle() {
-        if (actionMode == null) return;
+        if (actionMode == null || context == null) return;
 
-        actionMode.setTitle(getContext().getResources().getString(
+        actionMode.setTitle(context.getResources().getString(
                 R.string.laano_links_action_mode_selected,
                 viewModel.getSelectedCount(), adapter.getItemCount()));
         if (adapter.getItemCount() <= 0) {
@@ -530,7 +543,8 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         LinkRemovalConfirmationDialog dialog =
                 LinkRemovalConfirmationDialog.newInstance(selectedIds);
         dialog.setTargetFragment(this, LinkRemovalConfirmationDialog.DIALOG_REQUEST_CODE);
-        dialog.show(getFragmentManager(), LinkRemovalConfirmationDialog.DIALOG_TAG);
+        if (fragmentManager != null)
+            dialog.show(fragmentManager, LinkRemovalConfirmationDialog.DIALOG_TAG);
     }
 
     public void deleteLinks(ArrayList<String> selectedIds, boolean deleteNotes) {
@@ -544,7 +558,8 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         LinksConflictResolutionDialog dialog =
                 LinksConflictResolutionDialog.newInstance(linkId);
         dialog.setTargetFragment(this, REQUEST_LINK_CONFLICT_RESOLUTION);
-        dialog.show(getFragmentManager(), LinksConflictResolutionDialog.DIALOG_TAG);
+        if (fragmentManager != null)
+            dialog.show(fragmentManager, LinksConflictResolutionDialog.DIALOG_TAG);
     }
 
     @Override
@@ -553,7 +568,8 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         LinkConflictResolutionWarningDialog dialog =
                 LinkConflictResolutionWarningDialog.newInstance(linkId);
         dialog.setTargetFragment(this, LinkConflictResolutionWarningDialog.DIALOG_REQUEST_CODE);
-        dialog.show(getFragmentManager(), LinkConflictResolutionWarningDialog.DIALOG_TAG);
+        if (fragmentManager != null)
+            dialog.show(fragmentManager, LinkConflictResolutionWarningDialog.DIALOG_TAG);
     }
 
     // NOTE: callback from AlertDialog
@@ -634,22 +650,29 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            selectedIds = getArguments().getStringArrayList(ARGUMENT_SELECTED_IDS);
+            Bundle args = getArguments();
+            if (args != null)
+                selectedIds = args.getStringArrayList(ARGUMENT_SELECTED_IDS);
         }
 
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
+            Context dialogContext = getContext();
+            LinksFragment targetFragment = (LinksFragment) getTargetFragment();
+            if (dialogContext == null || targetFragment == null) {
+                throw new IllegalStateException("Unexpected state in onCreateDialog()");
+            }
             int length = selectedIds.size();
-            return new AlertDialog.Builder(getContext())
+            return new AlertDialog.Builder(dialogContext)
                     .setTitle(R.string.links_delete_confirmation_title)
                     .setMessage(getResources().getQuantityString(
                             R.plurals.links_delete_confirmation_message, length, length))
                     .setIcon(R.drawable.ic_warning)
                     .setPositiveButton(R.string.dialog_button_delete, (dialog, which) ->
-                            ((LinksFragment) getTargetFragment()).deleteLinks(selectedIds, true))
+                            targetFragment.deleteLinks(selectedIds, true))
                     .setNeutralButton(R.string.dialog_button_keep_notes, (dialog, which) ->
-                            ((LinksFragment) getTargetFragment()).deleteLinks(selectedIds, false))
+                            targetFragment.deleteLinks(selectedIds, false))
                     .setNegativeButton(R.string.dialog_button_cancel, null)
                     .create();
         }
@@ -676,32 +699,35 @@ public class LinksFragment extends BaseItemFragment implements LinksContract.Vie
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            linkId = getArguments().getString(ARGUMENT_LINK_ID);
+            Bundle args = getArguments();
+            if (args != null)
+                linkId = args.getString(ARGUMENT_LINK_ID);
         }
 
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            Context context = getContext();
-            LayoutInflater inflater = LayoutInflater.from(context);
+            Context dialogContext = getContext();
+            LinksFragment targetFragment = (LinksFragment) getTargetFragment();
+            if (dialogContext == null || targetFragment == null) {
+                throw new IllegalStateException("Unexpected state in onCreateDialog()");
+            }
+            LayoutInflater inflater = LayoutInflater.from(dialogContext);
             DialogDoNotShowCheckboxBinding binding =
                     DialogDoNotShowCheckboxBinding.inflate(inflater, null, false);
             CheckBox checkBox = binding.doNotShowCheckbox;
 
-            return new AlertDialog.Builder(context)
+            return new AlertDialog.Builder(dialogContext)
                     .setView(binding.getRoot())
                     .setTitle(R.string.links_conflict_resolution_warning_title)
                     .setMessage(R.string.links_conflict_resolution_warning_message)
                     .setIcon(R.drawable.ic_warning)
                     .setPositiveButton(R.string.dialog_button_continue, (dialog, which) -> {
-                        LinksFragment fragment = (LinksFragment) getTargetFragment();
-                        fragment.setShowConflictResolutionWarning(!checkBox.isChecked());
-                        fragment.showConflictResolution(linkId);
+                        targetFragment.setShowConflictResolutionWarning(!checkBox.isChecked());
+                        targetFragment.showConflictResolution(linkId);
                     })
-                    .setNegativeButton(R.string.dialog_button_cancel, (dialog, which) -> {
-                        LinksFragment fragment = (LinksFragment) getTargetFragment();
-                        fragment.setShowConflictResolutionWarning(!checkBox.isChecked());
-                    })
+                    .setNegativeButton(R.string.dialog_button_cancel, (dialog, which) ->
+                            targetFragment.setShowConflictResolutionWarning(!checkBox.isChecked()))
                     .create();
         }
     }

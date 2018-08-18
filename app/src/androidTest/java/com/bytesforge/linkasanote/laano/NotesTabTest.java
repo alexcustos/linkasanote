@@ -65,6 +65,7 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.longClick;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.contrib.RecyclerViewActions.scrollToPosition;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -181,7 +182,9 @@ public class NotesTabTest {
                     .check(matches(isDisplayed()));
         }
         AndroidTestUtils.rotateOrientation(laanoActivityTestRule);
+        int position = 0;
         for (Note note : notes) {
+            onView(withId(R.id.rv_notes)).perform(scrollToPosition(position++));
             onView(allOf(withId(R.id.note_note), withItemTextRv(note.getNote())))
                     .check(matches(isDisplayed()));
         }

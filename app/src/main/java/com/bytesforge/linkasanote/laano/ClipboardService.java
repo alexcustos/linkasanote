@@ -56,6 +56,7 @@ import javax.inject.Inject;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.exceptions.UndeliverableException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -129,7 +130,10 @@ public class ClipboardService extends Service {
         application.getApplicationComponent().inject(this);
         compositeDisposable = new CompositeDisposable();
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        clipboardManager.addPrimaryClipChangedListener(primaryClipChangedListener);
+        if (clipboardManager != null)
+            clipboardManager.addPrimaryClipChangedListener(primaryClipChangedListener);
+        else
+            Log.e(TAG, "onCreate(): Enable to register Clipboard Manager.");
     }
 
     @Override
@@ -143,9 +147,15 @@ public class ClipboardService extends Service {
 
     @Override
     public void onDestroy() {
-        clipboardManager.removePrimaryClipChangedListener(primaryClipChangedListener);
+        if (clipboardManager != null)
+            clipboardManager.removePrimaryClipChangedListener(primaryClipChangedListener);
         // NOTE: thread is continue running when service is destroyed
-        compositeDisposable.clear();
+        try {
+            // NOTE: https://github.com/ReactiveX/RxJava/issues/5083
+            compositeDisposable.clear();
+        } catch (UndeliverableException e) {
+            // TODO: check if it's the right place to ignore
+        }
         /* NOTE: annoying and not very useful notification
         if (settings.isClipboardLinkGetMetadata()) {
             // NOTE: inform only if internet connection is involved
@@ -162,7 +172,11 @@ public class ClipboardService extends Service {
     }
 
     private void cleanup() {
-        compositeDisposable.clear();
+        try {
+            compositeDisposable.clear();
+        } catch (UndeliverableException e) {
+            // NOTE: ignored explicitly due RxJava #5083
+        }
         clipboardType = CLIPBOARD_EMPTY;
         normalizedClipboard = null;
         linkDisabled = false;
@@ -307,7 +321,7 @@ public class ClipboardService extends Service {
         Log.i(TAG, "ClipboardCheck()");
 
         cleanup();
-        if (clipboardManager.hasPrimaryClip()) {
+        if (clipboardManager != null && clipboardManager.hasPrimaryClip()) {
             ClipData primaryClip = clipboardManager.getPrimaryClip();
             ClipDescription description = primaryClip.getDescription();
             if (primaryClip.getItemCount() > 0
