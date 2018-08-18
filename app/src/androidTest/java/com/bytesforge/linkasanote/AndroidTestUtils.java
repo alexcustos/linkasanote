@@ -143,6 +143,9 @@ public class AndroidTestUtils extends SharedUtils {
         final Uri linkUri = LocalContract.LinkEntry.buildUri();
         contentResolver.delete(linkUri, null, null);
 
+        final Uri noteUri = LocalContract.NoteEntry.buildUri();
+        contentResolver.delete(noteUri, null, null);
+
         final Uri tagUri = LocalContract.TagEntry.buildUri();
         contentResolver.delete(tagUri, null, null);
     }
