@@ -1,6 +1,6 @@
 # LaaNo: Link as a Note
 
-[LaaNo](https://laano.net) is an Android app which is designed to simplify the access to the information found on the Web and to give more power to manage it.
+[LaaNo](https://laano.net) is an Android app which is designed to simplify the access to the information found on the Web and give more power to manage it.
 
 * The app allows to bind Notes to Links and, at the same time, providing independent access to them.
 * Notes can be used as background information or as flashcards.
@@ -8,9 +8,12 @@
 
 ## Install
 
-[<img alt='Get it on Google Play'
-	src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'
-	height="83" />](https://play.google.com/store/apps/details?id=com.bytesforge.linkasanote)
+[<img alt="Get it on Google Play"
+	src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
+	height="83" style="max-width: 100%;" />](https://play.google.com/store/apps/details?id=com.bytesforge.linkasanote)
+[<img alt="Get it on F-Droid"
+    src="https://f-droid.org/badge/get-it-on.png"
+    height="83" style="max-width: 100%;" />](https://f-droid.org/packages/com.bytesforge.linkasanote/)
 
 ## LaaNo tools
 
