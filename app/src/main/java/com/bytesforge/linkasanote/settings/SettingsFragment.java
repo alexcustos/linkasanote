@@ -250,12 +250,13 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         prefSyncDirectory.setSummary(syncDirectory);
         prefSyncDirectory.setOnPreferenceChangeListener((preference, newValue) -> {
             String newSyncDirectory = (String) newValue;
-            // TODO: provide version to the client and use it to check if supportsForbiddenChars
+            // TODO: remove when proved it's not needed
+            /* NOTE: since v1.1.0 all paths are valid
             if (!FileUtils.isValidPath(newSyncDirectory, false)) {
                 showSnackbar(R.string.settings_fragment_snackbar_directory_error,
                         Snackbar.LENGTH_LONG);
                 return false;
-            }
+            }*/
             settings.setSyncDirectory(newSyncDirectory);
             String normalizedSyncDirectory = settings.getSyncDirectory();
             prefSyncDirectory.setSummary(normalizedSyncDirectory);

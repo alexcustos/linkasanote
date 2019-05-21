@@ -7,8 +7,11 @@ build/
 
 # Local configuration
 local.properties
-/app/sign*.properties
+release-signing.properties
 /app/prod/
 
-# External auxiliary files, directory will be mounted
+# Temporary files
+/tmp/
+
+# Mount point: external files
 /cloud/

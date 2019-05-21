@@ -31,7 +31,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.LaanoApplication;
@@ -78,7 +78,7 @@ public final class CloudUtils {
         checkNotNull(context);
         checkNotNull(accountManager);
 
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.GET_ACCOUNTS)
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.GET_ACCOUNTS)
                 != PackageManager.PERMISSION_GRANTED) {
             Log.i(TAG, "Insufficient permission to access accounts in device");
             return null;
