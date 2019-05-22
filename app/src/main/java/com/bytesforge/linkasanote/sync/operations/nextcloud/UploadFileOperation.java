@@ -26,15 +26,17 @@ import android.support.annotation.Nullable;
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.owncloud.android.lib.common.OwnCloudClient;
+import com.owncloud.android.lib.common.network.WebdavUtils;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
-import com.owncloud.android.lib.resources.files.CreateRemoteFolderOperation;
+import com.owncloud.android.lib.resources.files.CreateFolderRemoteOperation;
 import com.owncloud.android.lib.resources.files.ExistenceCheckRemoteOperation;
-import com.owncloud.android.lib.resources.files.ReadRemoteFileOperation;
-import com.owncloud.android.lib.resources.files.RemoteFile;
-import com.owncloud.android.lib.resources.files.UploadRemoteFileOperation;
+import com.owncloud.android.lib.resources.files.ReadFileRemoteOperation;
+import com.owncloud.android.lib.resources.files.UploadFileRemoteOperation;
+import com.owncloud.android.lib.resources.files.model.RemoteFile;
 
 import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.methods.PutMethod;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -67,7 +69,7 @@ public class UploadFileOperation extends RemoteOperation {
         RemoteOperationResult result = createRemoteParent(file.getRemotePath(), ocClient);
         if (!result.isSuccess()) return result;
 
-        EnhancedUploadRemoteFileOperation uploadOperation = new EnhancedUploadRemoteFileOperation(
+        EnhancedUploadFileRemoteOperation uploadOperation = new EnhancedUploadFileRemoteOperation(
                 file.getLocalPath(), file.getRemotePath(), file.getMimeType());
         result = uploadOperation.execute(ocClient);
         ArrayList<Object> data = new ArrayList<>();
@@ -89,20 +91,20 @@ public class UploadFileOperation extends RemoteOperation {
                 new ExistenceCheckRemoteOperation(remoteParent, false);
         RemoteOperationResult result = existenceOperation.execute(ocClient);
         if (result.getCode() == RemoteOperationResult.ResultCode.FILE_NOT_FOUND) {
-            CreateRemoteFolderOperation createOperation =
-                    new CreateRemoteFolderOperation(remoteParent, true);
+            CreateFolderRemoteOperation createOperation =
+                    new CreateFolderRemoteOperation(remoteParent, true);
             result = createOperation.execute(ocClient);
         }
         return result;
     }
 
-    private class EnhancedUploadRemoteFileOperation extends UploadRemoteFileOperation {
+    private class EnhancedUploadFileRemoteOperation extends UploadFileRemoteOperation {
 
         private OwnCloudClient ocClient;
         private String fileId;
         private String eTag;
 
-        public EnhancedUploadRemoteFileOperation(
+        public EnhancedUploadFileRemoteOperation(
                 String localPath, String remotePath, String mimeType) {
             super(localPath, remotePath, mimeType, Long.toString(currentTimeMillis() / 1000));
         }
@@ -124,7 +126,7 @@ public class UploadFileOperation extends RemoteOperation {
         }
 
         private void requestNextcloudFileAttributes() {
-            ReadRemoteFileOperation operation = new ReadRemoteFileOperation(this.mRemotePath);
+            ReadFileRemoteOperation operation = new ReadFileRemoteOperation(this.remotePath);
             RemoteOperationResult result =
                     CloudDataSource.executeRemoteOperation(operation, ocClient)
                             .blockingGet();
@@ -139,8 +141,11 @@ public class UploadFileOperation extends RemoteOperation {
         public RemoteOperationResult execute(OwnCloudClient ocClient) {
             this.ocClient = ocClient;
             RemoteOperationResult result = super.execute(ocClient);
+            // TODO: make sure this replacement of this.putMethod is working well
+            PutMethod putMethod = new PutMethod(
+                    ocClient.getWebdavUri() + WebdavUtils.encodePath(this.remotePath));
             Map<String, String> nextcloudHeaders =
-                    extractNextcloudResponseHeaders(this.mPutMethod.getResponseHeaders());
+                    extractNextcloudResponseHeaders(putMethod.getResponseHeaders());
             if (nextcloudHeaders != null) {
                 fileId = nextcloudHeaders.get(NEXTCLOUD_FILE_ID_HEADER);
                 eTag = nextcloudHeaders.get(NEXTCLOUD_E_TAG_HEADER);

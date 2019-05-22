@@ -20,7 +20,6 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     package="com.bytesforge.linkasanote">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -30,12 +29,11 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <!-- On Android M and above, use of these permissions is only requested at run time -->
-    <!-- NOTE: there is an issue with latest 1.0.x versions of nextcloud library that have maxSdkVersion="22" set -->
-    <uses-permission tools:remove="android:maxSdkVersion" android:name="android.permission.MANAGE_ACCOUNTS" />
-    <uses-permission tools:remove="android:maxSdkVersion" android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
-    <uses-permission tools:remove="android:maxSdkVersion" android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission tools:remove="android:maxSdkVersion" android:name="android.permission.USE_CREDENTIALS" />
+    <!-- Android M and above requires these permissions and also requests them at run time -->
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
 
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />

@@ -21,8 +21,7 @@ ext {
     powermockVersion = '1.7.4'
     rxjavaVersion = '2.2.0'
     rxandroidVersion = '2.1.0'
-    gsonVersion = '2.8.5' // NOTE: required by nextcloud
-    nextcloudLibraryVersion = '1.2.3' // TODO: upgrade to 1.3.x
+    nextcloudLibraryVersion = '1.4.2'
     uiAutomatorVersion = '2.1.3'
     jsoupVersion = '1.11.3'
     stethoVersion = '1.5.0'
