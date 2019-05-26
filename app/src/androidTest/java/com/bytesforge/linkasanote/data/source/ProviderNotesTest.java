@@ -25,9 +25,8 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
+import android.support.test.rule.provider.ProviderTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.ProviderTestCase2;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.data.Note;
@@ -36,6 +35,7 @@ import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -44,9 +44,12 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
-public class ProviderNotesTest extends ProviderTestCase2<Provider> {
+public class ProviderNotesTest {
 
     private final String KEY_PREFIX = CommonUtils.charRepeat('A', 21);
     private final String[] ENTRY_KEYS;
@@ -54,11 +57,12 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
     private final String[] NOTE_NAMES;
 
     private ContentResolver contentResolver;
-    private Provider provider;
+
+    @Rule
+    public ProviderTestRule providerRule =
+            new ProviderTestRule.Builder(Provider.class, LocalContract.CONTENT_AUTHORITY).build();
 
     public ProviderNotesTest() {
-        super(Provider.class, LocalContract.CONTENT_AUTHORITY);
-
         ENTRY_KEYS = new String[]{KEY_PREFIX + 'A', KEY_PREFIX + 'B'};
         NOTE_NAMES = new String[]{"Note", "Note #2"};
         NOTE_TAGS = new ArrayList<Tag>() {{
@@ -69,14 +73,8 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
     }
 
     @Before
-    @Override
     public void setUp() throws Exception {
-        setContext(InstrumentationRegistry.getTargetContext());
-        super.setUp();
-
-        contentResolver = getMockContentResolver();
-        provider = getProvider();
-
+        contentResolver = providerRule.getResolver();
         AndroidTestUtils.cleanUpProvider(contentResolver);
     }
 
@@ -189,7 +187,7 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
         assertNotNull(tags);
         final Uri noteUri = LocalContract.NoteEntry.buildUriWith(noteId);
 
-        Cursor cursor = provider.query(noteUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(noteUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
         assertThat(cursor.getCount(), equalTo(1));
         try {
@@ -205,7 +203,7 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
         assertNotNull(noteId);
         final Uri noteUri = LocalContract.NoteEntry.buildUriWith(noteId);
 
-        Cursor cursor = provider.query(noteUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(noteUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
         assertThat(cursor.getCount(), equalTo(1));
         try {
@@ -221,7 +219,7 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
     private List<Tag> queryNoteTags(String noteRowId) {
         final Uri noteTagsUri = LocalContract.NoteEntry.buildTagsDirUriWith(noteRowId);
 
-        Cursor cursor = provider.query(noteTagsUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(noteTagsUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
 
         List<Tag> tags = new ArrayList<>();
@@ -234,7 +232,7 @@ public class ProviderNotesTest extends ProviderTestCase2<Provider> {
     @NonNull
     private List<Tag> queryAllTags() {
         final Uri tagsUri = LocalContract.TagEntry.buildUri();
-        Cursor cursor = provider.query(tagsUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(tagsUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
 
         List<Tag> tags = new ArrayList<>();

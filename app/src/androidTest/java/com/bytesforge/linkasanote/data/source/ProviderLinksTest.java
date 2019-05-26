@@ -25,9 +25,8 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
+import android.support.test.rule.provider.ProviderTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.ProviderTestCase2;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.data.Link;
@@ -36,6 +35,7 @@ import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -44,9 +44,12 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
-public class ProviderLinksTest extends ProviderTestCase2<Provider> {
+public class ProviderLinksTest {
 
     private final String KEY_PREFIX = CommonUtils.charRepeat('A', 21);
     private final String[] ENTRY_KEYS;
@@ -55,11 +58,12 @@ public class ProviderLinksTest extends ProviderTestCase2<Provider> {
     private final String[] FAVORITE_NAMES;
 
     private ContentResolver contentResolver;
-    private Provider provider;
+
+    @Rule
+    public ProviderTestRule providerRule =
+            new ProviderTestRule.Builder(Provider.class, LocalContract.CONTENT_AUTHORITY).build();
 
     public ProviderLinksTest() {
-        super(Provider.class, LocalContract.CONTENT_AUTHORITY);
-
         ENTRY_KEYS = new String[]{KEY_PREFIX + 'A', KEY_PREFIX + 'B'};
         FAVORITE_LINKS = new String[]{"http://laano.net/link", "http://laano.net/link2"};
         FAVORITE_NAMES = new String[]{"Link", "Link #2"};
@@ -71,14 +75,8 @@ public class ProviderLinksTest extends ProviderTestCase2<Provider> {
     }
 
     @Before
-    @Override
     public void setUp() throws Exception {
-        setContext(InstrumentationRegistry.getTargetContext());
-        super.setUp();
-
-        contentResolver = getMockContentResolver();
-        provider = getProvider();
-
+        contentResolver = providerRule.getResolver();
         AndroidTestUtils.cleanUpProvider(contentResolver);
     }
 
@@ -191,7 +189,7 @@ public class ProviderLinksTest extends ProviderTestCase2<Provider> {
         assertNotNull(tags);
         final Uri linkUri = LocalContract.LinkEntry.buildUriWith(linkId);
 
-        Cursor cursor = provider.query(linkUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(linkUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
         assertThat(cursor.getCount(), equalTo(1));
         try {
@@ -207,7 +205,7 @@ public class ProviderLinksTest extends ProviderTestCase2<Provider> {
         assertNotNull(linkId);
         final Uri linkUri = LocalContract.LinkEntry.buildUriWith(linkId);
 
-        Cursor cursor = provider.query(linkUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(linkUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
         assertThat(cursor.getCount(), equalTo(1));
         try {
@@ -223,7 +221,7 @@ public class ProviderLinksTest extends ProviderTestCase2<Provider> {
     private List<Tag> queryLinkTags(String linkRowId) {
         final Uri linkTagsUri = LocalContract.LinkEntry.buildTagsDirUriWith(linkRowId);
 
-        Cursor cursor = provider.query(linkTagsUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(linkTagsUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
 
         List<Tag> tags = new ArrayList<>();
@@ -236,7 +234,7 @@ public class ProviderLinksTest extends ProviderTestCase2<Provider> {
     @NonNull
     private List<Tag> queryAllTags() {
         final Uri tagsUri = LocalContract.TagEntry.buildUri();
-        Cursor cursor = provider.query(tagsUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(tagsUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
 
         List<Tag> tags = new ArrayList<>();

@@ -25,9 +25,8 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
+import android.support.test.rule.provider.ProviderTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.ProviderTestCase2;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -35,6 +34,7 @@ import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -43,30 +43,28 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
-public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
+public class ProviderFavoritesTest {
 
     private final List<Favorite> FAVORITES;
 
     private ContentResolver contentResolver;
-    private Provider provider;
+
+    @Rule
+    public ProviderTestRule providerRule =
+            new ProviderTestRule.Builder(Provider.class, LocalContract.CONTENT_AUTHORITY).build();
 
     public ProviderFavoritesTest() {
-        super(Provider.class, LocalContract.CONTENT_AUTHORITY);
-
         FAVORITES = AndroidTestUtils.buildFavorites();
     }
 
     @Before
-    @Override
     public void setUp() throws Exception {
-        setContext(InstrumentationRegistry.getTargetContext());
-        super.setUp();
-
-        contentResolver = getMockContentResolver();
-        provider = getProvider();
-
+        contentResolver = providerRule.getResolver();
         AndroidTestUtils.cleanUpProvider(contentResolver);
     }
 
@@ -182,7 +180,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
         assertNotNull(tags);
         final Uri favoriteUri = LocalContract.FavoriteEntry.buildUriWith(favoriteId);
 
-        Cursor cursor = provider.query(favoriteUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(favoriteUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
         assertThat(cursor.getCount(), equalTo(1));
         try {
@@ -198,7 +196,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
         assertNotNull(favoriteId);
         final Uri favoriteUri = LocalContract.FavoriteEntry.buildUriWith(favoriteId);
 
-        Cursor cursor = provider.query(favoriteUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(favoriteUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
         assertThat(cursor.getCount(), equalTo(1));
         try {
@@ -214,7 +212,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
     private List<Tag> queryFavoriteTags(String favoriteRowId) {
         final Uri favoriteTagsUri = LocalContract.FavoriteEntry.buildTagsDirUriWith(favoriteRowId);
 
-        Cursor cursor = provider.query(favoriteTagsUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(favoriteTagsUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
 
         List<Tag> tags = new ArrayList<>();
@@ -227,7 +225,7 @@ public class ProviderFavoritesTest extends ProviderTestCase2<Provider> {
     @NonNull
     private List<Tag> queryAllTags() {
         final Uri tagsUri = LocalContract.TagEntry.buildUri();
-        Cursor cursor = provider.query(tagsUri, null, null, new String[]{}, null);
+        Cursor cursor = contentResolver.query(tagsUri, null, null, new String[]{}, null);
         assertNotNull(cursor);
 
         List<Tag> tags = new ArrayList<>();
