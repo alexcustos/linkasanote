@@ -32,9 +32,9 @@ import android.os.Handler;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
+import android.support.test.rule.GrantPermissionRule;
 import android.support.test.runner.AndroidJUnit4;
 
-import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.ApplicationComponent;
 import com.bytesforge.linkasanote.ApplicationModule;
 import com.bytesforge.linkasanote.DaggerApplicationComponent;
@@ -83,6 +83,10 @@ public class ManageAccountsActivityTest {
     public DaggerMockRule<ApplicationComponent> daggerMockRule = new DaggerMockRule<>(
             ApplicationComponent.class, new ApplicationModule(context)).set(component ->
             ((LaanoApplication) context.getApplicationContext()).setApplicationComponent(component));*/
+
+    @Rule
+    public GrantPermissionRule mRuntimePermissionRule = GrantPermissionRule.grant(
+            Manifest.permission.GET_ACCOUNTS);
 
     @Rule
     public ActivityTestRule<ManageAccountsActivity> manageAccountsActivityTestRule =
@@ -134,7 +138,6 @@ public class ManageAccountsActivityTest {
     }
 
     private void setupManageAccountsActivity() { // @Before
-        AndroidTestUtils.allowPermissionIfNeeded(Manifest.permission.GET_ACCOUNTS);
     }
 
     @Test
