@@ -32,7 +32,7 @@ android {
     File releaseSigning = project.rootProject.file('release-signing.properties')
     if (releaseSigning.exists()) {
         Properties signingProperties = new Properties()
-        signingProperties.load(releaseSigning.newDataInputStream())
+        releaseSigning.withInputStream { signingProperties.load(it) }
 
         // NOTE: signingProperties.hasProperty is not working
         println "Found release-signing.properties, will try to sign the build..."
@@ -87,6 +87,7 @@ android {
         exclude 'META-INF/README.txt'
         exclude 'META-INF/README.md'
         exclude 'META-INF/rxjava.properties'
+        exclude 'META-INF/*.*.version'
     }
 
     android.variantFilter { variant ->

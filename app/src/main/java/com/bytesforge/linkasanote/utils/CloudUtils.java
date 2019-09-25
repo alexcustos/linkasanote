@@ -148,8 +148,7 @@ public final class CloudUtils {
         try {
             return OwnCloudClientManagerFactory.getDefaultSingleton()
                     .getClientFor(ocAccount, context);
-        } catch (AccountUtils.AccountNotFoundException
-                | OperationCanceledException | AuthenticatorException | IOException e) {
+        } catch (OperationCanceledException | AuthenticatorException | IOException e) {
             Log.e(TAG, "Cannot get client for the account");
             CommonUtils.logStackTrace(TAG, e);
         }
