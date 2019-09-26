@@ -146,7 +146,7 @@ dependencies {
     compileOnly "javax.annotation:jsr250-api:${jsr250ApiVersion}"
 
     // Stetho
-    debugImplementation "com.facebook.stetho:stetho:${stethoVersion}"
+    implementation "com.facebook.stetho:stetho:${stethoVersion}"
 
     // Local unit tests
     testImplementation "junit:junit:${junitVersion}"

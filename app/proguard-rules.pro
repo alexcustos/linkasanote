@@ -43,6 +43,7 @@
 
 -keeppackagenames org.jsoup.nodes
 
+-keep class org.apache.commons.** { *; }
 -keep class org.apache.jackrabbit.webdav.** { *; }
 -dontwarn org.apache.jackrabbit.**
 

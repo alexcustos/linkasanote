@@ -32,12 +32,14 @@ import com.bytesforge.linkasanote.data.source.RepositoryModule;
 import com.bytesforge.linkasanote.settings.SettingsModule;
 import com.bytesforge.linkasanote.utils.UuidUtils;
 import com.bytesforge.linkasanote.utils.schedulers.SchedulerProviderModule;
+import com.facebook.stetho.Stetho;
 
 import java.lang.ref.WeakReference;
 
 public class LaanoApplication extends MultiDexApplication {
 
-    private static final boolean STRICT_MODE = true;
+    private static final boolean STRICT_MODE = false;
+    private static final boolean STETHO_MODE = false;
 
     static {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
@@ -62,8 +64,11 @@ public class LaanoApplication extends MultiDexApplication {
                 .schedulerProviderModule(new SchedulerProviderModule())
                 .build();
 
+        if (BuildConfig.DEBUG && STETHO_MODE) {
+            Stetho.initializeWithDefaults(this);
+        }
+
         if (BuildConfig.DEBUG && STRICT_MODE) {
-            //Stetho.initializeWithDefaults(this);
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                     .detectAll()
                     .penaltyLog()
