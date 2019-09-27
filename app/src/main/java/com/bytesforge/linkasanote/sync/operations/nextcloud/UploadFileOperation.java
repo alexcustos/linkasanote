@@ -138,7 +138,9 @@ public class UploadFileOperation extends RemoteOperation {
         }
 
         @Override
-        public RemoteOperationResult execute(OwnCloudClient ocClient) {
+        public RemoteOperationResult execute(@NonNull OwnCloudClient ocClient) {
+            checkNotNull(ocClient);
+
             this.ocClient = ocClient;
             RemoteOperationResult result = super.execute(ocClient);
             // TODO: make sure this replacement of this.putMethod is working well

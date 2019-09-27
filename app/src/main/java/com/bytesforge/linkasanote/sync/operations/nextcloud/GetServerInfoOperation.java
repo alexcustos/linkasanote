@@ -48,7 +48,9 @@ public class GetServerInfoOperation extends RemoteOperation {
     }
 
     @Override
-    protected RemoteOperationResult run(OwnCloudClient ocClient) {
+    protected RemoteOperationResult run(@NonNull OwnCloudClient ocClient) {
+        checkNotNull(ocClient);
+
         GetRemoteStatusOperation statusOperation = new GetRemoteStatusOperation(context);
         RemoteOperationResult result = statusOperation.execute(ocClient);
         if (result.isSuccess()) {

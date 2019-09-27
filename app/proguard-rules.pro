@@ -43,12 +43,13 @@
 
 -keeppackagenames org.jsoup.nodes
 
--keep class org.apache.commons.** { *; }
+-keep class org.apache.commons.httpclient.** { *; }
+-dontwarn org.apache.commons.**
+
 -keep class org.apache.jackrabbit.webdav.** { *; }
 -dontwarn org.apache.jackrabbit.**
 
 -dontwarn javax.servlet.http.**
--dontwarn org.apache.commons.**
 -dontwarn org.slf4j.*
 
 -dontwarn sun.misc.Unsafe
@@ -61,3 +62,4 @@
 -dontwarn org.checkerframework.**
 
 -keep class android.support.v7.** { *; }
+-keep class com.owncloud.android.lib.** { *; }
