@@ -60,7 +60,8 @@
                         android:inputType="text|textNoSuggestions"
                         android:maxLines="1"
                         android:text="@={viewModel.favoriteName}"
-                        android:afterTextChanged="@{() -> viewModel.afterNameChanged()}" />
+                        android:afterTextChanged="@{() -> viewModel.afterNameChanged()}"
+                        android:importantForAutofill="no" />
                 </android.support.design.widget.TextInputLayout>
 
                 <RelativeLayout
@@ -71,18 +72,23 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_toStartOf="@+id/checkbox_and_gate"
+                        android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
                         android:labelFor="@+id/checkbox_and_gate"
-                        android:text="@string/add_edit_favorite_and_gate_hint" />
+                        android:text="@string/add_edit_favorite_and_gate_hint"
+                        android:gravity="center_vertical|end" />
 
+                    <!-- NOTE: both Start & End padding go to the end of CheckBox -->
                     <android.support.v7.widget.AppCompatCheckBox
                         android:id="@+id/checkbox_and_gate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
+                        android:paddingTop="@dimen/dialog_checkbox_padding"
+                        android:paddingBottom="@dimen/dialog_checkbox_padding"
                         android:checked="@={viewModel.favoriteAndGate}"
-                        android:gravity="center_vertical" />
+                        android:gravity="center_vertical|end" />
                 </RelativeLayout>
 
                 <android.support.design.widget.TextInputLayout

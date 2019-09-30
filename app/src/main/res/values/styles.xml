@@ -62,7 +62,7 @@
     </style>
     <style name="Base.Laano.Settings" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="preferenceTheme">@style/Laano.SettingsTheme</item>
-        <!-- EXAMPLE: <item name="dialogLayout">@layout/settings_dialog_edittext</item> -->
+        <item name="dialogLayout">@layout/settings_dialog_edittext</item>
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
         <item name="colorAccent">@color/color_accent</item>
