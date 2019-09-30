@@ -41,6 +41,7 @@ public class AboutActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // App links: Tools -> App Links Assistant Step 2: when data handling is required
         ActivityAboutBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_about);
         // Toolbar
         setSupportActionBar(binding.toolbar);
