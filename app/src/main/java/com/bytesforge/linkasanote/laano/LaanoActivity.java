@@ -39,6 +39,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.AppBarLayout;
@@ -69,6 +70,7 @@ import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenter;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenterModule;
 import com.bytesforge.linkasanote.laano.links.LinksPresenter;
 import com.bytesforge.linkasanote.laano.links.LinksPresenterModule;
+import com.bytesforge.linkasanote.laano.links.addeditlink.AddEditLinkActivity;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenter;
 import com.bytesforge.linkasanote.laano.notes.NotesPresenterModule;
 import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity;
@@ -233,6 +235,17 @@ public class LaanoActivity extends AppCompatActivity implements
         syncBroadcastReceiver = new SyncBroadcastReceiver();
         // AccountManager
         accountManager.addOnAccountsUpdatedListener(accountsUpdateListener, null, true);
+
+        // Text sharing
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        String type = intent.getType();
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if ("text/plain".equals(type)) {
+                String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+                startAddEditLinkActivity(sharedText);
+            }
+        }
     }
 
     private void startClipboardService() {
@@ -579,6 +592,12 @@ public class LaanoActivity extends AppCompatActivity implements
     private void startAboutActivity() {
         Intent settingsIntent = new Intent(this, AboutActivity.class);
         startActivity(settingsIntent);
+    }
+
+    private void startAddEditLinkActivity(@Nullable String sharedText) {
+        Intent addEditLinkIntent = new Intent(this, AddEditLinkActivity.class);
+        addEditLinkIntent.putExtra(AddEditLinkActivity.EXTRA_SHARED_TEXT, sharedText);
+        startActivity(addEditLinkIntent);
     }
 
     private void setupDrawerContent(@NonNull NavigationView navigationView) {

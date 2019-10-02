@@ -35,6 +35,8 @@ import javax.inject.Inject;
 
 public class AddEditLinkActivity extends AppCompatActivity {
 
+    public final static String EXTRA_SHARED_TEXT = "SHARED_TEXT";
+
     @Inject
     AddEditLinkPresenter presenter;
 

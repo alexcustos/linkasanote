@@ -321,17 +321,28 @@ public class ClipboardService extends Service {
         Log.i(TAG, "ClipboardCheck()");
 
         cleanup();
+
+        String clipboardText = null;
         if (clipboardManager != null && clipboardManager.hasPrimaryClip()) {
             ClipData primaryClip = clipboardManager.getPrimaryClip();
-            ClipDescription description = primaryClip.getDescription();
-            if (primaryClip.getItemCount() > 0
-                    && (description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
-                    || description.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML))) {
-                CharSequence text = primaryClip.getItemAt(0).getText();
-                if (text != null) {
-                    normalizeClipboard(text.toString());
+            if (primaryClip != null) {
+                ClipDescription description = primaryClip.getDescription();
+                if (primaryClip.getItemCount() > 0
+                        && (description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
+                        || description.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML))) {
+                    CharSequence text = primaryClip.getItemAt(0).getText();
+                    if (text != null) {
+                        clipboardText = text.toString();
+                    }
                 }
             }
+        }
+        processClipboardText(clipboardText);
+    }
+
+    public void processClipboardText(@Nullable String clipboardText) {
+        if (clipboardText != null) {
+            normalizeClipboard(clipboardText);
         }
         if (settings.isClipboardLinkGetMetadata() && clipboardType == CLIPBOARD_LINK) {
             loadLinkExtra(normalizedClipboard);

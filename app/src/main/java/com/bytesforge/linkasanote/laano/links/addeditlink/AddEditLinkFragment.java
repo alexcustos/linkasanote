@@ -34,6 +34,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.text.InputFilter;
 import android.text.SpannableStringBuilder;
@@ -78,6 +79,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
 
     private MenuItem linkPasteMenuItem;
     private List<Tag> tags;
+    private String sharedText = null;
 
     public static AddEditLinkFragment newInstance() {
         return new AddEditLinkFragment();
@@ -140,8 +142,10 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
             data.putExtra(ARGUMENT_LINK_ID, linkId);
         }
         FragmentActivity activity = getActivity();
-        activity.setResult(Activity.RESULT_OK, data);
-        activity.finish();
+        if (activity != null) {
+            activity.setResult(Activity.RESULT_OK, data);
+            activity.finish();
+        }
     }
 
     @Override
@@ -149,12 +153,17 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
         super.onCreate(savedInstanceState);
         context = getActivity();
         setHasOptionsMenu(true);
+
+        Intent startIntent = ((AddEditLinkActivity) context).getIntent();
+        if (startIntent != null) {
+            sharedText = startIntent.getStringExtra(AddEditLinkActivity.EXTRA_SHARED_TEXT);
+        }
     }
 
     @Nullable
     @Override
     public View onCreateView(
-            LayoutInflater inflater, @Nullable ViewGroup container,
+            @NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_add_edit_link, container, false);
@@ -266,7 +275,10 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
     private void showFillInFormInfo() {
         FillInFormInfoDialog dialog = FillInFormInfoDialog.newInstance();
         dialog.setTargetFragment(this, FillInFormInfoDialog.DIALOG_REQUEST_CODE);
-        dialog.show(getFragmentManager(), FillInFormInfoDialog.DIALOG_TAG);
+        FragmentManager fragmentManager = getFragmentManager();
+        if (fragmentManager != null) {
+            dialog.show(fragmentManager, FillInFormInfoDialog.DIALOG_TAG);
+        }
     }
 
     // NOTE: callback from AlertDialog
@@ -326,7 +338,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         viewModel.saveInstanceState(outState);
     }
@@ -354,6 +366,10 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
                 startClipboardService();
             }
             clipboardService.setCallback(presenter);
+            if (sharedText != null) {
+                clipboardService.processClipboardText(sharedText);
+                sharedText = null;
+            }
         }
 
         @Override
@@ -392,12 +408,16 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
                     .setIcon(R.drawable.ic_info)
                     .setPositiveButton(R.string.dialog_button_continue, (dialog, which) -> {
                         AddEditLinkFragment fragment = (AddEditLinkFragment) getTargetFragment();
-                        fragment.setFillInFormInfo(!checkBox.isChecked());
-                        fragment.fillInForm();
+                        if (fragment != null) {
+                            fragment.setFillInFormInfo(!checkBox.isChecked());
+                            fragment.fillInForm();
+                        }
                     })
                     .setNegativeButton(R.string.dialog_button_cancel, (dialog, which) -> {
                         AddEditLinkFragment fragment = (AddEditLinkFragment) getTargetFragment();
-                        fragment.setFillInFormInfo(!checkBox.isChecked());
+                        if (fragment != null) {
+                            fragment.setFillInFormInfo(!checkBox.isChecked());
+                        }
                     })
                     .create();
         }
