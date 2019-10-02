@@ -236,13 +236,24 @@ public class LaanoActivity extends AppCompatActivity implements
         // AccountManager
         accountManager.addOnAccountsUpdatedListener(accountsUpdateListener, null, true);
 
-        // Text sharing
-        Intent intent = getIntent();
-        String action = intent.getAction();
-        String type = intent.getType();
+        handleStartIntent();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        handleStartIntent();
+    }
+
+    private void handleStartIntent() {
+        Intent startIntent = getIntent();
+        String action = startIntent.getAction();
+        String type = startIntent.getType();
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             if ("text/plain".equals(type)) {
-                String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+                String sharedText = startIntent.getStringExtra(Intent.EXTRA_TEXT);
                 startAddEditLinkActivity(sharedText);
             }
         }
