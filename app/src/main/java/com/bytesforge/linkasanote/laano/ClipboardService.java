@@ -69,8 +69,8 @@ public class ClipboardService extends Service {
 
     public interface Callback {
 
-        void onClipboardChanged(int clipboardType);
-        void onClipboardLinkExtraReady();
+        void onClipboardChanged(int clipboardType, boolean force);
+        void onClipboardLinkExtraReady(boolean force);
     }
 
     private final IBinder binder = new ClipboardBinder();
@@ -102,6 +102,7 @@ public class ClipboardService extends Service {
     private String linkTitle;
     private String linkDescription;
     private String[] linkKeywords;
+    private boolean force;
 
     public class ClipboardBinder extends Binder {
 
@@ -183,6 +184,7 @@ public class ClipboardService extends Service {
         linkTitle = null;
         linkDescription = null;
         linkKeywords = null;
+        force = false;
     }
 
     private boolean isCacheDirty() {
@@ -337,10 +339,11 @@ public class ClipboardService extends Service {
                 }
             }
         }
-        processClipboardText(clipboardText);
+        processClipboardText(clipboardText, force);
     }
 
-    public void processClipboardText(@Nullable String clipboardText) {
+    public void processClipboardText(@Nullable String clipboardText, boolean force) {
+        this.force = force;
         if (clipboardText != null) {
             normalizeClipboard(clipboardText);
         }
@@ -355,9 +358,9 @@ public class ClipboardService extends Service {
         if (callback == null) return;
 
         if (isLinkExtra()) {
-            callback.onClipboardLinkExtraReady();
+            callback.onClipboardLinkExtraReady(force);
         } else {
-            callback.onClipboardChanged(clipboardType);
+            callback.onClipboardChanged(clipboardType, force);
         }
     }
 

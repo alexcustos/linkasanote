@@ -367,7 +367,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
             }
             clipboardService.setCallback(presenter);
             if (sharedText != null) {
-                clipboardService.processClipboardText(sharedText);
+                clipboardService.processClipboardText(sharedText, true);
                 sharedText = null;
             }
         }
