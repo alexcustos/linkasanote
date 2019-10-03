@@ -21,18 +21,32 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    signingConfigs {
-        release {
-            File singRelease = file('sign_release.properties')
-            if (singRelease.exists()) {
-                Properties properties = new Properties()
-                properties.load(new FileInputStream(singRelease))
-                storeFile file(properties['STORE_FILE'])
-                storePassword properties['STORE_PASSWORD']
-                keyAlias properties['KEY_ALIAS']
-                keyPassword properties['KEY_PASSWORD']
+    /**
+     * To sign release build, create the file release-signing.properties with the follow content:
+     *
+     * signingStoreLocation=/path/to/key.store
+     * signingStorePassword=xxx
+     * signingKeyAlias=alias
+     * signingKeyPassword=xxx
+     */
+    File releaseSigning = project.rootProject.file('release-signing.properties')
+    if (releaseSigning.exists()) {
+        Properties signingProperties = new Properties()
+        releaseSigning.withInputStream { signingProperties.load(it) }
+
+        // NOTE: signingProperties.hasProperty is not working
+        println "Found release-signing.properties, will try to sign the build..."
+        signingConfigs {
+            release {
+                storeFile file(signingProperties.getProperty('signingStoreLocation'))
+                storePassword signingProperties.getProperty('signingStorePassword')
+                keyAlias signingProperties.getProperty('signingKeyAlias')
+                keyPassword signingProperties.getProperty('signingKeyPassword')
             }
         }
+        buildTypes.release.signingConfig = signingConfigs.release
+    } else {
+        buildTypes.release.signingConfig = null
     }
 
     buildTypes {
@@ -48,8 +62,13 @@ android {
             shrinkResources true
             multiDexEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
         }
+    }
+
+    lintOptions {
+        abortOnError false
+        htmlReport true
+        htmlOutput file("$project.buildDir/reports/lint/lint.html")
     }
 
     flavorDimensions "mode"
@@ -68,6 +87,7 @@ android {
         exclude 'META-INF/README.txt'
         exclude 'META-INF/README.md'
         exclude 'META-INF/rxjava.properties'
+        exclude 'META-INF/*.*.version'
     }
 
     android.variantFilter { variant ->
@@ -126,7 +146,7 @@ dependencies {
     compileOnly "javax.annotation:jsr250-api:${jsr250ApiVersion}"
 
     // Stetho
-    debugImplementation "com.facebook.stetho:stetho:${stethoVersion}"
+    implementation "com.facebook.stetho:stetho:${stethoVersion}"
 
     // Local unit tests
     testImplementation "junit:junit:${junitVersion}"

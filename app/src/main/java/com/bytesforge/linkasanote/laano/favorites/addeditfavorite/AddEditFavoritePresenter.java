@@ -190,18 +190,18 @@ public final class AddEditFavoritePresenter implements
     }
 
     @Override
-    public void onClipboardChanged(int clipboardType) {
+    public void onClipboardChanged(int clipboardType, boolean force) {
         view.setFavoritePaste(clipboardType);
         // NOTE: if data is ready either this method or linkExtraReady is called
-        if (viewModel.isEmpty() && settings.isClipboardFillInForms()) {
+        if (force || (viewModel.isEmpty() && settings.isClipboardFillInForms())) {
             view.fillInForm();
         }
     }
 
     @Override
-    public void onClipboardLinkExtraReady() {
+    public void onClipboardLinkExtraReady(boolean force) {
         view.setFavoritePaste(ClipboardService.CLIPBOARD_EXTRA);
-        if (viewModel.isEmpty() && settings.isClipboardFillInForms()) {
+        if (force || (viewModel.isEmpty() && settings.isClipboardFillInForms())) {
             view.fillInForm();
         }
     }

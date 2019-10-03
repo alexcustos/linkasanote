@@ -38,10 +38,10 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
-import com.owncloud.android.lib.resources.files.DownloadRemoteFileOperation;
-import com.owncloud.android.lib.resources.files.ReadRemoteFileOperation;
-import com.owncloud.android.lib.resources.files.RemoteFile;
-import com.owncloud.android.lib.resources.files.RemoveRemoteFileOperation;
+import com.owncloud.android.lib.resources.files.DownloadFileRemoteOperation;
+import com.owncloud.android.lib.resources.files.ReadFileRemoteOperation;
+import com.owncloud.android.lib.resources.files.RemoveFileRemoteOperation;
+import com.owncloud.android.lib.resources.files.model.RemoteFile;
 
 import org.json.JSONObject;
 
@@ -146,8 +146,8 @@ public class CloudItem<T extends Item> {
             final String localDirectory = CommonUtils.getTempDir(context);
             final String localPath = localDirectory + remotePath;
 
-            DownloadRemoteFileOperation operation =
-                    new DownloadRemoteFileOperation(remotePath, localDirectory);
+            DownloadFileRemoteOperation operation =
+                    new DownloadFileRemoteOperation(remotePath, localDirectory);
             RemoteOperationResult result =
                     CloudDataSource.executeRemoteOperation(operation, currentOcClient)
                             .blockingGet();
@@ -195,7 +195,7 @@ public class CloudItem<T extends Item> {
             if (currentOcClient == null) return null;
 
             final String remotePath = getRemotePath(itemId);
-            RemoveRemoteFileOperation operation = new RemoveRemoteFileOperation(remotePath);
+            RemoveFileRemoteOperation operation = new RemoveFileRemoteOperation(remotePath);
             RemoteOperationResult result =
                     CloudDataSource.executeRemoteOperation(operation, currentOcClient)
                             .blockingGet();
@@ -225,7 +225,7 @@ public class CloudItem<T extends Item> {
             if (currentOcClient == null) return null;
 
             final String remotePath = getRemotePath(itemId);
-            final ReadRemoteFileOperation operation = new ReadRemoteFileOperation(remotePath);
+            final ReadFileRemoteOperation operation = new ReadFileRemoteOperation(remotePath);
             final RemoteOperationResult result =
                     CloudDataSource.executeRemoteOperation(operation, currentOcClient)
                             .blockingGet();

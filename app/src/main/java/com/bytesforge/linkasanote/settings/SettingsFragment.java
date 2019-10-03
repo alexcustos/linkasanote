@@ -52,7 +52,6 @@ import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.owncloud.android.lib.resources.files.FileUtils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -250,12 +249,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         prefSyncDirectory.setSummary(syncDirectory);
         prefSyncDirectory.setOnPreferenceChangeListener((preference, newValue) -> {
             String newSyncDirectory = (String) newValue;
-            // TODO: provide version to the client and use it to check if supportsForbiddenChars
-            if (!FileUtils.isValidPath(newSyncDirectory, false)) {
-                showSnackbar(R.string.settings_fragment_snackbar_directory_error,
-                        Snackbar.LENGTH_LONG);
-                return false;
-            }
+            // NOTE: since Nextcloud library v1.1.0 all paths are valid
             settings.setSyncDirectory(newSyncDirectory);
             String normalizedSyncDirectory = settings.getSyncDirectory();
             prefSyncDirectory.setSummary(normalizedSyncDirectory);
@@ -313,7 +307,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     @NonNull
     private Map<String, String> getBackupEntries() {
         Map<String, String> backupEntries = new LinkedHashMap<>(0);
-        List<String> fileNames = ApplicationBackup.getBackupFileNames();
+        List<String> fileNames = ApplicationBackup.getBackupFileNames(context);
         if (fileNames != null) {
             int size = fileNames.size();
             for (int i = 0; i < size; i++) {

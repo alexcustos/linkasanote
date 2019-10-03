@@ -39,10 +39,10 @@ import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
-import com.owncloud.android.lib.resources.files.CreateRemoteFolderOperation;
-import com.owncloud.android.lib.resources.files.ReadRemoteFileOperation;
-import com.owncloud.android.lib.resources.files.ReadRemoteFolderOperation;
-import com.owncloud.android.lib.resources.files.RemoteFile;
+import com.owncloud.android.lib.resources.files.CreateFolderRemoteOperation;
+import com.owncloud.android.lib.resources.files.ReadFileRemoteOperation;
+import com.owncloud.android.lib.resources.files.ReadFolderRemoteOperation;
+import com.owncloud.android.lib.resources.files.model.RemoteFile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -488,7 +488,7 @@ public class CloudDataSource {
     public static Observable<RemoteFile> getRemoteFiles(
             final OwnCloudClient ocClient, final String remotePath) {
         return Observable.generate(() -> {
-            ReadRemoteFolderOperation operation = new ReadRemoteFolderOperation(remotePath);
+            ReadFolderRemoteOperation operation = new ReadFolderRemoteOperation(remotePath);
             RemoteOperationResult result =
                     CloudDataSource.executeRemoteOperation(operation, ocClient)
                             .blockingGet();
@@ -517,8 +517,8 @@ public class CloudDataSource {
             boolean createDataSource) {
         checkNotNull(ocClient);
         checkNotNull(dataSourceDirectory);
-        final ReadRemoteFileOperation readOperation =
-                new ReadRemoteFileOperation(dataSourceDirectory);
+        final ReadFileRemoteOperation readOperation =
+                new ReadFileRemoteOperation(dataSourceDirectory);
         RemoteOperationResult result =
                 executeRemoteOperation(readOperation, ocClient).blockingGet();
         if (result.isSuccess()) {
@@ -526,8 +526,8 @@ public class CloudDataSource {
             return file.getEtag();
         } else if (result.getCode() == RemoteOperationResult.ResultCode.FILE_NOT_FOUND
                 && createDataSource) {
-            CreateRemoteFolderOperation writeOperation =
-                    new CreateRemoteFolderOperation(dataSourceDirectory, true);
+            CreateFolderRemoteOperation writeOperation =
+                    new CreateFolderRemoteOperation(dataSourceDirectory, true);
             result = executeRemoteOperation(writeOperation, ocClient).blockingGet();
             if (result.isSuccess()) {
                 Log.d(TAG, "New folder has been created");

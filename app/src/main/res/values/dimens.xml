@@ -21,6 +21,7 @@
 
 <resources>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="minimum_clickable_height">48dp</dimen>
     <dimen name="drawer_header_height">140dp</dimen>
     <dimen name="drawer_header_status_margin_top">4dp</dimen>
     <dimen name="drawer_header_padding">16dp</dimen>
@@ -56,6 +57,7 @@
     <dimen name="recycler_view_right_button_padding_end">16dp</dimen>
     <dimen name="recycler_view_left_button_padding_start">16dp</dimen>
     <dimen name="recycler_view_tags_margin_bottom">16dp</dimen>
+    <dimen name="dialog_minimum_vertical_margin">48dp</dimen>
     <dimen name="dialog_padding">8dp</dimen>
     <dimen name="dialog_margin_content">24dp</dimen>
     <dimen name="dialog_title_vertical_padding">8dp</dimen>
@@ -65,6 +67,8 @@
     <dimen name="dialog_state_margin_end">8dp</dimen>
     <dimen name="dialog_margin_status_top">12dp</dimen>
     <dimen name="dialog_margin_status_bottom">16dp</dimen>
+    <dimen name="dialog_checkbox_padding">8dp</dimen>
+    <dimen name="dialog_checkbox_aligned_horizontal_padding">16dp</dimen>
     <dimen name="about_margin_vertical_text">16dp</dimen>
     <dimen name="about_margin_vertical">4dp</dimen>
 

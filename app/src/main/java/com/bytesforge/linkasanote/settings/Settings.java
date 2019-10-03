@@ -43,6 +43,7 @@ import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.google.common.base.Strings;
 
+import java.io.File;
 import java.util.List;
 
 import io.reactivex.Single;
@@ -68,7 +69,7 @@ public class Settings {
     public static final boolean GLOBAL_CLIPBOARD_LINK_UPDATED_TOAST = true;
     public static final boolean GLOBAL_CLIPBOARD_MONITOR_ON_START = true;
     public static final long GLOBAL_JSON_MAX_BODY_SIZE_BYTES = 10 * 1024;
-    public static final String GLOBAL_APPLICATION_DIRECTORY = "LaaNo";
+    public static final String GLOBAL_APPLICATION_DIRECTORY = File.separator + "LaaNo";
     public static final int GLOBAL_RETRY_ON_NETWORK_ERROR = 2;
     public static final int GLOBAL_DELAY_ON_NETWORK_ERROR_MILLIS = 2000;
     public static final int GLOBAL_SYNC_LOG_KEEPING_PERIOD_DAYS = 7;

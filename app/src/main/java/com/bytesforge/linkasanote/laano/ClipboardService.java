@@ -69,8 +69,8 @@ public class ClipboardService extends Service {
 
     public interface Callback {
 
-        void onClipboardChanged(int clipboardType);
-        void onClipboardLinkExtraReady();
+        void onClipboardChanged(int clipboardType, boolean force);
+        void onClipboardLinkExtraReady(boolean force);
     }
 
     private final IBinder binder = new ClipboardBinder();
@@ -102,6 +102,7 @@ public class ClipboardService extends Service {
     private String linkTitle;
     private String linkDescription;
     private String[] linkKeywords;
+    private boolean force;
 
     public class ClipboardBinder extends Binder {
 
@@ -183,6 +184,7 @@ public class ClipboardService extends Service {
         linkTitle = null;
         linkDescription = null;
         linkKeywords = null;
+        force = false;
     }
 
     private boolean isCacheDirty() {
@@ -321,17 +323,29 @@ public class ClipboardService extends Service {
         Log.i(TAG, "ClipboardCheck()");
 
         cleanup();
+
+        String clipboardText = null;
         if (clipboardManager != null && clipboardManager.hasPrimaryClip()) {
             ClipData primaryClip = clipboardManager.getPrimaryClip();
-            ClipDescription description = primaryClip.getDescription();
-            if (primaryClip.getItemCount() > 0
-                    && (description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
-                    || description.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML))) {
-                CharSequence text = primaryClip.getItemAt(0).getText();
-                if (text != null) {
-                    normalizeClipboard(text.toString());
+            if (primaryClip != null) {
+                ClipDescription description = primaryClip.getDescription();
+                if (primaryClip.getItemCount() > 0
+                        && (description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
+                        || description.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML))) {
+                    CharSequence text = primaryClip.getItemAt(0).getText();
+                    if (text != null) {
+                        clipboardText = text.toString();
+                    }
                 }
             }
+        }
+        processClipboardText(clipboardText, force);
+    }
+
+    public void processClipboardText(@Nullable String clipboardText, boolean force) {
+        this.force = force;
+        if (clipboardText != null) {
+            normalizeClipboard(clipboardText);
         }
         if (settings.isClipboardLinkGetMetadata() && clipboardType == CLIPBOARD_LINK) {
             loadLinkExtra(normalizedClipboard);
@@ -344,9 +358,9 @@ public class ClipboardService extends Service {
         if (callback == null) return;
 
         if (isLinkExtra()) {
-            callback.onClipboardLinkExtraReady();
+            callback.onClipboardLinkExtraReady(force);
         } else {
-            callback.onClipboardChanged(clipboardType);
+            callback.onClipboardChanged(clipboardType, force);
         }
     }
 

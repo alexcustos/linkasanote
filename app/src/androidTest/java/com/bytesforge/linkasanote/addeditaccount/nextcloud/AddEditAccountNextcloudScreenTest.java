@@ -26,9 +26,9 @@ import android.os.Handler;
 import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
+import android.support.test.rule.GrantPermissionRule;
 import android.support.test.runner.AndroidJUnit4;
 
-import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.sync.operations.OperationsService;
@@ -76,6 +76,10 @@ public class AddEditAccountNextcloudScreenTest {
     private final String SERVER_VERSION = "0.0.0.0";
 
     @Rule
+    public GrantPermissionRule mRuntimePermissionRule = GrantPermissionRule.grant(
+            Manifest.permission.GET_ACCOUNTS);
+
+    @Rule
     public ActivityTestRule<AddEditAccountActivity> addEditAccountActivityTestRule =
             new ActivityTestRule<>(AddEditAccountActivity.class);
 
@@ -87,8 +91,6 @@ public class AddEditAccountNextcloudScreenTest {
     @Before
     public void setupAddEditAccountActivityNextcloud() {
         MockitoAnnotations.initMocks(this);
-
-        AndroidTestUtils.allowPermissionIfNeeded(Manifest.permission.GET_ACCOUNTS);
 
         AddEditAccountActivity activity = addEditAccountActivityTestRule.getActivity();
         assertThat(activity, notNullValue());

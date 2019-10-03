@@ -60,7 +60,8 @@
                         android:inputType="text|textNoSuggestions"
                         android:maxLines="1"
                         android:text="@={viewModel.linkLink}"
-                        android:afterTextChanged="@{() -> viewModel.afterLinkChanged()}" />
+                        android:afterTextChanged="@{() -> viewModel.afterLinkChanged()}"
+                        android:importantForAutofill="no" />
                 </android.support.design.widget.TextInputLayout>
 
                 <RelativeLayout
@@ -71,18 +72,23 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_toStartOf="@+id/checkbox_disabled"
+                        android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
                         android:labelFor="@+id/checkbox_disabled"
-                        android:text="@string/add_edit_link_disabled_hint" />
+                        android:text="@string/add_edit_link_disabled_hint"
+                        android:gravity="center_vertical|end" />
 
+                    <!-- NOTE: both Start & End padding go to the end of CheckBox -->
                     <android.support.v7.widget.AppCompatCheckBox
                         android:id="@+id/checkbox_disabled"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
+                        android:paddingTop="@dimen/dialog_checkbox_padding"
+                        android:paddingBottom="@dimen/dialog_checkbox_padding"
                         android:checked="@={viewModel.linkDisabled}"
-                        android:gravity="center_vertical" />
+                        android:gravity="center_vertical|end" />
                 </RelativeLayout>
 
                 <android.support.design.widget.TextInputLayout
@@ -96,7 +102,8 @@
                         android:hint="@string/add_edit_link_name_hint"
                         android:inputType="text|textNoSuggestions"
                         android:maxLines="1"
-                        android:text="@={viewModel.linkName}" />
+                        android:text="@={viewModel.linkName}"
+                        android:importantForAutofill="no" />
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.design.widget.TextInputLayout

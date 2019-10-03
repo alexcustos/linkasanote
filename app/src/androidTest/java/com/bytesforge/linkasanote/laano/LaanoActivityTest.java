@@ -163,6 +163,8 @@ public class LaanoActivityTest {
                 createNote(note);
                 setupNotesTab();
             }
+            // TODO: check what cause the issue
+            AndroidTestUtils.sleep(150);
             onView(allOf(withId(R.id.note_note_caption), withItemTextRv(note.getNote())))
                     .check(matches(isDisplayed()));
         }

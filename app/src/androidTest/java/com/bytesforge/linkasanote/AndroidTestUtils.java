@@ -27,16 +27,11 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.Build;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiSelector;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 
@@ -119,7 +114,8 @@ public class AndroidTestUtils extends SharedUtils {
         return permissionStatus == PackageManager.PERMISSION_GRANTED;
     }
 
-    public static void allowPermissionIfNeeded(String permissionNeeded) {
+    /* EXAMPLE: UI instrumentation
+    public static void grantPermissionIfNeeded(String permissionNeeded) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                     && !hasNeededPermission(permissionNeeded)) {
@@ -134,7 +130,7 @@ public class AndroidTestUtils extends SharedUtils {
         } catch (UiObjectNotFoundException e) {
             System.out.println("There is not permissions dialog to interact with");
         }
-    }
+    } */
 
     public static void cleanUpProvider(ContentResolver contentResolver) {
         final Uri favoriteUri = LocalContract.FavoriteEntry.buildUri();
