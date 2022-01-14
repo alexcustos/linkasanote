@@ -22,8 +22,6 @@ package com.bytesforge.linkasanote.laano.notes;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.databinding.Bindable;
-import android.databinding.BindingAdapter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -38,6 +36,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import androidx.databinding.Bindable;
+import androidx.databinding.BindingAdapter;
 
 // NOTE: global viewModel, applied to fragment and every Item
 public class NotesViewModel extends BaseItemViewModel implements NotesContract.ViewModel {

@@ -21,11 +21,6 @@
 package com.bytesforge.linkasanote.laano.links.addeditlink;
 
 import android.content.Context;
-import android.databinding.BaseObservable;
-import android.databinding.Bindable;
-import android.databinding.BindingAdapter;
-import android.databinding.ObservableBoolean;
-import android.databinding.ObservableField;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -47,6 +42,12 @@ import com.google.common.base.Strings;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
+import androidx.databinding.BindingAdapter;
+import androidx.databinding.ObservableBoolean;
+import androidx.databinding.ObservableField;
 
 public class AddEditLinkViewModel extends BaseObservable implements
         AddEditLinkContract.ViewModel {

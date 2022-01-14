@@ -27,7 +27,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
-import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -64,6 +63,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import androidx.databinding.DataBindingUtil;
 
 public class AddEditNoteFragment extends Fragment implements AddEditNoteContract.View {
 

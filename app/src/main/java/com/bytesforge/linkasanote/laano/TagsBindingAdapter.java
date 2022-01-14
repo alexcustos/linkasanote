@@ -20,7 +20,6 @@
 
 package com.bytesforge.linkasanote.laano;
 
-import android.databinding.BindingAdapter;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.util.SparseIntArray;
@@ -28,6 +27,8 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.TextView;
+
+import androidx.databinding.BindingAdapter;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Tag;

@@ -21,8 +21,6 @@
 package com.bytesforge.linkasanote.laano.favorites;
 
 import android.content.Context;
-import android.databinding.Bindable;
-import android.databinding.BindingAdapter;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -33,6 +31,9 @@ import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.BaseItemViewModel;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import androidx.databinding.Bindable;
+import androidx.databinding.BindingAdapter;
 
 // NOTE: global viewModel, applied to fragment and every Item
 public class FavoritesViewModel extends BaseItemViewModel implements FavoritesContract.ViewModel {

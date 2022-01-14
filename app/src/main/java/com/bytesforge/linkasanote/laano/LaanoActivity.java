@@ -33,7 +33,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.databinding.DataBindingUtil;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -88,6 +87,8 @@ import javax.inject.Inject;
 
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import androidx.databinding.DataBindingUtil;
 
 public class LaanoActivity extends AppCompatActivity implements
         ActivityCompat.OnRequestPermissionsResultCallback {

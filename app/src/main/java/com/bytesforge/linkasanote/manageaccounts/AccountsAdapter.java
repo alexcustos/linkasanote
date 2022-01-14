@@ -20,7 +20,6 @@
 
 package com.bytesforge.linkasanote.manageaccounts;
 
-import android.databinding.ViewDataBinding;
 import android.support.annotation.NonNull;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
@@ -34,6 +33,8 @@ import java.security.InvalidParameterException;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import androidx.databinding.ViewDataBinding;
 
 public class AccountsAdapter extends RecyclerView.Adapter<AccountsAdapter.ViewHolder> {
 

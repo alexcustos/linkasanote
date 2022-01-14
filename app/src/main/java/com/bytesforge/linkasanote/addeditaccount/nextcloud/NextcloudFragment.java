@@ -28,7 +28,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -66,6 +65,8 @@ import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
 import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountUsername;
 import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import androidx.databinding.DataBindingUtil;
 
 public class NextcloudFragment extends Fragment implements
         NextcloudContract.View, OnRemoteOperationListener {

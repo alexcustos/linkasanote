@@ -20,8 +20,6 @@
 
 package com.bytesforge.linkasanote.laano;
 
-import android.databinding.BindingAdapter;
-import android.databinding.BindingConversion;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -35,6 +33,9 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.databinding.BindingAdapter;
+import androidx.databinding.BindingConversion;
 
 import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.ActionViewClickableSpan;

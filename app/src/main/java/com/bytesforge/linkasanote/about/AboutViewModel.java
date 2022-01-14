@@ -22,10 +22,6 @@ package com.bytesforge.linkasanote.about;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.databinding.BaseObservable;
-import android.databinding.Bindable;
-import android.databinding.BindingAdapter;
-import android.databinding.ObservableField;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -38,6 +34,11 @@ import com.bytesforge.linkasanote.BuildConfig;
 import com.bytesforge.linkasanote.R;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
+import androidx.databinding.BindingAdapter;
+import androidx.databinding.ObservableField;
 
 public class AboutViewModel extends BaseObservable implements AboutContract.ViewModel {
 

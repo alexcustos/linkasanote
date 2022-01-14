@@ -20,11 +20,12 @@
 
 package com.bytesforge.linkasanote.laano.links.addeditlink;
 
-import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+
+import androidx.databinding.DataBindingUtil;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
