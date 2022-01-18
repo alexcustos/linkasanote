@@ -20,14 +20,15 @@
 
 package com.bytesforge.linkasanote.data;
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.support.annotation.NonNull;
-
-import com.bytesforge.linkasanote.data.source.local.LocalContract;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
+
+import android.content.ContentValues;
+import android.database.Cursor;
+
+import androidx.annotation.NonNull;
+
+import com.bytesforge.linkasanote.data.source.local.LocalContract;
 
 public final class SyncResult {
 

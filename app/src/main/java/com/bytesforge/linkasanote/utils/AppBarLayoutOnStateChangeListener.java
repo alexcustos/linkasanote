@@ -20,7 +20,7 @@
 
 package com.bytesforge.linkasanote.utils;
 
-import android.support.design.widget.AppBarLayout;
+import com.google.android.material.appbar.AppBarLayout;
 
 public abstract class AppBarLayoutOnStateChangeListener implements AppBarLayout.OnOffsetChangedListener {
 

@@ -21,7 +21,8 @@
 package com.bytesforge.linkasanote.laano.notes.addeditnote;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.laano.links.LinkId;
 import com.bytesforge.linkasanote.laano.notes.NoteId;

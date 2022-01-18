@@ -29,7 +29,7 @@
             type="com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenter" />
     </data>
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/item_manage_accounts_layout_height">
 
@@ -112,5 +112,5 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             style="@style/Button.RecyclerView" />
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

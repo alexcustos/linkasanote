@@ -24,11 +24,12 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.widget.ImageButton;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;

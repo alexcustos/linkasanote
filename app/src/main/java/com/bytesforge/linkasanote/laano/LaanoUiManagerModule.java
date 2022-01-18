@@ -20,10 +20,10 @@
 
 package com.bytesforge.linkasanote.laano;
 
-import android.support.design.widget.TabLayout;
 import android.view.Menu;
 
 import com.bytesforge.linkasanote.settings.Settings;
+import com.google.android.material.tabs.TabLayout;
 
 import dagger.Module;
 import dagger.Provides;

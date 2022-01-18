@@ -20,22 +20,23 @@
 
 package com.bytesforge.linkasanote.laano.links.conflictresolution;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.databinding.DialogLinkConflictResolutionBinding;
 
 import javax.inject.Inject;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LinksConflictResolutionDialog extends DialogFragment implements
         LinksConflictResolutionContract.View {

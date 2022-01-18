@@ -20,11 +20,16 @@
 
 package com.bytesforge.linkasanote.data;
 
+import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
+
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.bytesforge.linkasanote.sync.SyncState;
@@ -39,10 +44,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.bytesforge.linkasanote.utils.UuidUtils.generateKey;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.System.currentTimeMillis;
 
 public final class Favorite implements Comparable<Favorite>, Item {
 

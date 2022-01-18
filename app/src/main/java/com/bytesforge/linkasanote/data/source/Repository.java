@@ -20,12 +20,16 @@
 
 package com.bytesforge.linkasanote.data.source;
 
+import static com.bytesforge.linkasanote.utils.UuidUtils.isKeyValidUuid;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.database.sqlite.SQLiteConstraintException;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
@@ -51,9 +55,6 @@ import javax.inject.Singleton;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-
-import static com.bytesforge.linkasanote.utils.UuidUtils.isKeyValidUuid;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Singleton
 public class Repository implements DataSource {

@@ -20,12 +20,16 @@
 
 package com.bytesforge.linkasanote;
 
+import static com.bytesforge.linkasanote.utils.CommonUtils.logStackTrace;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.format.DateFormat;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.source.local.DatabaseHelper;
 import com.bytesforge.linkasanote.settings.Settings;
@@ -40,9 +44,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import static com.bytesforge.linkasanote.utils.CommonUtils.logStackTrace;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class ApplicationBackup {
 

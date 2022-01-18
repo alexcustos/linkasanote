@@ -20,10 +20,13 @@
 
 package com.bytesforge.linkasanote.sync;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.database.sqlite.SQLiteConstraintException;
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.source.cloud.CloudItem;
@@ -38,8 +41,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SyncItem<T extends Item> {
 

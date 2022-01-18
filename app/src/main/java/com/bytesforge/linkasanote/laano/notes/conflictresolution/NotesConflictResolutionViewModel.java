@@ -23,8 +23,8 @@ package com.bytesforge.linkasanote.laano.notes.conflictresolution;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;

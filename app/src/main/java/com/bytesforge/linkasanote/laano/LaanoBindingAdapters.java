@@ -23,7 +23,6 @@ package com.bytesforge.linkasanote.laano;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.method.ScrollingMovementMethod;
@@ -34,6 +33,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.databinding.BindingAdapter;
 import androidx.databinding.BindingConversion;
 

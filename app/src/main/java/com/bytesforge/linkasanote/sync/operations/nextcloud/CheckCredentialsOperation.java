@@ -20,8 +20,11 @@
 
 package com.bytesforge.linkasanote.sync.operations.nextcloud;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.OwnCloudCredentials;
@@ -32,8 +35,6 @@ import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import com.owncloud.android.lib.resources.files.ExistenceCheckRemoteOperation;
 import com.owncloud.android.lib.resources.status.OwnCloudVersion;
 import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CheckCredentialsOperation extends RemoteOperation {
 

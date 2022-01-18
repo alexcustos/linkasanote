@@ -20,11 +20,14 @@
 
 package com.bytesforge.linkasanote.data.source.cloud;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.accounts.AccountManager;
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.Item;
 import com.bytesforge.linkasanote.data.ItemFactory;
@@ -51,8 +54,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import io.reactivex.Single;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CloudItem<T extends Item> {
 

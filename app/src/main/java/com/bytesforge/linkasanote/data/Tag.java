@@ -20,13 +20,17 @@
 
 package com.bytesforge.linkasanote.data;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
+
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
 import com.google.common.base.Objects;
@@ -36,9 +40,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.System.currentTimeMillis;
 
 public final class Tag implements Serializable, Parcelable, Comparable<Tag> {
 

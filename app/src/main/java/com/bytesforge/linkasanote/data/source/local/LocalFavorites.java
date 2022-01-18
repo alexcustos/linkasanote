@@ -20,12 +20,15 @@
 
 package com.bytesforge.linkasanote.data.source.local;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.FavoriteFactory;
 import com.bytesforge.linkasanote.data.Item;
@@ -41,8 +44,6 @@ import java.util.NoSuchElementException;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocalFavorites<T extends Item> implements LocalItems<T> {
 

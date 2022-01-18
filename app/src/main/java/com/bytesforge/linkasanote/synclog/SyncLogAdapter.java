@@ -20,17 +20,18 @@
 
 package com.bytesforge.linkasanote.synclog;
 
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.databinding.ItemSyncLogBinding;
 
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SyncLogAdapter extends RecyclerView.Adapter<SyncLogAdapter.ViewHolder> {
 

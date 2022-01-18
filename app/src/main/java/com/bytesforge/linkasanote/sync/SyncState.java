@@ -20,17 +20,18 @@
 
 package com.bytesforge.linkasanote.sync;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.source.local.BaseEntry;
 import com.google.common.base.Objects;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SyncState implements Parcelable {
 

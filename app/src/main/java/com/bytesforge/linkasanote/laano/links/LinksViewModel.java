@@ -23,20 +23,20 @@ package com.bytesforge.linkasanote.laano.links;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
 import android.widget.FrameLayout;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.laano.BaseItemViewModel;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import androidx.core.content.ContextCompat;
 import androidx.databinding.Bindable;
 import androidx.databinding.BindingAdapter;
 

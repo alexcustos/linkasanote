@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1">
@@ -81,7 +81,7 @@
                         android:enabled="@{viewModel.serverUrl}"
                         android:afterTextChanged="@{() -> viewModel.afterServerUrlChanged(serverUrl)}"
                         android:onFocusChange="@{viewModel::onServerUrlFocusChange}" />
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <ImageButton
                     android:id="@+id/host_url_refresh_button"
@@ -108,7 +108,7 @@
                 android:drawablePadding="@dimen/add_edit_account_status_icon_padding"
                 android:visibility="@{viewModel.serverStatus ? View.VISIBLE : View.GONE}" />
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -121,9 +121,9 @@
                     android:text="@={viewModel.accountUsernameText}"
                     android:enabled="@{viewModel.accountUsername}"
                     android:afterTextChanged="@{() -> viewModel.afterAccountCredentialsChanged()}" />
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:passwordToggleEnabled="true">
@@ -136,7 +136,7 @@
                     android:inputType="textPassword"
                     android:text="@={viewModel.accountPasswordText}"
                     android:afterTextChanged="@{() -> viewModel.afterAccountCredentialsChanged()}" />
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
                 android:id="@+id/auth_status"
@@ -149,7 +149,7 @@
                 android:drawablePadding="@dimen/add_edit_account_status_icon_padding"
                 android:visibility="@{viewModel.authStatus ? View.VISIBLE : View.GONE}" />
 
-            <android.support.v7.widget.AppCompatButton
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/login_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

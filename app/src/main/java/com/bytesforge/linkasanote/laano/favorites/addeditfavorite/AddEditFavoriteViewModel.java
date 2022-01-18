@@ -20,15 +20,21 @@
 
 package com.bytesforge.linkasanote.laano.favorites.addeditfavorite;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.design.widget.TextInputLayout;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
+import androidx.databinding.BindingAdapter;
+import androidx.databinding.ObservableBoolean;
+import androidx.databinding.ObservableField;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
@@ -37,17 +43,11 @@ import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.TagsCompletionView;
 import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.CommonUtils;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.common.base.Strings;
 
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import androidx.databinding.BaseObservable;
-import androidx.databinding.Bindable;
-import androidx.databinding.BindingAdapter;
-import androidx.databinding.ObservableBoolean;
-import androidx.databinding.ObservableField;
 
 public class AddEditFavoriteViewModel extends BaseObservable implements
         AddEditFavoriteContract.ViewModel {

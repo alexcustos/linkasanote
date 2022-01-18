@@ -20,6 +20,8 @@
 
 package com.bytesforge.linkasanote.utils;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -29,10 +31,11 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
@@ -48,8 +51,6 @@ import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation;
 
 import java.io.IOException;
 import java.util.Arrays;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class CloudUtils {
 

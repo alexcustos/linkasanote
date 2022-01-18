@@ -20,6 +20,8 @@
 
 package com.bytesforge.linkasanote.laano.links.addeditlink;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ComponentName;
@@ -28,13 +30,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AlertDialog;
 import android.text.InputFilter;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
@@ -46,6 +41,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Tag;
@@ -61,10 +65,6 @@ import com.tokenautocomplete.TokenCompleteTextView;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import androidx.databinding.DataBindingUtil;
 
 public class AddEditLinkFragment extends Fragment implements AddEditLinkContract.View {
 

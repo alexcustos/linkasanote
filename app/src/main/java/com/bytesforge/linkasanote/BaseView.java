@@ -20,7 +20,7 @@
 
 package com.bytesforge.linkasanote;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 public interface BaseView<T> {
 

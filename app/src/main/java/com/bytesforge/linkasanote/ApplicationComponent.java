@@ -20,7 +20,7 @@
 
 package com.bytesforge.linkasanote;
 
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 
 import com.bytesforge.linkasanote.about.AboutComponent;
 import com.bytesforge.linkasanote.about.AboutFragment;

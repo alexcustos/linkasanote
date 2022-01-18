@@ -20,6 +20,8 @@
 
 package com.bytesforge.linkasanote.sync;
 
+import static java.lang.System.currentTimeMillis;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.AbstractThreadedSyncAdapter;
@@ -30,9 +32,10 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.StringRes;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.StringRes;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -52,8 +55,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Single;
-
-import static java.lang.System.currentTimeMillis;
 
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 

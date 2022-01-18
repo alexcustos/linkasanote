@@ -27,8 +27,8 @@ import android.content.PeriodicSync;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;

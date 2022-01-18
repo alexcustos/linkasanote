@@ -20,26 +20,26 @@
 
 package com.bytesforge.linkasanote.synclog;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
+import androidx.databinding.BindingAdapter;
+import androidx.databinding.ObservableInt;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.SyncResult;
 import com.bytesforge.linkasanote.utils.CommonUtils;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.Date;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import androidx.databinding.BaseObservable;
-import androidx.databinding.Bindable;
-import androidx.databinding.BindingAdapter;
-import androidx.databinding.ObservableInt;
 
 public class SyncLogViewModel extends BaseObservable implements SyncLogContract.ViewModel {
 

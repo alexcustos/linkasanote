@@ -23,10 +23,11 @@ package com.bytesforge.linkasanote.settings;
 import android.accounts.Account;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NavUtils;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.utils.ActivityUtils;

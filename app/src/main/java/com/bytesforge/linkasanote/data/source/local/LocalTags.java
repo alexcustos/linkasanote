@@ -20,11 +20,14 @@
 
 package com.bytesforge.linkasanote.data.source.local;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.Tag;
 
@@ -32,8 +35,6 @@ import java.util.NoSuchElementException;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocalTags {
 

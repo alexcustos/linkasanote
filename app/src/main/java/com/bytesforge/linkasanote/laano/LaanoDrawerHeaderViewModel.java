@@ -20,12 +20,19 @@
 
 package com.bytesforge.linkasanote.laano;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
+import androidx.databinding.ObservableBoolean;
+import androidx.databinding.ObservableField;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
@@ -34,13 +41,6 @@ import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 
 import java.util.Date;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import androidx.databinding.BaseObservable;
-import androidx.databinding.Bindable;
-import androidx.databinding.ObservableBoolean;
-import androidx.databinding.ObservableField;
 
 public class LaanoDrawerHeaderViewModel extends BaseObservable {
 

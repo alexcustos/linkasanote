@@ -20,6 +20,8 @@
 
 package com.bytesforge.linkasanote.settings;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.Manifest;
 import android.accounts.Account;
 import android.content.Context;
@@ -27,21 +29,21 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
-import android.support.annotation.StringRes;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.preference.CheckBoxPreference;
-import android.support.v7.preference.EditTextPreference;
-import android.support.v7.preference.ListPreference;
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceFragmentCompat;
+import android.preference.ListPreference;
+import android.preference.Preference;
 import android.text.format.Formatter;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.StringRes;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
+import androidx.preference.CheckBoxPreference;
+import androidx.preference.EditTextPreference;
+import androidx.preference.PreferenceFragmentCompat;
 
 import com.bytesforge.linkasanote.ApplicationBackup;
 import com.bytesforge.linkasanote.LaanoApplication;
@@ -50,6 +52,7 @@ import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.data.source.local.DatabaseHelper;
 import com.bytesforge.linkasanote.utils.CommonUtils;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 
@@ -66,8 +69,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 

@@ -20,10 +20,14 @@
 
 package com.bytesforge.linkasanote.laano.favorites;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
+
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -49,9 +53,6 @@ import javax.inject.Inject;
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.System.currentTimeMillis;
 
 public final class FavoritesPresenter extends BaseItemPresenter implements
         FavoritesContract.Presenter, DataSource.Callback {

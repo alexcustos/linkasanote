@@ -22,8 +22,9 @@ package com.bytesforge.linkasanote.manageaccounts;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.BasePresenter;
 import com.bytesforge.linkasanote.BaseView;

@@ -20,17 +20,18 @@
 
 package com.bytesforge.linkasanote.laano;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.accounts.Account;
 import android.content.res.Resources;
-import android.support.annotation.NonNull;
-import android.support.annotation.StringRes;
-import android.support.design.widget.Snackbar;
-import android.support.design.widget.TabLayout;
-import android.support.v7.app.ActionBar;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.view.Menu;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.StringRes;
+import androidx.appcompat.app.ActionBar;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -44,8 +45,8 @@ import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.sync.SyncAdapter;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.bytesforge.linkasanote.utils.CommonUtils;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.tabs.TabLayout;
 
 public class LaanoUiManager {
 

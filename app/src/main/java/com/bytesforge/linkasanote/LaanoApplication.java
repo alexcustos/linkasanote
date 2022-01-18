@@ -23,9 +23,10 @@ package com.bytesforge.linkasanote;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.StrictMode;
-import android.support.annotation.VisibleForTesting;
-import android.support.multidex.MultiDexApplication;
-import android.support.v7.app.AppCompatDelegate;
+
+import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.multidex.MultiDexApplication;
 
 import com.bytesforge.linkasanote.data.source.ProviderModule;
 import com.bytesforge.linkasanote.data.source.RepositoryModule;

@@ -32,12 +32,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -49,6 +45,7 @@ import com.bytesforge.linkasanote.sync.operations.OperationsService;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.CheckCredentialsOperation;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation;
 import com.bytesforge.linkasanote.utils.CloudUtils;
+import com.google.android.material.snackbar.Snackbar;
 import com.owncloud.android.lib.common.OwnCloudAccount;
 import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
 import com.owncloud.android.lib.common.OwnCloudCredentials;
@@ -66,7 +63,10 @@ import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountUsername;
 import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import androidx.annotation.VisibleForTesting;
 import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 public class NextcloudFragment extends Fragment implements
         NextcloudContract.View, OnRemoteOperationListener {
