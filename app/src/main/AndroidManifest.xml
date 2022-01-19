@@ -50,7 +50,8 @@
         android:name=".LaanoApplication">
 
         <activity android:name=".laano.LaanoActivity"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -84,7 +85,8 @@
         <activity android:name=".laano.links.addeditlink.AddEditLinkActivity" />
         <activity android:name=".laano.notes.addeditnote.AddEditNoteActivity" />
         <activity android:name=".synclog.SyncLogActivity" />
-        <activity android:name=".about.AboutActivity">
+        <activity android:name=".about.AboutActivity"
+            android:exported="true">
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -103,7 +105,8 @@
             android:exported="false" />
 
         <!-- android:permission="android.permission.ACCOUNT_MANAGER" -->
-        <service android:name=".addeditaccount.AuthenticatorService">
+        <service android:name=".addeditaccount.AuthenticatorService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>

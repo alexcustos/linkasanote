@@ -29,8 +29,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.ListPreference;
-import android.preference.Preference;
 import android.text.format.Formatter;
 import android.view.View;
 import android.widget.Toast;
@@ -43,6 +41,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.preference.CheckBoxPreference;
 import androidx.preference.EditTextPreference;
+import androidx.preference.ListPreference;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
 import com.bytesforge.linkasanote.ApplicationBackup;
@@ -142,7 +142,8 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         boolean expandNotes = settings.isExpandNotes();
         prefExpandNotes.setChecked(expandNotes);
 
-        prefBackup = findPreference(resources.getString(R.string.pref_key_backup));
+        prefBackup = findPreference(
+                resources.getString(R.string.pref_key_backup));
         prefRestore = (ListPreference) findPreference(
                 resources.getString(R.string.pref_key_restore));
         prefRestore.setOnPreferenceChangeListener((preference, newValue) -> {

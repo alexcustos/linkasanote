@@ -34,7 +34,7 @@
             type="com.bytesforge.linkasanote.laano.links.LinksViewModel" />
     </data>
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="@{() -> presenter.onLinkClick(link.id, link.conflicted, link.notesSize)}"
@@ -247,5 +247,5 @@
                     android:scrollbars="none" />
             </LinearLayout>
         </LinearLayout>
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 </layout>
