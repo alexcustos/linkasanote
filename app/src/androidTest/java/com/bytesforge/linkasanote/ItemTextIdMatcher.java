@@ -25,12 +25,12 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import static org.hamcrest.CoreMatchers.allOf;
+
 import android.view.View;
 
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
-
-import static org.hamcrest.Matchers.allOf;
 
 public class ItemTextIdMatcher extends TypeSafeMatcher<View> {
 

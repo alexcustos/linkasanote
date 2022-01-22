@@ -32,14 +32,14 @@ import org.junit.runner.RunWith;
 import java.util.concurrent.TimeoutException;
 
 import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.core.IsInstanceOf.any;
 
 import androidx.test.InstrumentationRegistry;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.rule.ServiceTestRule;
-import androidx.test.runner.AndroidJUnit4;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -62,7 +62,8 @@ public class OperationsServiceTest {
         getServerInfoIntent.putExtra(
                 OperationsService.EXTRA_SERVER_URL, convertIdn(SERVER_URL, true));
 
-        assertThat(service.queueOperation(getServerInfoIntent, null, null), is(any(long.class)));
+        assertThat(service.queueOperation(getServerInfoIntent, null, null),
+                is(any(long.class)));
         assertThat(service.getPendingOperationsQueueSize(), equalTo(1));
     }
 }
