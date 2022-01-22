@@ -22,9 +22,6 @@ package com.bytesforge.linkasanote.data.source.local;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -50,6 +47,10 @@ import java.util.NoSuchElementException;
 import io.reactivex.observers.TestObserver;
 
 import static junit.framework.TestCase.assertNotNull;
+
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.runner.AndroidJUnit4;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest

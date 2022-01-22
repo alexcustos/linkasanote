@@ -20,12 +20,10 @@
 
 package com.bytesforge.linkasanote.sync.operations;
 
+import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
+
 import android.content.Intent;
 import android.os.IBinder;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ServiceTestRule;
-import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,11 +31,15 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeoutException;
 
-import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsInstanceOf.any;
+
+import androidx.test.InstrumentationRegistry;
+import androidx.test.filters.LargeTest;
+import androidx.test.rule.ServiceTestRule;
+import androidx.test.runner.AndroidJUnit4;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest

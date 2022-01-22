@@ -23,9 +23,10 @@ package com.bytesforge.linkasanote;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.TextView;
+
+import androidx.core.content.ContextCompat;
 
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
