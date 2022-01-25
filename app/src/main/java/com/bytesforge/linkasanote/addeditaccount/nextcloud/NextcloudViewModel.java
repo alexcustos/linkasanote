@@ -200,7 +200,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
         }
     }
 
-    @BindingAdapter({"android:drawableStart", "android:text"})
+    @BindingAdapter({"drawableStartCompat", "android:text"})
     public static void showStatus(TextView view, int icon, @NonNull String text) {
         view.setCompoundDrawablesWithIntrinsicBounds(icon, 0, 0, 0);
         view.setText(text);

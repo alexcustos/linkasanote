@@ -100,13 +100,14 @@
                 android:id="@+id/server_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:drawableStart="@{viewModel.serverStatusIcon}"
                 android:text="@{viewModel.serverStatusText}"
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/add_edit_account_status_min_height"
                 android:layout_marginBottom="@dimen/add_edit_account_url_form_space"
                 android:drawablePadding="@dimen/add_edit_account_status_icon_padding"
-                android:visibility="@{viewModel.serverStatus ? View.VISIBLE : View.GONE}" />
+                android:visibility="@{viewModel.serverStatus ? View.VISIBLE : View.GONE}"
+                android:tag="@{viewModel.serverStatusIcon}"
+                app:drawableStartCompat="@{viewModel.serverStatusIcon}" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -143,11 +144,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:drawableStart="@{viewModel.authStatusIcon}"
                 android:text="@{viewModel.authStatusText}"
                 android:minHeight="@dimen/add_edit_account_status_min_height"
                 android:drawablePadding="@dimen/add_edit_account_status_icon_padding"
-                android:visibility="@{viewModel.authStatus ? View.VISIBLE : View.GONE}" />
+                android:visibility="@{viewModel.authStatus ? View.VISIBLE : View.GONE}"
+                android:tag="@{viewModel.authStatusIcon}"
+                app:drawableStartCompat="@{viewModel.authStatusIcon}" />
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/login_button"

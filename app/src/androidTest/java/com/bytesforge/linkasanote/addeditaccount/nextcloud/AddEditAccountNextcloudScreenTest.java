@@ -31,11 +31,23 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
 import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withTagValue;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
 
 import android.Manifest;
 import android.content.Intent;
 import android.os.Handler;
+
+import androidx.test.espresso.matcher.ViewMatchers;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.rule.ActivityTestRule;
+import androidx.test.rule.GrantPermissionRule;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity;
@@ -53,18 +65,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
-
-import static com.bytesforge.linkasanote.EspressoMatchers.withDrawable;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.verify;
-
-import androidx.test.espresso.matcher.ViewMatchers;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.rule.ActivityTestRule;
-import androidx.test.rule.GrantPermissionRule;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -117,7 +117,9 @@ public class AddEditAccountNextcloudScreenTest {
 
         onView(withId(R.id.server_status)).check(
                 matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)));
-        onView(withId(R.id.server_status)).check(matches(withDrawable(R.drawable.ic_warning)));
+        //onView(withId(R.id.server_status)).check(matches(withDrawable(R.drawable.ic_warning)));
+        onView(withId(R.id.server_status)).check(
+                matches(withTagValue(equalTo(R.drawable.ic_warning))));
         onView(withId(R.id.host_url_refresh_button)).check(
                 matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
         onView(withId(R.id.auth_status)).check(
@@ -136,7 +138,9 @@ public class AddEditAccountNextcloudScreenTest {
                 matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)));
         onView(withId(R.id.server_status)).check(matches(withText(
                 R.string.add_edit_account_nextcloud_warning_empty_url)));
-        onView(withId(R.id.server_status)).check(matches(withDrawable(R.drawable.ic_warning)));
+        //onView(withId(R.id.server_status)).check(matches(withDrawable(R.drawable.ic_warning)));
+        onView(withId(R.id.server_status)).check(
+                matches(withTagValue(equalTo(R.drawable.ic_warning))));
     }
 
     @Test
@@ -148,7 +152,9 @@ public class AddEditAccountNextcloudScreenTest {
                 matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)));
         onView(withId(R.id.server_status)).check(matches(withText(
                 R.string.add_edit_account_nextcloud_warning_malformed_url)));
-        onView(withId(R.id.server_status)).check(matches(withDrawable(R.drawable.ic_warning)));
+        //onView(withId(R.id.server_status)).check(matches(withDrawable(R.drawable.ic_warning)));
+        onView(withId(R.id.server_status)).check(
+                matches(withTagValue(equalTo(R.drawable.ic_warning))));
     }
 
     @Test
