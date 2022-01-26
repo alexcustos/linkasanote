@@ -20,11 +20,11 @@
 
 package com.bytesforge.linkasanote.utils;
 
-
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.util.Base64;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;

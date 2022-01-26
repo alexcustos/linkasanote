@@ -20,9 +20,12 @@
 
 package com.bytesforge.linkasanote.laano.links.addeditlink;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.database.sqlite.SQLiteConstraintException;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.Link;
 import com.bytesforge.linkasanote.data.Tag;
@@ -42,8 +45,6 @@ import javax.inject.Inject;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class AddEditLinkPresenter implements
         AddEditLinkContract.Presenter, TokenCompleteTextView.TokenListener<Tag> {

@@ -23,7 +23,8 @@ package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
 import android.content.Context;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.Nullable;
 
 import dagger.Module;
 import dagger.Provides;

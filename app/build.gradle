@@ -5,20 +5,18 @@ android {
     buildToolsVersion BUILD_TOOL_VERSION
 
     defaultConfig {
-        applicationId "com.bytesforge.linkasanote"
+        applicationId 'com.bytesforge.linkasanote'
         minSdkVersion MIN_SDK_VERSION
         targetSdkVersion SDK_VERSION
         versionCode buildVersionCode()
         versionName VERSION_NAME
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        vectorDrawables.useSupportLibrary = true
-        resConfigs "en", "ru-rRU"
-        buildConfigField "long", "BUILD_TIMESTAMP", System.currentTimeMillis() + "L"
-    }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+
+        vectorDrawables.useSupportLibrary = true
+        resConfigs 'en', 'ru-rRU'
+        buildConfigField 'long', 'BUILD_TIMESTAMP', System.currentTimeMillis() + 'L'
     }
 
     /**
@@ -35,7 +33,7 @@ android {
         releaseSigning.withInputStream { signingProperties.load(it) }
 
         // NOTE: signingProperties.hasProperty is not working
-        println "Found release-signing.properties, will try to sign the build..."
+        println 'Found release-signing.properties, will try to sign the build...'
         signingConfigs {
             release {
                 storeFile file(signingProperties.getProperty('signingStoreLocation'))
@@ -65,35 +63,42 @@ android {
         }
     }
 
-    lintOptions {
-        abortOnError false
-        htmlReport true
-        htmlOutput file("$project.buildDir/reports/lint/lint.html")
+    buildFeatures {
+        dataBinding true
+        viewBinding true
     }
 
-    flavorDimensions "mode"
+
+    flavorDimensions 'mode'
     productFlavors {
         mock {
-            applicationIdSuffix = ".mock"
+            applicationIdSuffix = '.mock'
         }
         prod
     }
-
     packagingOptions {
-        exclude 'META-INF/CHANGES'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/README'
-        exclude 'META-INF/README.txt'
-        exclude 'META-INF/README.md'
-        exclude 'META-INF/rxjava.properties'
-        exclude 'META-INF/*.*.version'
+        resources {
+            excludes += [
+                    'META-INF/CHANGES',
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/LICENSE',
+                    'META-INF/README',
+                    'META-INF/README.txt',
+                    'META-INF/README.md',
+                    'META-INF/rxjava.properties',
+                    'META-INF/*.*.version'
+            ]
+            pickFirsts += [
+                    'androidsupportmultidexversion.txt'
+            ]
+        }
     }
+
 
     android.variantFilter { variant ->
         if (variant.buildType.name == 'release'
                 && variant.getFlavors().get(0).name == 'mock') {
-            variant.setIgnore(true);
+            variant.setIgnore(true)
         }
     }
 
@@ -117,6 +122,11 @@ android {
             java.srcDir sharedTestDir
         }
     }
+    lint {
+        abortOnError false
+        htmlOutput file("$project.buildDir/reports/lint/lint.html")
+        htmlReport true
+    }
 }
 
 dependencies {
@@ -124,13 +134,7 @@ dependencies {
     implementation project(':androidutils')
     implementation 'com.github.alexcustos:TokenAutoComplete:2.1.4'
 
-    implementation "com.android.support:multidex:${multidexVersion}"
-    implementation "com.android.support:appcompat-v7:${supportLibraryVersion}"
-    implementation "com.android.support:design:${supportLibraryVersion}"
-    implementation "com.android.support:preference-v14:${supportLibraryVersion}"
-    implementation "com.android.support:recyclerview-v7:${supportLibraryVersion}"
-    implementation "com.android.support:cardview-v7:${supportLibraryVersion}"
-    implementation "com.android.support.constraint:constraint-layout:${constraintLayoutVersion}"
+    implementation "androidx.multidex:multidex:${multidexVersion}"
 
     implementation "com.google.guava:guava:${guavaVersion}-android"
     implementation "com.github.nextcloud:android-library:${nextcloudLibraryVersion}"
@@ -140,15 +144,22 @@ dependencies {
     implementation "io.reactivex.rxjava2:rxjava:${rxjavaVersion}"
     implementation "io.reactivex.rxjava2:rxandroid:${rxandroidVersion}"
 
+    // AndroidX
+    implementation "androidx.drawerlayout:drawerlayout:${androidxVersion}"
+    implementation "androidx.preference:preference:${androidxVersion}"
+    //implementation "androidx.appcompat:appcompat:${appcompatVersion}"
+    implementation "com.google.android.material:material:${materialVersion}"
+
     // Dagger 2
     annotationProcessor "com.google.dagger:dagger-compiler:${daggerVersion}"
     implementation "com.google.dagger:dagger:${daggerVersion}"
-    compileOnly "javax.annotation:jsr250-api:${jsr250ApiVersion}"
+    compileOnly "javax.annotation:javax.annotation-api:${javaxAnnotationVersion}"
 
     // Stetho
     implementation "com.facebook.stetho:stetho:${stethoVersion}"
 
     // Local unit tests
+    testImplementation "androidx.test:core:${coreVersion}"
     testImplementation "junit:junit:${junitVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "org.powermock:powermock-module-junit4:${powermockVersion}"
@@ -157,17 +168,14 @@ dependencies {
     testImplementation "org.slf4j:slf4j-simple:${slf4jVersion}"
 
     // Espresso Testing
-    androidTestImplementation "com.android.support.test.espresso:espresso-core:${espressoVersion}"
-    androidTestImplementation "com.android.support.test.espresso:espresso-contrib:${espressoVersion}"
-    androidTestImplementation "com.android.support.test:runner:${testVersion}"
-    androidTestImplementation "com.android.support.test:rules:${testVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${espressoVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:${espressoVersion}"
+    androidTestImplementation "androidx.test:runner:${testVersion}"
+    androidTestImplementation "androidx.test:rules:${testVersion}"
+    androidTestImplementation "androidx.test.ext:junit:${testExtVersion}"
     androidTestImplementation "org.mockito:mockito-core:${mockitoVersion}"
     androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:${dexmakerVersion}"
-    androidTestImplementation "com.android.support.test.uiautomator:uiautomator-v18:${uiAutomatorVersion}"
 
     // Resolve conflicts
-    implementation "com.google.code.findbugs:jsr305:${findbugsJsr305Version}"
-    androidTestImplementation "com.android.support:recyclerview-v7:${supportLibraryVersion}"
-    androidTestImplementation "com.android.support:appcompat-v7:${supportLibraryVersion}"
-    androidTestImplementation "com.android.support:design:${supportLibraryVersion}"
+    //implementation "com.google.code.findbugs:jsr305:${findbugsJsr305Version}"
 }

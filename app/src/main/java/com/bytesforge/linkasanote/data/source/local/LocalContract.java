@@ -20,15 +20,16 @@
 
 package com.bytesforge.linkasanote.data.source.local;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.ContentUris;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.bytesforge.linkasanote.BuildConfig;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class LocalContract {
 

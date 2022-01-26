@@ -23,7 +23,7 @@ package com.bytesforge.linkasanote.utils;
 import android.content.Context;
 import android.content.res.Resources;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.util.Patterns;

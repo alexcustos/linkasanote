@@ -20,16 +20,10 @@
 
 package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.Context;
-import android.databinding.BaseObservable;
-import android.databinding.Bindable;
-import android.databinding.BindingAdapter;
-import android.databinding.ObservableBoolean;
-import android.databinding.ObservableField;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,13 +32,20 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
+import androidx.databinding.BindingAdapter;
+import androidx.databinding.ObservableBoolean;
+import androidx.databinding.ObservableField;
+
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.utils.CommonUtils;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.common.base.Strings;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class NextcloudViewModel extends BaseObservable implements NextcloudContract.ViewModel {
 
@@ -199,7 +200,7 @@ public class NextcloudViewModel extends BaseObservable implements NextcloudContr
         }
     }
 
-    @BindingAdapter({"android:drawableStart", "android:text"})
+    @BindingAdapter({"drawableStartCompat", "android:text"})
     public static void showStatus(TextView view, int icon, @NonNull String text) {
         view.setCompoundDrawablesWithIntrinsicBounds(icon, 0, 0, 0);
         view.setText(text);

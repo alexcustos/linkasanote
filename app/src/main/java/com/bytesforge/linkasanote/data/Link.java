@@ -22,8 +22,8 @@ package com.bytesforge.linkasanote.data;
 
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;

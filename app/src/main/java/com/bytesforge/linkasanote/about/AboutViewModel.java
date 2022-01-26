@@ -20,24 +20,25 @@
 
 package com.bytesforge.linkasanote.about;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.Context;
 import android.content.res.Resources;
-import android.databinding.BaseObservable;
-import android.databinding.Bindable;
-import android.databinding.BindingAdapter;
-import android.databinding.ObservableField;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
 import android.text.format.DateFormat;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
+import androidx.databinding.BindingAdapter;
+import androidx.databinding.ObservableField;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.BuildConfig;
 import com.bytesforge.linkasanote.R;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.android.material.snackbar.Snackbar;
 
 public class AboutViewModel extends BaseObservable implements AboutContract.ViewModel {
 

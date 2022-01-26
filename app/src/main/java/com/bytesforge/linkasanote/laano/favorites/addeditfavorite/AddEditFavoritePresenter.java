@@ -20,9 +20,12 @@
 
 package com.bytesforge.linkasanote.laano.favorites.addeditfavorite;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.database.sqlite.SQLiteConstraintException;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Tag;
@@ -42,8 +45,6 @@ import javax.inject.Inject;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class AddEditFavoritePresenter implements
         AddEditFavoriteContract.Presenter, TokenCompleteTextView.TokenListener<Tag> {

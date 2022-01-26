@@ -23,9 +23,10 @@ package com.bytesforge.linkasanote;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.TextView;
+
+import androidx.core.content.ContextCompat;
 
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
@@ -42,6 +43,7 @@ public class DrawableMatcher extends TypeSafeMatcher<View> {
 
     @Override
     protected boolean matchesSafely(View target) {
+        // NOTE: this method doesn't work since SDK 21
         if (!(target instanceof TextView)) return false;
 
         TextView textView = (TextView) target;
@@ -57,10 +59,15 @@ public class DrawableMatcher extends TypeSafeMatcher<View> {
         Context context = target.getContext();
         Resources resources = context.getResources();
         Drawable expectedDrawable = ContextCompat.getDrawable(context, expectedId);
+        if (expectedDrawable == null) return false;
+
+        Drawable.ConstantState expectedConstantState = expectedDrawable.getConstantState();
         for (Drawable item : drawables) {
+            if (item == null) continue;
+
             Drawable.ConstantState itemConstantState = item.getConstantState();
             if (itemConstantState != null
-                    && itemConstantState.equals(expectedDrawable.getConstantState())) {
+                    && itemConstantState.equals(expectedConstantState)) {
                 resourceName = resources.getResourceEntryName(expectedId);
                 return true;
             }

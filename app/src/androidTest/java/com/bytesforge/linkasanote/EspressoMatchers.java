@@ -20,8 +20,6 @@
 
 package com.bytesforge.linkasanote;
 
-import android.support.test.espresso.UiController;
-import android.support.test.espresso.ViewAction;
 import android.view.View;
 
 import com.google.common.base.Strings;
@@ -29,6 +27,9 @@ import com.google.common.base.Strings;
 import org.hamcrest.Matcher;
 
 import static com.google.common.base.Preconditions.checkArgument;
+
+import androidx.test.espresso.UiController;
+import androidx.test.espresso.ViewAction;
 
 public class EspressoMatchers {
 

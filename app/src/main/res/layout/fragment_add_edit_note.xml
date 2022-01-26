@@ -30,7 +30,7 @@
             type="com.bytesforge.linkasanote.laano.notes.addeditnote.AddEditNoteViewModel" />
     </data>
 
-    <android.support.design.widget.CoordinatorLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/snackbar_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -88,7 +88,7 @@
                         android:visibility="@{viewModel.linkStatus == null ? View.GONE : View.VISIBLE}" />
                 </FrameLayout>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/screen_edge_padding"
@@ -110,9 +110,9 @@
                         android:text="@={viewModel.noteNote}"
                         android:afterTextChanged="@{() -> viewModel.afterNoteChanged()}"
                         android:onTouch="@{viewModel::onNoteTouch}" />
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/note_tags_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -127,9 +127,9 @@
                         android:inputType="text|textNoSuggestions|textMultiLine"
                         android:lineSpacingExtra="@dimen/tags_line_spacing_extra"
                         android:onFocusChange="@{viewModel::onTagsFocusChange}" />
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <android.support.v7.widget.AppCompatButton
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/add_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -142,5 +142,5 @@
                     android:onClick="@{() -> viewModel.onAddButtonClick()}" />
             </LinearLayout>
         </ScrollView>
-    </android.support.design.widget.CoordinatorLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

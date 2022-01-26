@@ -20,7 +20,7 @@
 
 package com.bytesforge.linkasanote.data;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.bytesforge.linkasanote.sync.SyncState;
 

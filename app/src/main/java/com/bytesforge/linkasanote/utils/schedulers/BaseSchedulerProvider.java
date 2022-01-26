@@ -20,7 +20,7 @@
 
 package com.bytesforge.linkasanote.utils.schedulers;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import io.reactivex.Scheduler;
 

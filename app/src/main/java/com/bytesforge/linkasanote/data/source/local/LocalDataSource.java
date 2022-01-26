@@ -20,13 +20,16 @@
 
 package com.bytesforge.linkasanote.data.source.local;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.bytesforge.linkasanote.data.Favorite;
 import com.bytesforge.linkasanote.data.Link;
@@ -43,8 +46,6 @@ import javax.inject.Singleton;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Singleton
 public class LocalDataSource {

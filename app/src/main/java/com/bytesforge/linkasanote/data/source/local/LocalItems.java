@@ -21,8 +21,9 @@
 package com.bytesforge.linkasanote.data.source.local;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
 
 import com.bytesforge.linkasanote.sync.SyncState;
 

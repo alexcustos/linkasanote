@@ -20,7 +20,7 @@
 
 package com.bytesforge.linkasanote.synclog;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.bytesforge.linkasanote.data.source.Repository;
 import com.bytesforge.linkasanote.utils.CommonUtils;

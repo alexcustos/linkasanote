@@ -20,6 +20,8 @@
 
 package com.bytesforge.linkasanote.about;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
@@ -31,14 +33,15 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
 
 import com.bytesforge.linkasanote.BuildConfig;
 import com.bytesforge.linkasanote.LaanoApplication;
@@ -59,8 +62,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import io.reactivex.Single;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AboutFragment extends Fragment implements AboutContract.View {
 

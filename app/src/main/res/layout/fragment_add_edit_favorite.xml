@@ -30,7 +30,7 @@
             type="com.bytesforge.linkasanote.laano.favorites.addeditfavorite.AddEditFavoriteViewModel" />
     </data>
 
-    <android.support.design.widget.CoordinatorLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/snackbar_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -47,7 +47,7 @@
                 android:orientation="vertical"
                 android:padding="@dimen/screen_edge_padding">
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     bind:nameError="@{viewModel.nameErrorText}">
@@ -62,7 +62,7 @@
                         android:text="@={viewModel.favoriteName}"
                         android:afterTextChanged="@{() -> viewModel.afterNameChanged()}"
                         android:importantForAutofill="no" />
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -79,7 +79,7 @@
                         android:gravity="center_vertical|end" />
 
                     <!-- NOTE: both Start & End padding go to the end of CheckBox -->
-                    <android.support.v7.widget.AppCompatCheckBox
+                    <androidx.appcompat.widget.AppCompatCheckBox
                         android:id="@+id/checkbox_and_gate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -91,7 +91,7 @@
                         android:gravity="center_vertical|end" />
                 </RelativeLayout>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/favorite_tags_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
@@ -105,9 +105,9 @@
                         android:lineSpacingExtra="@dimen/tags_line_spacing_extra"
                         android:afterTextChanged="@{() -> viewModel.afterTagsChanged()}"
                         android:onFocusChange="@{viewModel::onTagsFocusChange}" />
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <android.support.v7.widget.AppCompatButton
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/add_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -119,5 +119,5 @@
                     android:onClick="@{() -> viewModel.onAddButtonClick()}" />
             </LinearLayout>
         </ScrollView>
-    </android.support.design.widget.CoordinatorLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

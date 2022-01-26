@@ -21,8 +21,8 @@
 package com.bytesforge.linkasanote.data.source.cloud;
 
 import android.accounts.NetworkErrorException;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Favorite;

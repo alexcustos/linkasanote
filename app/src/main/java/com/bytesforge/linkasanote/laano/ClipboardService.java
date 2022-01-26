@@ -30,9 +30,6 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
 import android.util.Log;
 import android.util.Patterns;
 import android.widget.Toast;
@@ -59,6 +56,10 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.exceptions.UndeliverableException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 
 public class ClipboardService extends Service {
 

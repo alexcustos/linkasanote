@@ -20,19 +20,20 @@
 
 package com.bytesforge.linkasanote.sync.files;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.bytesforge.linkasanote.utils.UuidUtils;
 import com.google.common.base.Objects;
 
 import java.io.File;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class JsonFile implements Parcelable, Comparable<JsonFile> {
 

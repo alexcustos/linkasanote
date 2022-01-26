@@ -20,8 +20,11 @@
 
 package com.bytesforge.linkasanote.sync.operations.nextcloud;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.sync.files.JsonFile;
@@ -42,9 +45,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.System.currentTimeMillis;
 
 public class UploadFileOperation extends RemoteOperation {
 

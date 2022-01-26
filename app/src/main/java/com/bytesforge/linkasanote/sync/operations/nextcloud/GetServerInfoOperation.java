@@ -20,8 +20,11 @@
 
 package com.bytesforge.linkasanote.sync.operations.nextcloud;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.Context;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
@@ -30,8 +33,6 @@ import com.owncloud.android.lib.resources.status.GetRemoteStatusOperation;
 import com.owncloud.android.lib.resources.status.OwnCloudVersion;
 
 import java.util.ArrayList;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class GetServerInfoOperation extends RemoteOperation {

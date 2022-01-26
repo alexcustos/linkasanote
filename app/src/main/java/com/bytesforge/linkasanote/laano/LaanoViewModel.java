@@ -20,19 +20,20 @@
 
 package com.bytesforge.linkasanote.laano;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.Context;
-import android.databinding.BaseObservable;
-import android.databinding.Bindable;
-import android.databinding.BindingAdapter;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.NavigationView;
 import android.view.LayoutInflater;
 
-import com.bytesforge.linkasanote.databinding.DrawerHeaderBinding;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
+import androidx.databinding.BindingAdapter;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.bytesforge.linkasanote.databinding.DrawerHeaderBinding;
+import com.google.android.material.navigation.NavigationView;
 
 public class LaanoViewModel extends BaseObservable {
 

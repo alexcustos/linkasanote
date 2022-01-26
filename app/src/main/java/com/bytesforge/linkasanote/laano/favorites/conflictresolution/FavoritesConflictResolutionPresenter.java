@@ -20,7 +20,7 @@
 
 package com.bytesforge.linkasanote.laano.favorites.conflictresolution;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.bytesforge.linkasanote.data.Favorite;

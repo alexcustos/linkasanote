@@ -20,12 +20,15 @@
 
 package com.bytesforge.linkasanote.laano.links;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.RecyclerView;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.databinding.ItemLinksNotesBinding;
@@ -34,8 +37,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LinksNotesAdapter extends RecyclerView.Adapter<LinksNotesAdapter.ViewHolder> {
 

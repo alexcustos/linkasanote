@@ -20,14 +20,19 @@
 
 package com.bytesforge.linkasanote.laano;
 
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.contrib.RecyclerViewActions.scrollToPosition;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.res.Resources;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.contrib.RecyclerViewActions;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.LaanoApplication;
@@ -44,29 +49,26 @@ import com.bytesforge.linkasanote.utils.ActivityUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.List;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static android.support.test.espresso.action.ViewActions.scrollTo;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.RecyclerViewActions.scrollToPosition;
-import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static com.bytesforge.linkasanote.EspressoMatchers.clickChildViewWithId;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
 import static junit.framework.Assert.assertNotNull;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import androidx.test.espresso.contrib.RecyclerViewActions;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -185,7 +187,7 @@ public class LaanoActivityTest {
         onView(withItemTextId(LINKS_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));
-        assertThat((laanoActivity.getCurrentFragment()).getTitle(), Matchers.equalTo(LINKS_TITLE));
+        assertThat((laanoActivity.getCurrentFragment()).getTitle(), equalTo(LINKS_TITLE));
         assertThat(laanoActivity.getCurrentFragment(), instanceOf(LinksFragment.class));
     }
 
@@ -231,7 +233,7 @@ public class LaanoActivityTest {
         onView(withItemTextId(FAVORITES_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));
-        assertThat((laanoActivity.getCurrentFragment()).getTitle(), Matchers.equalTo(FAVORITES_TITLE));
+        assertThat((laanoActivity.getCurrentFragment()).getTitle(), equalTo(FAVORITES_TITLE));
         assertThat(laanoActivity.getCurrentFragment(), instanceOf(FavoritesFragment.class));
     }
 
@@ -266,7 +268,7 @@ public class LaanoActivityTest {
         onView(withItemTextId(NOTES_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));
-        assertThat((laanoActivity.getCurrentFragment()).getTitle(), Matchers.equalTo(NOTES_TITLE));
+        assertThat((laanoActivity.getCurrentFragment()).getTitle(), equalTo(NOTES_TITLE));
         assertThat(laanoActivity.getCurrentFragment(), instanceOf(NotesFragment.class));
     }
 

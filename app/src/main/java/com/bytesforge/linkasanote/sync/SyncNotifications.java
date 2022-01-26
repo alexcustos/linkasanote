@@ -20,6 +20,8 @@
 
 package com.bytesforge.linkasanote.sync;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -29,16 +31,15 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 
 import com.bytesforge.linkasanote.BuildConfig;
 import com.bytesforge.linkasanote.R;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SyncNotifications {
     private static final String TAG = SyncNotifications.class.getSimpleName();

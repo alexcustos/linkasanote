@@ -20,11 +20,22 @@
 
 package com.bytesforge.linkasanote.laano;
 
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.swipeLeft;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.contrib.DrawerMatchers.isClosed;
+import static androidx.test.espresso.contrib.DrawerMatchers.isOpen;
+import static androidx.test.espresso.contrib.NavigationViewActions.navigateTo;
+import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
+import static androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withContentDescription;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withResourceName;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
+
 import android.content.res.Resources;
-import android.support.test.espresso.contrib.DrawerActions;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
 import android.view.Gravity;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
@@ -33,31 +44,23 @@ import com.bytesforge.linkasanote.laano.favorites.FavoritesFragment;
 import com.bytesforge.linkasanote.laano.links.LinksFragment;
 import com.bytesforge.linkasanote.laano.notes.NotesFragment;
 
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.swipeLeft;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.DrawerMatchers.isClosed;
-import static android.support.test.espresso.contrib.DrawerMatchers.isOpen;
-import static android.support.test.espresso.contrib.NavigationViewActions.navigateTo;
-import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
-import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withResourceName;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static com.bytesforge.linkasanote.AndroidTestUtils.getToolbarNavigationContentDescription;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
 import static junit.framework.Assert.assertNotNull;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.Matchers.allOf;
+
+import androidx.test.espresso.contrib.DrawerActions;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.rule.ActivityTestRule;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -103,15 +106,15 @@ public class ApplicationNavigationTest {
     public void swipeLeftViewPager_switchesTab() {
         // Links
         onView(withId(R.id.laano_view_pager)).check(matches(isDisplayed()));
-        assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(LINKS_TITLE));
+        assertThat((activity.getCurrentFragment()).getTitle(), equalTo(LINKS_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(LinksFragment.class));
         // Favorites
         onView(withId(R.id.laano_view_pager)).perform(swipeLeft());
-        assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(FAVORITES_TITLE));
+        assertThat((activity.getCurrentFragment()).getTitle(), equalTo(FAVORITES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(FavoritesFragment.class));
         // Notes
         onView(withId(R.id.laano_view_pager)).perform(swipeLeft());
-        assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(NOTES_TITLE));
+        assertThat((activity.getCurrentFragment()).getTitle(), equalTo(NOTES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(NotesFragment.class));
     }
 
@@ -121,19 +124,19 @@ public class ApplicationNavigationTest {
         onView(withItemTextId(LINKS_TITLE, R.id.tab_layout))
             .perform(click())
             .check(matches(isDisplayed()));
-        assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(LINKS_TITLE));
+        assertThat((activity.getCurrentFragment()).getTitle(), equalTo(LINKS_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(LinksFragment.class));
         // Favorites
         onView(withItemTextId(FAVORITES_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));
-        assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(FAVORITES_TITLE));
+        assertThat((activity.getCurrentFragment()).getTitle(), equalTo(FAVORITES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(FavoritesFragment.class));
         // Notes
         onView(withItemTextId(NOTES_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));
-        assertThat((activity.getCurrentFragment()).getTitle(), Matchers.equalTo(NOTES_TITLE));
+        assertThat((activity.getCurrentFragment()).getTitle(), equalTo(NOTES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(NotesFragment.class));
     }
 
