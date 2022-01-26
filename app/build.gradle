@@ -5,7 +5,7 @@ android {
     buildToolsVersion BUILD_TOOL_VERSION
 
     defaultConfig {
-        applicationId "com.bytesforge.linkasanote"
+        applicationId 'com.bytesforge.linkasanote'
         minSdkVersion MIN_SDK_VERSION
         targetSdkVersion SDK_VERSION
         versionCode buildVersionCode()
@@ -15,8 +15,8 @@ android {
         testInstrumentationRunnerArguments clearPackageData: 'true'
 
         vectorDrawables.useSupportLibrary = true
-        resConfigs "en", "ru-rRU"
-        buildConfigField "long", "BUILD_TIMESTAMP", System.currentTimeMillis() + "L"
+        resConfigs 'en', 'ru-rRU'
+        buildConfigField 'long', 'BUILD_TIMESTAMP', System.currentTimeMillis() + 'L'
     }
 
     /**
@@ -33,7 +33,7 @@ android {
         releaseSigning.withInputStream { signingProperties.load(it) }
 
         // NOTE: signingProperties.hasProperty is not working
-        println "Found release-signing.properties, will try to sign the build..."
+        println 'Found release-signing.properties, will try to sign the build...'
         signingConfigs {
             release {
                 storeFile file(signingProperties.getProperty('signingStoreLocation'))
@@ -68,36 +68,37 @@ android {
         viewBinding true
     }
 
-    lintOptions {
-        abortOnError false
-        htmlReport true
-        htmlOutput file("$project.buildDir/reports/lint/lint.html")
-    }
 
-    flavorDimensions "mode"
+    flavorDimensions 'mode'
     productFlavors {
         mock {
-            applicationIdSuffix = ".mock"
+            applicationIdSuffix = '.mock'
         }
         prod
     }
-
     packagingOptions {
-        pickFirst 'androidsupportmultidexversion.txt'
-        exclude 'META-INF/CHANGES'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/README'
-        exclude 'META-INF/README.txt'
-        exclude 'META-INF/README.md'
-        exclude 'META-INF/rxjava.properties'
-        exclude 'META-INF/*.*.version'
+        resources {
+            excludes += [
+                    'META-INF/CHANGES',
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/LICENSE',
+                    'META-INF/README',
+                    'META-INF/README.txt',
+                    'META-INF/README.md',
+                    'META-INF/rxjava.properties',
+                    'META-INF/*.*.version'
+            ]
+            pickFirsts += [
+                    'androidsupportmultidexversion.txt'
+            ]
+        }
     }
+
 
     android.variantFilter { variant ->
         if (variant.buildType.name == 'release'
                 && variant.getFlavors().get(0).name == 'mock') {
-            variant.setIgnore(true);
+            variant.setIgnore(true)
         }
     }
 
@@ -120,6 +121,11 @@ android {
         androidTest {
             java.srcDir sharedTestDir
         }
+    }
+    lint {
+        abortOnError false
+        htmlOutput file("$project.buildDir/reports/lint/lint.html")
+        htmlReport true
     }
 }
 

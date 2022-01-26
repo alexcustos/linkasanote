@@ -2,7 +2,7 @@
 
 ext {
     // NOTE: xxx.yy.zz; -SNAPSHOT; -RCxx
-    VERSION_NAME = "0.3.5"
+    VERSION_NAME = '0.3.5'
     SDK_VERSION = 31
     MIN_SDK_VERSION = 19
     BUILD_TOOL_VERSION = '31.0.0'
@@ -40,14 +40,14 @@ ext {
         // Release: xxx.yy.zz.99
         // -SNAPSHOT: *.00
         // -RCxx: *.(1-98)
-        def candidate = "99"
+        def candidate = '99'
         def (major, minor, patch) = VERSION_NAME.toLowerCase().replaceAll('-', '').tokenize('.')
         if (patch.endsWith("snapshot")) {
-            candidate = "0"
-            patch = patch.replaceAll("[^0-9]", "");
+            candidate = '0'
+            patch = patch.replaceAll('[^0-9]', '')
         } else {
             def rc
-            (patch, rc) = patch.tokenize("rc")
+            (patch, rc) = patch.tokenize('rc')
             if (rc) {
                 candidate = rc
             }
@@ -63,7 +63,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'com.android.tools.build:gradle:7.1.0'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -76,7 +76,7 @@ allprojects {
         // https://jitpack.io/docs/BUILDING/#gradle-projects
         // https://jitpack.io/com/github/USER/REPO/TAG/build.log
         maven { url 'https://jitpack.io' }
-        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
     }
     /*gradle.projectsEvaluated {
         tasks.withType(JavaCompile) {
