@@ -17,16 +17,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package com.bytesforge.linkasanote.about
 
-package com.bytesforge.linkasanote.about;
+import android.content.Context
+import dagger.Module
+import dagger.Provides
 
-import com.bytesforge.linkasanote.FragmentScoped;
+@Module
+class AboutPresenterModule(private val context: Context, private val view: AboutContract.View) {
+    @Provides
+    fun provideAboutContractView(): AboutContract.View {
+        return view
+    }
 
-import dagger.Subcomponent;
-
-@FragmentScoped
-@Subcomponent(modules = {AboutPresenterModule.class})
-public interface AboutComponent {
-
-    void inject(AboutActivity aboutActivity);
+    @Provides
+    fun provideAboutContractViewModel(): AboutContract.ViewModel {
+        return AboutViewModel(context)
+    }
 }
