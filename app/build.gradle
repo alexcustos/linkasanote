@@ -61,6 +61,11 @@ android {
             multiDexEnabled true
         }
         release {
+            applicationVariants.all { variant ->
+                variant.outputs.all {
+                    outputFileName = "laano_v${variant.versionName}-${variant.name}.apk"
+                }
+            }
             debuggable false
             minifyEnabled true
             shrinkResources true

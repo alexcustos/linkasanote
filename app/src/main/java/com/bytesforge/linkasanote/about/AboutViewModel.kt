@@ -32,14 +32,13 @@ import com.bytesforge.linkasanote.BR
 import com.bytesforge.linkasanote.BuildConfig
 import com.bytesforge.linkasanote.R
 import com.google.android.material.snackbar.Snackbar
-import com.google.common.base.Preconditions
 
 class AboutViewModel(context: Context) : BaseObservable(), AboutContract.ViewModel {
     @JvmField
     val appVersionText = ObservableField<String?>()
     @JvmField
     val appCopyrightText = ObservableField<String?>()
-    private val resources: Resources
+    private val resources: Resources = context.resources
 
     enum class SnackbarId {
         ABOUT_LAUNCH_GOOGLE_PLAY_ERROR
@@ -58,13 +57,11 @@ class AboutViewModel(context: Context) : BaseObservable(), AboutContract.ViewMod
     }
 
     override fun saveInstanceState(outState: Bundle) {
-        Preconditions.checkNotNull(outState)
         outState.putString(STATE_APP_VERSION_TEXT, appVersionText.get())
         outState.putString(STATE_APP_COPYRIGHT_TEXT, appCopyrightText.get())
     }
 
     override fun applyInstanceState(state: Bundle) {
-        Preconditions.checkNotNull(state)
         appVersionText.set(state.getString(STATE_APP_VERSION_TEXT))
         appCopyrightText.set(state.getString(STATE_APP_COPYRIGHT_TEXT))
     }
@@ -112,9 +109,5 @@ class AboutViewModel(context: Context) : BaseObservable(), AboutContract.ViewMod
                 ).show()
             }
         }
-    }
-
-    init {
-        resources = Preconditions.checkNotNull(context).resources
     }
 }

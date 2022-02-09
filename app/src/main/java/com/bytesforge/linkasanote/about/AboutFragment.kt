@@ -25,6 +25,7 @@ import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
@@ -36,15 +37,14 @@ import androidx.fragment.app.Fragment
 import com.bytesforge.linkasanote.BuildConfig
 import com.bytesforge.linkasanote.LaanoApplication
 import com.bytesforge.linkasanote.R
-import com.bytesforge.linkasanote.about.AboutFragment
 import com.bytesforge.linkasanote.databinding.DialogAboutLicenseTermsBinding
 import com.bytesforge.linkasanote.databinding.FragmentAboutBinding
 import com.bytesforge.linkasanote.utils.ActivityUtils
 import com.bytesforge.linkasanote.utils.CommonUtils
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider
 import com.google.common.base.Charsets
-import com.google.common.base.Preconditions
 import io.reactivex.Single
+import io.reactivex.disposables.CompositeDisposable
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -53,6 +53,7 @@ import javax.inject.Inject
 class AboutFragment : Fragment(), AboutContract.View {
     private var presenter: AboutContract.Presenter? = null
     private var viewModel: AboutContract.ViewModel? = null
+
     override fun onResume() {
         super.onResume()
         presenter!!.subscribe()
@@ -61,24 +62,25 @@ class AboutFragment : Fragment(), AboutContract.View {
     override fun onPause() {
         super.onPause()
         presenter!!.unsubscribe()
+        compositeDisposable.clear()
     }
 
     override val isActive: Boolean
         get() = isAdded
 
     override fun setPresenter(presenter: AboutContract.Presenter) {
-        this.presenter = Preconditions.checkNotNull(presenter)
+        this.presenter = presenter
     }
 
     override fun setViewModel(viewModel: AboutContract.ViewModel) {
-        this.viewModel = Preconditions.checkNotNull(viewModel)
+        this.viewModel = viewModel
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val binding = FragmentAboutBinding.inflate(inflater, container, false)
         viewModel!!.setInstanceState(savedInstanceState)
         binding.presenter = presenter
@@ -91,53 +93,84 @@ class AboutFragment : Fragment(), AboutContract.View {
         viewModel!!.saveInstanceState(outState)
     }
 
-    override fun showGooglePlay() {
-        val resources = resources
-        val uri = Uri.parse(
-            resources.getString(R.string.google_market) + BuildConfig.APPLICATION_ID
+    private fun getMarketIntent(): Intent? {
+        val intent = requireContext().packageManager
+            .getLaunchIntentForPackage(GOOGLE_PLAY_PACKAGE_NAME) ?: return null
+
+        val androidComponent = ComponentName(
+            GOOGLE_PLAY_PACKAGE_NAME,
+            //"com.google.android.finsky.activities.LaunchUrlHandlerActivity"
+            "com.google.android.finsky.activities.MarketDeepLinkHandlerActivity"
         )
-        val intent = Intent(Intent.ACTION_VIEW, uri)
+        intent.component = androidComponent
+        val marketUriBuilder = Uri.parse(resources.getString(R.string.google_market))
+            .buildUpon()
+            .appendQueryParameter("id", BuildConfig.APPLICATION_ID)
+        intent.data = marketUriBuilder.build()
+        //intent.setPackage(GOOGLE_PLAY_PACKAGE_NAME)
+
+        return intent
+    }
+
+    private fun findMarketIntent(): Intent? {
+        val marketUriBuilder = Uri.parse(resources.getString(R.string.google_market))
+            .buildUpon()
+            .appendQueryParameter("id", BuildConfig.APPLICATION_ID)
+        val intent = Intent(Intent.ACTION_VIEW, marketUriBuilder.build())
+
         val apps = requireContext().packageManager.queryIntentActivities(intent, 0)
-        var found = false
         for (app in apps) {
             if (app.activityInfo.applicationInfo.packageName == GOOGLE_PLAY_PACKAGE_NAME) {
                 val activityInfo = app.activityInfo
                 val componentName = ComponentName(
                     activityInfo.applicationInfo.packageName, activityInfo.name
                 )
-                intent.addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK
-                            or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-                            or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                )
+                var flags = Intent.FLAG_ACTIVITY_NO_HISTORY or
+                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
+                        Intent.FLAG_ACTIVITY_NEW_TASK
+                flags = if (Build.VERSION.SDK_INT >= 21) {
+                    flags or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+                } else {
+                    flags or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                intent.addFlags(flags)
+                //intent.addFlags(
+                //    Intent.FLAG_ACTIVITY_NEW_TASK
+                //            or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                //            or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                //)
                 intent.component = componentName
-                startActivity(intent)
-                found = true
-                break
+                //intent.setPackage(GOOGLE_PLAY_PACKAGE_NAME)
+
+                return intent
             }
         }
-        if (!found) {
-            val webUri = Uri.parse(
-                resources.getString(R.string.google_play) + BuildConfig.APPLICATION_ID
-            )
-            val webIntent = Intent(Intent.ACTION_VIEW, webUri)
-            try {
-                startActivity(webIntent)
-            } catch (e: ActivityNotFoundException) {
-                viewModel!!.showLaunchGooglePlayErrorSnackbar()
-            }
+        return null
+    }
+
+    override fun showGooglePlay() {
+        var intent = findMarketIntent() ?: getMarketIntent()
+
+        if (intent == null) {
+            val webUriBuilder = Uri.parse(resources.getString(R.string.google_play))
+                .buildUpon()
+                .appendQueryParameter("id", BuildConfig.APPLICATION_ID)
+            intent = Intent(Intent.ACTION_VIEW, webUriBuilder.build())
+        }
+
+        try {
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            viewModel!!.showLaunchGooglePlayErrorSnackbar()
         }
     }
 
-    override fun showLicenseTermsAlertDialog(licenseAsset: String) {
-        Preconditions.checkNotNull(licenseAsset)
-        val dialog = LicenseTermsDialog.newInstance(licenseAsset)
-        dialog.show(requireFragmentManager(), LicenseTermsDialog.DIALOG_TAG)
+    override fun showLicenseTermsAlertDialog(licenseText: String) {
+        val dialog = LicenseTermsDialog.newInstance(licenseText)
+        dialog.show(parentFragmentManager, LicenseTermsDialog.DIALOG_TAG)
     }
 
     class LicenseTermsDialog : DialogFragment() {
-        //private var context: Context? = null
-        //private var resources: Resources? = null
         var binding: DialogAboutLicenseTermsBinding? = null
         private var licenseAsset: String? = null
 
@@ -152,8 +185,6 @@ class AboutFragment : Fragment(), AboutContract.View {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             licenseAsset = requireArguments().getString(ARGUMENT_LICENSE_ASSET)
-            //context = getContext()
-            //resources = requireContext().resources
             val application = requireActivity().application as LaanoApplication
             application.applicationComponent.inject(this)
         }
@@ -161,29 +192,23 @@ class AboutFragment : Fragment(), AboutContract.View {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             val inflater = LayoutInflater.from(context)
             binding = DialogAboutLicenseTermsBinding.inflate(inflater, null, false)
-            Single.fromCallable {
-                getLicenseText(
-                    licenseAsset!!
-                )
-            }
+            compositeDisposable.clear()
+            val disposable = Single.fromCallable { getLicenseText( licenseAsset!! ) }
                 .subscribeOn(schedulerProvider!!.computation())
-                .map { source: String? ->
-                    ActivityUtils.fromHtmlCompat(
-                        source!!
-                    )
-                }
+                .map { source: String? -> ActivityUtils.fromHtmlCompat(source!!) }
                 .observeOn(schedulerProvider!!.ui())
                 .subscribe(
                     { text: Spanned? -> binding!!.licenseTerms.text = text }
-                ) { throwable: Throwable? -> CommonUtils.logStackTrace(TAG_E, throwable!!) }
+                ) { throwable: Throwable? -> CommonUtils.logStackTrace(TAG_E!!, throwable!!) }
+            compositeDisposable.add(disposable)
+
             return AlertDialog.Builder(context)
                 .setView(binding!!.root)
-                .setPositiveButton(resources!!.getString(R.string.dialog_button_ok), null)
+                .setPositiveButton(resources.getString(R.string.dialog_button_ok), null)
                 .create()
         }
 
         private fun getLicenseText(assetName: String): String {
-            Preconditions.checkNotNull(assetName)
             val resources = requireContext().resources
             var licenseText: String
             try {
@@ -220,6 +245,7 @@ class AboutFragment : Fragment(), AboutContract.View {
         private val TAG = AboutFragment::class.java.simpleName
         private val TAG_E = AboutFragment::class.java.canonicalName
         private const val GOOGLE_PLAY_PACKAGE_NAME = "com.android.vending"
+        private val compositeDisposable: CompositeDisposable = CompositeDisposable()
         fun newInstance(): AboutFragment {
             return AboutFragment()
         }

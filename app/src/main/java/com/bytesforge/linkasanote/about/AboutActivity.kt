@@ -40,10 +40,10 @@ class AboutActivity : AppCompatActivity() {
         // Toolbar
         setSupportActionBar(binding.toolbar)
         val actionBar = supportActionBar
-        if (actionBar != null) {
-            actionBar.setTitle(R.string.actionbar_title_about)
-            actionBar.setDisplayHomeAsUpEnabled(true)
-            actionBar.setDisplayShowHomeEnabled(true)
+        actionBar?.apply {
+            setTitle(R.string.actionbar_title_about)
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowHomeEnabled(true)
         }
         // Fragment
         var fragment = supportFragmentManager
