@@ -19,7 +19,6 @@
  */
 package com.bytesforge.linkasanote.about
 
-import com.bytesforge.linkasanote.about.AboutPresenter
 import javax.inject.Inject
 
 class AboutPresenter @Inject constructor(

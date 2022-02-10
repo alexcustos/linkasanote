@@ -32,6 +32,7 @@ class AboutActivity : AppCompatActivity() {
     @JvmField
     @Inject
     var presenter: AboutPresenter? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // App links: Tools -> App Links Assistant Step 2: when data handling is required

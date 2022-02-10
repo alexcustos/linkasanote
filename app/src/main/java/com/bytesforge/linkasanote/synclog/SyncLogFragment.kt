@@ -19,45 +19,17 @@
  */
 package com.bytesforge.linkasanote.synclog
 
-import com.bytesforge.linkasanote.synclog.SyncLogViewModel
-import androidx.recyclerview.widget.RecyclerView
-import android.view.ViewGroup
-import android.view.LayoutInflater
-import com.bytesforge.linkasanote.synclog.SyncLogAdapter
-import androidx.appcompat.app.AppCompatActivity
-import javax.inject.Inject
-import com.bytesforge.linkasanote.synclog.SyncLogPresenter
 import android.os.Bundle
-import androidx.databinding.DataBindingUtil
-import com.bytesforge.linkasanote.R
-import com.bytesforge.linkasanote.synclog.SyncLogFragment
-import com.bytesforge.linkasanote.utils.ActivityUtils
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.synclog.SyncLogPresenterModule
-import com.bytesforge.linkasanote.BaseView
-import com.bytesforge.linkasanote.BasePresenter
-import androidx.recyclerview.widget.LinearLayoutManager
 import android.os.Parcelable
+import android.view.LayoutInflater
 import android.view.View
-import com.bytesforge.linkasanote.FragmentScoped
-import dagger.Subcomponent
-import com.bytesforge.linkasanote.synclog.SyncLogActivity
-import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import com.bytesforge.linkasanote.utils.CommonUtils
-import androidx.databinding.BaseObservable
-import androidx.databinding.ObservableInt
-import com.bytesforge.linkasanote.BR
-import androidx.databinding.BindingAdapter
-import androidx.coordinatorlayout.widget.CoordinatorLayout
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bytesforge.linkasanote.data.SyncResult
 import com.bytesforge.linkasanote.databinding.FragmentSyncLogBinding
-import com.google.android.material.snackbar.Snackbar
 import com.google.common.base.Preconditions
-import dagger.Provides
-import java.util.ArrayList
 
 class SyncLogFragment : Fragment(), SyncLogContract.View {
     private var presenter: SyncLogContract.Presenter? = null
@@ -65,6 +37,7 @@ class SyncLogFragment : Fragment(), SyncLogContract.View {
     var adapter: SyncLogAdapter? = null
     var rvLayoutManager: LinearLayoutManager? = null
     private var rvLayoutState: Parcelable? = null
+
     override fun onResume() {
         super.onResume()
         presenter!!.subscribe()
@@ -90,7 +63,7 @@ class SyncLogFragment : Fragment(), SyncLogContract.View {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val binding = FragmentSyncLogBinding.inflate(inflater, container, false)
         viewModel!!.setInstanceState(savedInstanceState)
         setRvLayoutState(savedInstanceState)
@@ -139,7 +112,7 @@ class SyncLogFragment : Fragment(), SyncLogContract.View {
     override fun showSyncResults(syncResults: List<SyncResult>) {
         Preconditions.checkNotNull(syncResults)
         adapter!!.swapItems(syncResults)
-        viewModel!!.listSize = syncResults.size
+        viewModel!!.setListSize(syncResults.size)
         applyRvLayoutState()
     }
 

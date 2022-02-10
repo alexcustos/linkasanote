@@ -20,48 +20,26 @@
 package com.bytesforge.linkasanote.synclog
 
 import android.content.Context
-import com.bytesforge.linkasanote.synclog.SyncLogViewModel
-import androidx.recyclerview.widget.RecyclerView
-import android.view.ViewGroup
-import android.view.LayoutInflater
-import com.bytesforge.linkasanote.synclog.SyncLogAdapter
-import androidx.appcompat.app.AppCompatActivity
-import javax.inject.Inject
-import com.bytesforge.linkasanote.synclog.SyncLogPresenter
 import android.os.Bundle
-import com.bytesforge.linkasanote.R
-import com.bytesforge.linkasanote.synclog.SyncLogFragment
-import com.bytesforge.linkasanote.utils.ActivityUtils
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.synclog.SyncLogPresenterModule
-import com.bytesforge.linkasanote.BaseView
-import com.bytesforge.linkasanote.BasePresenter
-import androidx.recyclerview.widget.LinearLayoutManager
-import android.os.Parcelable
 import android.view.View
-import com.bytesforge.linkasanote.FragmentScoped
-import dagger.Subcomponent
-import com.bytesforge.linkasanote.synclog.SyncLogActivity
-import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import com.bytesforge.linkasanote.utils.CommonUtils
-import com.bytesforge.linkasanote.BR
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.databinding.*
+import androidx.databinding.BaseObservable
+import androidx.databinding.Bindable
+import androidx.databinding.BindingAdapter
+import androidx.databinding.ObservableInt
+import com.bytesforge.linkasanote.BR
+import com.bytesforge.linkasanote.R
 import com.bytesforge.linkasanote.data.SyncResult
+import com.bytesforge.linkasanote.utils.CommonUtils
 import com.google.android.material.snackbar.Snackbar
 import com.google.common.base.Preconditions
-import dagger.Provides
-import java.lang.IllegalArgumentException
 import java.util.*
 
-class SyncLogViewModel(context: Context) : BaseObservable(), SyncLogContract.ViewModel {
-    override val listSize = ObservableInt()
+class SyncLogViewModel(private val context: Context) : BaseObservable(), SyncLogContract.ViewModel {
+    val listSize = ObservableInt()
 
     @Bindable
     var progressOverlay = false
-    private val context: Context
 
     enum class SnackbarId {
         DATABASE_ERROR
@@ -173,7 +151,4 @@ class SyncLogViewModel(context: Context) : BaseObservable(), SyncLogContract.Vie
         }
     }
 
-    init {
-        this.context = Preconditions.checkNotNull(context)
-    }
 }

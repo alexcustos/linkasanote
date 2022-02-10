@@ -19,40 +19,10 @@
  */
 package com.bytesforge.linkasanote.synclog
 
-import com.bytesforge.linkasanote.synclog.SyncLogViewModel
-import androidx.recyclerview.widget.RecyclerView
-import android.view.ViewGroup
-import android.view.LayoutInflater
-import com.bytesforge.linkasanote.synclog.SyncLogAdapter
-import androidx.appcompat.app.AppCompatActivity
-import javax.inject.Inject
-import com.bytesforge.linkasanote.synclog.SyncLogPresenter
 import android.os.Bundle
-import androidx.databinding.DataBindingUtil
-import com.bytesforge.linkasanote.R
-import com.bytesforge.linkasanote.synclog.SyncLogFragment
-import com.bytesforge.linkasanote.utils.ActivityUtils
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.synclog.SyncLogPresenterModule
-import com.bytesforge.linkasanote.BaseView
 import com.bytesforge.linkasanote.BasePresenter
-import androidx.recyclerview.widget.LinearLayoutManager
-import android.os.Parcelable
-import com.bytesforge.linkasanote.FragmentScoped
-import dagger.Subcomponent
-import com.bytesforge.linkasanote.synclog.SyncLogActivity
-import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import com.bytesforge.linkasanote.utils.CommonUtils
-import androidx.databinding.BaseObservable
-import androidx.databinding.ObservableInt
-import com.bytesforge.linkasanote.BR
-import androidx.databinding.BindingAdapter
-import androidx.coordinatorlayout.widget.CoordinatorLayout
+import com.bytesforge.linkasanote.BaseView
 import com.bytesforge.linkasanote.data.SyncResult
-import com.google.android.material.snackbar.Snackbar
-import dagger.Provides
 
 interface SyncLogContract {
     interface View : BaseView<Presenter?> {
@@ -62,11 +32,12 @@ interface SyncLogContract {
     }
 
     interface ViewModel : BaseView<Presenter?> {
+        val defaultInstanceState: Bundle
+
         fun setInstanceState(savedInstanceState: Bundle?)
         fun saveInstanceState(outState: Bundle)
         fun applyInstanceState(state: Bundle)
-        val defaultInstanceState: Bundle
-        val listSize: Int
+        fun getListSize(): Int
         fun setListSize(listSize: Int): Boolean
         fun showProgressOverlay()
         fun hideProgressOverlay()
