@@ -24,7 +24,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bytesforge.linkasanote.data.SyncResult
 import com.bytesforge.linkasanote.databinding.ItemSyncLogBinding
-import com.google.common.base.Preconditions
 
 class SyncLogAdapter(
     syncResults: List<SyncResult>,
@@ -80,18 +79,18 @@ class SyncLogAdapter(
     }
 
     fun swapItems(syncResults: List<SyncResult>) {
-        Preconditions.checkNotNull(syncResults)
         this.syncResults = syncResults
         notifyDataSetChanged()
     }
 
     companion object {
         private val TAG = SyncLogAdapter::class.java.simpleName
+        private val TAG_E = SyncLogAdapter::class.java.canonicalName
     }
 
     init {
-        this.syncResults = Preconditions.checkNotNull(syncResults)
-        this.viewModel = Preconditions.checkNotNull(viewModel)
+        this.syncResults = syncResults
+        this.viewModel = viewModel
         setHasStableIds(true)
     }
 }

@@ -246,6 +246,7 @@ class AboutFragment : Fragment(), AboutContract.View {
         private val TAG_E = AboutFragment::class.java.canonicalName
         private const val GOOGLE_PLAY_PACKAGE_NAME = "com.android.vending"
         private val compositeDisposable: CompositeDisposable = CompositeDisposable()
+
         fun newInstance(): AboutFragment {
             return AboutFragment()
         }

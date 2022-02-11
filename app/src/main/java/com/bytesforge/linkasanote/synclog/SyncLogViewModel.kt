@@ -21,7 +21,6 @@ package com.bytesforge.linkasanote.synclog
 
 import android.content.Context
 import android.os.Bundle
-import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
@@ -32,8 +31,21 @@ import com.bytesforge.linkasanote.R
 import com.bytesforge.linkasanote.data.SyncResult
 import com.bytesforge.linkasanote.utils.CommonUtils
 import com.google.android.material.snackbar.Snackbar
-import com.google.common.base.Preconditions
 import java.util.*
+
+@BindingAdapter("snackbarId")
+fun CoordinatorLayout.showSnackbar(snackbarId: SyncLogViewModel.SnackbarId?) {
+    if (snackbarId == null) return
+
+    when (snackbarId) {
+        SyncLogViewModel.SnackbarId.DATABASE_ERROR -> Snackbar.make(
+            this, R.string.error_database, Snackbar.LENGTH_INDEFINITE
+        )
+            .setAction(R.string.snackbar_button_ok) { /* just inform */ }
+            .show()
+        else -> throw IllegalArgumentException("Unexpected snackbar has been requested")
+    }
+}
 
 class SyncLogViewModel(private val context: Context) : BaseObservable(), SyncLogContract.ViewModel {
     val listSize = ObservableInt()
@@ -62,13 +74,11 @@ class SyncLogViewModel(private val context: Context) : BaseObservable(), SyncLog
     }
 
     override fun saveInstanceState(outState: Bundle) {
-        Preconditions.checkNotNull(outState)
         outState.putInt(STATE_LIST_SIZE, listSize.get())
         outState.putBoolean(STATE_PROGRESS_OVERLAY, progressOverlay)
     }
 
     override fun applyInstanceState(state: Bundle) {
-        Preconditions.checkNotNull(state)
         listSize.set(state.getInt(STATE_LIST_SIZE))
         progressOverlay = state.getBoolean(STATE_PROGRESS_OVERLAY)
         notifyChange()
@@ -89,7 +99,6 @@ class SyncLogViewModel(private val context: Context) : BaseObservable(), SyncLog
     }
 
     fun getSyncResult(position: Int, syncResult: SyncResult): String {
-        Preconditions.checkNotNull(syncResult)
         return "$position. $syncResult"
     }
 
@@ -137,18 +146,20 @@ class SyncLogViewModel(private val context: Context) : BaseObservable(), SyncLog
         private const val STATE_LIST_SIZE = "LIST_SIZE"
         private const val STATE_PROGRESS_OVERLAY = "PROGRESS_OVERLAY"
         const val STATE_RECYCLER_LAYOUT = "RECYCLER_LAYOUT"
-        @BindingAdapter("snackbarId")
-        fun showSnackbar(view: CoordinatorLayout?, snackbarId: SnackbarId?) {
+        /*
+        @JvmStatic @BindingAdapter("snackbarId")
+        fun showSnackbar(view: CoordinatorLayout, snackbarId: SnackbarId?) {
             if (snackbarId == null) return
+
             when (snackbarId) {
                 SnackbarId.DATABASE_ERROR -> Snackbar.make(
-                    view!!, R.string.error_database, Snackbar.LENGTH_INDEFINITE
+                    view, R.string.error_database, Snackbar.LENGTH_INDEFINITE
                 )
-                    .setAction(R.string.snackbar_button_ok) { v: View? -> }
+                    .setAction(R.string.snackbar_button_ok) { /* just inform */ }
                     .show()
                 else -> throw IllegalArgumentException("Unexpected snackbar has been requested")
             }
         }
+        */
     }
-
 }

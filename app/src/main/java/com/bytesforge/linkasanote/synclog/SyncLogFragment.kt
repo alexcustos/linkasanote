@@ -29,7 +29,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bytesforge.linkasanote.data.SyncResult
 import com.bytesforge.linkasanote.databinding.FragmentSyncLogBinding
-import com.google.common.base.Preconditions
 
 class SyncLogFragment : Fragment(), SyncLogContract.View {
     private var presenter: SyncLogContract.Presenter? = null
@@ -52,11 +51,11 @@ class SyncLogFragment : Fragment(), SyncLogContract.View {
         get() = isAdded
 
     override fun setPresenter(presenter: SyncLogContract.Presenter) {
-        this.presenter = Preconditions.checkNotNull(presenter)
+        this.presenter = presenter
     }
 
     override fun setViewModel(viewModel: SyncLogContract.ViewModel) {
-        this.viewModel = Preconditions.checkNotNull(viewModel)
+        this.viewModel = viewModel
     }
 
     override fun onCreateView(
@@ -83,15 +82,14 @@ class SyncLogFragment : Fragment(), SyncLogContract.View {
     private fun setRvLayoutState(savedInstanceState: Bundle?) {
         if (savedInstanceState != null) {
             rvLayoutState = savedInstanceState.getParcelable(
-                SyncLogViewModel.Companion.STATE_RECYCLER_LAYOUT
+                SyncLogViewModel.STATE_RECYCLER_LAYOUT
             )
         }
     }
 
     private fun saveRvLayoutState(outState: Bundle) {
-        Preconditions.checkNotNull(outState)
         outState.putParcelable(
-            SyncLogViewModel.Companion.STATE_RECYCLER_LAYOUT,
+            SyncLogViewModel.STATE_RECYCLER_LAYOUT,
             rvLayoutManager!!.onSaveInstanceState()
         )
     }
@@ -110,7 +108,6 @@ class SyncLogFragment : Fragment(), SyncLogContract.View {
     }
 
     override fun showSyncResults(syncResults: List<SyncResult>) {
-        Preconditions.checkNotNull(syncResults)
         adapter!!.swapItems(syncResults)
         viewModel!!.setListSize(syncResults.size)
         applyRvLayoutState()
@@ -118,6 +115,8 @@ class SyncLogFragment : Fragment(), SyncLogContract.View {
 
     companion object {
         private val TAG = SyncLogFragment::class.java.simpleName
+        private val TAG_E = SyncLogFragment::class.java.canonicalName
+
         fun newInstance(): SyncLogFragment {
             return SyncLogFragment()
         }

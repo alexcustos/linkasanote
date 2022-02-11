@@ -41,17 +41,15 @@ class SyncLogActivity : AppCompatActivity() {
         // Toolbar
         setSupportActionBar(binding.toolbar)
         val actionBar = supportActionBar
-        if (actionBar != null) {
-            val resources = resources
-            actionBar.setTitle(
-                resources.getQuantityString(
-                    R.plurals.actionbar_title_sync_log,
-                    Settings.GLOBAL_SYNC_LOG_KEEPING_PERIOD_DAYS,
-                    Settings.GLOBAL_SYNC_LOG_KEEPING_PERIOD_DAYS
-                )
+
+        supportActionBar?.apply {
+            title = resources.getQuantityString(
+                R.plurals.actionbar_title_sync_log,
+                Settings.GLOBAL_SYNC_LOG_KEEPING_PERIOD_DAYS,
+                Settings.GLOBAL_SYNC_LOG_KEEPING_PERIOD_DAYS
             )
-            actionBar.setDisplayHomeAsUpEnabled(true)
-            actionBar.setDisplayShowHomeEnabled(true)
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowHomeEnabled(true)
         }
         // Fragment
         var fragment = supportFragmentManager
