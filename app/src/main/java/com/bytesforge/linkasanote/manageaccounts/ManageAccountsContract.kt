@@ -77,7 +77,7 @@ interface ManageAccountsContract {
         fun confirmAccountRemoval(account: Account)
         val accountsWithPermissionCheck: Array<Account>?
         fun loadAccountItems(): Single<List<AccountItem>>
-        fun swapItems(accountItems: List<AccountItem?>)
+        fun swapItems(accountItems: List<AccountItem>)
         fun showSuccessfullyUpdatedSnackbar()
         fun showNotEnoughPermissionsSnackbar()
     }

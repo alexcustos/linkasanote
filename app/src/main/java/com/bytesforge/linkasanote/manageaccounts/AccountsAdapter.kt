@@ -19,69 +19,26 @@
  */
 package com.bytesforge.linkasanote.manageaccounts
 
-import android.accounts.Account
-import com.bytesforge.linkasanote.manageaccounts.AccountItem
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenter
-import androidx.recyclerview.widget.RecyclerView
-import androidx.databinding.ViewDataBinding
-import android.view.ViewGroup
 import android.view.LayoutInflater
-import com.bytesforge.linkasanote.manageaccounts.AccountsAdapter.AccountItemDiffCallback
-import androidx.recyclerview.widget.DiffUtil.DiffResult
+import android.view.ViewGroup
+import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.DiffUtil
-import androidx.appcompat.app.AppCompatActivity
-import javax.inject.Inject
-import android.os.Bundle
-import androidx.databinding.DataBindingUtil
-import com.bytesforge.linkasanote.R
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsFragment
-import com.bytesforge.linkasanote.utils.ActivityUtils
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenterModule
-import android.content.Intent
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity
-import com.bytesforge.linkasanote.BaseView
-import android.accounts.AccountManager
-import com.bytesforge.linkasanote.BasePresenter
-import com.bytesforge.linkasanote.manageaccounts.AccountsAdapter
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.DividerItemDecoration
-import com.bytesforge.linkasanote.utils.CloudUtils
-import com.google.android.material.snackbar.Snackbar
-import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity
-import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsFragment.AccountRemovalConfirmationDialog
-import android.content.DialogInterface
-import android.accounts.AccountManagerCallback
-import android.accounts.AccountManagerFuture
-import com.bytesforge.linkasanote.FragmentScoped
-import dagger.Subcomponent
-import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import android.widget.ImageButton
-import android.widget.Toast
-import android.util.DisplayMetrics
-import android.view.Gravity
+import androidx.recyclerview.widget.RecyclerView
 import com.bytesforge.linkasanote.databinding.ItemManageAccountsAddBinding
 import com.bytesforge.linkasanote.databinding.ItemManageAccountsBinding
-import com.google.common.base.Preconditions
-import dagger.Provides
 import java.security.InvalidParameterException
 
 class AccountsAdapter(
-    presenter: ManageAccountsPresenter, accountItems: MutableList<AccountItem?>
+    private val presenter: ManageAccountsPresenter,
+    private val accountItems: MutableList<AccountItem>
 ) : RecyclerView.Adapter<AccountsAdapter.ViewHolder>() {
-    private val accountItems: MutableList<AccountItem?>
-    private val presenter: ManageAccountsPresenter
 
     class ViewHolder(private val binding: ViewDataBinding) : RecyclerView.ViewHolder(
         binding.root
     ) {
-        fun bind(accountItem: AccountItem?) {
-            if (accountItem.getType() == AccountItem.Companion.TYPE_ACCOUNT) {
-                (binding as ItemManageAccountsBinding).accountItem =
-                    accountItem
+        fun bind(accountItem: AccountItem) {
+            if (accountItem.type == AccountItem.TYPE_ACCOUNT) {
+                (binding as ItemManageAccountsBinding).accountItem = accountItem
             }
             binding.executePendingBindings()
         }
@@ -89,24 +46,28 @@ class AccountsAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        return if (viewType == AccountItem.Companion.TYPE_ACCOUNT) {
-            val binding = ItemManageAccountsBinding.inflate(
-                inflater,
-                parent,
-                false
-            )
-            binding.presenter = presenter
-            ViewHolder(binding)
-        } else if (viewType == AccountItem.Companion.TYPE_ACTION_ADD) {
-            val binding = ItemManageAccountsAddBinding.inflate(
-                inflater,
-                parent,
-                false
-            )
-            binding.presenter = presenter
-            ViewHolder(binding)
-        } else {
-            throw InvalidParameterException("Unexpected AccountItem type ID [$viewType]")
+        return when (viewType) {
+            AccountItem.TYPE_ACCOUNT -> {
+                val binding = ItemManageAccountsBinding.inflate(
+                    inflater,
+                    parent,
+                    false
+                )
+                binding.presenter = presenter
+                ViewHolder(binding)
+            }
+            AccountItem.TYPE_ACTION_ADD -> {
+                val binding = ItemManageAccountsAddBinding.inflate(
+                    inflater,
+                    parent,
+                    false
+                )
+                binding.presenter = presenter
+                ViewHolder(binding)
+            }
+            else -> {
+                throw InvalidParameterException("Unexpected AccountItem type ID [$viewType]")
+            }
         }
     }
 
@@ -120,11 +81,10 @@ class AccountsAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return accountItems[position].getType()
+        return accountItems[position].type
     }
 
-    fun swapItems(accountItems: List<AccountItem?>) {
-        Preconditions.checkNotNull(accountItems)
+    fun swapItems(accountItems: List<AccountItem>) {
         val diffCallback = AccountItemDiffCallback(this.accountItems, accountItems)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
         this.accountItems.clear()
@@ -133,8 +93,8 @@ class AccountsAdapter(
     }
 
     inner class AccountItemDiffCallback(
-        private val oldList: List<AccountItem?>,
-        private val newList: List<AccountItem?>
+        private val oldList: List<AccountItem>,
+        private val newList: List<AccountItem>
     ) : DiffUtil.Callback() {
         override fun getOldListSize(): Int {
             return oldList.size
@@ -145,8 +105,8 @@ class AccountsAdapter(
         }
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val oldAccountName = oldList[oldItemPosition].getAccountName()
-            val newAccountName = newList[newItemPosition].getAccountName()
+            val oldAccountName = oldList[oldItemPosition].accountName
+            val newAccountName = newList[newItemPosition].accountName
             return (oldAccountName == null && newAccountName == null
                     || oldAccountName != null && oldAccountName == newAccountName)
         }
@@ -156,10 +116,5 @@ class AccountsAdapter(
             val newItem = newList[newItemPosition]
             return oldItem == newItem
         }
-    }
-
-    init {
-        this.presenter = Preconditions.checkNotNull(presenter)
-        this.accountItems = accountItems
     }
 }

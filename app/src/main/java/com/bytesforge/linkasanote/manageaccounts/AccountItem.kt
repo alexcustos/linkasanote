@@ -20,52 +20,7 @@
 package com.bytesforge.linkasanote.manageaccounts
 
 import android.accounts.Account
-import com.bytesforge.linkasanote.manageaccounts.AccountItem
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenter
-import androidx.recyclerview.widget.RecyclerView
-import androidx.databinding.ViewDataBinding
-import android.view.ViewGroup
-import android.view.LayoutInflater
-import com.bytesforge.linkasanote.manageaccounts.AccountsAdapter.AccountItemDiffCallback
-import androidx.recyclerview.widget.DiffUtil.DiffResult
-import androidx.recyclerview.widget.DiffUtil
-import androidx.appcompat.app.AppCompatActivity
-import javax.inject.Inject
-import android.os.Bundle
-import androidx.databinding.DataBindingUtil
-import com.bytesforge.linkasanote.R
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsFragment
-import com.bytesforge.linkasanote.utils.ActivityUtils
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenterModule
-import android.content.Intent
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity
-import com.bytesforge.linkasanote.BaseView
-import android.accounts.AccountManager
-import com.bytesforge.linkasanote.BasePresenter
-import com.bytesforge.linkasanote.manageaccounts.AccountsAdapter
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.DividerItemDecoration
-import com.bytesforge.linkasanote.utils.CloudUtils
-import com.google.android.material.snackbar.Snackbar
-import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity
-import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsFragment.AccountRemovalConfirmationDialog
-import android.content.DialogInterface
-import android.accounts.AccountManagerCallback
-import android.accounts.AccountManagerFuture
-import com.bytesforge.linkasanote.FragmentScoped
-import dagger.Subcomponent
-import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import android.widget.ImageButton
-import android.widget.Toast
-import android.util.DisplayMetrics
-import android.view.Gravity
 import com.google.common.base.Objects
-import com.google.common.base.Preconditions
-import dagger.Provides
 
 class AccountItem {
     var account: Account? = null
@@ -75,7 +30,7 @@ class AccountItem {
         private set
 
     constructor(account: Account) {
-        this.account = Preconditions.checkNotNull(account)
+        this.account = account
         type = TYPE_ACCOUNT
     }
 
@@ -86,17 +41,20 @@ class AccountItem {
     val accountName: String?
         get() = if (account == null) null else account!!.name
 
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) return true
-        if (obj == null || javaClass != obj.javaClass) return false
-        val accountItem = obj as AccountItem
-        return if (account == null!! xor accountItem.account == null) false else (account == null || Objects.equal(
-            account!!.name,
-            accountItem.account!!.name
-        ))
-                && Objects.equal(displayName, accountItem.displayName)
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+
+        val accountItem = other as AccountItem
+        if ((account == null) xor (accountItem.account == null)) return false
 
         // NOTE: (account == null && accountItem.account == null)
+        return ((account == null || Objects.equal(account!!.name, accountItem.account!!.name))
+                && Objects.equal(displayName, accountItem.displayName))
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hashCode(account, displayName, type)
     }
 
     companion object {

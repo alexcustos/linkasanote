@@ -70,7 +70,8 @@ class ManageAccountsPresenter @Inject constructor(
     private val view: ManageAccountsContract.View, private val accountManager: AccountManager,
     private val schedulerProvider: BaseSchedulerProvider
 ) : ManageAccountsContract.Presenter {
-    private val disposable: CompositeDisposable
+    private val disposable: CompositeDisposable = CompositeDisposable()
+
     @Inject
     fun setupView() {
         view.setPresenter(this)
@@ -87,7 +88,7 @@ class ManageAccountsPresenter @Inject constructor(
             .subscribeOn(schedulerProvider.computation())
             .observeOn(schedulerProvider.ui())
             .subscribe(
-                { accountItems: List<AccountItem?> -> view.swapItems(accountItems) }
+                { accountItems: List<AccountItem> -> view.swapItems(accountItems) }
             )  // NullPointerException
             { throwable: Throwable? -> view.showNotEnoughPermissionsSnackbar() }
         this.disposable.add(disposable)
@@ -130,9 +131,5 @@ class ManageAccountsPresenter @Inject constructor(
 
     companion object {
         private val TAG = ManageAccountsPresenter::class.java.simpleName
-    }
-
-    init {
-        disposable = CompositeDisposable()
     }
 }

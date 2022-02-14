@@ -21,61 +21,32 @@ package com.bytesforge.linkasanote.manageaccounts
 
 import android.accounts.*
 import android.app.Activity
-import com.bytesforge.linkasanote.manageaccounts.AccountItem
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenter
-import androidx.recyclerview.widget.RecyclerView
-import androidx.databinding.ViewDataBinding
-import android.view.ViewGroup
-import android.view.LayoutInflater
-import com.bytesforge.linkasanote.manageaccounts.AccountsAdapter.AccountItemDiffCallback
-import androidx.recyclerview.widget.DiffUtil.DiffResult
-import androidx.recyclerview.widget.DiffUtil
-import androidx.appcompat.app.AppCompatActivity
-import javax.inject.Inject
-import android.os.Bundle
-import androidx.databinding.DataBindingUtil
-import com.bytesforge.linkasanote.R
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsFragment
-import com.bytesforge.linkasanote.utils.ActivityUtils
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsPresenterModule
-import android.content.Intent
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsActivity
-import com.bytesforge.linkasanote.BaseView
-import com.bytesforge.linkasanote.BasePresenter
-import com.bytesforge.linkasanote.manageaccounts.AccountsAdapter
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.DividerItemDecoration
-import com.bytesforge.linkasanote.utils.CloudUtils
-import com.google.android.material.snackbar.Snackbar
-import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity
-import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment
-import com.bytesforge.linkasanote.manageaccounts.ManageAccountsFragment.AccountRemovalConfirmationDialog
-import android.content.DialogInterface
 import android.app.Dialog
+import android.content.DialogInterface
+import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
-import com.bytesforge.linkasanote.FragmentScoped
-import dagger.Subcomponent
-import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import android.widget.ImageButton
-import android.widget.Toast
-import android.util.DisplayMetrics
 import android.util.Log
-import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.bytesforge.linkasanote.R
+import com.bytesforge.linkasanote.addeditaccount.AddEditAccountActivity
+import com.bytesforge.linkasanote.addeditaccount.nextcloud.NextcloudFragment
 import com.bytesforge.linkasanote.databinding.FragmentManageAccountsBinding
 import com.bytesforge.linkasanote.settings.Settings
-import com.google.common.base.Preconditions
-import dagger.Provides
+import com.bytesforge.linkasanote.utils.CloudUtils
+import com.google.android.material.snackbar.Snackbar
 import io.reactivex.Single
 import java.io.IOException
-import java.lang.NullPointerException
 import java.util.*
 
 class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
@@ -85,6 +56,7 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
     private var adapter: AccountsAdapter? = null
     private var binding: FragmentManageAccountsBinding? = null
     private var accountManager: AccountManager? = null
+
     override fun onResume() {
         super.onResume()
         presenter!!.subscribe()
@@ -99,20 +71,20 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
         get() = isAdded
 
     override fun setPresenter(presenter: ManageAccountsContract.Presenter) {
-        this.presenter = Preconditions.checkNotNull(presenter)
+        this.presenter = presenter
     }
 
     override fun setAccountManager(accountManager: AccountManager) {
-        this.accountManager = Preconditions.checkNotNull(accountManager)
+        this.accountManager = accountManager
     }
 
     override fun finishActivity() {
-        activity!!.onBackPressed()
+        requireActivity().onBackPressed()
     }
 
     override fun cancelActivity() {
-        activity!!.setResult(Activity.RESULT_CANCELED)
-        activity!!.finish()
+        requireActivity().setResult(Activity.RESULT_CANCELED)
+        requireActivity().finish()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -122,7 +94,7 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentManageAccountsBinding.inflate(inflater, container, false)
         // RecyclerView
         setupAccountsRecyclerView(binding!!.rvAccounts)
@@ -130,7 +102,7 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
     }
 
     private fun setupAccountsRecyclerView(rvAccounts: RecyclerView) {
-        val accountItems: MutableList<AccountItem?> = ArrayList()
+        val accountItems: MutableList<AccountItem> = ArrayList()
         adapter = AccountsAdapter((presenter as ManageAccountsPresenter?)!!, accountItems)
         rvAccounts.adapter = adapter
         val layoutManager = LinearLayoutManager(context)
@@ -147,10 +119,10 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
                 ?: throw NullPointerException("Required permission was not granted")
             val accountItems: MutableList<AccountItem> = LinkedList()
             for (account in accounts) {
-                val accountItem = CloudUtils.getAccountItem(account, context!!)
+                val accountItem = CloudUtils.getAccountItem(account, requireContext())
                 accountItems.add(accountItem)
             }
-            if (Settings.GLOBAL_MULTIACCOUNT_SUPPORT || accounts.size <= 0) {
+            if (Settings.GLOBAL_MULTIACCOUNT_SUPPORT || accounts.isEmpty()) {
                 accountItems.add(AccountItem())
             }
             accountItems
@@ -179,8 +151,11 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
 
     override fun addAccount() {
         accountManager!!.addAccount(
-            CloudUtils.getAccountType(context!!),
-            null, null, null, activity, addAccountCallback, handler
+            CloudUtils.getAccountType(requireContext()),
+            null,
+            null,
+            null,
+            activity, addAccountCallback, handler
         )
     }
 
@@ -195,8 +170,8 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
     override fun confirmAccountRemoval(account: Account) {
         val dialog = AccountRemovalConfirmationDialog.newInstance(account)
         dialog.setTargetFragment(this, AccountRemovalConfirmationDialog.DIALOG_REQUEST_CODE)
-        val fragmentManager = fragmentManager
-        if (fragmentManager != null) dialog.show(
+        val fragmentManager = parentFragmentManager
+        dialog.show(
             fragmentManager,
             AccountRemovalConfirmationDialog.DIALOG_TAG
         )
@@ -214,11 +189,11 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
         private var account: Account? = null
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
-            account = arguments!!.getParcelable(ARGUMENT_REMOVAL_CONFIRMATION_ACCOUNT)
+            account = requireArguments().getParcelable(ARGUMENT_REMOVAL_CONFIRMATION_ACCOUNT)
         }
 
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-            return AlertDialog.Builder(context!!)
+            return AlertDialog.Builder(requireContext())
                 .setTitle(R.string.manage_accounts_removal_confirmation_title)
                 .setMessage(
                     resources.getString(
@@ -240,7 +215,6 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
             const val DIALOG_TAG = "ACCOUNT_REMOVAL_CONFIRMATION"
             const val DIALOG_REQUEST_CODE = 0
             fun newInstance(account: Account): AccountRemovalConfirmationDialog {
-                Preconditions.checkNotNull(account)
                 val args = Bundle()
                 args.putParcelable(ARGUMENT_REMOVAL_CONFIRMATION_ACCOUNT, account)
                 val dialog = AccountRemovalConfirmationDialog()
@@ -251,21 +225,20 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
     }
 
     private val removeAccountCallback =
-        AccountManagerCallback { future: AccountManagerFuture<Bundle?>? ->
-            if (future != null && future.isDone) {
+        AccountManagerCallback { future: AccountManagerFuture<Bundle?> ->
+            if (future.isDone) {
                 // NOTE: sync successfully completes if account is removed in the middle
                 presenter!!.loadAccountItems(true)
             }
         }
     private val removeAccountCallbackCompat =
-        AccountManagerCallback { future: AccountManagerFuture<Boolean?>? ->
-            if (future != null && future.isDone) {
+        AccountManagerCallback { future: AccountManagerFuture<Boolean?> ->
+            if (future.isDone) {
                 presenter!!.loadAccountItems(true)
             }
         }
     private val addAccountCallback =
-        label@ AccountManagerCallback { future: AccountManagerFuture<Bundle?>? ->
-            if (future == null) return@label
+        AccountManagerCallback { future: AccountManagerFuture<Bundle?> ->
             try {
                 future.result // NOTE: see exceptions
                 presenter!!.loadAccountItems(true)
@@ -278,10 +251,9 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
             }
         }
     override val accountsWithPermissionCheck: Array<Account>?
-        get() = CloudUtils.getAccountsWithPermissionCheck(context!!, accountManager!!)
+        get() = CloudUtils.getAccountsWithPermissionCheck(requireContext(), accountManager!!)
 
-    override fun swapItems(accountItems: List<AccountItem?>) {
-        Preconditions.checkNotNull(accountItems)
+    override fun swapItems(accountItems: List<AccountItem>) {
         adapter!!.swapItems(accountItems)
     }
 

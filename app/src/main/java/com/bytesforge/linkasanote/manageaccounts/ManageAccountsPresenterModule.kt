@@ -67,9 +67,9 @@ import dagger.Module
 import dagger.Provides
 
 @Module
-class ManageAccountsPresenterModule(private val view: ManageAccountsContract.View?) {
+class ManageAccountsPresenterModule(private val view: ManageAccountsContract.View) {
     @Provides
-    fun provideManageAccountsContractView(): ManageAccountsContract.View? {
+    fun provideManageAccountsContractView(): ManageAccountsContract.View {
         return view
     }
 }
