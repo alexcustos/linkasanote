@@ -19,51 +19,29 @@
  */
 package com.bytesforge.linkasanote.settings
 
-import com.bytesforge.linkasanote.data.Favorite
-import com.bytesforge.linkasanote.R
-import com.bytesforge.linkasanote.sync.files.JsonFile
 import android.accounts.Account
-import android.content.*
-import com.bytesforge.linkasanote.data.source.local.LocalContract
-import android.os.Bundle
-import com.bytesforge.linkasanote.sync.SyncAdapter
-import com.bytesforge.linkasanote.laano.FilterType
-import com.bytesforge.linkasanote.laano.links.LinksPresenter
-import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenter
-import com.bytesforge.linkasanote.laano.notes.NotesPresenter
-import android.content.SharedPreferences.Editor
-import dagger.Provides
-import javax.inject.Singleton
-import androidx.appcompat.app.AppCompatActivity
-import com.bytesforge.linkasanote.settings.SettingsActivity
-import com.bytesforge.linkasanote.settings.SettingsFragment
-import com.bytesforge.linkasanote.utils.ActivityUtils
-import androidx.core.app.NavUtils
-import androidx.preference.PreferenceFragmentCompat
-import javax.inject.Inject
-import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider
-import androidx.fragment.app.FragmentActivity
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.ApplicationBackup
-import android.widget.Toast
-import com.bytesforge.linkasanote.utils.CommonUtils
-import com.google.android.material.snackbar.Snackbar
-import com.bytesforge.linkasanote.data.source.local.DatabaseHelper
-import androidx.core.content.ContextCompat
-import android.content.pm.PackageManager
+import android.content.ContentResolver
+import android.content.Context
+import android.content.SharedPreferences
 import android.content.res.Resources
-import androidx.annotation.RequiresApi
-import androidx.annotation.StringRes
+import android.os.Bundle
+import com.bytesforge.linkasanote.R
+import com.bytesforge.linkasanote.data.Favorite
 import com.bytesforge.linkasanote.data.Link
 import com.bytesforge.linkasanote.data.Note
-import com.google.common.base.Preconditions
+import com.bytesforge.linkasanote.data.source.local.LocalContract
+import com.bytesforge.linkasanote.laano.FilterType
+import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenter
+import com.bytesforge.linkasanote.laano.links.LinksPresenter
+import com.bytesforge.linkasanote.laano.notes.NotesPresenter
+import com.bytesforge.linkasanote.sync.SyncAdapter
+import com.bytesforge.linkasanote.sync.files.JsonFile
 import com.google.common.base.Strings
 import io.reactivex.Single
 import java.io.File
 
-class Settings(context: Context, sharedPreferences: SharedPreferences) {
-    private val resources: Resources
-    private val sharedPreferences: SharedPreferences
+class Settings(context: Context, private val sharedPreferences: SharedPreferences) {
+    private val resources: Resources = context.resources
 
     // Runtime settings
     var isSyncable = false
@@ -128,29 +106,27 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
             } else clipboardParameterWhiteList!!.split(GLOBAL_PARAMETER_WHITE_LIST_DELIMITER)
                 .toTypedArray()
         }
-    val syncDirectory: String?
+    var syncDirectory: String?
         get() {
             val prefKey = resources.getString(R.string.pref_key_sync_directory)
             return sharedPreferences.getString(prefKey, DEFAULT_SYNC_DIRECTORY)
         }
-
-    @Synchronized
-    fun setSyncDirectory(syncDirectory: String) {
-        val oldValue = syncDirectory
-        val prefKey = resources.getString(R.string.pref_key_sync_directory)
-        val normalizedSyncDirectory = normalizeSyncDirectory(syncDirectory)
-        if (oldValue != normalizedSyncDirectory) {
-            putStringSetting(prefKey, normalizedSyncDirectory)
-            resetSyncState()
+        @Synchronized set(syncDirectory) {
+            val oldValue = syncDirectory
+            val prefKey = resources.getString(R.string.pref_key_sync_directory)
+            val normalizedSyncDirectory = normalizeSyncDirectory(syncDirectory)
+            if (oldValue != normalizedSyncDirectory) {
+                putStringSetting(prefKey, normalizedSyncDirectory)
+                resetSyncState()
+            }
         }
-    }
 
-    private fun normalizeSyncDirectory(syncDirectory: String): String {
-        return if (Strings.isNullOrEmpty(syncDirectory)) {
-            DEFAULT_SYNC_DIRECTORY
-        } else {
-            if (syncDirectory.startsWith(JsonFile.PATH_SEPARATOR)) syncDirectory else JsonFile.PATH_SEPARATOR + syncDirectory
+    private fun normalizeSyncDirectory(syncDirectory: String?): String {
+        if (Strings.isNullOrEmpty(syncDirectory)) {
+            return DEFAULT_SYNC_DIRECTORY
         }
+        return if (syncDirectory!!.startsWith(JsonFile.PATH_SEPARATOR)) syncDirectory
+        else JsonFile.PATH_SEPARATOR + syncDirectory
     }
 
     fun getSyncInterval(account: Account?, isDelay: Boolean): Single<Long?> {
@@ -168,7 +144,9 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
             if (ContentResolver.getSyncAutomatically(account, LocalContract.CONTENT_AUTHORITY)) {
                 val periodicSyncs = ContentResolver
                     .getPeriodicSyncs(account, LocalContract.CONTENT_AUTHORITY)
-                if (periodicSyncs.isEmpty()) return@fromCallable manualInterval else return@fromCallable periodicSyncs[0].period
+
+                if (periodicSyncs.isEmpty()) return@fromCallable manualInterval
+                else return@fromCallable periodicSyncs[0].period
             } else {
                 return@fromCallable manualInterval
             }
@@ -177,6 +155,7 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
 
     fun setSyncInterval(account: Account?, seconds: Long) {
         if (account == null) return
+
         val manualInterval = resources.getString(
             R.string.pref_sync_interval_manual_mode
         ).toLong()
@@ -234,15 +213,12 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
     }
 
     fun getLastSyncedETag(key: String): String? {
-        return sharedPreferences.getString(
-            Preconditions.checkNotNull(key),
-            DEFAULT_LAST_SYNCED_ETAG
-        )
+        return sharedPreferences.getString(key, DEFAULT_LAST_SYNCED_ETAG)
     }
 
     @Synchronized
     fun setLastSyncedETag(key: String, lastSyncedETag: String?) {
-        putStringSetting(Preconditions.checkNotNull(key), lastSyncedETag)
+        putStringSetting(key, lastSyncedETag)
     }
 
     @Synchronized
@@ -255,7 +231,6 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
     }
 
     private fun getFilterType(key: String): FilterType {
-        Preconditions.checkNotNull(key)
         val ordinal = sharedPreferences.getInt(key, DEFAULT_FILTER_TYPE.ordinal)
         return try {
             FilterType.values()[ordinal]
@@ -266,8 +241,8 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
 
     @Synchronized
     private fun setFilterType(key: String, filterType: FilterType?) {
-        Preconditions.checkNotNull(key)
         if (filterType == null) return
+
         val filter = getFilterType(key)
         if (filterType != filter) {
             putIntSetting(key, filterType.ordinal)
@@ -277,7 +252,6 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
     var linksFilterType: FilterType
         get() = getFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE)
         set(filterType) {
-            Preconditions.checkNotNull(filterType)
             setFilterType(LinksPresenter.SETTING_LINKS_FILTER_TYPE, filterType)
         }
 
@@ -288,7 +262,8 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
             if (linkId == null) linkFilter = null
             val filterId = linkFilterId
             if (filterId == null && linkId == null) return
-            if (filterId == null!! xor linkId == null) {
+
+            if ((filterId == null) xor (linkId == null)) {
                 putStringSetting(SETTING_LINK_FILTER_ID, linkId)
             } else if (linkId != filterId) {
                 putStringSetting(SETTING_LINK_FILTER_ID, linkId)
@@ -298,6 +273,7 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
     fun resetLinkFilterId(linkId: String?) {
         val filterId = linkFilterId
         if (filterId == null || linkId == null) return
+
         if (filterId == linkId) {
             linkFilterId = null
         }
@@ -306,7 +282,6 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
     var favoritesFilterType: FilterType
         get() = getFilterType(FavoritesPresenter.SETTING_FAVORITES_FILTER_TYPE)
         set(filterType) {
-            Preconditions.checkNotNull(filterType)
             setFilterType(FavoritesPresenter.SETTING_FAVORITES_FILTER_TYPE, filterType)
         }
 
@@ -317,7 +292,7 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
             if (favoriteId == null) favoriteFilter = null
             val filterId = favoriteFilterId
             if (filterId == null && favoriteId == null) return
-            if (filterId == null!! xor favoriteId == null) {
+            if ((filterId == null) xor (favoriteId == null)) {
                 putStringSetting(SETTING_FAVORITE_FILTER_ID, favoriteId)
             } else if (favoriteId != filterId) {
                 putStringSetting(SETTING_FAVORITE_FILTER_ID, favoriteId)
@@ -335,7 +310,6 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
     var notesFilterType: FilterType
         get() = getFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE)
         set(filterType) {
-            Preconditions.checkNotNull(filterType)
             setFilterType(NotesPresenter.SETTING_NOTES_FILTER_TYPE, filterType)
         }
 
@@ -346,7 +320,7 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
             if (noteId == null) noteFilter = null
             val filterId = noteFilterId
             if (filterId == null && noteId == null) return
-            if (filterId == null!! xor noteId == null) {
+            if ((filterId == null) xor (noteId == null)) {
                 putStringSetting(SETTING_NOTE_FILTER_ID, noteId)
             } else if (noteId != filterId) {
                 putStringSetting(SETTING_NOTE_FILTER_ID, noteId)
@@ -423,6 +397,7 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
 
     companion object {
         private val TAG = Settings::class.java.simpleName
+
         const val GLOBAL_ICON_ALPHA_DISABLED = 0.4f
         const val GLOBAL_PROGRESS_OVERLAY_ALPHA = 0.4f
         const val GLOBAL_PROGRESS_OVERLAY_DURATION: Long = 200 // ms
@@ -444,6 +419,7 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
         const val GLOBAL_SYNC_LOG_KEEPING_PERIOD_DAYS = 7
         const val GLOBAL_DEFER_RELOAD_DELAY_MILLIS = 100
         const val GLOBAL_QUERY_CHUNK_SIZE = 20
+
         private const val DEFAULT_EXPAND_LINKS = false
         private const val DEFAULT_EXPAND_NOTES = true
         private const val DEFAULT_SYNC_DIRECTORY = "/.laano_sync"
@@ -453,6 +429,7 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
         private const val DEFAULT_CLIPBOARD_LINK_FOLLOW = false
         private const val DEFAULT_CLIPBOARD_FILL_IN_FORMS = true
         private const val DEFAULT_CLIPBOARD_PARAMETER_WHITE_LIST = "id, page"
+
         private const val SETTING_LAST_SYNC_TIME = "LAST_SYNC_TIME"
         private const val SETTING_LAST_LINKS_SYNC_TIME = "LAST_LINKS_SYNC_TIME"
         private const val SETTING_LAST_FAVORITES_SYNC_TIME = "LAST_FAVORITES_SYNC_TIME"
@@ -465,6 +442,7 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
             "SHOW_CONFLICT_RESOLUTION_WARNING"
         private const val SETTING_SHOW_FILL_IN_FORM_INFO = "SHOW_FILL_IN_FORM_INFO"
         private const val SETTING_NOTES_LAYOUT_MODE_READING = "NOTES_LAYOUT_MODE_READING"
+
         private const val DEFAULT_LAST_SYNC_TIME: Long = 0
         private const val DEFAULT_SYNC_STATUS = SyncAdapter.SYNC_STATUS_UNKNOWN
         @JvmField
@@ -476,12 +454,7 @@ class Settings(context: Context, sharedPreferences: SharedPreferences) {
         private const val DEFAULT_SHOW_CONFLICT_RESOLUTION_WARNING = true
         private const val DEFAULT_SHOW_FILL_IN_FORM_INFO = true
         private const val DEFAULT_NOTES_LAYOUT_MODE_READING = false
-        private val EMPTY_STRING_ARRAY = arrayOf<String>()
-    }
 
-    // Normal settings
-    init {
-        resources = context.resources
-        this.sharedPreferences = sharedPreferences
+        private val EMPTY_STRING_ARRAY = arrayOf<String>()
     }
 }

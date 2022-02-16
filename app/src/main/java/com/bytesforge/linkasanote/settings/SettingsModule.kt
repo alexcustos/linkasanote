@@ -19,42 +19,12 @@
  */
 package com.bytesforge.linkasanote.settings
 
-import com.bytesforge.linkasanote.data.Favorite
-import com.bytesforge.linkasanote.R
-import com.bytesforge.linkasanote.sync.files.JsonFile
-import android.accounts.Account
-import android.content.*
-import com.bytesforge.linkasanote.data.source.local.LocalContract
-import android.os.Bundle
-import com.bytesforge.linkasanote.sync.SyncAdapter
-import com.bytesforge.linkasanote.laano.FilterType
-import com.bytesforge.linkasanote.laano.links.LinksPresenter
-import com.bytesforge.linkasanote.laano.favorites.FavoritesPresenter
-import com.bytesforge.linkasanote.laano.notes.NotesPresenter
-import android.content.SharedPreferences.Editor
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.preference.PreferenceManager
+import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
-import androidx.appcompat.app.AppCompatActivity
-import com.bytesforge.linkasanote.settings.SettingsActivity
-import com.bytesforge.linkasanote.settings.SettingsFragment
-import com.bytesforge.linkasanote.utils.ActivityUtils
-import androidx.core.app.NavUtils
-import androidx.preference.PreferenceFragmentCompat
-import javax.inject.Inject
-import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider
-import androidx.fragment.app.FragmentActivity
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.ApplicationBackup
-import android.widget.Toast
-import com.bytesforge.linkasanote.utils.CommonUtils
-import com.google.android.material.snackbar.Snackbar
-import com.bytesforge.linkasanote.data.source.local.DatabaseHelper
-import androidx.core.content.ContextCompat
-import android.content.pm.PackageManager
-import android.preference.PreferenceManager
-import androidx.annotation.RequiresApi
-import androidx.annotation.StringRes
-import dagger.Module
 
 @Module
 class SettingsModule {

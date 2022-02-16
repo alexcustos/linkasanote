@@ -36,7 +36,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.core.IsInstanceOf.any;
 
-import androidx.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.rule.ServiceTestRule;
@@ -53,7 +53,8 @@ public class OperationsServiceTest {
     @Test
     public void queueOperation_queuesOneAndReturnsHashCode() throws TimeoutException {
         Intent serviceIntent = new Intent(
-                InstrumentationRegistry.getTargetContext(), OperationsService.class);
+                InstrumentationRegistry.getInstrumentation().getTargetContext(),
+                OperationsService.class);
         IBinder binder = operationsServiceRule.bindService(serviceIntent);
         OperationsService service = ((OperationsService.OperationsBinder) binder).getService();
 

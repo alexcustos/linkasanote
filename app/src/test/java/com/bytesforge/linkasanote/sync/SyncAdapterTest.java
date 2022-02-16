@@ -50,6 +50,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -64,7 +65,9 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -137,12 +140,18 @@ public class SyncAdapterTest {
         PowerMockito.mockStatic(Uri.class);
 
         when(context.getResources()).thenReturn(resources);
-        when(CloudUtils.getOwnCloudClient(isNull(), any(Context.class))).thenReturn(ownCloudClient);
-        when(CloudUtils.getAccountName(isNull())).thenReturn(ACCOUNT_NAME);
+        when(CloudUtils.getOwnCloudClient(isNull(), any(Context.class)))
+                .thenAnswer((Answer<OwnCloudClient>) invocation -> ownCloudClient);
+        when(CloudUtils.getAccountName(isNull()))
+                .thenAnswer((Answer<String>) invocation -> ACCOUNT_NAME);
         when(CloudUtils.updateUserProfile(
-                isNull(), any(OwnCloudClient.class), any(AccountManager.class))).thenReturn(true);
-        when(cloudFavorites.getDataSourceETag(ownCloudClient)).thenReturn(E_TAGL);
-        when(cloudFavorites.isCloudDataSourceChanged(E_TAGL)).thenReturn(true);
+                isNull(), any(OwnCloudClient.class), any(AccountManager.class))
+        )
+                .thenAnswer((Answer<Boolean>) invocation -> true);
+        when(cloudFavorites.getDataSourceETag(ownCloudClient))
+                .thenAnswer((Answer<String>) invocation -> E_TAGL);
+        when(cloudFavorites.isCloudDataSourceChanged(E_TAGL))
+                .thenAnswer((Answer<Boolean>) invocation -> true);
         when(localFavorites.resetSyncState()).thenReturn(Single.just(0));
         when(localFavorites.isConflicted()).thenReturn(Single.just(false));
 
@@ -177,7 +186,7 @@ public class SyncAdapterTest {
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).upload(eq(favorite), eq(ownCloudClient));
         verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
-        assertEquals(syncStateCaptor.getValue().isSynced(), true);
+        assertTrue(syncStateCaptor.getValue().isSynced());
         verify(syncNotifications).sendSyncBroadcast(
                 any(String.class), eq(SyncNotifications.STATUS_UPLOADED),
                 any(String.class), any(int.class));
@@ -235,7 +244,7 @@ public class SyncAdapterTest {
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
         verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
-        assertEquals(syncStateCaptor.getValue().isSynced(), true);
+        assertTrue(syncStateCaptor.getValue().isSynced());
         assertEquals(syncStateCaptor.getValue().getETag(), E_TAGC);
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_UPDATED), eq(favoriteId));
@@ -298,7 +307,7 @@ public class SyncAdapterTest {
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).download(eq(favoriteId), eq(ownCloudClient));
         verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
-        assertEquals(syncStateCaptor.getValue().isConflicted(), true);
+        assertTrue(syncStateCaptor.getValue().isConflicted());
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_UPDATED), eq(favoriteId));
         //assertEquals(syncAdapter.getFailsCount(), 0);
@@ -423,8 +432,8 @@ public class SyncAdapterTest {
 
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
-        assertEquals(syncStateCaptor.getValue().isDeleted(), false);
-        assertEquals(syncStateCaptor.getValue().isConflicted(), true);
+        assertFalse(syncStateCaptor.getValue().isDeleted());
+        assertTrue(syncStateCaptor.getValue().isConflicted());
         verify(syncNotifications).sendSyncBroadcast(eq(SyncNotifications.ACTION_SYNC_FAVORITES),
                 eq(SyncNotifications.STATUS_UPDATED), eq(favoriteId));
         //assertEquals(syncAdapter.getFailsCount(), 0);
@@ -484,7 +493,7 @@ public class SyncAdapterTest {
         syncAdapter.onPerformSync(null, extras, null, null, null);
         verify(cloudFavorites).upload(eq(localFavorite), eq(ownCloudClient));
         verify(localFavorites).update(eq(favoriteId), syncStateCaptor.capture());
-        assertEquals(syncStateCaptor.getValue().isSynced(), true);
+        assertTrue(syncStateCaptor.getValue().isSynced());
         verify(syncNotifications).sendSyncBroadcast(
                 any(String.class), eq(SyncNotifications.STATUS_UPLOADED),
                 any(String.class), any(int.class));
