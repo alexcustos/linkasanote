@@ -19,86 +19,12 @@
  */
 package com.bytesforge.linkasanote.sync
 
-import com.bytesforge.linkasanote.settings.Settings.isSyncUploadToEmpty
-import com.bytesforge.linkasanote.settings.Settings.isSyncProtectLocal
-import com.bytesforge.linkasanote.settings.Settings.updateLastFavoritesSyncTime
-import com.bytesforge.linkasanote.settings.Settings.updateLastLinksSyncTime
-import com.bytesforge.linkasanote.settings.Settings.updateLastNotesSyncTime
-import com.bytesforge.linkasanote.settings.Settings.syncStatus
-import android.os.Parcelable
-import com.bytesforge.linkasanote.sync.files.JsonFile
-import android.os.Parcel
-import com.bytesforge.linkasanote.utils.CloudUtils
-import com.bytesforge.linkasanote.utils.UuidUtils
-import com.owncloud.android.lib.common.operations.RemoteOperation
-import com.owncloud.android.lib.common.OwnCloudClient
-import com.owncloud.android.lib.common.operations.RemoteOperationResult
-import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation.EnhancedUploadFileRemoteOperation
-import com.owncloud.android.lib.resources.files.ExistenceCheckRemoteOperation
-import com.owncloud.android.lib.resources.files.CreateFolderRemoteOperation
-import com.owncloud.android.lib.resources.files.UploadFileRemoteOperation
-import com.owncloud.android.lib.resources.files.ReadFileRemoteOperation
-import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource
-import com.owncloud.android.lib.resources.files.model.RemoteFile
-import com.owncloud.android.lib.common.network.WebdavUtils
-import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation
-import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation.ServerInfo
-import com.owncloud.android.lib.resources.status.GetRemoteStatusOperation
-import com.owncloud.android.lib.resources.status.OwnCloudVersion
-import android.os.Bundle
-import com.owncloud.android.lib.common.OwnCloudCredentials
-import com.owncloud.android.lib.common.OwnCloudCredentialsFactory
-import com.bytesforge.linkasanote.sync.operations.nextcloud.CheckCredentialsOperation
-import com.owncloud.android.lib.common.network.RedirectionPath
-import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation
-import android.os.IBinder
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationsBinder
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationsHandler
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationItem
-import android.accounts.Account
-import com.owncloud.android.lib.common.operations.OnRemoteOperationListener
-import android.os.HandlerThread
-import android.content.Intent
-import com.bytesforge.linkasanote.sync.operations.OperationsService
-import android.os.Looper
-import com.owncloud.android.lib.common.OwnCloudAccount
-import com.owncloud.android.lib.common.OwnCloudClientManagerFactory
-import android.accounts.AccountsException
-import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation
-import com.bytesforge.linkasanote.data.source.cloud.CloudItem
-import com.bytesforge.linkasanote.sync.SyncNotifications
-import com.bytesforge.linkasanote.sync.SyncItemResult
-import com.bytesforge.linkasanote.sync.SyncItem
-import com.bytesforge.linkasanote.utils.CommonUtils
-import android.database.sqlite.SQLiteConstraintException
-import com.bytesforge.linkasanote.data.source.local.LocalContract.SyncResultEntry
 import android.content.ContentValues
-import android.accounts.AccountManager
-import com.bytesforge.linkasanote.data.Favorite
-import android.content.AbstractThreadedSyncAdapter
-import android.content.ContentProviderClient
-import com.bytesforge.linkasanote.sync.SyncAdapter
-import com.bytesforge.linkasanote.R
-import io.reactivex.SingleSource
-import android.widget.Toast
-import androidx.annotation.StringRes
-import javax.inject.Inject
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.sync.SyncService
-import androidx.core.app.NotificationManagerCompat
-import kotlin.jvm.JvmOverloads
-import android.app.NotificationManager
-import android.app.NotificationChannel
 import android.database.Cursor
-import androidx.core.content.ContextCompat
-import androidx.core.app.NotificationCompat
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.BitmapDrawable
-import com.bytesforge.linkasanote.data.source.local.*
+import android.os.Parcel
+import android.os.Parcelable
+import com.bytesforge.linkasanote.data.source.local.BaseEntry
 import com.google.common.base.Objects
-import com.google.common.base.Preconditions
-import java.lang.IllegalArgumentException
 
 class SyncState : Parcelable {
     val rowId: Long
@@ -142,7 +68,7 @@ class SyncState : Parcelable {
         isSynced = synced
     }
 
-    protected constructor(source: Parcel) {
+    private constructor(source: Parcel) {
         rowId = source.readLong()
         eTag = source.readString()
         duplicated = source.readInt()
@@ -152,27 +78,24 @@ class SyncState : Parcelable {
     }
 
     constructor(syncState: SyncState?, state: State) {
-        var syncState = syncState
-        Preconditions.checkNotNull(state)
-        if (syncState == null) {
-            syncState = SyncState()
-        }
-        rowId = syncState.rowId
-        eTag = syncState.eTag
-        duplicated = syncState.duplicated
+        val syncStateLocal = syncState ?: SyncState()
+
+        rowId = syncStateLocal.rowId
+        eTag = syncStateLocal.eTag
+        duplicated = syncStateLocal.duplicated
         when (state) {
             State.UNSYNCED -> {
-                isConflicted = syncState.isConflicted
-                isDeleted = syncState.isDeleted
+                isConflicted = syncStateLocal.isConflicted
+                isDeleted = syncStateLocal.isDeleted
                 isSynced = false
             }
             State.SYNCED -> {
-                isConflicted = syncState.isConflicted
+                isConflicted = syncStateLocal.isConflicted
                 isDeleted = false
                 isSynced = true
             }
             State.DELETED -> {
-                isConflicted = syncState.isConflicted
+                isConflicted = syncStateLocal.isConflicted
                 isDeleted = true
                 isSynced = false
             }
@@ -188,11 +111,13 @@ class SyncState : Parcelable {
                 isDeleted = true
                 isSynced = false
             }
-            else -> throw IllegalArgumentException("Unexpected state was provided [" + state.name + "]")
+            else -> throw IllegalArgumentException(
+                "Unexpected state was provided [" + state.name + "]")
         }
     }
 
-    constructor(state: State) : this(null as SyncState?, state) {}
+    constructor(state: State) : this(null as SyncState?, state)
+
     constructor(eTag: String?, duplicated: Int) {
         requireNotNull(eTag) { "Duplicate conflict state must be constructed with valid eTag" }
         require(duplicated > 0) { "Cannot setup duplicate conflict state for primary record" }
@@ -206,7 +131,7 @@ class SyncState : Parcelable {
     }
 
     constructor(eTag: String, state: State) : this(state) {
-        this.eTag = Preconditions.checkNotNull(eTag)
+        this.eTag = eTag
     }// NOTE: lets DB maintain the default value
 
     // NOTE: rowId must not be here
@@ -234,9 +159,26 @@ class SyncState : Parcelable {
         return Objects.hashCode(rowId, eTag, duplicated, isConflicted, isDeleted, isSynced)
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SyncState
+
+        if (rowId != other.rowId) return false
+        if (duplicated != other.duplicated) return false
+        if (isConflicted != other.isConflicted) return false
+        if (isDeleted != other.isDeleted) return false
+        if (isSynced != other.isSynced) return false
+        if (eTag != other.eTag) return false
+
+        return true
+    }
+
     companion object {
-        val CREATOR: Parcelable.Creator<SyncState> = object : Parcelable.Creator<SyncState?> {
-            override fun createFromParcel(source: Parcel): SyncState? {
+        @JvmField
+        val CREATOR: Parcelable.Creator<SyncState> = object : Parcelable.Creator<SyncState> {
+            override fun createFromParcel(source: Parcel): SyncState {
                 return SyncState(source)
             }
 
@@ -245,44 +187,34 @@ class SyncState : Parcelable {
             }
         }
 
+        @JvmStatic
         fun from(cursor: Cursor): SyncState {
             val rowId = cursor.getLong(cursor.getColumnIndexOrThrow(BaseEntry._ID))
-            val eTag = cursor.getString(
-                cursor.getColumnIndexOrThrow(
-                    BaseEntry.COLUMN_NAME_ETAG
-                )
-            )
-            val duplicated = cursor.getInt(
-                cursor.getColumnIndexOrThrow(
-                    BaseEntry.COLUMN_NAME_DUPLICATED
-                )
-            )
-            val conflicted = cursor.getInt(
-                cursor.getColumnIndexOrThrow(
-                    BaseEntry.COLUMN_NAME_CONFLICTED
-                )
-            ) == 1
-            val deleted = cursor.getInt(
-                cursor.getColumnIndexOrThrow(
-                    BaseEntry.COLUMN_NAME_DELETED
-                )
-            ) == 1
-            val synced = cursor.getInt(
-                cursor.getColumnIndexOrThrow(
-                    BaseEntry.COLUMN_NAME_SYNCED
-                )
-            ) == 1
+
+            val eTag = cursor.getString(cursor.getColumnIndexOrThrow(
+                BaseEntry.COLUMN_NAME_ETAG))
+            val duplicated = cursor.getInt(cursor.getColumnIndexOrThrow(
+                BaseEntry.COLUMN_NAME_DUPLICATED))
+            val conflicted = cursor.getInt(cursor.getColumnIndexOrThrow(
+                BaseEntry.COLUMN_NAME_CONFLICTED)) == 1
+            val deleted = cursor.getInt(cursor.getColumnIndexOrThrow(
+                BaseEntry.COLUMN_NAME_DELETED)) == 1
+            val synced = cursor.getInt(cursor.getColumnIndexOrThrow(
+                BaseEntry.COLUMN_NAME_SYNCED)) == 1
+
             return SyncState(rowId, eTag, duplicated, conflicted, deleted, synced)
         }
 
         @JvmStatic
         fun from(values: ContentValues): SyncState {
             val rowId = values.getAsLong(BaseEntry._ID)
+
             val eTag = values.getAsString(BaseEntry.COLUMN_NAME_ETAG)
             val duplicated = values.getAsInteger(BaseEntry.COLUMN_NAME_DUPLICATED)
             val conflicted = values.getAsBoolean(BaseEntry.COLUMN_NAME_CONFLICTED)
             val deleted = values.getAsBoolean(BaseEntry.COLUMN_NAME_DELETED)
             val synced = values.getAsBoolean(BaseEntry.COLUMN_NAME_SYNCED)
+
             return SyncState(rowId, eTag, duplicated, conflicted, deleted, synced)
         }
     }

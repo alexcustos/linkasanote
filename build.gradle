@@ -22,7 +22,7 @@ ext {
     // Test
     coreVersion = '1.4.0'
     junitVersion = '4.12'
-    mockitoVersion = '3.3.3'
+    mockitoVersion = '3.12.4'
     powermockVersion = '2.0.9'
     slf4jVersion = '1.7.33'
     // AndroidTest

@@ -19,85 +19,26 @@
  */
 package com.bytesforge.linkasanote.sync
 
-import com.bytesforge.linkasanote.settings.Settings.isSyncUploadToEmpty
-import com.bytesforge.linkasanote.settings.Settings.isSyncProtectLocal
-import com.bytesforge.linkasanote.settings.Settings.updateLastFavoritesSyncTime
-import com.bytesforge.linkasanote.settings.Settings.updateLastLinksSyncTime
-import com.bytesforge.linkasanote.settings.Settings.updateLastNotesSyncTime
-import com.bytesforge.linkasanote.settings.Settings.syncStatus
-import com.bytesforge.linkasanote.sync.files.JsonFile
-import com.bytesforge.linkasanote.utils.CloudUtils
-import com.bytesforge.linkasanote.utils.UuidUtils
-import com.owncloud.android.lib.common.operations.RemoteOperation
-import com.owncloud.android.lib.common.OwnCloudClient
-import com.owncloud.android.lib.common.operations.RemoteOperationResult
-import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation.EnhancedUploadFileRemoteOperation
-import com.owncloud.android.lib.resources.files.ExistenceCheckRemoteOperation
-import com.owncloud.android.lib.resources.files.CreateFolderRemoteOperation
-import com.owncloud.android.lib.resources.files.UploadFileRemoteOperation
-import com.owncloud.android.lib.resources.files.ReadFileRemoteOperation
-import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource
-import com.owncloud.android.lib.resources.files.model.RemoteFile
-import com.owncloud.android.lib.common.network.WebdavUtils
-import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation
-import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation.ServerInfo
-import com.owncloud.android.lib.resources.status.GetRemoteStatusOperation
-import com.owncloud.android.lib.resources.status.OwnCloudVersion
-import com.owncloud.android.lib.common.OwnCloudCredentials
-import com.owncloud.android.lib.common.OwnCloudCredentialsFactory
-import com.bytesforge.linkasanote.sync.operations.nextcloud.CheckCredentialsOperation
-import com.owncloud.android.lib.common.network.RedirectionPath
-import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationsBinder
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationsHandler
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationItem
-import android.accounts.Account
-import com.owncloud.android.lib.common.operations.OnRemoteOperationListener
-import com.bytesforge.linkasanote.sync.operations.OperationsService
-import com.owncloud.android.lib.common.OwnCloudAccount
-import com.owncloud.android.lib.common.OwnCloudClientManagerFactory
-import android.accounts.AccountsException
-import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation
-import com.bytesforge.linkasanote.data.source.local.LocalItems
-import com.bytesforge.linkasanote.data.source.cloud.CloudItem
-import com.bytesforge.linkasanote.sync.SyncNotifications
-import com.bytesforge.linkasanote.sync.SyncItemResult
-import com.bytesforge.linkasanote.sync.SyncItem
-import com.bytesforge.linkasanote.utils.CommonUtils
-import com.bytesforge.linkasanote.data.source.local.LocalContract
-import android.database.sqlite.SQLiteConstraintException
-import com.bytesforge.linkasanote.data.source.local.LocalContract.SyncResultEntry
-import android.accounts.AccountManager
-import com.bytesforge.linkasanote.data.source.local.LocalSyncResults
-import com.bytesforge.linkasanote.data.source.local.LocalLinks
-import com.bytesforge.linkasanote.data.source.local.LocalFavorites
-import com.bytesforge.linkasanote.data.Favorite
-import com.bytesforge.linkasanote.data.source.local.LocalNotes
-import com.bytesforge.linkasanote.sync.SyncAdapter
-import com.bytesforge.linkasanote.R
-import io.reactivex.SingleSource
-import android.widget.Toast
-import androidx.annotation.StringRes
-import javax.inject.Inject
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.sync.SyncService
-import androidx.core.app.NotificationManagerCompat
-import kotlin.jvm.JvmOverloads
-import android.app.NotificationManager
 import android.app.NotificationChannel
-import android.content.*
-import androidx.core.content.ContextCompat
-import androidx.core.app.NotificationCompat
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.BitmapDrawable
-import android.os.*
+import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.bytesforge.linkasanote.BuildConfig
+import com.bytesforge.linkasanote.R
+import com.bytesforge.linkasanote.sync.SyncNotifications
 import com.google.common.base.Preconditions
 
 class SyncNotifications(private val context: Context?) {
-    private val notificationManager: NotificationManagerCompat
+    private val notificationManager: NotificationManagerCompat =
+        NotificationManagerCompat.from(context!!)
+
     private var accountName: String? = null
     @JvmOverloads
     fun sendSyncBroadcast(action: String?, status: Int, id: String? = null, count: Int = -1) {
@@ -117,8 +58,9 @@ class SyncNotifications(private val context: Context?) {
 
     private fun initChannels(context: Context?) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+
         val notificationManager =
-            context!!.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (notificationManager == null) {
             Log.e(TAG, "Error while retrieving Notification Service")
             return
@@ -150,7 +92,7 @@ class SyncNotifications(private val context: Context?) {
     }
 
     private val launcherBitmap: Bitmap?
-        private get() {
+        get() {
             val logo = ContextCompat.getDrawable(context!!, R.mipmap.ic_launcher)
             return if (logo is BitmapDrawable) {
                 logo.bitmap
@@ -183,7 +125,6 @@ class SyncNotifications(private val context: Context?) {
     }
 
     init {
-        notificationManager = NotificationManagerCompat.from(context!!)
         initChannels(context)
     }
 }

@@ -19,106 +19,48 @@
  */
 package com.bytesforge.linkasanote.sync
 
-import com.bytesforge.linkasanote.settings.Settings.isSyncUploadToEmpty
-import com.bytesforge.linkasanote.settings.Settings.isSyncProtectLocal
-import com.bytesforge.linkasanote.settings.Settings.updateLastFavoritesSyncTime
-import com.bytesforge.linkasanote.settings.Settings.updateLastLinksSyncTime
-import com.bytesforge.linkasanote.settings.Settings.updateLastNotesSyncTime
-import com.bytesforge.linkasanote.settings.Settings.syncStatus
-import com.bytesforge.linkasanote.sync.files.JsonFile
-import com.bytesforge.linkasanote.utils.CloudUtils
-import com.bytesforge.linkasanote.utils.UuidUtils
-import com.owncloud.android.lib.common.operations.RemoteOperation
-import com.owncloud.android.lib.common.OwnCloudClient
-import com.owncloud.android.lib.common.operations.RemoteOperationResult
-import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation.EnhancedUploadFileRemoteOperation
-import com.owncloud.android.lib.resources.files.ExistenceCheckRemoteOperation
-import com.owncloud.android.lib.resources.files.CreateFolderRemoteOperation
-import com.owncloud.android.lib.resources.files.UploadFileRemoteOperation
-import com.owncloud.android.lib.resources.files.ReadFileRemoteOperation
-import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource
-import com.owncloud.android.lib.resources.files.model.RemoteFile
-import com.owncloud.android.lib.common.network.WebdavUtils
-import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation
-import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation.ServerInfo
-import com.owncloud.android.lib.resources.status.GetRemoteStatusOperation
-import com.owncloud.android.lib.resources.status.OwnCloudVersion
-import com.owncloud.android.lib.common.OwnCloudCredentials
-import com.owncloud.android.lib.common.OwnCloudCredentialsFactory
-import com.bytesforge.linkasanote.sync.operations.nextcloud.CheckCredentialsOperation
-import com.owncloud.android.lib.common.network.RedirectionPath
-import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationsBinder
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationsHandler
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationItem
 import android.accounts.Account
-import com.owncloud.android.lib.common.operations.OnRemoteOperationListener
-import com.bytesforge.linkasanote.sync.operations.OperationsService
-import com.owncloud.android.lib.common.OwnCloudAccount
-import com.owncloud.android.lib.common.OwnCloudClientManagerFactory
-import android.accounts.AccountsException
-import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation
-import com.bytesforge.linkasanote.data.source.local.LocalItems
-import com.bytesforge.linkasanote.data.source.cloud.CloudItem
-import com.bytesforge.linkasanote.sync.SyncNotifications
-import com.bytesforge.linkasanote.sync.SyncItemResult
-import com.bytesforge.linkasanote.sync.SyncItem
-import com.bytesforge.linkasanote.utils.CommonUtils
-import com.bytesforge.linkasanote.data.source.local.LocalContract
-import android.database.sqlite.SQLiteConstraintException
-import com.bytesforge.linkasanote.data.source.local.LocalContract.SyncResultEntry
 import android.accounts.AccountManager
-import com.bytesforge.linkasanote.data.source.local.LocalSyncResults
-import com.bytesforge.linkasanote.data.source.local.LocalLinks
-import com.bytesforge.linkasanote.data.source.local.LocalFavorites
-import com.bytesforge.linkasanote.data.Favorite
-import com.bytesforge.linkasanote.data.source.local.LocalNotes
-import com.bytesforge.linkasanote.sync.SyncAdapter
-import com.bytesforge.linkasanote.R
-import io.reactivex.SingleSource
-import android.widget.Toast
-import androidx.annotation.StringRes
-import javax.inject.Inject
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.sync.SyncService
-import androidx.core.app.NotificationManagerCompat
-import kotlin.jvm.JvmOverloads
-import android.app.NotificationManager
-import android.app.NotificationChannel
 import android.content.*
 import android.content.res.Resources
-import androidx.core.content.ContextCompat
-import androidx.core.app.NotificationCompat
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.BitmapDrawable
 import android.os.*
 import android.util.Log
+import android.widget.Toast
+import androidx.annotation.StringRes
+import com.bytesforge.linkasanote.R
+import com.bytesforge.linkasanote.data.Favorite
 import com.bytesforge.linkasanote.data.Link
 import com.bytesforge.linkasanote.data.Note
+import com.bytesforge.linkasanote.data.source.cloud.CloudItem
+import com.bytesforge.linkasanote.data.source.local.LocalFavorites
+import com.bytesforge.linkasanote.data.source.local.LocalLinks
+import com.bytesforge.linkasanote.data.source.local.LocalNotes
+import com.bytesforge.linkasanote.data.source.local.LocalSyncResults
 import com.bytesforge.linkasanote.settings.Settings
+import com.bytesforge.linkasanote.utils.CloudUtils
 import com.google.common.base.Joiner
 import io.reactivex.Single
-import java.util.ArrayList
 
 class SyncAdapter(
-    private val context: Context?, private val settings: Settings?, autoInitialize: Boolean,
+    private val contextVal: Context?, private val settings: Settings?, autoInitialize: Boolean,
     private val accountManager: AccountManager?, private val syncNotifications: SyncNotifications,
     private val localSyncResults: LocalSyncResults?,
     localLinks: LocalLinks<Link>?, cloudLinks: CloudItem<Link>?,
     localFavorites: LocalFavorites<Favorite>?, cloudFavorites: CloudItem<Favorite>?,
     localNotes: LocalNotes<Note>?, cloudNotes: CloudItem<Note>?
 ) : AbstractThreadedSyncAdapter(
-    context, autoInitialize
+    contextVal, autoInitialize
 ) {
-    private val localLinks: LocalLinks<Link>
-    private val cloudLinks: CloudItem<Link>
-    private val localFavorites: LocalFavorites<Favorite>
-    private val cloudFavorites: CloudItem<Favorite>
-    private val localNotes: LocalNotes<Note>
-    private val cloudNotes: CloudItem<Note>
-    private val resources: Resources
+    private val localLinks: LocalLinks<Link> = localLinks!!
+    private val cloudLinks: CloudItem<Link> = cloudLinks!!
+    private val localFavorites: LocalFavorites<Favorite> = localFavorites!!
+    private val cloudFavorites: CloudItem<Favorite> = cloudFavorites!!
+    private val localNotes: LocalNotes<Note> = localNotes!!
+    private val cloudNotes: CloudItem<Note> = cloudNotes!!
+    private val resources: Resources = contextVal!!.resources
+
     private var manualMode = false
+
     override fun onPerformSync(
         account: Account, extras: Bundle, authority: String,
         provider: ContentProviderClient, syncResult: SyncResult
@@ -126,7 +68,7 @@ class SyncAdapter(
         manualMode = extras.getBoolean(SYNC_MANUAL_MODE, false)
         val started = System.currentTimeMillis()
         syncNotifications.setAccountName(CloudUtils.getAccountName(account))
-        val ocClient = CloudUtils.getOwnCloudClient(account, context)
+        val ocClient = CloudUtils.getOwnCloudClient(account, contextVal)
         if (ocClient == null) {
             syncNotifications.notifyFailedSynchronization(
                 resources.getString(R.string.sync_adapter_title_failed_login),
@@ -137,7 +79,7 @@ class SyncAdapter(
 
         //Start
         syncNotifications.sendSyncBroadcast(
-            SyncNotifications.Companion.ACTION_SYNC, SyncNotifications.Companion.STATUS_SYNC_START
+            SyncNotifications.ACTION_SYNC, SyncNotifications.STATUS_SYNC_START
         )
         val updated = CloudUtils.updateUserProfile(account, ocClient, accountManager)
         if (!updated) {
@@ -156,38 +98,38 @@ class SyncAdapter(
 
         // Favorites
         syncNotifications.sendSyncBroadcast(
-            SyncNotifications.Companion.ACTION_SYNC_FAVORITES,
-            SyncNotifications.Companion.STATUS_SYNC_START
+            SyncNotifications.ACTION_SYNC_FAVORITES,
+            SyncNotifications.STATUS_SYNC_START
         )
         val syncFavorites = SyncItem(
             ocClient, localFavorites, cloudFavorites,
-            syncNotifications, SyncNotifications.Companion.ACTION_SYNC_FAVORITES,
+            syncNotifications, SyncNotifications.ACTION_SYNC_FAVORITES,
             settings!!.isSyncUploadToEmpty, settings.isSyncProtectLocal, started
         )
         favoritesSyncResult = syncFavorites.sync()
         settings.updateLastFavoritesSyncTime()
         syncNotifications.sendSyncBroadcast(
-            SyncNotifications.Companion.ACTION_SYNC_FAVORITES,
-            SyncNotifications.Companion.STATUS_SYNC_STOP
+            SyncNotifications.ACTION_SYNC_FAVORITES,
+            SyncNotifications.STATUS_SYNC_STOP
         )
         fatalError = favoritesSyncResult.isFatal
 
         // Links
         if (!fatalError) {
             syncNotifications.sendSyncBroadcast(
-                SyncNotifications.Companion.ACTION_SYNC_LINKS,
-                SyncNotifications.Companion.STATUS_SYNC_START
+                SyncNotifications.ACTION_SYNC_LINKS,
+                SyncNotifications.STATUS_SYNC_START
             )
             val syncLinks = SyncItem(
                 ocClient, localLinks, cloudLinks,
-                syncNotifications, SyncNotifications.Companion.ACTION_SYNC_LINKS,
+                syncNotifications, SyncNotifications.ACTION_SYNC_LINKS,
                 settings.isSyncUploadToEmpty, settings.isSyncProtectLocal, started
             )
             linksSyncResult = syncLinks.sync()
             settings.updateLastLinksSyncTime()
             syncNotifications.sendSyncBroadcast(
-                SyncNotifications.Companion.ACTION_SYNC_LINKS,
-                SyncNotifications.Companion.STATUS_SYNC_STOP
+                SyncNotifications.ACTION_SYNC_LINKS,
+                SyncNotifications.STATUS_SYNC_STOP
             )
             fatalError = linksSyncResult.isFatal
         }
@@ -195,20 +137,20 @@ class SyncAdapter(
         // Notes
         if (!fatalError) {
             syncNotifications.sendSyncBroadcast(
-                SyncNotifications.Companion.ACTION_SYNC_NOTES,
-                SyncNotifications.Companion.STATUS_SYNC_START
+                SyncNotifications.ACTION_SYNC_NOTES,
+                SyncNotifications.STATUS_SYNC_START
             )
             val syncNotes = SyncItem(
                 ocClient, localNotes, cloudNotes,
-                syncNotifications, SyncNotifications.Companion.ACTION_SYNC_NOTES,
+                syncNotifications, SyncNotifications.ACTION_SYNC_NOTES,
                 settings.isSyncUploadToEmpty, settings.isSyncProtectLocal, started
             )
             notesSyncResult = syncNotes.sync()
             settings.updateLastNotesSyncTime()
             settings.updateLastLinksSyncTime() // NOTE: because there are related links
             syncNotifications.sendSyncBroadcast(
-                SyncNotifications.Companion.ACTION_SYNC_NOTES,
-                SyncNotifications.Companion.STATUS_SYNC_STOP
+                SyncNotifications.ACTION_SYNC_NOTES,
+                SyncNotifications.STATUS_SYNC_STOP
             )
             fatalError = notesSyncResult.isFatal
         }
@@ -218,7 +160,7 @@ class SyncAdapter(
                 && linksSyncResult!!.isSuccess && notesSyncResult!!.isSuccess)
         saveLastSyncStatus(success)
         syncNotifications.sendSyncBroadcast(
-            SyncNotifications.Companion.ACTION_SYNC, SyncNotifications.Companion.STATUS_SYNC_STOP
+            SyncNotifications.ACTION_SYNC, SyncNotifications.STATUS_SYNC_STOP
         )
 
         // Error notifications
@@ -240,7 +182,7 @@ class SyncAdapter(
         } else {
             // Fail
             val failSources: MutableList<String> = ArrayList()
-            val linkFailsCount = linksSyncResult.getFailsCount()
+            val linkFailsCount = linksSyncResult!!.failsCount
             if (linkFailsCount > 0) {
                 failSources.add(
                     resources.getQuantityString(
@@ -258,7 +200,7 @@ class SyncAdapter(
                     )
                 )
             }
-            val noteFailsCount = notesSyncResult.getFailsCount()
+            val noteFailsCount = notesSyncResult!!.failsCount
             if (noteFailsCount > 0) {
                 failSources.add(
                     resources.getQuantityString(
@@ -267,7 +209,7 @@ class SyncAdapter(
                     )
                 )
             }
-            if (!failSources.isEmpty()) {
+            if (failSources.isNotEmpty()) {
                 syncNotifications.notifyFailedSynchronization(
                     resources.getString(
                         R.string.sync_adapter_text_failed, Joiner.on(", ").join(failSources)
@@ -316,7 +258,7 @@ class SyncAdapter(
 
     private fun showToast(@StringRes toastId: Int, duration: Int) {
         val handler = Handler(Looper.getMainLooper())
-        handler.post { Toast.makeText(context, toastId, duration).show() }
+        handler.post { Toast.makeText(contextVal, toastId, duration).show() }
     }
 
     companion object {
@@ -329,14 +271,4 @@ class SyncAdapter(
         const val SYNC_MANUAL_MODE = "MANUAL_MODE"
     }
 
-    // NOTE: Note should contain linkId to notify related Link
-    init {
-        this.localLinks = localLinks!!
-        this.cloudLinks = cloudLinks!!
-        this.localFavorites = localFavorites!!
-        this.cloudFavorites = cloudFavorites!!
-        this.localNotes = localNotes!!
-        this.cloudNotes = cloudNotes!!
-        resources = context!!.resources
-    }
 }

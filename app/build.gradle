@@ -190,8 +190,9 @@ dependencies {
     androidTestImplementation "androidx.test:runner:${testVersion}"
     androidTestImplementation "androidx.test:rules:${testVersion}"
     androidTestImplementation "androidx.test.ext:junit:${testExtVersion}"
-    androidTestImplementation "org.mockito:mockito-core:${mockitoVersion}"
-    androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:${dexmakerVersion}"
+    androidTestImplementation "org.mockito:mockito-android:${mockitoVersion}"
+    //androidTestImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
+    //androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:${dexmakerVersion}"
 
     // Resolve conflicts
     //implementation "com.google.code.findbugs:jsr305:${findbugsJsr305Version}"

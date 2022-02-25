@@ -36,7 +36,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 import android.Manifest;
@@ -92,7 +92,7 @@ public class AddEditAccountNextcloudScreenTest {
 
     @Before
     public void setupAddEditAccountActivityNextcloud() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
 
         AddEditAccountActivity activity = addEditAccountActivityTestRule.getActivity();
         assertThat(activity, notNullValue());

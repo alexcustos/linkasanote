@@ -19,93 +19,18 @@
  */
 package com.bytesforge.linkasanote.sync.files
 
-import com.bytesforge.linkasanote.settings.Settings.isSyncUploadToEmpty
-import com.bytesforge.linkasanote.settings.Settings.isSyncProtectLocal
-import com.bytesforge.linkasanote.settings.Settings.updateLastFavoritesSyncTime
-import com.bytesforge.linkasanote.settings.Settings.updateLastLinksSyncTime
-import com.bytesforge.linkasanote.settings.Settings.updateLastNotesSyncTime
-import com.bytesforge.linkasanote.settings.Settings.syncStatus
-import android.os.Parcelable
-import com.bytesforge.linkasanote.sync.files.JsonFile
+import android.net.Uri
 import android.os.Parcel
+import android.os.Parcelable
 import com.bytesforge.linkasanote.utils.CloudUtils
 import com.bytesforge.linkasanote.utils.UuidUtils
-import com.owncloud.android.lib.common.operations.RemoteOperation
-import com.owncloud.android.lib.common.OwnCloudClient
-import com.owncloud.android.lib.common.operations.RemoteOperationResult
-import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation.EnhancedUploadFileRemoteOperation
-import com.owncloud.android.lib.resources.files.ExistenceCheckRemoteOperation
-import com.owncloud.android.lib.resources.files.CreateFolderRemoteOperation
-import com.owncloud.android.lib.resources.files.UploadFileRemoteOperation
-import com.owncloud.android.lib.resources.files.ReadFileRemoteOperation
-import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource
-import com.owncloud.android.lib.resources.files.model.RemoteFile
-import com.owncloud.android.lib.common.network.WebdavUtils
-import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation
-import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation.ServerInfo
-import com.owncloud.android.lib.resources.status.GetRemoteStatusOperation
-import com.owncloud.android.lib.resources.status.OwnCloudVersion
-import android.os.Bundle
-import com.owncloud.android.lib.common.OwnCloudCredentials
-import com.owncloud.android.lib.common.OwnCloudCredentialsFactory
-import com.bytesforge.linkasanote.sync.operations.nextcloud.CheckCredentialsOperation
-import com.owncloud.android.lib.common.network.RedirectionPath
-import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation
-import android.os.IBinder
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationsBinder
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationsHandler
-import com.bytesforge.linkasanote.sync.operations.OperationsService.OperationItem
-import android.accounts.Account
-import com.owncloud.android.lib.common.operations.OnRemoteOperationListener
-import android.os.HandlerThread
-import android.content.Intent
-import com.bytesforge.linkasanote.sync.operations.OperationsService
-import android.os.Looper
-import com.owncloud.android.lib.common.OwnCloudAccount
-import com.owncloud.android.lib.common.OwnCloudClientManagerFactory
-import android.accounts.AccountsException
-import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation
-import com.bytesforge.linkasanote.data.source.local.LocalItems
-import com.bytesforge.linkasanote.data.source.cloud.CloudItem
-import com.bytesforge.linkasanote.sync.SyncNotifications
-import com.bytesforge.linkasanote.sync.SyncItemResult
-import com.bytesforge.linkasanote.sync.SyncItem
-import com.bytesforge.linkasanote.utils.CommonUtils
-import com.bytesforge.linkasanote.data.source.local.LocalContract
-import android.database.sqlite.SQLiteConstraintException
-import com.bytesforge.linkasanote.data.source.local.LocalContract.SyncResultEntry
-import android.content.ContentValues
-import android.accounts.AccountManager
-import com.bytesforge.linkasanote.data.source.local.LocalSyncResults
-import com.bytesforge.linkasanote.data.source.local.LocalLinks
-import com.bytesforge.linkasanote.data.source.local.LocalFavorites
-import com.bytesforge.linkasanote.data.Favorite
-import com.bytesforge.linkasanote.data.source.local.LocalNotes
-import android.content.AbstractThreadedSyncAdapter
-import android.content.ContentProviderClient
-import com.bytesforge.linkasanote.sync.SyncAdapter
-import com.bytesforge.linkasanote.R
-import io.reactivex.SingleSource
-import android.widget.Toast
-import androidx.annotation.StringRes
-import javax.inject.Inject
-import com.bytesforge.linkasanote.LaanoApplication
-import com.bytesforge.linkasanote.sync.SyncService
-import androidx.core.app.NotificationManagerCompat
-import kotlin.jvm.JvmOverloads
-import android.app.NotificationManager
-import android.app.NotificationChannel
-import androidx.core.content.ContextCompat
-import androidx.core.app.NotificationCompat
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.BitmapDrawable
-import android.net.Uri
 import com.google.common.base.Objects
-import com.google.common.base.Preconditions
 import java.io.File
 
 class JsonFile : Parcelable, Comparable<JsonFile> {
+    val mimeType: String
+        get() = MIME_TYPE
+
     private var length: Long
     var localPath: String?
 
@@ -115,8 +40,8 @@ class JsonFile : Parcelable, Comparable<JsonFile> {
     var eTag: String?
 
     constructor(remotePath: String) {
-        Preconditions.checkNotNull(remotePath)
         require(remotePath.startsWith(PATH_SEPARATOR)) { "Remote path must be absolute [$remotePath]" }
+
         length = 0
         localPath = null
         this.remotePath = remotePath
@@ -124,13 +49,12 @@ class JsonFile : Parcelable, Comparable<JsonFile> {
     }
 
     constructor(localPath: String, remotePath: String) : this(remotePath) {
-        Preconditions.checkNotNull(localPath)
         this.localPath = localPath
         val localFile = File(localPath)
         length = localFile.length()
     }
 
-    protected constructor(`in`: Parcel) {
+    private constructor(`in`: Parcel) {
         length = `in`.readLong()
         localPath = `in`.readString()
         remotePath = `in`.readString()
@@ -148,14 +72,15 @@ class JsonFile : Parcelable, Comparable<JsonFile> {
         dest.writeString(eTag)
     }
 
-    override fun compareTo(obj: JsonFile): Int {
-        return remotePath!!.compareTo(obj.remotePath!!, ignoreCase = true)
+    override fun compareTo(other: JsonFile): Int {
+        return remotePath!!.compareTo(other.remotePath!!, ignoreCase = true)
     }
 
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) return true
-        if (obj == null || javaClass != obj.javaClass) return false
-        val file = obj as JsonFile
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+
+        val file = other as JsonFile
         return (Objects.equal(remotePath, file.remotePath)
                 && Objects.equal(length, file.length))
     }
@@ -169,12 +94,13 @@ class JsonFile : Parcelable, Comparable<JsonFile> {
     }
 
     companion object {
-        val mimeType = "application/json"
-            get() = Companion.field
+        private const val MIME_TYPE = "application/json"
         private const val FILE_EXTENSION = ".json"
         const val PATH_SEPARATOR = "/"
-        val CREATOR: Parcelable.Creator<JsonFile> = object : Parcelable.Creator<JsonFile?> {
-            override fun createFromParcel(`in`: Parcel): JsonFile? {
+
+        @JvmField
+        val CREATOR: Parcelable.Creator<JsonFile> = object : Parcelable.Creator<JsonFile> {
+            override fun createFromParcel(`in`: Parcel): JsonFile {
                 return JsonFile(`in`)
             }
 
@@ -185,21 +111,22 @@ class JsonFile : Parcelable, Comparable<JsonFile> {
 
         @JvmStatic
         fun getFileName(id: String): String {
-            return Preconditions.checkNotNull(id).toString() + FILE_EXTENSION
+            return id + FILE_EXTENSION
         }
 
         @JvmStatic
         fun getTempFileName(id: String): String {
-            return Preconditions.checkNotNull(id).toString() + "." + CloudUtils.getApplicationId()
+            return id + "." + CloudUtils.getApplicationId()
         }
 
         @JvmStatic
         fun getId(mimeType: String?, filePath: String?): String? {
             if (mimeType == null || filePath == null) return null
-            if (mimeType != Companion.mimeType) return null
+            if (mimeType != mimeType) return null
+
             var id = Uri.parse(filePath).lastPathSegment
-            id = if (id != null && id.endsWith(FILE_EXTENSION)) {
-                id.substring(0, id.length - FILE_EXTENSION.length)
+            if (id != null && id.endsWith(FILE_EXTENSION)) {
+                id = id.substring(0, id.length - FILE_EXTENSION.length)
             } else {
                 return null
             }
