@@ -20,7 +20,9 @@
 
 package com.bytesforge.linkasanote.laano.notes.conflictresolution;
 
-import android.util.Log;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Link;
@@ -39,20 +41,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.NoSuchElementException;
 
 import io.reactivex.Single;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Log.class})
+@RunWith(MockitoJUnitRunner.class)
 public class NotesConflictResolutionPresenterTest {
 
     @Mock
@@ -86,8 +81,7 @@ public class NotesConflictResolutionPresenterTest {
 
     @Before
     public void setupNotesConflictResolutionPresenter() {
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(Log.class);
+        MockitoAnnotations.openMocks(this);
         schedulerProvider = new ImmediateSchedulerProvider();
         noteId = TestUtils.KEY_PREFIX + 'A';
         defaultNote = new Note(noteId, "Note", null, TestUtils.TAGS);

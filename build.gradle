@@ -21,8 +21,8 @@ ext {
     stethoVersion = '1.6.0'
     // Test
     coreVersion = '1.4.0'
-    junitVersion = '4.12'
-    mockitoVersion = '3.12.4'
+    junitVersion = '4.13.2'
+    mockitoVersion = '4.3.1'
     powermockVersion = '2.0.9'
     slf4jVersion = '1.7.33'
     // AndroidTest

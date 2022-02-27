@@ -20,6 +20,11 @@
 
 package com.bytesforge.linkasanote.laano.links.conflictresolution;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import android.util.Log;
 
 import com.bytesforge.linkasanote.TestUtils;
@@ -34,26 +39,22 @@ import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.NoSuchElementException;
 
 import io.reactivex.Single;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Log.class})
+@RunWith(MockitoJUnitRunner.class)
 public class LinksConflictResolutionPresenterTest {
 
     @Mock
@@ -80,6 +81,8 @@ public class LinksConflictResolutionPresenterTest {
     @Mock
     private Settings settings;
 
+    private static MockedStatic<Log> mockedLog;
+
     private static final String E_TAGL = "abcdefghigklmnopqrstuvwxwz";
     private static final String E_TAGC = "zwxwvutsrqponmlkgihgfedcba";
 
@@ -88,10 +91,19 @@ public class LinksConflictResolutionPresenterTest {
     private Link defaultLink;
     private String linkId;
 
+    @BeforeClass
+    public static void init() {
+        mockedLog = Mockito.mockStatic(Log.class);
+    }
+
+    @AfterClass
+    public static void close() {
+        mockedLog.close();
+    }
+
     @Before
     public void setupLinksConflictResolutionPresenter() {
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(Log.class);
+        MockitoAnnotations.openMocks(this);
         schedulerProvider = new ImmediateSchedulerProvider();
         linkId = TestUtils.KEY_PREFIX + 'A';
         defaultLink = new Link(linkId, "http://laano.net/link", "Link", false, TestUtils.TAGS);
@@ -149,7 +161,8 @@ public class LinksConflictResolutionPresenterTest {
         when(localLinks.get(eq(linkId))).thenReturn(Single.just(link));
         when(localLinks.getMain(eq(link.getDuplicatedKey())))
                 .thenReturn(Single.error(new NoSuchElementException()));
-        when(viewModel.isCloudPopulated()).thenReturn(true);
+        // TODO: check why that's unnecessary
+        //when(viewModel.isCloudPopulated()).thenReturn(true);
         when(localLinks.update(eq(linkId), any(SyncState.class))).thenReturn(Single.just(true));
         presenter.subscribe();
         verify(viewModel).populateCloudLink(eq(link));

@@ -20,6 +20,15 @@
 
 package com.bytesforge.linkasanote.sync;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.ContentProviderClient;
@@ -46,17 +55,19 @@ import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,18 +78,7 @@ import java.util.Map;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Log.class, CloudUtils.class, Uri.class})
+@RunWith(MockitoJUnitRunner.class)
 public class SyncAdapterTest {
 
     @Mock
@@ -135,6 +135,10 @@ public class SyncAdapterTest {
     @Captor
     ArgumentCaptor<SyncState> syncStateCaptor;
 
+    private static MockedStatic<Log> mockedLog;
+    private static MockedStatic<CloudUtils> mockedCloudUtils;
+    private static MockedStatic<Uri> mockedUri;
+
     private SyncAdapter syncAdapter;
 
     private static final String E_TAGL = "abcdefghigklmnopqrstuvwxwz";
@@ -144,30 +148,43 @@ public class SyncAdapterTest {
     private static final String ACCOUNT_NAME = USERNAME + "@" + SERVER_URL;
     private static final String REMOTE_PATH = "/cloud/path";
 
+    @BeforeClass
+    public static void init() {
+        mockedLog = Mockito.mockStatic(Log.class);
+        mockedCloudUtils = Mockito.mockStatic(CloudUtils.class);
+        mockedUri = Mockito.mockStatic(Uri.class);
+    }
+
+    @AfterClass
+    public static void close() {
+        mockedLog.close();
+        mockedCloudUtils.close();
+        mockedUri.close();
+    }
+
     @Before
     public void setupSyncAdapter() {
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(Log.class);
-        PowerMockito.mockStatic(CloudUtils.class);
-        PowerMockito.mockStatic(Uri.class);
+        MockitoAnnotations.openMocks(this);
 
         when(context.getResources()).thenReturn(resources);
         when(resources.getString(any(int.class)))
                 .thenAnswer((Answer<String>) invocation -> "Mocked");
-        when(CloudUtils.getOwnCloudClient(eq(account), any(Context.class)))
+
+        mockedCloudUtils.when(() -> CloudUtils.getOwnCloudClient(eq(account), any(Context.class)))
                 .thenAnswer((Answer<OwnCloudClient>) invocation -> ownCloudClient);
-        when(CloudUtils.getAccountName(eq(account)))
+        mockedCloudUtils.when(() -> CloudUtils.getAccountName(eq(account)))
                 .thenAnswer((Answer<String>) invocation -> ACCOUNT_NAME);
-        when(CloudUtils.updateUserProfile(
-                eq(account), any(OwnCloudClient.class), any(AccountManager.class))
-        )
+        mockedCloudUtils.when(() -> CloudUtils.updateUserProfile(
+                eq(account), any(OwnCloudClient.class), any(AccountManager.class)))
                 .thenAnswer((Answer<Boolean>) invocation -> true);
+
         when(cloudFavorites.getDataSourceETag(ownCloudClient))
                 .thenAnswer((Answer<String>) invocation -> E_TAGL);
         when(cloudFavorites.isCloudDataSourceChanged(E_TAGL))
                 .thenAnswer((Answer<Boolean>) invocation -> true);
-        when(localFavorites.resetSyncState()).thenReturn(Single.just(0));
-        when(localFavorites.isConflicted()).thenReturn(Single.just(false));
+        // TODO: check why that's unnecessary
+        //when(localFavorites.resetSyncState()).thenReturn(Single.just(0));
+        //when(localFavorites.isConflicted()).thenReturn(Single.just(false));
 
         syncAdapter = new SyncAdapter(context, settings, true, accountManager, syncNotifications,
                 localSyncResults, localLinks, cloudLinks, localFavorites, cloudFavorites,
