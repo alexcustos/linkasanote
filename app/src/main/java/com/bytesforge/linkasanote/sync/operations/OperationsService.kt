@@ -77,7 +77,7 @@ class OperationsService : Service() {
         val target: Target, val operation: RemoteOperation,
         val listener: OnRemoteOperationListener?, val handler: Handler?
     ) {
-        private fun hasListener(): Boolean {
+        fun hasListener(): Boolean {
             return listener != null && handler != null
         }
 
@@ -153,20 +153,22 @@ class OperationsService : Service() {
 
     fun queueOperation(
         intent: Intent,
-        listener: OnRemoteOperationListener,
-        handler: Handler
+        listener: OnRemoteOperationListener?,
+        handler: Handler?
     ): Long {
         Log.d(TAG, "Queuing message with id $operationId")
         val operationItem = buildOperation(intent, listener, handler)
         pendingOperations.add(operationItem)
         val msg = operationsHandler!!.obtainMessage()
         msg.arg1 = operationId.getAndIncrement()
-        operationsHandler!!.sendMessage(msg)
+        if (operationItem.hasListener()) {
+            operationsHandler!!.sendMessage(msg)
+        }
         return operationItem.operation.hashCode().toLong()
     }
 
     private fun buildOperation(
-        intent: Intent, listener: OnRemoteOperationListener, handler: Handler
+        intent: Intent, listener: OnRemoteOperationListener?, handler: Handler?
     ): OperationItem {
         val operation: RemoteOperation
         if (!intent.hasExtra(EXTRA_ACCOUNT) && !intent.hasExtra(EXTRA_SERVER_URL)) {

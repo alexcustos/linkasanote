@@ -30,7 +30,7 @@ import javax.inject.Singleton
 class SettingsModule {
     @Provides
     @Singleton
-    fun provideSharedPreferences(context: Context?): SharedPreferences {
+    fun provideSharedPreferences(context: Context): SharedPreferences {
         return PreferenceManager.getDefaultSharedPreferences(context)
     }
 

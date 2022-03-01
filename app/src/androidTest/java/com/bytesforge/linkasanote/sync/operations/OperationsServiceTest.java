@@ -21,25 +21,23 @@
 package com.bytesforge.linkasanote.sync.operations;
 
 import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
+import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 import android.content.Intent;
 import android.os.IBinder;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ServiceTestRule;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeoutException;
-
-import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.core.IsInstanceOf.any;
-
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.rule.ServiceTestRule;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -64,7 +62,7 @@ public class OperationsServiceTest {
                 OperationsService.EXTRA_SERVER_URL, convertIdn(SERVER_URL, true));
 
         assertThat(service.queueOperation(getServerInfoIntent, null, null),
-                is(any(long.class)));
+                greaterThanOrEqualTo(0L));
         assertThat(service.getPendingOperationsQueueSize(), equalTo(1));
     }
 }
