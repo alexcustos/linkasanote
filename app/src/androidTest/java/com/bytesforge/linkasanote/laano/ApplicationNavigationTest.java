@@ -48,7 +48,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 
 import static com.bytesforge.linkasanote.AndroidTestUtils.getToolbarNavigationContentDescription;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;

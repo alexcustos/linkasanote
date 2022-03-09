@@ -32,9 +32,21 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
+import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
+import static junit.framework.Assert.assertNotNull;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.res.Resources;
+
+import androidx.test.espresso.contrib.RecyclerViewActions;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.ApplicationComponent;
@@ -65,19 +77,6 @@ import java.util.List;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-
-import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
-import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
-import static junit.framework.Assert.assertNotNull;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.mockito.Mockito.when;
-
-import androidx.test.espresso.contrib.RecyclerViewActions;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -119,7 +118,7 @@ public class FavoritesTabTest {
     private final List<Favorite> FAVORITES;
 
     public FavoritesTabTest() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         FAVORITES = AndroidTestUtils.buildFavorites();
     }
 

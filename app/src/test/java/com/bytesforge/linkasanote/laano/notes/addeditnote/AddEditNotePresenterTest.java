@@ -20,6 +20,15 @@
 
 package com.bytesforge.linkasanote.laano.notes.addeditnote;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.bytesforge.linkasanote.TestUtils;
 import com.bytesforge.linkasanote.data.Note;
 import com.bytesforge.linkasanote.data.Tag;
@@ -43,15 +52,6 @@ import java.util.NoSuchElementException;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class AddEditNotePresenterTest {
 
@@ -83,7 +83,7 @@ public class AddEditNotePresenterTest {
 
     @Before
     public void setLinksPresenter() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         schedulerProvider = new ImmediateSchedulerProvider();
         when(view.isActive()).thenReturn(true);
         presenter = new AddEditNotePresenter(

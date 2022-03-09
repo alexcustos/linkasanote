@@ -20,6 +20,13 @@
 
 package com.bytesforge.linkasanote.data.source;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.when;
+
 import android.util.Log;
 
 import com.bytesforge.linkasanote.TestUtils;
@@ -29,14 +36,16 @@ import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -46,15 +55,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Log.class})
+@RunWith(MockitoJUnitRunner.class)
 public class RepositoryNoteTest {
 
     private final List<Note> NOTES;
@@ -67,6 +68,8 @@ public class RepositoryNoteTest {
     @Mock
     private CloudDataSource cloudDataSource;
 
+    private static MockedStatic<Log> mockedLog;
+
     private TestObserver<List<Note>> testNotesObserver;
     private TestObserver<Note> testNoteObserver;
 
@@ -74,10 +77,20 @@ public class RepositoryNoteTest {
         NOTES = TestUtils.buildNotes();
     }
 
+    @BeforeClass
+    public static void init() {
+        mockedLog = Mockito.mockStatic(Log.class);
+    }
+
+    @AfterClass
+    public static void close() {
+        mockedLog.close();
+    }
+
     @Before
     public void setupRepository() {
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(Log.class);
+        MockitoAnnotations.openMocks(this);
+
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
         repository = new Repository(localDataSource, cloudDataSource, schedulerProvider);
     }

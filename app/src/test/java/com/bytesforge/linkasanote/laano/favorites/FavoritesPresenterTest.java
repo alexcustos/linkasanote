@@ -20,6 +20,11 @@
 
 package com.bytesforge.linkasanote.laano.favorites;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import android.util.Log;
 
 import com.bytesforge.linkasanote.TestUtils;
@@ -31,16 +36,18 @@ import com.bytesforge.linkasanote.settings.Settings;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,13 +55,7 @@ import java.util.List;
 
 import io.reactivex.Observable;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Log.class})
+@RunWith(MockitoJUnitRunner.class)
 public class FavoritesPresenterTest {
 
     @Mock
@@ -77,16 +78,27 @@ public class FavoritesPresenterTest {
     @Captor
     ArgumentCaptor<List<Favorite>> favoriteListCaptor;
 
+    private static MockedStatic<Log> mockedLog;
+
     private final List<Favorite> FAVORITES;
 
     public FavoritesPresenterTest() {
         FAVORITES = TestUtils.buildFavorites();
     }
 
+    @BeforeClass
+    public static void init() {
+        mockedLog = Mockito.mockStatic(Log.class);
+    }
+
+    @AfterClass
+    public static void close() {
+        mockedLog.close();
+    }
+
     @Before
     public void setupFavoritesPresenter() {
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(Log.class);
+        MockitoAnnotations.openMocks(this);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
         when(view.isActive()).thenReturn(true);
         when(settings.getFavoritesFilterType()).thenReturn(FilterType.ALL);

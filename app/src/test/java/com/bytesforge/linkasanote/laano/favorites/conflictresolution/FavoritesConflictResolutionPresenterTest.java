@@ -20,6 +20,11 @@
 
 package com.bytesforge.linkasanote.laano.favorites.conflictresolution;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import android.util.Log;
 
 import com.bytesforge.linkasanote.TestUtils;
@@ -32,26 +37,22 @@ import com.bytesforge.linkasanote.sync.SyncState;
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider;
 import com.bytesforge.linkasanote.utils.schedulers.ImmediateSchedulerProvider;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.NoSuchElementException;
 
 import io.reactivex.Single;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Log.class})
+@RunWith(MockitoJUnitRunner.class)
 public class FavoritesConflictResolutionPresenterTest {
 
     @Mock
@@ -72,6 +73,8 @@ public class FavoritesConflictResolutionPresenterTest {
     @Mock
     private Settings settings;
 
+    private static MockedStatic<Log> mockedLog;
+
     private static final String E_TAGL = "abcdefghigklmnopqrstuvwxwz";
     private static final String E_TAGC = "zwxwvutsrqponmlkgihgfedcba";
 
@@ -80,10 +83,19 @@ public class FavoritesConflictResolutionPresenterTest {
     private Favorite defaultFavorite;
     private String favoriteId;
 
+    @BeforeClass
+    public static void init() {
+        mockedLog = Mockito.mockStatic(Log.class);
+    }
+
+    @AfterClass
+    public static void close() {
+        mockedLog.close();
+    }
+
     @Before
     public void setupFavoritesConflictResolutionPresenter() {
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(Log.class);
+        MockitoAnnotations.openMocks(this);
         schedulerProvider = new ImmediateSchedulerProvider();
         favoriteId = TestUtils.KEY_PREFIX + 'A';
         defaultFavorite = new Favorite(favoriteId, "Favorite", false, TestUtils.TAGS);
@@ -147,7 +159,8 @@ public class FavoritesConflictResolutionPresenterTest {
         when(localFavorites.get(eq(favoriteId))).thenReturn(Single.just(favorite));
         when(localFavorites.getMain(eq(favorite.getDuplicatedKey())))
                 .thenReturn(Single.error(new NoSuchElementException()));
-        when(viewModel.isCloudPopulated()).thenReturn(true);
+        // TODO: check why that's unnecessary
+        //when(viewModel.isCloudPopulated()).thenReturn(true);
         when(localFavorites.update(eq(favoriteId), any(SyncState.class)))
                 .thenReturn(Single.just(true));
         presenter.subscribe();

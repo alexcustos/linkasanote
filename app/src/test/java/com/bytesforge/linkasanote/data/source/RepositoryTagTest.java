@@ -20,6 +20,13 @@
 
 package com.bytesforge.linkasanote.data.source;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource;
 import com.bytesforge.linkasanote.data.source.local.LocalDataSource;
@@ -39,13 +46,6 @@ import java.util.NoSuchElementException;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class RepositoryTagTest {
 
@@ -69,7 +69,7 @@ public class RepositoryTagTest {
 
     @Before
     public void setupRepository() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         BaseSchedulerProvider schedulerProvider = new ImmediateSchedulerProvider();
         repository = new Repository(localDataSource, cloudDataSource, schedulerProvider);
     }
