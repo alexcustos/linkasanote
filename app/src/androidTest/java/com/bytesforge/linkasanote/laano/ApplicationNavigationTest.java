@@ -108,6 +108,7 @@ public class ApplicationNavigationTest {
         assertThat((activity.getCurrentFragment()).getTitle(), equalTo(LINKS_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(LinksFragment.class));
         // Favorites
+        // TODO: check why it doesn't work
         onView(withId(R.id.laano_view_pager)).perform(swipeLeft());
         assertThat((activity.getCurrentFragment()).getTitle(), equalTo(FAVORITES_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(FavoritesFragment.class));

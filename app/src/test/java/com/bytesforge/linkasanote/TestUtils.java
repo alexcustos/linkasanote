@@ -20,5 +20,7 @@
 
 package com.bytesforge.linkasanote;
 
+import com.bytesforge.sharedtestcode.SharedUtils;
+
 public class TestUtils extends SharedUtils {
 }

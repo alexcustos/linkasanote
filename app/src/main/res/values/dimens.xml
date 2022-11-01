@@ -22,6 +22,7 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="minimum_clickable_height">48dp</dimen>
+    <dimen name="minimum_clickable_width">48dp</dimen>
     <dimen name="drawer_header_height">140dp</dimen>
     <dimen name="drawer_header_status_margin_top">4dp</dimen>
     <dimen name="drawer_header_padding">16dp</dimen>

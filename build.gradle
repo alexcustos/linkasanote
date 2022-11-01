@@ -2,15 +2,16 @@
 
 ext {
     // NOTE: xxx.yy.zz; -SNAPSHOT; -RCxx
-    VERSION_NAME = '0.3.6'
-    SDK_VERSION = 31
+    VERSION_NAME = '0.3.7'
+    SDK_VERSION = 33
     MIN_SDK_VERSION = 19
-    BUILD_TOOL_VERSION = '31.0.0'
+    BUILD_TOOL_VERSION = '33.0.0'
 
     multidexVersion = '2.0.1'
     androidxDrawerVersion = '1.1.1'
     androidxPrefVersion = '1.2.0'
-    materialVersion = '1.5.0'
+    androidxLifecycleVersion= '2.5.1'
+    materialVersion = '1.7.0'
     //appcompatVersion = '1.4.1'
     guavaVersion = '31.0.1'
     daggerVersion = '2.40.5'
@@ -64,7 +65,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.2'
+        classpath 'com.android.tools.build:gradle:7.3.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

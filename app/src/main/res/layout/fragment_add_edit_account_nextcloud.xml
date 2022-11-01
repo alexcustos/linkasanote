@@ -74,21 +74,22 @@
                     <EditText
                         android:id="@+id/server_url"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="@dimen/minimum_clickable_height"
+                        android:afterTextChanged="@{() -> viewModel.afterServerUrlChanged(serverUrl)}"
+                        android:autofillHints="url"
+                        android:enabled="@{viewModel.serverUrl}"
                         android:hint="@string/add_edit_account_nextcloud_url_hint"
                         android:inputType="textUri"
+                        android:onFocusChange="@{viewModel::onServerUrlFocusChange}"
                         android:text="@={viewModel.serverUrlText}"
-                        android:enabled="@{viewModel.serverUrl}"
-                        android:afterTextChanged="@{() -> viewModel.afterServerUrlChanged(serverUrl)}"
-                        android:onFocusChange="@{viewModel::onServerUrlFocusChange}" />
+                        bind:ignore="SpeakableTextPresentCheck" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <ImageButton
                     android:id="@+id/host_url_refresh_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="@dimen/minimum_clickable_width"
+                    android:layout_height="@dimen/minimum_clickable_height"
                     android:layout_gravity="bottom|end"
-                    android:layout_marginBottom="@dimen/add_edit_account_refresh_margin_bottom"
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/add_edit_account_nextcloud_url_refresh_description"
                     android:visibility="@{viewModel.refreshButton ? View.VISIBLE : View.GONE}"
@@ -116,12 +117,14 @@
                 <EditText
                     android:id="@+id/account_username"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/minimum_clickable_height"
+                    android:afterTextChanged="@{() -> viewModel.afterAccountCredentialsChanged()}"
+                    android:autofillHints="username"
+                    android:enabled="@{viewModel.accountUsername}"
                     android:hint="@string/add_edit_account_nextcloud_username_hint"
                     android:inputType="textNoSuggestions"
                     android:text="@={viewModel.accountUsernameText}"
-                    android:enabled="@{viewModel.accountUsername}"
-                    android:afterTextChanged="@{() -> viewModel.afterAccountCredentialsChanged()}" />
+                    bind:ignore="SpeakableTextPresentCheck" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -132,11 +135,13 @@
                 <EditText
                     android:id="@+id/account_password"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/minimum_clickable_height"
+                    android:afterTextChanged="@{() -> viewModel.afterAccountCredentialsChanged()}"
+                    android:autofillHints="password"
                     android:hint="@string/add_edit_account_nextcloud_password_hint"
                     android:inputType="textPassword"
                     android:text="@={viewModel.accountPasswordText}"
-                    android:afterTextChanged="@{() -> viewModel.afterAccountCredentialsChanged()}" />
+                    bind:ignore="SpeakableTextPresentCheck" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
@@ -171,12 +176,12 @@
 
                 <Button
                     android:id="@+id/about_nextcloud_button"
+                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/add_edit_account_nextcloud_about"
-                    android:textColor="@color/about_nextcloud_button"
                     android:onClick="@{() -> viewModel.onAboutNextcloudClick()}"
-                    style="?android:attr/buttonBarButtonStyle" />
+                    android:text="@string/add_edit_account_nextcloud_about"
+                    android:textColor="@color/about_nextcloud_button" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
