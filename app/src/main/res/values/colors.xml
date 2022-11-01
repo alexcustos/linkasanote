@@ -26,7 +26,7 @@
 
     <color name="color_primary">@color/indigo_500</color>
     <color name="color_primary_dark">@color/indigo_700</color>
-    <color name="color_accent">@color/red_A200</color>
+    <color name="color_accent">@color/recommended_accent</color>
     <color name="tabs_text">@color/indigo_200</color>
     <color name="tabs_text_selected">@android:color/white</color>
     <color name="token">@android:color/transparent</color>
@@ -52,10 +52,11 @@
     <color name="link_background">@color/note_background</color>
     <color name="link_note_divider">@color/grey_300</color>
     <color name="dialog_title_background">@color/grey_100</color>
-    <color name="about_nextcloud_button">@color/indigo_300</color>
+    <color name="about_nextcloud_button">@color/indigo_400</color>
 
     <!-- Misc -->
     <color name="green_500">#4CAF50</color>
+    <color name="recommended_accent">#D32F2F</color>
 
     <!-- Indigo: primary -->
     <color name="indigo_50">#E8EAF6</color>

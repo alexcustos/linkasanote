@@ -138,6 +138,7 @@ android {
         htmlOutput file("$project.buildDir/reports/lint/lint.html")
         htmlReport true
     }
+    namespace 'com.bytesforge.linkasanote'
 }
 
 dependencies {
@@ -155,6 +156,8 @@ dependencies {
     implementation "androidx.core:core-ktx:$core_ktx_version"
     implementation "androidx.preference:preference-ktx:${androidxPrefVersion}"
     //implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel:${androidxLifecycleVersion}"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${androidxLifecycleVersion}"
 
     // RxJava
     implementation "io.reactivex.rxjava2:rxjava:${rxjavaVersion}"
