@@ -40,6 +40,7 @@ import androidx.test.rule.ActivityTestRule;
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 
 import com.bytesforge.linkasanote.data.source.local.LocalContract;
+import com.bytesforge.sharedtestcode.SharedUtils;
 
 import java.util.Collection;
 

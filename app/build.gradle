@@ -124,15 +124,6 @@ android {
         enabled = true
     }
 
-    sourceSets {
-        String sharedTestDir = 'src/sharedTest/java'
-        test {
-            java.srcDir sharedTestDir
-        }
-        androidTest {
-            java.srcDir sharedTestDir
-        }
-    }
     lint {
         abortOnError false
         htmlOutput file("$project.buildDir/reports/lint/lint.html")
@@ -178,12 +169,14 @@ dependencies {
     implementation "com.facebook.stetho:stetho:${stethoVersion}"
 
     // Local unit tests
+    testImplementation project(":sharedTestCode")
     testImplementation "androidx.test:core:${coreVersion}"
     testImplementation "junit:junit:${junitVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "org.mockito:mockito-inline:${mockitoVersion}"
 
     // Espresso Testing
+    androidTestImplementation project(":sharedTestCode")
     androidTestImplementation "androidx.test.espresso:espresso-core:${espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${espressoVersion}"
     androidTestImplementation "androidx.test:runner:${testVersion}"
