@@ -17,8 +17,13 @@ android {
         testInstrumentationRunnerArguments clearPackageData: 'true'
 
         vectorDrawables.useSupportLibrary = true
-        resConfigs 'en', 'ru-rRU'
+        resourceConfigurations += ['en', 'ru-rRU']
         buildConfigField 'long', 'BUILD_TIMESTAMP', System.currentTimeMillis() + 'L'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     //compileOptions {
@@ -170,7 +175,7 @@ dependencies {
 
     // Local unit tests
     testImplementation project(":sharedTestCode")
-    testImplementation "androidx.test:core:${coreVersion}"
+    testImplementation "androidx.test:core:${testCoreVersion}"
     testImplementation "junit:junit:${junitVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "org.mockito:mockito-inline:${mockitoVersion}"
@@ -179,8 +184,8 @@ dependencies {
     androidTestImplementation project(":sharedTestCode")
     androidTestImplementation "androidx.test.espresso:espresso-core:${espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${espressoVersion}"
-    androidTestImplementation "androidx.test:runner:${testVersion}"
-    androidTestImplementation "androidx.test:rules:${testVersion}"
+    androidTestImplementation "androidx.test:runner:${testRunnerVersion}"
+    androidTestImplementation "androidx.test:rules:${testRulesVersion}"
     androidTestImplementation "androidx.test.ext:junit:${testExtVersion}"
     androidTestImplementation "org.mockito:mockito-core:${mockitoVersion}"
     //androidTestImplementation "org.mockito:mockito-android:${mockitoVersion}"
