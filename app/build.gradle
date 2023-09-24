@@ -3,11 +3,9 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion SDK_VERSION
-    buildToolsVersion BUILD_TOOL_VERSION
-
     defaultConfig {
         applicationId 'com.bytesforge.linkasanote'
+        compileSdk = SDK_VERSION
         minSdkVersion MIN_SDK_VERSION
         targetSdkVersion SDK_VERSION
         versionCode buildVersionCode()
@@ -151,8 +149,6 @@ dependencies {
     // Kotlin
     implementation "androidx.core:core-ktx:$core_ktx_version"
     implementation "androidx.preference:preference-ktx:${androidxPrefVersion}"
-    //implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "androidx.lifecycle:lifecycle-viewmodel:${androidxLifecycleVersion}"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${androidxLifecycleVersion}"
 
     // RxJava
@@ -160,8 +156,8 @@ dependencies {
     implementation "io.reactivex.rxjava2:rxandroid:${rxandroidVersion}"
 
     // AndroidX
+    //implementation "androidx.lifecycle:lifecycle-viewmodel:${androidxLifecycleVersion}"
     implementation "androidx.drawerlayout:drawerlayout:${androidxDrawerVersion}"
-    //implementation "androidx.appcompat:appcompat:${appcompatVersion}"
     implementation "com.google.android.material:material:${materialVersion}"
 
     // Dagger 2
@@ -178,7 +174,6 @@ dependencies {
     testImplementation "androidx.test:core:${testCoreVersion}"
     testImplementation "junit:junit:${junitVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
-    testImplementation "org.mockito:mockito-inline:${mockitoVersion}"
 
     // Espresso Testing
     androidTestImplementation project(":sharedTestCode")
@@ -188,8 +183,6 @@ dependencies {
     androidTestImplementation "androidx.test:rules:${testRulesVersion}"
     androidTestImplementation "androidx.test.ext:junit:${testExtVersion}"
     androidTestImplementation "org.mockito:mockito-core:${mockitoVersion}"
-    //androidTestImplementation "org.mockito:mockito-android:${mockitoVersion}"
-    //androidTestImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
     androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito-inline:${dexmakerVersion}"
 
     // Resolve conflicts
