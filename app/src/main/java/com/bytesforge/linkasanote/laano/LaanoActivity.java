@@ -157,7 +157,11 @@ public class LaanoActivity extends AppCompatActivity implements
         laanoUiManager.updateTitle(activeTab);
 
         registerReceiver(connectivityBroadcastReceiver, connectivityIntentFilter);
-        registerReceiver(syncBroadcastReceiver, syncIntentFilter);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(syncBroadcastReceiver, syncIntentFilter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(syncBroadcastReceiver, syncIntentFilter);
+        }
     }
 
     @Override
