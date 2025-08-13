@@ -63,3 +63,6 @@
 
 -keep class android.support.v7.** { *; }
 -keep class com.owncloud.android.lib.** { *; }
+
+-dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+
