@@ -4,11 +4,12 @@ plugins {
 
 android {
     namespace 'com.bytesforge.sharedtestcode'
-    compileSdk = 35
+    compileSdk = rootProject.ext.SDK_VERSION
+    buildToolsVersion rootProject.ext.BUILD_TOOL_VERSION
 
     defaultConfig {
-        minSdk 21
-        targetSdk 35
+        minSdk rootProject.ext.MIN_SDK_VERSION
+        targetSdk rootProject.ext.SDK_VERSION
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -33,12 +34,11 @@ android {
             dimension 'mode'
         }
     }
-    buildToolsVersion '35.0.0'
 }
 
 dependencies {
 
-    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'com.google.android.material:material:1.12.0'
     implementation project(path: ':app')
 }

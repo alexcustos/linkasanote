@@ -1,6 +1,7 @@
 # Android Studio generated files
 .gradle/
 .idea/
+.kotlin/
 build/
 /captures/
 *.iml

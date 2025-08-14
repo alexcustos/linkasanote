@@ -270,6 +270,7 @@ public class FavoritesTabTest {
 
         onView(withId(R.id.rv_favorites))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));
+        onView(withId(R.id.favorites_delete)).check(matches(isDisplayed()));
         onView(withItemTextId(LINKS_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));

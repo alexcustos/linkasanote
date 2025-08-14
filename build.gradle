@@ -2,7 +2,7 @@
 
 buildscript {
     ext.kotlin_version = '1.9.23'
-    ext.core_ktx_version = '1.10.1'
+    ext.core_ktx_version = '1.13.0'
     repositories {
         mavenCentral()
         google()
@@ -24,9 +24,9 @@ plugins {
 ext {
     // NOTE: xxx.yy.zz; -SNAPSHOT; -RCxx
     VERSION_NAME = '0.3.8'
-    SDK_VERSION = 35
+    SDK_VERSION = 36
     MIN_SDK_VERSION = 21
-    BUILD_TOOL_VERSION = '35.0.0'
+    BUILD_TOOL_VERSION = '36.0.0'
 }
 
 ext {
