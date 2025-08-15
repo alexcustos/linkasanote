@@ -276,6 +276,7 @@ public class NotesTabTest {
 
         onView(withId(R.id.rv_notes))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));
+        onView(withId(R.id.notes_delete)).check(matches(isDisplayed()));
         onView(withItemTextId(FAVORITE_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));

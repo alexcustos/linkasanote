@@ -268,6 +268,7 @@ public class LinksTabTest {
 
         onView(withId(R.id.rv_links))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));
+        onView(withId(R.id.links_delete)).check(matches(isDisplayed()));
         onView(withItemTextId(FAVORITES_TITLE, R.id.tab_layout))
                 .perform(click())
                 .check(matches(isDisplayed()));

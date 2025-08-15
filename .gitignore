@@ -1,6 +1,7 @@
 # Android Studio generated files
 .gradle/
 .idea/
+.kotlin/
 build/
 /captures/
 *.iml
@@ -9,6 +10,7 @@ build/
 local.properties
 release-signing.properties
 /app/prod/
+build.sh
 
 # Temporary files
 /tmp/
