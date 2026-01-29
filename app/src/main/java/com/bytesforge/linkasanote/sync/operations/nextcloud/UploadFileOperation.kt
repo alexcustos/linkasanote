@@ -76,9 +76,7 @@ class UploadFileOperation(private val file: JsonFile) : RemoteOperation() {
     private inner class EnhancedUploadFileRemoteOperation(
         localPath: String?, remotePath: String?, mimeType: String?
     ) : UploadFileRemoteOperation(
-        localPath, remotePath, mimeType, java.lang.Long.toString(
-            System.currentTimeMillis() / 1000
-        )
+        localPath, remotePath, mimeType, (System.currentTimeMillis() / 1000).toString()
     ) {
         private var ocClient: OwnCloudClient? = null
         private var fileId: String? = null
@@ -117,31 +115,33 @@ class UploadFileOperation(private val file: JsonFile) : RemoteOperation() {
             )
             val nextcloudHeaders = extractNextcloudResponseHeaders(putMethod.responseHeaders)
             if (nextcloudHeaders != null) {
-                fileId = nextcloudHeaders[NEXTCLOUD_FILE_ID_HEADER]
-                eTag = nextcloudHeaders[NEXTCLOUD_E_TAG_HEADER]
+                fileId = nextcloudHeaders[NEXTCLOUD_FILE_ID_HEADER.lowercase()]
+                eTag = nextcloudHeaders[NEXTCLOUD_E_TAG_HEADER.lowercase()]
             }
             return result
         }
 
         private fun extractNextcloudResponseHeaders(headers: Array<Header>?): Map<String, String>? {
             if (headers == null) return null
+
             val nextcloudHeaders: MutableMap<String, String> = HashMap()
+            val headerPrefix = NEXTCLOUD_HEADER_PREFIX.lowercase()
             for (header in headers) {
-                val name = header.name.toLowerCase()
-                if (name.startsWith(NEXTCLOUD_HEADER_PREFIX)) {
+                val name = header.name.lowercase()
+                if (name.startsWith(headerPrefix)) {
                     val value = header.value.replace("^\"|\"$".toRegex(), "")
                     nextcloudHeaders[name] = value
                 }
             }
-            return if (nextcloudHeaders.isEmpty()) null else nextcloudHeaders
+            return nextcloudHeaders.ifEmpty { null }
         }
     }
 
     companion object {
         private val TAG = UploadFileOperation::class.java.simpleName
-        private val NEXTCLOUD_HEADER_PREFIX = "OC-".toLowerCase()
-        private val NEXTCLOUD_FILE_ID_HEADER = NEXTCLOUD_HEADER_PREFIX + "FileId".toLowerCase()
-        private val NEXTCLOUD_E_TAG_HEADER = NEXTCLOUD_HEADER_PREFIX + "ETag".toLowerCase()
+        private const val NEXTCLOUD_HEADER_PREFIX = "OC-"
+        private const val NEXTCLOUD_FILE_ID_HEADER = NEXTCLOUD_HEADER_PREFIX + "FileId"
+        private const val NEXTCLOUD_E_TAG_HEADER = NEXTCLOUD_HEADER_PREFIX + "ETag"
     }
 
 }
