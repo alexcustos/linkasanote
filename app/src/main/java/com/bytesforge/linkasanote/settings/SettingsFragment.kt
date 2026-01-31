@@ -103,6 +103,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         prefBackup = findPreference(
             resources.getString(R.string.pref_key_backup)
         )
+
         prefRestore = findPreference<Preference>(
             resources.getString(R.string.pref_key_restore)
         ) as ListPreference?
@@ -281,6 +282,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     // Backup
     private fun refreshBackupEntries() {
         if (prefRestore == null) return
+
         val backupEntries = backupEntries
         val size = backupEntries.size
         if (size <= 0) {

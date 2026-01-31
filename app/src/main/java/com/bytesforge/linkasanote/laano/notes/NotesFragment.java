@@ -20,6 +20,8 @@
 
 package com.bytesforge.linkasanote.laano.notes;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -27,6 +29,14 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -41,14 +51,6 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SimpleItemAnimator;
-
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Note;
@@ -67,8 +69,6 @@ import com.bytesforge.linkasanote.utils.ActivityUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class NotesFragment extends BaseItemFragment implements NotesContract.View {
 
     public static final int REQUEST_ADD_NOTE = 1;
@@ -77,7 +77,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
     private NotesContract.Presenter presenter;
     private NotesContract.ViewModel viewModel;
-    private NotesAdapterBase adapter;
+    private NotesAdapterBase adapter; // <RecyclerView.ViewHolder>
     private NotesAdapterNormal normalAdapter;
     private NotesAdapterReading readingAdapter;
     private ActionMode actionMode;
@@ -150,7 +150,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.toolbar_notes, menu);
         MenuItem searchMenuItem = menu.findItem(R.id.toolbar_notes_search);
         setSearchMenuItem(searchMenuItem);
@@ -209,36 +209,32 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.toolbar_notes_filter:
-                showFilteringPopupMenu();
-                break;
-            case R.id.toolbar_notes_action_mode:
-                boolean readingMode = presenter.isNotesLayoutModeReading();
-                if (readingMode) {
-                    readingMode = presenter.toggleNotesLayoutMode();
-                    invalidateOptionsMenu();
-                    updateNotesAdapter(readingMode);
-                }
-                enableActionMode();
-                break;
-            case R.id.toolbar_notes_expand_all:
-                expandAllNotes();
-                break;
-            case R.id.toolbar_notes_collapse_all:
-                collapseAllNotes();
-                break;
-            case R.id.toolbar_notes_clear_clipboard:
-                if (context != null)
-                    ActivityUtils.clearClipboard(context);
-                break;
-            case R.id.toolbar_notes_layout_mode:
-                toggleNotesLayoutMode();
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.toolbar_notes_filter) {
+            showFilteringPopupMenu();
+        } else if (id == R.id.toolbar_notes_action_mode) {
+            boolean readingMode = presenter.isNotesLayoutModeReading();
+            if (readingMode) {
+                readingMode = presenter.toggleNotesLayoutMode();
+                invalidateOptionsMenu();
+                updateNotesAdapter(readingMode);
+            }
+            enableActionMode();
+        } else if (id == R.id.toolbar_notes_expand_all) {
+            expandAllNotes();
+        } else if (id == R.id.toolbar_notes_collapse_all) {
+            collapseAllNotes();
+        } else if (id ==R.id.toolbar_notes_clear_clipboard) {
+            if (context != null)
+                ActivityUtils.clearClipboard(context);
+        } else if (id == R.id.toolbar_notes_layout_mode) {
+            toggleNotesLayoutMode();
+        } else {
+            return super.onOptionsItemSelected(item);
         }
+
         return true;
     }
 
@@ -326,13 +322,6 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_ADD_NOTE:
-                if (resultCode == Activity.RESULT_OK) {
-                    //viewModel.showSaveSuccessSnackbar();
-                    String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
-                    String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
-                    presenter.syncSavedNote(linkId, noteId);
-                }
-                break;
             case REQUEST_EDIT_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
                     //viewModel.showSaveSuccessSnackbar();
@@ -423,26 +412,15 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         Menu menu = popupMenu.getMenu();
         popupMenu.getMenuInflater().inflate(R.menu.filter, menu);
         popupMenu.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.filter_all:
-                    presenter.setFilterType(FilterType.ALL);
-                    break;
-                case R.id.filter_link:
-                    presenter.setFilterType(FilterType.LINK);
-                    break;
-                case R.id.filter_favorite:
-                    presenter.setFilterType(FilterType.FAVORITE);
-                    break;
-                case R.id.filter_no_tags:
-                    presenter.setFilterType(FilterType.NO_TAGS);
-                    break;
-                case R.id.filter_unbound:
-                    presenter.setFilterType(FilterType.UNBOUND);
-                    break;
-                case R.id.filter_conflicted:
-                    presenter.setFilterType(FilterType.CONFLICTED);
-                    break;
-            }
+            int id = item.getItemId();
+
+            if (id == R.id.filter_all) presenter.setFilterType(FilterType.ALL);
+            else if (id == R.id.filter_link) presenter.setFilterType(FilterType.LINK);
+            else if (id == R.id.filter_favorite) presenter.setFilterType(FilterType.FAVORITE);
+            else if (id == R.id.filter_no_tags) presenter.setFilterType(FilterType.NO_TAGS);
+            else if (id == R.id.filter_unbound) presenter.setFilterType(FilterType.UNBOUND);
+            else if (id == R.id.filter_conflicted) presenter.setFilterType(FilterType.CONFLICTED);
+
             // NOTE: also go to the start of the list if the current filter is selected
             scrollToPosition(0);
             return true;
@@ -619,19 +597,18 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.notes_delete:
-                    presenter.onDeleteClick();
-                    break;
-                case R.id.notes_select_all:
-                    presenter.onSelectAllClick();
-                    updateActionModeTitle();
-                    updateActionModeMenu();
-                    break;
-                default:
-                    throw new UnsupportedOperationException(
-                            "Unknown ActionMode item [" + item.getItemId() + "]");
+            int id = item.getItemId();
+
+            if (id == R.id.notes_delete) {
+                presenter.onDeleteClick();
+            } else if (id == R.id.notes_select_all) {
+                presenter.onSelectAllClick();
+                updateActionModeTitle();
+                updateActionModeMenu();
+            } else {
+                throw new UnsupportedOperationException("Unknown ActionMode item [" + item.getItemId() + "]");
             }
+
             return true;
         }
 

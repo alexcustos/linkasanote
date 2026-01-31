@@ -25,6 +25,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.os.Bundle
+import androidx.core.content.edit
 import com.bytesforge.linkasanote.R
 import com.bytesforge.linkasanote.data.Favorite
 import com.bytesforge.linkasanote.data.Link
@@ -139,8 +140,7 @@ class Settings(context: Context, private val sharedPreferences: SharedPreference
             if (isDelay) {
                 Thread.sleep(25) // TODO: find a better way, it is not good at all
             }
-            val manualInterval =
-                resources.getString(R.string.pref_sync_interval_manual_mode).toLong()
+            val manualInterval = resources.getString(R.string.pref_sync_interval_manual_mode).toLong()
             if (ContentResolver.getSyncAutomatically(account, LocalContract.CONTENT_AUTHORITY)) {
                 val periodicSyncs = ContentResolver
                     .getPeriodicSyncs(account, LocalContract.CONTENT_AUTHORITY)
@@ -233,8 +233,8 @@ class Settings(context: Context, private val sharedPreferences: SharedPreference
     private fun getFilterType(key: String): FilterType {
         val ordinal = sharedPreferences.getInt(key, DEFAULT_FILTER_TYPE.ordinal)
         return try {
-            FilterType.values()[ordinal]
-        } catch (e: ArrayIndexOutOfBoundsException) {
+            FilterType.entries[ordinal]
+        } catch (_: ArrayIndexOutOfBoundsException) {
             DEFAULT_FILTER_TYPE
         }
     }
@@ -372,27 +372,27 @@ class Settings(context: Context, private val sharedPreferences: SharedPreference
         }
 
     private fun putStringSetting(key: String, value: String?) {
-        val editor = sharedPreferences.edit()
-        editor.putString(key, value)
-        editor.apply()
+        sharedPreferences.edit {
+            putString(key, value)
+        }
     }
 
     private fun putIntSetting(key: String, value: Int) {
-        val editor = sharedPreferences.edit()
-        editor.putInt(key, value)
-        editor.apply()
+        sharedPreferences.edit {
+            putInt(key, value)
+        }
     }
 
     private fun putLongSetting(key: String, value: Long) {
-        val editor = sharedPreferences.edit()
-        editor.putLong(key, value)
-        editor.apply()
+        sharedPreferences.edit {
+            putLong(key, value)
+        }
     }
 
     private fun putBooleanSetting(key: String, value: Boolean) {
-        val editor = sharedPreferences.edit()
-        editor.putBoolean(key, value)
-        editor.apply()
+        sharedPreferences.edit {
+            putBoolean(key, value)
+        }
     }
 
     companion object {
