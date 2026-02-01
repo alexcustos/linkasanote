@@ -50,7 +50,7 @@ class AboutActivity : AppCompatActivity() {
         var fragment = supportFragmentManager
             .findFragmentById(R.id.content_frame) as AboutFragment?
         if (fragment == null) {
-            fragment = AboutFragment.Companion.newInstance()
+            fragment = AboutFragment.newInstance()
             ActivityUtils.addFragmentToActivity(
                 supportFragmentManager, fragment, R.id.content_frame
             )
@@ -63,7 +63,7 @@ class AboutActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
+        //onBackPressed() - let the OS handle it automatically
         return true
     }
 }

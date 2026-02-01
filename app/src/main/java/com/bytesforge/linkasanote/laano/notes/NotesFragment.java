@@ -37,6 +37,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -47,6 +51,7 @@ import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentResultListener;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -71,8 +76,6 @@ import java.util.List;
 
 public class NotesFragment extends BaseItemFragment implements NotesContract.View {
 
-    public static final int REQUEST_ADD_NOTE = 1;
-    public static final int REQUEST_EDIT_NOTE = 2;
     public static final int REQUEST_NOTE_CONFLICT_RESOLUTION = 3;
 
     private NotesContract.Presenter presenter;
@@ -125,7 +128,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         fragmentActivity = getActivity();
-        fragmentManager = getFragmentManager();
+        fragmentManager = getParentFragmentManager();
         context = getContext();
 
         setHasOptionsMenu(true);
@@ -226,7 +229,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
             expandAllNotes();
         } else if (id == R.id.toolbar_notes_collapse_all) {
             collapseAllNotes();
-        } else if (id ==R.id.toolbar_notes_clear_clipboard) {
+        } else if (id == R.id.toolbar_notes_clear_clipboard) {
             if (context != null)
                 ActivityUtils.clearClipboard(context);
         } else if (id == R.id.toolbar_notes_layout_mode) {
@@ -265,14 +268,14 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         if (linkId != null) {
             intent.putExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID, linkId);
         }
-        startActivityForResult(intent, REQUEST_ADD_NOTE);
+        requestAddEditNoteActivityResultLauncher.launch(intent);
     }
 
     @Override
     public void showEditNote(@NonNull String noteId) {
         Intent intent = new Intent(context, AddEditNoteActivity.class);
         intent.putExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID, noteId);
-        startActivityForResult(intent, REQUEST_EDIT_NOTE);
+        requestAddEditNoteActivityResultLauncher.launch(intent);
     }
 
     @Override
@@ -318,33 +321,39 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         applyRvLayoutState();
     }
 
+    ActivityResultLauncher<Intent> requestAddEditNoteActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        assert data != null;
+
+                        //viewModel.showSaveSuccessSnackbar();
+                        String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
+                        String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
+                        presenter.syncSavedNote(linkId, noteId);
+                    }
+                }
+            });
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_ADD_NOTE:
-            case REQUEST_EDIT_NOTE:
-                if (resultCode == Activity.RESULT_OK) {
-                    //viewModel.showSaveSuccessSnackbar();
-                    String linkId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_RELATED_LINK_ID);
-                    String noteId = data.getStringExtra(AddEditNoteFragment.ARGUMENT_NOTE_ID);
-                    presenter.syncSavedNote(linkId, noteId);
-                }
-                break;
-            case REQUEST_NOTE_CONFLICT_RESOLUTION:
-                presenter.updateTabNormalState();
-                // NOTE: force reload because of conflict resolution is a dialog
-                presenter.loadNotes(false);
-                if (resultCode == NotesConflictResolutionDialog.RESULT_OK) {
-                    presenter.updateSyncStatus();
-                    //viewModel.showConflictResolutionSuccessfulSnackbar();
-                    Toast.makeText(context, R.string.toast_conflict_resolved,
-                            Toast.LENGTH_SHORT).show();
-                } else if (resultCode == NotesConflictResolutionDialog.RESULT_FAILED){
-                    viewModel.showConflictResolutionErrorSnackbar();
-                }
-                break;
-            default:
-                throw new IllegalStateException("The result is received from the unexpected activity");
+        if (requestCode == REQUEST_NOTE_CONFLICT_RESOLUTION) {
+            presenter.updateTabNormalState();
+            // NOTE: force reload because of conflict resolution is a dialog
+            presenter.loadNotes(false);
+            if (resultCode == NotesConflictResolutionDialog.RESULT_OK) {
+                presenter.updateSyncStatus();
+                //viewModel.showConflictResolutionSuccessfulSnackbar();
+                Toast.makeText(context, R.string.toast_conflict_resolved,
+                        Toast.LENGTH_SHORT).show();
+            } else if (resultCode == NotesConflictResolutionDialog.RESULT_FAILED) {
+                viewModel.showConflictResolutionErrorSnackbar();
+            }
+        } else {
+            throw new IllegalStateException("The result is received from the unexpected activity");
         }
     }
 
@@ -536,11 +545,7 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
         if (notesActionModeCallback == null) return;
 
         int selected = viewModel.getSelectedCount();
-        if (selected <= 0) {
-            notesActionModeCallback.setDeleteEnabled(false);
-        } else {
-            notesActionModeCallback.setDeleteEnabled(true);
-        }
+        notesActionModeCallback.setDeleteEnabled(selected > 0);
     }
 
     @Override
@@ -570,8 +575,8 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
     @Override
     public void showConflictResolution(@NonNull String noteId) {
         checkNotNull(noteId);
-        NotesConflictResolutionDialog dialog =
-                NotesConflictResolutionDialog.newInstance(noteId);
+
+        NotesConflictResolutionDialog dialog = NotesConflictResolutionDialog.newInstance(noteId);
         dialog.setTargetFragment(this, REQUEST_NOTE_CONFLICT_RESOLUTION);
         if (fragmentManager != null)
             dialog.show(fragmentManager, NotesConflictResolutionDialog.DIALOG_TAG);

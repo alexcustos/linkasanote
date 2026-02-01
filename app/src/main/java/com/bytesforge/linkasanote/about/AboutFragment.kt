@@ -24,14 +24,13 @@ import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.net.toUri
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import com.bytesforge.linkasanote.BuildConfig
@@ -42,12 +41,12 @@ import com.bytesforge.linkasanote.databinding.FragmentAboutBinding
 import com.bytesforge.linkasanote.utils.ActivityUtils
 import com.bytesforge.linkasanote.utils.CommonUtils
 import com.bytesforge.linkasanote.utils.schedulers.BaseSchedulerProvider
-import com.google.common.base.Charsets
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 class AboutFragment : Fragment(), AboutContract.View {
@@ -103,7 +102,7 @@ class AboutFragment : Fragment(), AboutContract.View {
             "com.google.android.finsky.activities.MarketDeepLinkHandlerActivity"
         )
         intent.component = androidComponent
-        val marketUriBuilder = Uri.parse(resources.getString(R.string.google_market))
+        val marketUriBuilder = resources.getString(R.string.google_market).toUri()
             .buildUpon()
             .appendQueryParameter("id", BuildConfig.APPLICATION_ID)
         intent.data = marketUriBuilder.build()
@@ -113,7 +112,7 @@ class AboutFragment : Fragment(), AboutContract.View {
     }
 
     private fun findMarketIntent(): Intent? {
-        val marketUriBuilder = Uri.parse(resources.getString(R.string.google_market))
+        val marketUriBuilder = resources.getString(R.string.google_market).toUri()
             .buildUpon()
             .appendQueryParameter("id", BuildConfig.APPLICATION_ID)
         val intent = Intent(Intent.ACTION_VIEW, marketUriBuilder.build())
@@ -125,14 +124,11 @@ class AboutFragment : Fragment(), AboutContract.View {
                 val componentName = ComponentName(
                     activityInfo.applicationInfo.packageName, activityInfo.name
                 )
-                var flags = Intent.FLAG_ACTIVITY_NO_HISTORY or
+                val flags = Intent.FLAG_ACTIVITY_NO_HISTORY or
                         Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
-                        Intent.FLAG_ACTIVITY_NEW_TASK
-                flags = if (Build.VERSION.SDK_INT >= 21) {
-                    flags or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
-                } else {
-                    flags or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+
                 intent.addFlags(flags)
                 //intent.addFlags(
                 //    Intent.FLAG_ACTIVITY_NEW_TASK
@@ -152,7 +148,7 @@ class AboutFragment : Fragment(), AboutContract.View {
         var intent = findMarketIntent() ?: getMarketIntent()
 
         if (intent == null) {
-            val webUriBuilder = Uri.parse(resources.getString(R.string.google_play))
+            val webUriBuilder = resources.getString(R.string.google_play).toUri()
                 .buildUpon()
                 .appendQueryParameter("id", BuildConfig.APPLICATION_ID)
             intent = Intent(Intent.ACTION_VIEW, webUriBuilder.build())
@@ -160,7 +156,7 @@ class AboutFragment : Fragment(), AboutContract.View {
 
         try {
             startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
+        } catch (_: ActivityNotFoundException) {
             viewModel!!.showLaunchGooglePlayErrorSnackbar()
         }
     }
@@ -190,7 +186,7 @@ class AboutFragment : Fragment(), AboutContract.View {
         }
 
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-            val inflater = LayoutInflater.from(context)
+            val inflater = layoutInflater
             binding = DialogAboutLicenseTermsBinding.inflate(inflater, null, false)
             compositeDisposable.clear()
             val disposable = Single.fromCallable { getLicenseText( licenseAsset!! ) }
@@ -215,14 +211,14 @@ class AboutFragment : Fragment(), AboutContract.View {
                 var line: String?
                 val builder = StringBuilder()
                 val stream = resources.assets.open(assetName)
-                val `in` = BufferedReader(InputStreamReader(stream, Charsets.UTF_8))
+                val `in` = BufferedReader(InputStreamReader(stream, StandardCharsets.UTF_8))
                 while (`in`.readLine().also { line = it } != null) {
                     builder.append(line)
                     builder.append('\n')
                 }
                 `in`.close()
                 licenseText = builder.toString()
-            } catch (e: IOException) {
+            } catch (_: IOException) {
                 licenseText = resources.getString(R.string.about_fragment_error_license, assetName)
             }
             return licenseText
@@ -242,7 +238,7 @@ class AboutFragment : Fragment(), AboutContract.View {
     }
 
     companion object {
-        private val TAG = AboutFragment::class.java.simpleName
+        //private val TAG = AboutFragment::class.java.simpleName
         private val TAG_E = AboutFragment::class.java.canonicalName
         private const val GOOGLE_PLAY_PACKAGE_NAME = "com.android.vending"
         private val compositeDisposable: CompositeDisposable = CompositeDisposable()
