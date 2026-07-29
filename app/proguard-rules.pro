@@ -42,6 +42,8 @@
 #public static int e(...);
 
 -keeppackagenames org.jsoup.nodes
+-dontwarn com.google.re2j.Matcher
+-dontwarn com.google.re2j.Pattern
 
 -keep class org.apache.commons.httpclient.** { *; }
 -dontwarn org.apache.commons.**

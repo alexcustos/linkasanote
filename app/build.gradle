@@ -162,7 +162,7 @@ dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
 
     implementation 'com.google.guava:guava:33.5.0-android'
-    implementation 'com.github.nextcloud:android-library:1.5.0'
+    implementation 'com.github.nextcloud:android-library:1.6.1'
     implementation 'org.jsoup:jsoup:1.22.1'
 
     // Kotlin

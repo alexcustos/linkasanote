@@ -23,7 +23,7 @@ import android.content.Context
 import com.owncloud.android.lib.common.OwnCloudClient
 import com.owncloud.android.lib.common.operations.RemoteOperation
 import com.owncloud.android.lib.common.operations.RemoteOperationResult
-import com.owncloud.android.lib.resources.status.GetRemoteStatusOperation
+import com.owncloud.android.lib.resources.status.GetStatusRemoteOperation
 import com.owncloud.android.lib.resources.status.OwnCloudVersion
 
 class GetServerInfoOperation(
@@ -31,7 +31,7 @@ class GetServerInfoOperation(
 {
     private val serverInfo = ServerInfo()
     override fun run(ocClient: OwnCloudClient): RemoteOperationResult {
-        val statusOperation = GetRemoteStatusOperation(context)
+        val statusOperation = GetStatusRemoteOperation(context)
         val result = statusOperation.execute(ocClient)
         if (result.isSuccess) {
             serverInfo.version = result.data[0] as OwnCloudVersion

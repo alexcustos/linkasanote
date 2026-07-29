@@ -26,7 +26,7 @@ import com.owncloud.android.lib.common.operations.RemoteOperation
 import com.owncloud.android.lib.common.operations.RemoteOperationResult
 import com.owncloud.android.lib.resources.files.ExistenceCheckRemoteOperation
 import com.owncloud.android.lib.resources.status.OwnCloudVersion
-import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation
+import com.owncloud.android.lib.resources.users.GetUserInfoRemoteOperation
 
 class CheckCredentialsOperation(
     credentials: Bundle?, private val serverVersion: OwnCloudVersion) : RemoteOperation()
@@ -48,7 +48,7 @@ class CheckCredentialsOperation(
         }
         if (result.isSuccess) {
             // NOTE: user display name is updated during synchronization
-            val infoOperation = GetRemoteUserInfoOperation()
+            val infoOperation = GetUserInfoRemoteOperation()
             result = infoOperation.execute(ocClient)
         }
         if (result.isSuccess) {
