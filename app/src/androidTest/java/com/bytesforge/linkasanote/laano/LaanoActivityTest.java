@@ -29,10 +29,24 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.contrib.RecyclerViewActions.scrollToPosition;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static com.bytesforge.linkasanote.EspressoMatchers.clickChildViewWithId;
+import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
+import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNotNull;
 
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.res.Resources;
+
+import androidx.test.espresso.contrib.RecyclerViewActions;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.LaanoApplication;
@@ -54,21 +68,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.List;
-
-import static com.bytesforge.linkasanote.EspressoMatchers.clickChildViewWithId;
-import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
-import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
-import static junit.framework.Assert.assertNotNull;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import androidx.test.espresso.contrib.RecyclerViewActions;
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest

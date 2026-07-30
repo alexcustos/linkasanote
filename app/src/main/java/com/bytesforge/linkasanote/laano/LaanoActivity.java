@@ -20,6 +20,9 @@
 
 package com.bytesforge.linkasanote.laano;
 
+import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -37,13 +40,26 @@ import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.databinding.DataBindingUtil;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.viewpager.widget.ViewPager;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
@@ -74,21 +90,6 @@ import com.google.android.material.tabs.TabLayout;
 import java.io.IOException;
 
 import javax.inject.Inject;
-
-import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import androidx.annotation.RequiresApi;
-import androidx.annotation.VisibleForTesting;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.view.GravityCompat;
-import androidx.databinding.DataBindingUtil;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.viewpager.widget.ViewPager;
 
 public class LaanoActivity extends AppCompatActivity implements
         ActivityCompat.OnRequestPermissionsResultCallback {
@@ -342,7 +343,7 @@ public class LaanoActivity extends AppCompatActivity implements
         }
         doubleBackPressed = true;
         laanoUiManager.showShortToast(R.string.toast_double_back_press);
-        new Handler().postDelayed(
+        new Handler(Looper.getMainLooper()).postDelayed(
                 () -> doubleBackPressed = false,
                 Settings.GLOBAL_DOUBLE_BACK_TO_EXIT_MILLIS);
     }
@@ -384,8 +385,8 @@ public class LaanoActivity extends AppCompatActivity implements
     private void requestGetAccountsPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, PERMISSION_GET_ACCOUNTS)) {
             Snackbar.make(binding.laanoViewPager,
-                    R.string.laano_permission_get_accounts,
-                    Snackbar.LENGTH_INDEFINITE)
+                            R.string.laano_permission_get_accounts,
+                            Snackbar.LENGTH_INDEFINITE)
                     .setAction(R.string.snackbar_button_ok, view ->
                             ActivityCompat.requestPermissions(
                                     this, PERMISSIONS_GET_ACCOUNTS, REQUEST_GET_ACCOUNTS))
@@ -624,7 +625,7 @@ public class LaanoActivity extends AppCompatActivity implements
                     switch (menuItem.getItemId()) {
                         case R.id.add_account_menu_item:
                             accountManager.addAccount(getAccountType(this),
-                                    null, null, null, this, addAccountCallback, new Handler());
+                                    null, null, null, this, addAccountCallback, new Handler(Looper.getMainLooper()));
                             break;
                         case R.id.manage_accounts_menu_item:
                             checkGetAccountsPermissionAndLaunchActivity();

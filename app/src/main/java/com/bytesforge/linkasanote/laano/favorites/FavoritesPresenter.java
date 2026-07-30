@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.System.currentTimeMillis;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -224,7 +225,7 @@ public final class FavoritesPresenter extends BaseItemPresenter implements
                         view.updateView();
                     }
                     if (loadIsDeferred) {
-                        new Handler().postDelayed(() -> loadFavorites(false, forceShowLoading),
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> loadFavorites(false, forceShowLoading),
                                 Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
                     }
                 })

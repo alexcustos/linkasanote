@@ -35,6 +35,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.IntentCompat;
 import androidx.databinding.DataBindingUtil;
 
 import com.bytesforge.linkasanote.LaanoApplication;
@@ -57,7 +58,7 @@ public class AddEditAccountActivity extends AppCompatActivity implements
 
     private static final int REQUEST_PERMISSION_GET_ACCOUNTS = 0;
     private static final String PERMISSION_GET_ACCOUNTS = Manifest.permission.GET_ACCOUNTS;
-    private static String[] PERMISSIONS_GET_ACCOUNTS = new String[]{PERMISSION_GET_ACCOUNTS};
+    private static final String[] PERMISSIONS_GET_ACCOUNTS = new String[]{PERMISSION_GET_ACCOUNTS};
 
     public static final String ARGUMENT_REQUEST_CODE = "REQUEST_CODE";
     public static final int REQUEST_ADD_NEXTCLOUD_ACCOUNT = 0;
@@ -81,11 +82,11 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         Account account = null;
         int requestCode = startIntent.getIntExtra(ARGUMENT_REQUEST_CODE, -1);
         if (REQUEST_UPDATE_NEXTCLOUD_ACCOUNT == requestCode) {
-            account = startIntent.getParcelableExtra(
-                    NextcloudFragment.ARGUMENT_EDIT_ACCOUNT_ACCOUNT);
+            account = IntentCompat.getParcelableExtra(startIntent,
+                    NextcloudFragment.ARGUMENT_EDIT_ACCOUNT_ACCOUNT, Account.class);
         }
-        accountAuthenticatorResponse = startIntent.getParcelableExtra(
-                AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE);
+        accountAuthenticatorResponse = IntentCompat.getParcelableExtra(startIntent,
+                AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, AccountAuthenticatorResponse.class);
         // Fragment (View)
         NextcloudFragment nextcloudFragment = (NextcloudFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.content_frame);
@@ -139,8 +140,8 @@ public class AddEditAccountActivity extends AppCompatActivity implements
         presenter.disableLayout();
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, PERMISSION_GET_ACCOUNTS)) {
             Snackbar.make(binding.contentFrame,
-                    R.string.add_edit_account_permission_get_accounts,
-                    Snackbar.LENGTH_INDEFINITE)
+                            R.string.add_edit_account_permission_get_accounts,
+                            Snackbar.LENGTH_INDEFINITE)
                     .setAction(R.string.snackbar_button_ok, view ->
                             ActivityCompat.requestPermissions(
                                     this, PERMISSIONS_GET_ACCOUNTS, REQUEST_PERMISSION_GET_ACCOUNTS))

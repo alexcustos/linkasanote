@@ -48,10 +48,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.os.BundleCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentResultListener;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -370,8 +370,8 @@ public class NotesFragment extends BaseItemFragment implements NotesContract.Vie
 
     private void setRvLayoutState(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            rvLayoutState = savedInstanceState.getParcelable(
-                    BaseItemViewModel.STATE_RECYCLER_LAYOUT);
+            rvLayoutState = BundleCompat.getParcelable(savedInstanceState,
+                    BaseItemViewModel.STATE_RECYCLER_LAYOUT, Parcelable.class);
         }
     }
 

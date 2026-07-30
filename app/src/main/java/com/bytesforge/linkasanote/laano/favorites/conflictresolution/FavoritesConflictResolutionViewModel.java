@@ -20,11 +20,19 @@
 
 package com.bytesforge.linkasanote.laano.favorites.conflictresolution;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.os.BundleCompat;
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
+import androidx.databinding.ObservableBoolean;
+import androidx.databinding.ObservableField;
 
 import com.bytesforge.linkasanote.BR;
 import com.bytesforge.linkasanote.R;
@@ -33,13 +41,6 @@ import com.bytesforge.linkasanote.data.Tag;
 import com.bytesforge.linkasanote.laano.favorites.FavoritesViewModel;
 
 import java.util.ArrayList;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import androidx.databinding.BaseObservable;
-import androidx.databinding.Bindable;
-import androidx.databinding.ObservableBoolean;
-import androidx.databinding.ObservableField;
 
 public class FavoritesConflictResolutionViewModel extends BaseObservable implements
         FavoritesConflictResolutionContract.ViewModel {
@@ -144,7 +145,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         localInfo.set(state.getString(STATE_LOCAL_INFO));
         localId = state.getString(STATE_LOCAL_ID);
         localName.set(state.getString(STATE_LOCAL_NAME));
-        localTags = state.getParcelableArrayList(STATE_LOCAL_TAGS);
+        localTags = BundleCompat.getParcelableArrayList(state, STATE_LOCAL_TAGS, Tag.class);
         localDeleteButton.set(state.getBoolean(STATE_LOCAL_DELETE_BUTTON));
         localUploadButton.set(state.getBoolean(STATE_LOCAL_UPLOAD_BUTTON));
 
@@ -153,7 +154,7 @@ public class FavoritesConflictResolutionViewModel extends BaseObservable impleme
         cloudInfo.set(state.getString(STATE_CLOUD_INFO));
         cloudId = state.getString(STATE_CLOUD_ID);
         cloudName.set(state.getString(STATE_CLOUD_NAME));
-        cloudTags = state.getParcelableArrayList(STATE_CLOUD_TAGS);
+        cloudTags = BundleCompat.getParcelableArrayList(state, STATE_CLOUD_TAGS, Tag.class);
         cloudDeleteButton.set(state.getBoolean(STATE_CLOUD_DELETE_BUTTON));
         cloudDownloadButton.set(state.getBoolean(STATE_CLOUD_DOWNLOAD_BUTTON));
         cloudRetryButton.set(state.getBoolean(STATE_CLOUD_RETRY_BUTTON));

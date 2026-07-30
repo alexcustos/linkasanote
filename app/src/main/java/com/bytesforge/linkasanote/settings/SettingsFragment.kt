@@ -30,7 +30,13 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
-import androidx.preference.*
+import androidx.core.os.BundleCompat
+import androidx.core.os.ConfigurationCompat
+import androidx.preference.CheckBoxPreference
+import androidx.preference.EditTextPreference
+import androidx.preference.ListPreference
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import com.bytesforge.linkasanote.ApplicationBackup
 import com.bytesforge.linkasanote.LaanoApplication
 import com.bytesforge.linkasanote.R
@@ -45,7 +51,9 @@ import com.google.common.base.Strings
 import io.reactivex.disposables.CompositeDisposable
 import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Arrays
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -70,7 +78,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val args = arguments
-        account = args?.getParcelable(ARGUMENT_SETTINGS_ACCOUNT)
+        account = args?.let { BundleCompat.getParcelable(it, ARGUMENT_SETTINGS_ACCOUNT, Account::class.java) }
         val fragmentActivity = activity
         if (fragmentActivity != null) {
             val application = fragmentActivity.application as LaanoApplication
@@ -213,15 +221,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         newWhiteList.trim { it <= ' ' }.split("\\W+").toTypedArray()
                     val newWhiteListNormalized: String =
                         if (newWhiteList.isNotEmpty() && Strings.isNullOrEmpty(
-                            newWhiteListArray[0]
-                        )
-                    ) {
-                        joiner.join(
-                            newWhiteListArray.copyOfRange(1, newWhiteListArray.size)
-                        )
-                    } else {
-                        joiner.join(newWhiteListArray)
-                    }
+                                newWhiteListArray[0]
+                            )
+                        ) {
+                            joiner.join(
+                                newWhiteListArray.copyOfRange(1, newWhiteListArray.size)
+                            )
+                        } else {
+                            joiner.join(newWhiteListArray)
+                        }
                     prefClipboardParameterWhiteList.summary = newWhiteListNormalized
                     if (newWhiteList != newWhiteListNormalized) {
                         prefClipboardParameterWhiteList.text = newWhiteListNormalized
@@ -321,7 +329,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         continue
                     }
                     backupEntries[CommonUtils.formatDateTime(
-                        requireContext(), backupDate!!)] = fileName
+                        requireContext(), backupDate!!
+                    )] = fileName
                 }
                 return backupEntries
             }
@@ -330,11 +339,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private val currentLocaleCompat: Locale
         get() {
             checkNotNull(context) { "Context is needed at this point" }
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                requireContext().resources.configuration.locales[0]
-            } else {
-                requireContext().resources.configuration.locale
-            }
+            return ConfigurationCompat.getLocales(requireContext().resources.configuration)[0]
+                ?: Locale.getDefault()
         }
 
     private fun backup() {

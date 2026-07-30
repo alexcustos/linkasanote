@@ -19,7 +19,12 @@
  */
 package com.bytesforge.linkasanote.manageaccounts
 
-import android.accounts.*
+import android.accounts.Account
+import android.accounts.AccountManager
+import android.accounts.AccountManagerCallback
+import android.accounts.AccountManagerFuture
+import android.accounts.AuthenticatorException
+import android.accounts.OperationCanceledException
 import android.app.Activity
 import android.app.Dialog
 import android.content.DialogInterface
@@ -27,12 +32,14 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -47,7 +54,7 @@ import com.bytesforge.linkasanote.utils.CloudUtils
 import com.google.android.material.snackbar.Snackbar
 import io.reactivex.Single
 import java.io.IOException
-import java.util.*
+import java.util.LinkedList
 
 class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
     @get:VisibleForTesting
@@ -189,7 +196,9 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
         private var account: Account? = null
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
-            account = requireArguments().getParcelable(ARGUMENT_REMOVAL_CONFIRMATION_ACCOUNT)
+            account = BundleCompat.getParcelable(
+                requireArguments(), ARGUMENT_REMOVAL_CONFIRMATION_ACCOUNT, Account::class.java
+            )
         }
 
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -259,7 +268,7 @@ class ManageAccountsFragment : Fragment(), ManageAccountsContract.View {
 
     companion object {
         private val TAG = ManageAccountsFragment::class.java.simpleName
-        private val handler = Handler()
+        private val handler = Handler(Looper.getMainLooper())
         fun newInstance(): ManageAccountsFragment {
             return ManageAccountsFragment()
         }

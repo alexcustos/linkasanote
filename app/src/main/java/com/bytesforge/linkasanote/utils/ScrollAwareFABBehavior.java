@@ -30,6 +30,7 @@ import androidx.core.view.ViewCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+
 public class ScrollAwareFABBehavior extends FloatingActionButton.Behavior {
 
     // To enable layout inflation to work correctly
@@ -43,15 +44,16 @@ public class ScrollAwareFABBehavior extends FloatingActionButton.Behavior {
             @NonNull View directTargetChild, @NonNull View target, int axes, int type) {
         return axes == ViewCompat.SCROLL_AXIS_VERTICAL
                 || super.onStartNestedScroll(
-                        coordinatorLayout, child, directTargetChild, target, axes, type);
+                coordinatorLayout, child, directTargetChild, target, axes, type);
     }
 
     @Override
     public void onNestedScroll(
             @NonNull CoordinatorLayout coordinatorLayout, @NonNull FloatingActionButton child,
-            @NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
+            @NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed,
+            int type, @NonNull int[] consumed) {
         super.onNestedScroll(coordinatorLayout, child,
-                target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type);
+                target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type, consumed);
 
         final int dy = dyConsumed + dyConsumed;
         if (dy > 0 && child.isShown()) {
