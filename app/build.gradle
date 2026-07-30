@@ -28,7 +28,7 @@ android {
         javaCompileOptions {
             annotationProcessorOptions {
                 arguments = [
-                    "dagger.hilt.disableModulesHaveInstallInCheck" : "true"
+                        "dagger.hilt.disableModulesHaveInstallInCheck": "true"
                 ]
             }
         }
