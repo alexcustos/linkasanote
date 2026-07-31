@@ -37,7 +37,6 @@ import com.bytesforge.linkasanote.sync.files.JsonFile;
 import com.bytesforge.linkasanote.sync.operations.nextcloud.UploadFileOperation;
 import com.bytesforge.linkasanote.utils.CloudUtils;
 import com.bytesforge.linkasanote.utils.CommonUtils;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
@@ -50,6 +49,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -109,7 +109,7 @@ public class CloudItem<T extends Item> {
                     JsonFile.getTempFileName(item.getId());
             final File localFile = new File(localPath);
             try {
-                Files.asCharSink(localFile, Charsets.UTF_8).write(itemJson.toString());
+                Files.asCharSink(localFile, StandardCharsets.UTF_8).write(itemJson.toString());
             } catch (IOException e) {
                 Log.e(TAG, "Cannot create temporary file [" + localPath + "]");
                 return null;
@@ -156,7 +156,7 @@ public class CloudItem<T extends Item> {
                 File localFile = new File(localPath);
                 String jsonString = null;
                 try {
-                    jsonString = Files.asCharSource(localFile, Charsets.UTF_8).read();
+                    jsonString = Files.asCharSource(localFile, StandardCharsets.UTF_8).read();
                 } catch (IOException e) {
                     Log.e(TAG, "Cannot read the file downloaded [" + localPath + "]");
                 }

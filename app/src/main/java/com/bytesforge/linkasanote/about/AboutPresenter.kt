@@ -51,7 +51,7 @@ class AboutPresenter @Inject constructor(
     }
 
     companion object {
-        private val TAG = AboutPresenter::class.java.simpleName
-        private val TAG_E = AboutPresenter::class.java.canonicalName
+        //private val TAG = AboutPresenter::class.java.simpleName
+        //private val TAG_E = AboutPresenter::class.java.canonicalName
     }
 }

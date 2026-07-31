@@ -20,6 +20,8 @@
 
 package com.bytesforge.linkasanote.laano;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.app.Service;
 import android.content.ClipData;
 import android.content.ClipDescription;
@@ -30,9 +32,14 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.util.Patterns;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 
 import com.bytesforge.linkasanote.LaanoApplication;
 import com.bytesforge.linkasanote.R;
@@ -55,12 +62,6 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.exceptions.UndeliverableException;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-
 public class ClipboardService extends Service {
 
     private static final String TAG = ClipboardService.class.getSimpleName();
@@ -71,6 +72,7 @@ public class ClipboardService extends Service {
     public interface Callback {
 
         void onClipboardChanged(int clipboardType, boolean force);
+
         void onClipboardLinkExtraReady(boolean force);
     }
 
@@ -197,7 +199,7 @@ public class ClipboardService extends Service {
         synchronized (cacheIsDirtyLock) {
             if (cacheIsDirty) {
                 cacheIsDirty = false;
-                new Handler().postDelayed(invalidateCache, INVALIDATE_CACHE_IN_MILLIS);
+                new Handler(Looper.getMainLooper()).postDelayed(invalidateCache, INVALIDATE_CACHE_IN_MILLIS);
                 return true;
             }
         }
@@ -219,7 +221,7 @@ public class ClipboardService extends Service {
                 } else {
                     clipboardType = CLIPBOARD_TEXT;
                 }
-            }  else { // NOTE: URL will be normalized in loadLinkExtra()
+            } else { // NOTE: URL will be normalized in loadLinkExtra()
                 clipboardType = CLIPBOARD_LINK;
             }
         } else {

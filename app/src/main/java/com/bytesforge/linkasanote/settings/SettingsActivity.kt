@@ -24,6 +24,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NavUtils
+import androidx.core.content.IntentCompat
 import com.bytesforge.linkasanote.R
 import com.bytesforge.linkasanote.utils.ActivityUtils
 
@@ -31,7 +32,7 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val startIntent = intent
-        val account = startIntent.getParcelableExtra<Account>(EXTRA_ACCOUNT)
+        val account = IntentCompat.getParcelableExtra(startIntent, EXTRA_ACCOUNT, Account::class.java)
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setTitle(R.string.actionbar_title_settings)

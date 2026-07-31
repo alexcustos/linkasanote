@@ -47,7 +47,7 @@ import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
 import com.owncloud.android.lib.common.UserInfo;
 import com.owncloud.android.lib.common.accounts.AccountUtils;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
-import com.owncloud.android.lib.resources.users.GetRemoteUserInfoOperation;
+import com.owncloud.android.lib.resources.users.GetUserInfoRemoteOperation;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -158,7 +158,7 @@ public final class CloudUtils {
 
     public static boolean updateUserProfile(
             Account account, OwnCloudClient ocClient, AccountManager accountManager) {
-        GetRemoteUserInfoOperation operation = new GetRemoteUserInfoOperation();
+        GetUserInfoRemoteOperation operation = new GetUserInfoRemoteOperation();
         RemoteOperationResult result;
         try {
             result = CloudDataSource.executeRemoteOperation(operation, ocClient).blockingGet();

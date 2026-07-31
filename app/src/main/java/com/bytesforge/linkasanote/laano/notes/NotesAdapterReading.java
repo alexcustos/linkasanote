@@ -62,15 +62,16 @@ public class NotesAdapterReading extends NotesAdapterBase<NotesAdapterReading.Vi
         }
     }
 
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         ItemNotesReadingBinding binding = ItemNotesReadingBinding.inflate(inflater, parent, false);
         return new ViewHolder(binding);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Note note = notes.get(position);
         holder.bind(note, presenter, viewModel);
     }

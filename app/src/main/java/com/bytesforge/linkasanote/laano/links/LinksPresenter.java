@@ -20,11 +20,16 @@
 
 package com.bytesforge.linkasanote.laano.links;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
+
 import android.net.Uri;
 import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Log;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -56,9 +61,6 @@ import javax.inject.Inject;
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.System.currentTimeMillis;
 
 public final class LinksPresenter extends BaseItemPresenter implements
         LinksContract.Presenter, DataSource.Callback {
@@ -327,7 +329,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                         view.updateView();
                     }
                     if (loadIsDeferred) {
-                        new Handler().postDelayed(() -> loadLinks(false, forceShowLoading),
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> loadLinks(false, forceShowLoading),
                                 Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
                     }
                 })
@@ -399,7 +401,7 @@ public final class LinksPresenter extends BaseItemPresenter implements
                     settings.setLinkFilterId(null);
                     settings.setLinkFilter(null);
                 }
-            } else if (numNotes > 0){
+            } else if (numNotes > 0) {
                 onToggleClick(linkId);
             }
         }

@@ -20,10 +20,15 @@
 
 package com.bytesforge.linkasanote.laano.notes;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.System.currentTimeMillis;
+
 import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Log;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -55,8 +60,6 @@ import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.System.currentTimeMillis;
 
 public final class NotesPresenter extends BaseItemPresenter implements
         NotesContract.Presenter, DataSource.Callback {
@@ -314,7 +317,7 @@ public final class NotesPresenter extends BaseItemPresenter implements
                         view.updateView();
                     }
                     if (loadIsDeferred) {
-                        new Handler().postDelayed(() -> loadNotes(false, forceShowLoading),
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> loadNotes(false, forceShowLoading),
                                 Settings.GLOBAL_DEFER_RELOAD_DELAY_MILLIS);
                     }
                 })

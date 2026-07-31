@@ -34,9 +34,20 @@ import static androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withResourceName;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.bytesforge.linkasanote.AndroidTestUtils.getToolbarNavigationContentDescription;
+import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertNotNull;
 
 import android.content.res.Resources;
 import android.view.Gravity;
+
+import androidx.test.espresso.contrib.DrawerActions;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.rule.ActivityTestRule;
 
 import com.bytesforge.linkasanote.AndroidTestUtils;
 import com.bytesforge.linkasanote.R;
@@ -48,18 +59,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import static com.bytesforge.linkasanote.AndroidTestUtils.getToolbarNavigationContentDescription;
-import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
-import static junit.framework.Assert.assertNotNull;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
-
-import androidx.test.espresso.contrib.DrawerActions;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.rule.ActivityTestRule;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -122,8 +121,8 @@ public class ApplicationNavigationTest {
     public void clickOnTab_switchesTab() {
         // Links
         onView(withItemTextId(LINKS_TITLE, R.id.tab_layout))
-            .perform(click())
-            .check(matches(isDisplayed()));
+                .perform(click())
+                .check(matches(isDisplayed()));
         assertThat((activity.getCurrentFragment()).getTitle(), equalTo(LINKS_TITLE));
         assertThat(activity.getCurrentFragment(), instanceOf(LinksFragment.class));
         // Favorites
@@ -150,7 +149,7 @@ public class ApplicationNavigationTest {
         onView(allOf(
                 withText(R.string.actionbar_title_settings),
                 isDescendantOfA(withResourceName("action_bar"))))
-            .check(matches(isDisplayed()));
+                .check(matches(isDisplayed()));
         // Close
         onView(withContentDescription("Navigate up")).perform(click());
         onView(withId(R.id.laano_view_pager)).check(matches(isDisplayed()));

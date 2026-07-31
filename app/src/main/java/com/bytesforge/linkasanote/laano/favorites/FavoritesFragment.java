@@ -20,27 +20,14 @@
 
 package com.bytesforge.linkasanote.laano.favorites;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.ActionMode;
-import androidx.appcompat.widget.PopupMenu;
-import androidx.appcompat.widget.SearchView;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SimpleItemAnimator;
-
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,6 +35,22 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.appcompat.widget.SearchView;
+import androidx.core.os.BundleCompat;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Favorite;
@@ -63,8 +66,6 @@ import com.bytesforge.linkasanote.utils.ActivityUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class FavoritesFragment extends BaseItemFragment implements FavoritesContract.View {
 
@@ -118,7 +119,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         fragmentActivity = getActivity();
-        fragmentManager = getFragmentManager();
+        fragmentManager = getParentFragmentManager();
         context = getContext();
 
         setHasOptionsMenu(true);
@@ -280,7 +281,7 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
                     //viewModel.showConflictResolutionSuccessfulSnackbar();
                     Toast.makeText(context, R.string.toast_conflict_resolved,
                             Toast.LENGTH_SHORT).show();
-                } else if (resultCode == FavoritesConflictResolutionDialog.RESULT_FAILED){
+                } else if (resultCode == FavoritesConflictResolutionDialog.RESULT_FAILED) {
                     viewModel.showConflictResolutionErrorSnackbar();
                 }
                 break;
@@ -303,8 +304,8 @@ public class FavoritesFragment extends BaseItemFragment implements FavoritesCont
 
     private void setRvLayoutState(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            rvLayoutState = savedInstanceState.getParcelable(
-                    BaseItemViewModel.STATE_RECYCLER_LAYOUT);
+            rvLayoutState = BundleCompat.getParcelable(savedInstanceState,
+                    BaseItemViewModel.STATE_RECYCLER_LAYOUT, Parcelable.class);
         }
     }
 

@@ -49,7 +49,6 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.data.Tag;
@@ -276,10 +275,7 @@ public class AddEditLinkFragment extends Fragment implements AddEditLinkContract
     private void showFillInFormInfo() {
         FillInFormInfoDialog dialog = FillInFormInfoDialog.newInstance();
         dialog.setTargetFragment(this, FillInFormInfoDialog.DIALOG_REQUEST_CODE);
-        FragmentManager fragmentManager = getFragmentManager();
-        if (fragmentManager != null) {
-            dialog.show(fragmentManager, FillInFormInfoDialog.DIALOG_TAG);
-        }
+        dialog.show(getParentFragmentManager(), FillInFormInfoDialog.DIALOG_TAG);
     }
 
     // NOTE: callback from AlertDialog

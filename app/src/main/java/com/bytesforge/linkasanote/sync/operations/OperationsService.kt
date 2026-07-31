@@ -24,9 +24,16 @@ import android.accounts.AccountsException
 import android.app.Service
 import android.content.Intent
 import android.net.Uri
-import android.os.*
+import android.os.Binder
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.IBinder
+import android.os.Looper
+import android.os.Message
+import android.os.Process
 import android.util.Log
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.IntentCompat
 import com.bytesforge.linkasanote.data.source.cloud.CloudDataSource
 import com.bytesforge.linkasanote.sync.operations.nextcloud.CheckCredentialsOperation
 import com.bytesforge.linkasanote.sync.operations.nextcloud.GetServerInfoOperation
@@ -107,7 +114,8 @@ class OperationsService : Service() {
     }
 
     private inner class OperationsHandler(
-        looper: Looper?, private val service: OperationsService) : Handler(
+        looper: Looper?, private val service: OperationsService
+    ) : Handler(
         looper!!
     ) {
         private var lastTarget: Target?
@@ -176,7 +184,7 @@ class OperationsService : Service() {
                 "At least one of the following EXTRA must be specified: ACCOUNT, SERVER_URL"
             )
         }
-        val account = intent.getParcelableExtra<Account>(EXTRA_ACCOUNT)
+        val account = IntentCompat.getParcelableExtra(intent, EXTRA_ACCOUNT, Account::class.java)
         val serverUrl = intent.getStringExtra(EXTRA_SERVER_URL)
         val target = Target(
             account, if (serverUrl == null) null else Uri.parse(serverUrl)
@@ -187,6 +195,7 @@ class OperationsService : Service() {
                 serverUrl,
                 this@OperationsService
             )
+
             ACTION_CHECK_CREDENTIALS -> {
                 val credentials = intent.getBundleExtra(EXTRA_CREDENTIALS)
                 val serverVersion = OwnCloudVersion(
@@ -194,6 +203,7 @@ class OperationsService : Service() {
                 )
                 CheckCredentialsOperation(credentials, serverVersion)
             }
+
             else -> throw UnsupportedOperationException("OperationItem not supported: $action")
         }
         return OperationItem(target, operation, listener, handler)

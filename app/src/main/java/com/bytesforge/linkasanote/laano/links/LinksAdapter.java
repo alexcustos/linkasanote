@@ -83,7 +83,7 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
             LinearLayoutManager rvLayoutManager = new LinearLayoutManager(context);
             rvLinkNotes.setLayoutManager(rvLayoutManager);
             rvLinkNotes.setAdapter(new LinksNotesAdapter(link.getNotes(), presenter));
-            rvLinkNotes.setLayoutFrozen(true); // NOTE: after setAdapter
+            rvLinkNotes.suppressLayout(true); // NOTE: after setAdapter
             binding.executePendingBindings();
         }
     }

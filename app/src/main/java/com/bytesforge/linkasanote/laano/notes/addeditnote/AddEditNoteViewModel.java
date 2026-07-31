@@ -33,6 +33,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.os.BundleCompat;
 import androidx.databinding.BaseObservable;
 import androidx.databinding.Bindable;
 import androidx.databinding.BindingAdapter;
@@ -81,7 +82,8 @@ public class AddEditNoteViewModel extends BaseObservable implements
     private boolean tagsHasFocus;
 
     public enum SnackbarId {
-        DATABASE_ERROR, NOTE_EMPTY, NOTE_NOT_FOUND}
+        DATABASE_ERROR, NOTE_EMPTY, NOTE_NOT_FOUND
+    }
 
     @Bindable
     public SnackbarId snackbarId;
@@ -117,7 +119,7 @@ public class AddEditNoteViewModel extends BaseObservable implements
     public void applyInstanceState(@NonNull Bundle state) {
         checkNotNull(state);
         noteNote.set(state.getString(STATE_NOTE_NOTE));
-        noteSyncState = state.getParcelable(STATE_NOTE_SYNC_STATE);
+        noteSyncState = BundleCompat.getParcelable(state, STATE_NOTE_SYNC_STATE, SyncState.class);
         addButton.set(state.getBoolean(STATE_ADD_BUTTON));
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
         noteErrorText = state.getString(STATE_NOTE_ERROR_TEXT);

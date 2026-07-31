@@ -45,7 +45,7 @@ public abstract class NotesAdapterBase<VH extends RecyclerView.ViewHolder> exten
     protected List<Note> notes;
 
     @NonNull
-    private List<String> noteIds;
+    private final List<String> noteIds;
 
     public NotesAdapterBase(
             @NonNull List<Note> notes,
@@ -70,7 +70,7 @@ public abstract class NotesAdapterBase<VH extends RecyclerView.ViewHolder> exten
     @NonNull
     public String[] getIds() {
         // NOTE: adapter will be a raw type, so make a copy is only way to make it type safe
-        return noteIds.toArray(new String[noteIds.size()]);
+        return noteIds.toArray(new String[0]);
     }
 
     public void swapItems(@NonNull List<Note> notes) {
@@ -156,11 +156,12 @@ public abstract class NotesAdapterBase<VH extends RecyclerView.ViewHolder> exten
         }
     }
 
+    @NonNull
     @Override
-    public abstract VH onCreateViewHolder(ViewGroup parent, int viewType);
+    public abstract VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType);
 
     @Override
-    public abstract void onBindViewHolder(VH holder, int position);
+    public abstract void onBindViewHolder(@NonNull VH holder, int position);
 
     @Override
     public int getItemCount() {

@@ -41,6 +41,7 @@
 
     <application
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -116,7 +117,8 @@
 
         <!-- android:process=":sync" -->
         <service android:name=".sync.SyncService"
-            android:exported="true">
+            android:exported="true"
+            android:permission="android.permission.AUTHENTICATE_ACCOUNTS">
 
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
@@ -149,4 +151,8 @@
 
         <meta-data android:name="android.max_aspect" android:value="3.0" />
     </application>
+
+    <queries>
+        <package android:name="com.android.vending" />
+    </queries>
 </manifest>

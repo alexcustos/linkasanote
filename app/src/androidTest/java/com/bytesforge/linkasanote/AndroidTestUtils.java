@@ -35,7 +35,6 @@ import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
-import androidx.test.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 
@@ -86,7 +85,7 @@ public class AndroidTestUtils extends SharedUtils {
 
         getInstrumentation().runOnMainSync(() -> {
             Collection resumedActivities =
-                ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(RESUMED);
+                    ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(RESUMED);
             if (resumedActivities.iterator().hasNext()) {
                 resumedActivity[0] = (Activity) resumedActivities.iterator().next();
             } else {
@@ -111,7 +110,7 @@ public class AndroidTestUtils extends SharedUtils {
     private static final int GRANT_BUTTON_INDEX = 1;
 
     private static boolean hasNeededPermission(String permissionNeeded) {
-        Context context = InstrumentationRegistry.getTargetContext();
+        Context context = getInstrumentation().getTargetContext();
         int permissionStatus = ContextCompat.checkSelfPermission(context, permissionNeeded);
         return permissionStatus == PackageManager.PERMISSION_GRANTED;
     }

@@ -30,6 +30,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.os.BundleCompat;
 import androidx.databinding.BaseObservable;
 import androidx.databinding.Bindable;
 import androidx.databinding.BindingAdapter;
@@ -71,7 +72,8 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
     private boolean tagsHasFocus;
 
     public enum SnackbarId {
-        DATABASE_ERROR, FAVORITE_EMPTY, FAVORITE_NOT_FOUND}
+        DATABASE_ERROR, FAVORITE_EMPTY, FAVORITE_NOT_FOUND
+    }
 
     @Bindable
     public SnackbarId snackbarId;
@@ -108,7 +110,7 @@ public class AddEditFavoriteViewModel extends BaseObservable implements
         checkNotNull(state);
         favoriteName.set(state.getString(STATE_FAVORITE_NAME));
         favoriteAndGate.set(state.getBoolean(STATE_FAVORITE_AND_GATE));
-        favoriteSyncState = state.getParcelable(STATE_FAVORITE_SYNC_STATE);
+        favoriteSyncState = BundleCompat.getParcelable(state, STATE_FAVORITE_SYNC_STATE, SyncState.class);
         addButton.set(state.getBoolean(STATE_ADD_BUTTON));
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
         nameErrorText = state.getString(STATE_NAME_ERROR_TEXT);

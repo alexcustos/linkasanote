@@ -20,6 +20,11 @@
 
 package com.bytesforge.linkasanote.addeditaccount.nextcloud;
 
+import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
+import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountUsername;
+import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
@@ -32,12 +37,18 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 import com.bytesforge.linkasanote.R;
 import com.bytesforge.linkasanote.databinding.FragmentAddEditAccountNextcloudBinding;
@@ -58,16 +69,6 @@ import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountType;
-import static com.bytesforge.linkasanote.utils.CloudUtils.getAccountUsername;
-import static com.bytesforge.linkasanote.utils.CommonUtils.convertIdn;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import androidx.annotation.VisibleForTesting;
-import androidx.databinding.DataBindingUtil;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-
 public class NextcloudFragment extends Fragment implements
         NextcloudContract.View, OnRemoteOperationListener {
 
@@ -82,7 +83,7 @@ public class NextcloudFragment extends Fragment implements
     private FragmentAddEditAccountNextcloudBinding binding;
     private AccountManager accountManager;
 
-    private final Handler handler = new Handler();
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private static final Object operationsLock = new Object();
     private OperationsService operationsService = null;
     private List<Intent> operationsQueue = new ArrayList<>();
@@ -336,8 +337,7 @@ public class NextcloudFragment extends Fragment implements
         }
         // Update
         for (String key : userData.keySet()) {
-            Object value = userData.get(key);
-            accountManager.setUserData(account, key, value == null ? null : value.toString());
+            accountManager.setUserData(account, key, userData.getString(key));
         }
         String password = credentials.getAuthToken();
         accountManager.setPassword(account, password);
@@ -419,7 +419,7 @@ public class NextcloudFragment extends Fragment implements
 
     private void showAccountDoesNotExistSnackbar() {
         Snackbar.make(binding.snackbarLayout,
-                R.string.add_edit_account_nextcloud_warning_no_account, Snackbar.LENGTH_LONG)
+                        R.string.add_edit_account_nextcloud_warning_no_account, Snackbar.LENGTH_LONG)
                 .addCallback(new Snackbar.Callback() {
 
                     @Override

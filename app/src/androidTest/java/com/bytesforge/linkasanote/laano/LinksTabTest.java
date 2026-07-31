@@ -34,9 +34,9 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextId;
 import static com.bytesforge.linkasanote.EspressoMatchers.withItemTextRv;
-import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;

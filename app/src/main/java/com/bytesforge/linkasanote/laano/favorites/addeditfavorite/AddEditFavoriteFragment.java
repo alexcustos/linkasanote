@@ -257,7 +257,7 @@ public class AddEditFavoriteFragment extends Fragment implements AddEditFavorite
     private void showFillInFormInfo() {
         FillInFormInfoDialog dialog = FillInFormInfoDialog.newInstance();
         dialog.setTargetFragment(this, FillInFormInfoDialog.DIALOG_REQUEST_CODE);
-        dialog.show(getFragmentManager(), FillInFormInfoDialog.DIALOG_TAG);
+        dialog.show(getParentFragmentManager(), FillInFormInfoDialog.DIALOG_TAG);
     }
 
     // NOTE: callback from AlertDialog

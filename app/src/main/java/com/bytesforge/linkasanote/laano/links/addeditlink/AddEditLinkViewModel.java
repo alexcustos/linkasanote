@@ -30,6 +30,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.os.BundleCompat;
 import androidx.databinding.BaseObservable;
 import androidx.databinding.Bindable;
 import androidx.databinding.BindingAdapter;
@@ -112,7 +113,7 @@ public class AddEditLinkViewModel extends BaseObservable implements
         linkLink.set(state.getString(STATE_LINK_LINK));
         linkName.set(state.getString(STATE_LINK_NAME));
         linkDisabled.set(state.getBoolean(STATE_LINK_DISABLED));
-        linkSyncState = state.getParcelable(STATE_LINK_SYNC_STATE);
+        linkSyncState = BundleCompat.getParcelable(state, STATE_LINK_SYNC_STATE, SyncState.class);
         addButton.set(state.getBoolean(STATE_ADD_BUTTON));
         addButtonText = state.getInt(STATE_ADD_BUTTON_TEXT);
         linkErrorText = state.getString(STATE_LINK_ERROR_TEXT);

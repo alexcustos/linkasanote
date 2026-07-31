@@ -24,6 +24,7 @@ import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -81,8 +82,8 @@ class SyncLogFragment : Fragment(), SyncLogContract.View {
 
     private fun setRvLayoutState(savedInstanceState: Bundle?) {
         if (savedInstanceState != null) {
-            rvLayoutState = savedInstanceState.getParcelable(
-                SyncLogViewModel.STATE_RECYCLER_LAYOUT
+            rvLayoutState = BundleCompat.getParcelable(
+                savedInstanceState, SyncLogViewModel.STATE_RECYCLER_LAYOUT, Parcelable::class.java
             )
         }
     }
